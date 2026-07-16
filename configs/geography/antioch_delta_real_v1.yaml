@@ -1,0 +1,62 @@
+scenario_id: antioch_delta_real_v1
+
+# A deliberately bounded area around Antioch and the western Delta.
+# Bounding box order is south, west, north, east.
+bbox:
+  south: 37.93
+  west: -121.88
+  north: 38.07
+  east: -121.68
+
+camera:
+  center:
+    - -121.78
+    - 38.00
+  zoom: 11.8
+  pitch: 55
+  bearing: -18
+  max_pitch: 75
+
+overpass:
+  endpoints:
+    - https://overpass-api.de/api/interpreter
+    - https://overpass.kumi.systems/api/interpreter
+  timeout_s: 180
+
+water:
+  accepted_waterway_tags:
+    - river
+    - canal
+    - fairway
+
+  prohibited_access_values:
+    - "no"
+    - private
+
+  maximum_incident_snap_m: 450.0
+
+road:
+  accepted_highway_tags:
+    - motorway
+    - trunk
+    - primary
+    - secondary
+    - tertiary
+    - unclassified
+    - residential
+    - service
+
+  prohibited_access_values:
+    - "no"
+    - private
+
+  maximum_incident_snap_m: 700.0
+
+fleet:
+  boat_count: 2
+  drone_count: 3
+  ambulance_count: 2
+  minimum_base_spacing_m: 1400.0
+
+output_directory:
+  data/geography/antioch_delta_real_v1

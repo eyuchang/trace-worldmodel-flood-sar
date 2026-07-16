@@ -1,0 +1,11 @@
+name: trace-jepa
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -e .[dev]
+
+# Install the PyTorch build appropriate for the machine before enabling JEPA.
+# Then run: pip install -e ".[jepa]"

@@ -1,0 +1,9 @@
+model_manifest_version: model-config-v1
+hub_repo: facebookresearch/vjepa2
+hub_entry: vjepa2_1_vit_base_384
+preprocessor_entry: vjepa2_preprocessor
+crop_size: 384
+num_frames: 64
+role: frozen_visual_encoder
+notes: >-
+  Use the encoder only. Train a separate flood-domain action-prefix predictor.

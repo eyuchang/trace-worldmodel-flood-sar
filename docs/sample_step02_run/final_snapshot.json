@@ -1,0 +1,3300 @@
+{
+  "config": {
+    "auto_plan": true,
+    "commander_authority_present": true,
+    "planning_interval_s": 5.0,
+    "rescue": {
+      "merge_alert_radius": 2.0,
+      "pickup_base_s": 6.0,
+      "pickup_per_person_s": 1.5,
+      "post_rescue_policy": "standby_at_safe_location",
+      "safe_location_id": "safe_transfer_dock",
+      "unload_base_s": 5.0,
+      "unload_per_person_s": 1.0
+    },
+    "s1": {
+      "drone_report_accuracy": 0.92,
+      "observation_latency_s": 2.0,
+      "ood_severity": 0.25,
+      "packet_loss": 0.02,
+      "seed": 7,
+      "sensor_noise": 0.12
+    },
+    "s2": {
+      "clearance_horizon_s": 180.0,
+      "observation_freshness_s": 120.0,
+      "rain_intensity": 0.25,
+      "route_closure_depth": 0.72,
+      "upstream_inflow": 0.2,
+      "water_rise_rate": 0.00015
+    },
+    "s3": {
+      "conflict_policy": "serialize",
+      "deadline_weight": 1.0,
+      "mission_budget": 1000.0,
+      "risk_weight": 1.0,
+      "severity_weight": 1.0
+    },
+    "s5": {
+      "default_drone_endurance": 0.82,
+      "max_pending_surveys": 3,
+      "sector_weather": 0.25,
+      "sensor_quality": 0.9,
+      "value_of_information_weight": 0.7
+    },
+    "simulation_speed": 1.0
+  },
+  "controller": {
+    "active_commitments": [
+      {
+        "action_type": "verify_route",
+        "asset_id": "survey_drone_1",
+        "commitment_id": "commitment-c091c5440336",
+        "group_id": null,
+        "navigation_distance": 67.47592163134935,
+        "navigation_summary": "aerial survey to North Channel",
+        "path": [
+          {
+            "x": 60.0,
+            "y": 64.0
+          }
+        ],
+        "path_segments": [
+          {
+            "direction": "direct",
+            "edge_index": null,
+            "from_position": {
+              "x": 17.0,
+              "y": 12.0
+            },
+            "mode": "air",
+            "route_id": null,
+            "segment_id": "segment-9ed4796ecff2",
+            "to_position": {
+              "x": 60.0,
+              "y": 64.0
+            }
+          }
+        ],
+        "plan_id": "verify:survey_drone_1:north_channel",
+        "record_id": "trace-1a984421d6a25e32ada5",
+        "record_version": 2,
+        "route_id": "north_channel",
+        "target": {
+          "x": 60.0,
+          "y": 64.0
+        }
+      },
+      {
+        "action_type": "dispatch_rescue_boat",
+        "asset_id": "rescue_boat_1",
+        "commitment_id": "commitment-2a58efdfe0a6",
+        "group_id": "group_riverside",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+        "path": [
+          {
+            "x": 30.0,
+            "y": 12.0
+          },
+          {
+            "x": 52.0,
+            "y": 18.0
+          },
+          {
+            "x": 72.0,
+            "y": 34.0
+          },
+          {
+            "x": 84.0,
+            "y": 52.0
+          },
+          {
+            "x": 88.0,
+            "y": 66.0
+          }
+        ],
+        "path_segments": [
+          {
+            "direction": "forward",
+            "edge_index": 0,
+            "from_position": {
+              "x": 12.0,
+              "y": 16.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-22ecc54a2ad1",
+            "to_position": {
+              "x": 30.0,
+              "y": 12.0
+            }
+          },
+          {
+            "direction": "forward",
+            "edge_index": 1,
+            "from_position": {
+              "x": 30.0,
+              "y": 12.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-d75f33aac5dd",
+            "to_position": {
+              "x": 52.0,
+              "y": 18.0
+            }
+          },
+          {
+            "direction": "forward",
+            "edge_index": 2,
+            "from_position": {
+              "x": 52.0,
+              "y": 18.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-779e52631638",
+            "to_position": {
+              "x": 72.0,
+              "y": 34.0
+            }
+          },
+          {
+            "direction": "forward",
+            "edge_index": 3,
+            "from_position": {
+              "x": 72.0,
+              "y": 34.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-e75ad128a87d",
+            "to_position": {
+              "x": 84.0,
+              "y": 52.0
+            }
+          },
+          {
+            "direction": "forward",
+            "edge_index": 4,
+            "from_position": {
+              "x": 84.0,
+              "y": 52.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-bf4b5e77a35a",
+            "to_position": {
+              "x": 88.0,
+              "y": 66.0
+            }
+          }
+        ],
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "record_id": "trace-9f429ee5ae90dce700c5",
+        "record_version": 4,
+        "route_id": "south_detour",
+        "target": {
+          "x": 88.0,
+          "y": 66.0
+        }
+      },
+      {
+        "action_type": "evacuate_to_safety",
+        "asset_id": "rescue_boat_1",
+        "commitment_id": "commitment-12700e331559",
+        "group_id": null,
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to Safe Transfer Dock",
+        "path": [
+          {
+            "x": 84.0,
+            "y": 52.0
+          },
+          {
+            "x": 72.0,
+            "y": 34.0
+          },
+          {
+            "x": 52.0,
+            "y": 18.0
+          },
+          {
+            "x": 30.0,
+            "y": 12.0
+          },
+          {
+            "x": 12.0,
+            "y": 16.0
+          }
+        ],
+        "path_segments": [
+          {
+            "direction": "reverse",
+            "edge_index": 4,
+            "from_position": {
+              "x": 88.0,
+              "y": 66.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-e53f64f67810",
+            "to_position": {
+              "x": 84.0,
+              "y": 52.0
+            }
+          },
+          {
+            "direction": "reverse",
+            "edge_index": 3,
+            "from_position": {
+              "x": 84.0,
+              "y": 52.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-8efd4693cb54",
+            "to_position": {
+              "x": 72.0,
+              "y": 34.0
+            }
+          },
+          {
+            "direction": "reverse",
+            "edge_index": 2,
+            "from_position": {
+              "x": 72.0,
+              "y": 34.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-897dbb58cebf",
+            "to_position": {
+              "x": 52.0,
+              "y": 18.0
+            }
+          },
+          {
+            "direction": "reverse",
+            "edge_index": 1,
+            "from_position": {
+              "x": 52.0,
+              "y": 18.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-8e8e67f82d06",
+            "to_position": {
+              "x": 30.0,
+              "y": 12.0
+            }
+          },
+          {
+            "direction": "reverse",
+            "edge_index": 0,
+            "from_position": {
+              "x": 30.0,
+              "y": 12.0
+            },
+            "mode": "water",
+            "route_id": "south_detour",
+            "segment_id": "segment-3a964a1d2416",
+            "to_position": {
+              "x": 12.0,
+              "y": 16.0
+            }
+          }
+        ],
+        "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+        "record_id": "trace-7dc8944d0689d235885b",
+        "record_version": 2,
+        "route_id": "south_detour",
+        "target": {
+          "x": 12.0,
+          "y": 16.0
+        }
+      }
+    ],
+    "contradiction_count": 1,
+    "known_assets": {
+      "rescue_boat_1": {
+        "action_started_at": 49.0,
+        "action_type": null,
+        "asset_id": "rescue_boat_1",
+        "asset_type": "rescue_boat",
+        "assigned_group_id": null,
+        "assigned_route_id": null,
+        "authorization_record_id": "trace-7dc8944d0689d235885b",
+        "authorization_record_version": 2,
+        "capacity": 6,
+        "heading_degrees": 167.47119229084848,
+        "home_position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "interruption_reason": null,
+        "mission_phase": "standby",
+        "operating_cost": 5.0,
+        "passenger_count": 0,
+        "passenger_group_ids": [],
+        "path": [],
+        "path_index": 0,
+        "path_segments": [],
+        "position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "resource": 0.981800000000002,
+        "safe_location_id": "safe_transfer_dock",
+        "safe_position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "speed": 4.0,
+        "status": "standby",
+        "target": null,
+        "weather_tolerance": 0.85
+      },
+      "survey_drone_1": {
+        "action_started_at": 0.0,
+        "action_type": null,
+        "asset_id": "survey_drone_1",
+        "asset_type": "survey_drone",
+        "assigned_group_id": null,
+        "assigned_route_id": null,
+        "authorization_record_id": "trace-1a984421d6a25e32ada5",
+        "authorization_record_version": 2,
+        "capacity": 0,
+        "heading_degrees": 50.411869152317074,
+        "home_position": {
+          "x": 17.0,
+          "y": 12.0
+        },
+        "interruption_reason": null,
+        "mission_phase": "idle",
+        "operating_cost": 2.0,
+        "passenger_count": 0,
+        "passenger_group_ids": [],
+        "path": [],
+        "path_index": 0,
+        "path_segments": [],
+        "position": {
+          "x": 60.0,
+          "y": 64.0
+        },
+        "resource": 0.8118999999999998,
+        "safe_location_id": null,
+        "safe_position": null,
+        "speed": 8.0,
+        "status": "available",
+        "target": null,
+        "weather_tolerance": 0.7
+      }
+    },
+    "known_groups": {
+      "group_riverside": {
+        "alert_count": 1,
+        "assigned_asset_id": null,
+        "cancelled": false,
+        "condition": "rescued",
+        "deadline_s": 1200.0,
+        "discovered": true,
+        "group_id": "group_riverside",
+        "label": "Riverside Apartments",
+        "last_alert_at": 0.0,
+        "people": 4,
+        "people_delivered": 4,
+        "people_onboard": 0,
+        "people_waiting": 0,
+        "position": {
+          "x": 88.0,
+          "y": 66.0
+        },
+        "rescue_phase": "delivered",
+        "rescued": true,
+        "safe_location_id": "safe_transfer_dock",
+        "severity": 0.551395506984375,
+        "source_call_id": "event-389a2920b1f2"
+      }
+    },
+    "last_plan_cycle_at": 49.0,
+    "last_selected_plan": {
+      "decision": "clear",
+      "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+      "plan_name": "Evacuate 4 people to safety via South Detour",
+      "reason": "All declared technical gates passed for this action class.",
+      "record_id": "trace-7dc8944d0689d235885b",
+      "record_version": 2,
+      "trigger_event_id": null,
+      "utility": 143.56340868579284
+    },
+    "latest_reasoning": {
+      "affected_record_ids": [
+        "trace-1a984421d6a25e32ada5",
+        "trace-7f1b0da5953b4317bb59",
+        "trace-9f429ee5ae90dce700c5"
+      ],
+      "changes": [
+        {
+          "after": "group_riverside",
+          "before": null,
+          "field": "group_id"
+        },
+        {
+          "after": "Riverside Apartments",
+          "before": null,
+          "field": "location_label"
+        },
+        {
+          "after": {
+            "x": 88.0,
+            "y": 66.0
+          },
+          "before": null,
+          "field": "position"
+        },
+        {
+          "after": 4,
+          "before": null,
+          "field": "people"
+        },
+        {
+          "after": 0.55,
+          "before": null,
+          "field": "severity"
+        },
+        {
+          "after": 1200.0,
+          "before": null,
+          "field": "deadline_s"
+        },
+        {
+          "after": "safe_transfer_dock",
+          "before": null,
+          "field": "safe_location_id"
+        }
+      ],
+      "completed": true,
+      "cycle_id": "reasoning-25a42a9f7b32",
+      "decision_change": "Plan re-evaluated; decision unchanged",
+      "scenario_level": "CORE",
+      "selected_plan_id": "verify:survey_drone_1:north_channel",
+      "selected_plan_name": "Verify North Channel",
+      "simulation_time": 0.0,
+      "steps": [
+        {
+          "details": {
+            "changes": [
+              {
+                "after": "group_riverside",
+                "before": null,
+                "field": "group_id"
+              },
+              {
+                "after": "Riverside Apartments",
+                "before": null,
+                "field": "location_label"
+              },
+              {
+                "after": {
+                  "x": 88.0,
+                  "y": 66.0
+                },
+                "before": null,
+                "field": "position"
+              },
+              {
+                "after": 4,
+                "before": null,
+                "field": "people"
+              },
+              {
+                "after": 0.55,
+                "before": null,
+                "field": "severity"
+              },
+              {
+                "after": 1200.0,
+                "before": null,
+                "field": "deadline_s"
+              },
+              {
+                "after": "safe_transfer_dock",
+                "before": null,
+                "field": "safe_location_id"
+              }
+            ],
+            "trigger_event_id": "event-389a2920b1f2",
+            "visibility": "both"
+          },
+          "stage": "trigger",
+          "status": "complete",
+          "summary": "Authority or mission state changed",
+          "title": "1. Change received"
+        },
+        {
+          "details": {
+            "payload": {
+              "deadline_s": 1200.0,
+              "group_id": "group_riverside",
+              "location_label": "Riverside Apartments",
+              "people": 4,
+              "position": {
+                "x": 88.0,
+                "y": 66.0
+              },
+              "safe_location_id": "safe_transfer_dock",
+              "severity": 0.55
+            }
+          },
+          "stage": "state",
+          "status": "complete",
+          "summary": "Mission demand changed; candidate plans and their licensing claims are rebuilt.",
+          "title": "2. Mission state and affected assumptions updated"
+        },
+        {
+          "details": {
+            "plans": [
+              {
+                "ood": 0.0625,
+                "plan_id": "verify:survey_drone_1:north_channel",
+                "success": 0.8280000000000001,
+                "support": 0.583119,
+                "uncertainty": 0.2867524
+              },
+              {
+                "ood": 0.53,
+                "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+                "success": 0.3647059749904886,
+                "support": 0.03495285,
+                "uncertainty": 0.5293198029999999
+              },
+              {
+                "ood": 0.25,
+                "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+                "success": 0.6834764478012328,
+                "support": 0.7191945,
+                "uncertainty": 0.24193831000000002
+              }
+            ]
+          },
+          "stage": "prediction",
+          "status": "complete",
+          "summary": "3 candidate plans were predicted under the updated state.",
+          "title": "3. Candidate futures recomputed"
+        },
+        {
+          "details": {
+            "claim_count": 3
+          },
+          "stage": "claim",
+          "status": "complete",
+          "summary": "Each candidate produced a grounded predictive or practical claim; unchanged claim identities remain in the same TRACE lineage.",
+          "title": "4. Licensing claims rebuilt"
+        },
+        {
+          "details": {
+            "affected_record_ids": [
+              "trace-1a984421d6a25e32ada5",
+              "trace-7f1b0da5953b4317bb59",
+              "trace-9f429ee5ae90dce700c5"
+            ],
+            "decision_changes": []
+          },
+          "stage": "trace",
+          "status": "complete",
+          "summary": "3 record lineages were evaluated; 0 received a new semantic version.",
+          "title": "5. TRACE records evaluated"
+        },
+        {
+          "details": {
+            "plan_id": "verify:survey_drone_1:north_channel",
+            "record_id": "trace-1a984421d6a25e32ada5",
+            "record_version": 2,
+            "utility": 51.014495200000006
+          },
+          "stage": "plan",
+          "status": "complete",
+          "summary": "Selected Verify North Channel (QUALIFY).",
+          "title": "6. Highest-utility admissible plan selected"
+        },
+        {
+          "details": {
+            "commitment_id": "commitment-c091c5440336",
+            "distance": 67.47592163134935,
+            "path_segments": 1
+          },
+          "stage": "commitment",
+          "status": "complete",
+          "summary": "survey_drone_1 follows a declared aerial survey to North Channel; no straight-line shortcut is permitted.",
+          "title": "7. Authorized action dispatched"
+        }
+      ],
+      "trigger_event_id": "event-389a2920b1f2",
+      "trigger_label": "Authority or mission state changed"
+    },
+    "pending_claims": [
+      {
+        "action": {
+          "action_id": "action-208d3d675d5f",
+          "action_type": "verify_route",
+          "actor_id": "survey_drone_1",
+          "destination": null,
+          "origin": null,
+          "parameters": {
+            "expected_information_yield": 0.7,
+            "purpose": "resolve_pending_route_claim"
+          },
+          "route_id": "north_channel"
+        },
+        "claim": "survey_drone_1 should verify North Channel now.",
+        "decision": "qualify",
+        "failed_gates": [
+          "model_support",
+          "observation_freshness"
+        ],
+        "missing_items": [
+          "evidence inside the declared model support",
+          "a fresh observation window"
+        ],
+        "model_support": 0.583119,
+        "ood_score": 0.0625,
+        "plan_id": "verify:survey_drone_1:north_channel",
+        "plan_name": "Verify North Channel",
+        "previous_decision": null,
+        "record_id": "trace-1a984421d6a25e32ada5",
+        "record_version": 2,
+        "repair": "Limit the action to evidence gathering; monitor and do not commit the rescue branch yet.",
+        "semantic_revision_of": null,
+        "success_probability": 0.8280000000000001,
+        "trace_status": "qualify",
+        "trigger_event_id": "event-389a2920b1f2",
+        "uncertainty": 0.2867524
+      },
+      {
+        "action": {
+          "action_id": "action-abdb2040012c",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "north_channel"
+        },
+        "claim": "North Channel will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments.",
+        "decision": "hold",
+        "failed_gates": [
+          "model_support",
+          "out_of_distribution",
+          "uncertainty",
+          "observation_freshness"
+        ],
+        "missing_items": [
+          "evidence inside the declared model support",
+          "current observation or verification for the out-of-support region",
+          "narrower calibrated uncertainty",
+          "a fresh observation window"
+        ],
+        "model_support": 0.03495285,
+        "ood_score": 0.53,
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "plan_name": "Boat to Riverside Apartments via North Channel",
+        "previous_decision": null,
+        "record_id": "trace-7f1b0da5953b4317bb59",
+        "record_version": 2,
+        "repair": "Verify north_channel or choose a supported alternative.",
+        "semantic_revision_of": null,
+        "success_probability": 0.3647059749904886,
+        "trace_status": "defer",
+        "trigger_event_id": "event-389a2920b1f2",
+        "uncertainty": 0.5293198029999999
+      },
+      {
+        "action": {
+          "action_id": "action-d84804e11d80",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "claim": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments.",
+        "decision": "clear",
+        "failed_gates": [],
+        "missing_items": [],
+        "model_support": 0.7191945,
+        "ood_score": 0.25,
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "previous_decision": null,
+        "record_id": "trace-9f429ee5ae90dce700c5",
+        "record_version": 2,
+        "repair": null,
+        "semantic_revision_of": null,
+        "success_probability": 0.6834764478012328,
+        "trace_status": "accept",
+        "trigger_event_id": "event-389a2920b1f2",
+        "uncertainty": 0.24193831000000002
+      },
+      {
+        "action": {
+          "action_id": "action-d3bda867ae93",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "claim": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments.",
+        "decision": "clear",
+        "failed_gates": [],
+        "missing_items": [],
+        "model_support": 0.6561997037576035,
+        "ood_score": 0.25,
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "previous_decision": "clear",
+        "record_id": "trace-9f429ee5ae90dce700c5",
+        "record_version": 4,
+        "repair": null,
+        "semantic_revision_of": {
+          "record_id": "trace-9f429ee5ae90dce700c5",
+          "record_version": 2
+        },
+        "success_probability": 0.6783116990178076,
+        "trace_status": "accept",
+        "trigger_event_id": null,
+        "uncertainty": 0.2683961244218065
+      },
+      {
+        "action": {
+          "action_id": "action-f36a82a17f7a",
+          "action_type": "evacuate_to_safety",
+          "actor_id": "rescue_boat_1",
+          "destination": "safe_transfer_dock",
+          "origin": "incident_pickup",
+          "parameters": {
+            "group_ids": [
+              "group_riverside"
+            ],
+            "people_count": 4,
+            "safe_location_id": "safe_transfer_dock",
+            "safe_location_label": "Safe Transfer Dock"
+          },
+          "route_id": "south_detour"
+        },
+        "claim": "South Detour will remain traversable long enough for rescue_boat_1 to deliver 4 onboard people to the Safe Transfer Dock.",
+        "decision": "clear",
+        "failed_gates": [],
+        "missing_items": [],
+        "model_support": 0.6714244266326308,
+        "ood_score": 0.25,
+        "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+        "plan_name": "Evacuate 4 people to safety via South Detour",
+        "previous_decision": null,
+        "record_id": "trace-7dc8944d0689d235885b",
+        "record_version": 2,
+        "repair": null,
+        "semantic_revision_of": null,
+        "success_probability": 0.6780727786921599,
+        "trace_status": "accept",
+        "trigger_event_id": null,
+        "uncertainty": 0.26200174081429506
+      }
+    ],
+    "reasoning_history": [
+      {
+        "affected_record_ids": [
+          "trace-1a984421d6a25e32ada5",
+          "trace-7f1b0da5953b4317bb59",
+          "trace-9f429ee5ae90dce700c5"
+        ],
+        "changes": [
+          {
+            "after": "group_riverside",
+            "before": null,
+            "field": "group_id"
+          },
+          {
+            "after": "Riverside Apartments",
+            "before": null,
+            "field": "location_label"
+          },
+          {
+            "after": {
+              "x": 88.0,
+              "y": 66.0
+            },
+            "before": null,
+            "field": "position"
+          },
+          {
+            "after": 4,
+            "before": null,
+            "field": "people"
+          },
+          {
+            "after": 0.55,
+            "before": null,
+            "field": "severity"
+          },
+          {
+            "after": 1200.0,
+            "before": null,
+            "field": "deadline_s"
+          },
+          {
+            "after": "safe_transfer_dock",
+            "before": null,
+            "field": "safe_location_id"
+          }
+        ],
+        "completed": true,
+        "cycle_id": "reasoning-25a42a9f7b32",
+        "decision_change": "Plan re-evaluated; decision unchanged",
+        "scenario_level": "CORE",
+        "selected_plan_id": "verify:survey_drone_1:north_channel",
+        "selected_plan_name": "Verify North Channel",
+        "simulation_time": 0.0,
+        "steps": [
+          {
+            "details": {
+              "changes": [
+                {
+                  "after": "group_riverside",
+                  "before": null,
+                  "field": "group_id"
+                },
+                {
+                  "after": "Riverside Apartments",
+                  "before": null,
+                  "field": "location_label"
+                },
+                {
+                  "after": {
+                    "x": 88.0,
+                    "y": 66.0
+                  },
+                  "before": null,
+                  "field": "position"
+                },
+                {
+                  "after": 4,
+                  "before": null,
+                  "field": "people"
+                },
+                {
+                  "after": 0.55,
+                  "before": null,
+                  "field": "severity"
+                },
+                {
+                  "after": 1200.0,
+                  "before": null,
+                  "field": "deadline_s"
+                },
+                {
+                  "after": "safe_transfer_dock",
+                  "before": null,
+                  "field": "safe_location_id"
+                }
+              ],
+              "trigger_event_id": "event-389a2920b1f2",
+              "visibility": "both"
+            },
+            "stage": "trigger",
+            "status": "complete",
+            "summary": "Authority or mission state changed",
+            "title": "1. Change received"
+          },
+          {
+            "details": {
+              "payload": {
+                "deadline_s": 1200.0,
+                "group_id": "group_riverside",
+                "location_label": "Riverside Apartments",
+                "people": 4,
+                "position": {
+                  "x": 88.0,
+                  "y": 66.0
+                },
+                "safe_location_id": "safe_transfer_dock",
+                "severity": 0.55
+              }
+            },
+            "stage": "state",
+            "status": "complete",
+            "summary": "Mission demand changed; candidate plans and their licensing claims are rebuilt.",
+            "title": "2. Mission state and affected assumptions updated"
+          },
+          {
+            "details": {
+              "plans": [
+                {
+                  "ood": 0.0625,
+                  "plan_id": "verify:survey_drone_1:north_channel",
+                  "success": 0.8280000000000001,
+                  "support": 0.583119,
+                  "uncertainty": 0.2867524
+                },
+                {
+                  "ood": 0.53,
+                  "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+                  "success": 0.3647059749904886,
+                  "support": 0.03495285,
+                  "uncertainty": 0.5293198029999999
+                },
+                {
+                  "ood": 0.25,
+                  "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+                  "success": 0.6834764478012328,
+                  "support": 0.7191945,
+                  "uncertainty": 0.24193831000000002
+                }
+              ]
+            },
+            "stage": "prediction",
+            "status": "complete",
+            "summary": "3 candidate plans were predicted under the updated state.",
+            "title": "3. Candidate futures recomputed"
+          },
+          {
+            "details": {
+              "claim_count": 3
+            },
+            "stage": "claim",
+            "status": "complete",
+            "summary": "Each candidate produced a grounded predictive or practical claim; unchanged claim identities remain in the same TRACE lineage.",
+            "title": "4. Licensing claims rebuilt"
+          },
+          {
+            "details": {
+              "affected_record_ids": [
+                "trace-1a984421d6a25e32ada5",
+                "trace-7f1b0da5953b4317bb59",
+                "trace-9f429ee5ae90dce700c5"
+              ],
+              "decision_changes": []
+            },
+            "stage": "trace",
+            "status": "complete",
+            "summary": "3 record lineages were evaluated; 0 received a new semantic version.",
+            "title": "5. TRACE records evaluated"
+          },
+          {
+            "details": {
+              "plan_id": "verify:survey_drone_1:north_channel",
+              "record_id": "trace-1a984421d6a25e32ada5",
+              "record_version": 2,
+              "utility": 51.014495200000006
+            },
+            "stage": "plan",
+            "status": "complete",
+            "summary": "Selected Verify North Channel (QUALIFY).",
+            "title": "6. Highest-utility admissible plan selected"
+          },
+          {
+            "details": {
+              "commitment_id": "commitment-c091c5440336",
+              "distance": 67.47592163134935,
+              "path_segments": 1
+            },
+            "stage": "commitment",
+            "status": "complete",
+            "summary": "survey_drone_1 follows a declared aerial survey to North Channel; no straight-line shortcut is permitted.",
+            "title": "7. Authorized action dispatched"
+          }
+        ],
+        "trigger_event_id": "event-389a2920b1f2",
+        "trigger_label": "Authority or mission state changed"
+      }
+    ],
+    "requested_surveys": [],
+    "route_beliefs": {
+      "north_channel": {
+        "blocked_segment_index": 3,
+        "clearance_valid_until": null,
+        "confidence": 0.8280000000000001,
+        "observed_at": 9.0,
+        "report_id": "event-972f4576d6d4",
+        "route_id": "north_channel",
+        "source": "survey_drone_1",
+        "status": "blocked"
+      },
+      "south_detour": {
+        "blocked_segment_index": null,
+        "clearance_valid_until": 217.0,
+        "confidence": 0.95,
+        "observed_at": 37.0,
+        "report_id": "event-e2eda60c99dd",
+        "route_id": "south_detour",
+        "source": "rescue_boat_1",
+        "status": "open"
+      }
+    },
+    "simulation_time": 84.0
+  },
+  "event_chain_valid": true,
+  "generated_at": "2026-07-15T08:16:18.452511Z",
+  "metrics": {
+    "blocks": 0,
+    "clears": 3,
+    "commitments": 3,
+    "double_commitment_violations": 0,
+    "escalations": 0,
+    "events": 199,
+    "false_clears": 1,
+    "false_holds": 0,
+    "holds": 1,
+    "last_model_support": 0.6714244266326308,
+    "last_ood_score": 0.25,
+    "last_uncertainty": 0.26200174081429506,
+    "local_repairs": 1,
+    "max_water_depth": 0.3491854000000007,
+    "onboard_people": 0,
+    "parameter_revisions": 1,
+    "pending_people": 0,
+    "qualifies": 1,
+    "reconnaissance_sorties": 1,
+    "rescued_people": 4,
+    "revisions": 2,
+    "route_interruptions": 0,
+    "stale_clearance_actions": 0,
+    "trace_records": 5,
+    "wasted_reconnaissance": 0
+  },
+  "recent_events": [
+    {
+      "created_at": "2026-07-15T08:16:17.975721Z",
+      "event_id": "event-f3f7259a20c1",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 140,
+      "simulation_time": 52.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:17.980845Z",
+      "event_id": "event-1c8005513953",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 83.2013536286466,
+          "y": 50.802030442969894
+        },
+        "resource": 0.9895000000000012
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 141,
+      "simulation_time": 53.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:17.986049Z",
+      "event_id": "event-6a4ecc2bcbf8",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 142,
+      "simulation_time": 53.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:17.992400Z",
+      "event_id": "event-00c77c720545",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 80.98255284374568,
+          "y": 47.47382926561852
+        },
+        "resource": 0.9891500000000012
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 143,
+      "simulation_time": 54.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:17.998111Z",
+      "event_id": "event-77fc320766c2",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 144,
+      "simulation_time": 54.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.003354Z",
+      "event_id": "event-8d075d07386f",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 78.76375205884476,
+          "y": 44.145628088267145
+        },
+        "resource": 0.9888000000000012
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 145,
+      "simulation_time": 55.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.010466Z",
+      "event_id": "event-8d21ac7a119a",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 146,
+      "simulation_time": 55.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.016051Z",
+      "event_id": "event-293fc1de701c",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 76.54495127394384,
+          "y": 40.81742691091577
+        },
+        "resource": 0.9884500000000013
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 147,
+      "simulation_time": 56.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.022529Z",
+      "event_id": "event-cd10e69dc2d7",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 148,
+      "simulation_time": 56.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.029203Z",
+      "event_id": "event-a75e39e191f1",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 74.32615048904293,
+          "y": 37.489225733564396
+        },
+        "resource": 0.9881000000000013
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 149,
+      "simulation_time": 57.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.035246Z",
+      "event_id": "event-cd72bef83218",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 150,
+      "simulation_time": 57.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.040831Z",
+      "event_id": "event-f72bd61ffabb",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 1,
+        "position": {
+          "x": 72.10734970414201,
+          "y": 34.16102455621302
+        },
+        "resource": 0.9877500000000013
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 151,
+      "simulation_time": 58.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.047822Z",
+      "event_id": "event-f450cc34185a",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 152,
+      "simulation_time": 58.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.057056Z",
+      "event_id": "event-2186c98b127e",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 69.02764429713679,
+          "y": 31.62211543770943
+        },
+        "resource": 0.9874000000000014
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 153,
+      "simulation_time": 59.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.065790Z",
+      "event_id": "event-4c65f9ba6c7a",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 154,
+      "simulation_time": 59.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.078357Z",
+      "event_id": "event-c28f39b82bb4",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 65.90416905936466,
+          "y": 29.12333524749173
+        },
+        "resource": 0.9870500000000014
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 155,
+      "simulation_time": 60.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.085577Z",
+      "event_id": "event-2a7d10be49da",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 156,
+      "simulation_time": 60.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.091592Z",
+      "event_id": "event-898575180137",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 62.78069382159254,
+          "y": 26.624555057274033
+        },
+        "resource": 0.9867000000000015
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 157,
+      "simulation_time": 61.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.098566Z",
+      "event_id": "event-f1575d6dda4f",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 158,
+      "simulation_time": 61.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.106357Z",
+      "event_id": "event-e52a68544019",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 59.65721858382042,
+          "y": 24.125774867056336
+        },
+        "resource": 0.9863500000000015
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 159,
+      "simulation_time": 62.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.112722Z",
+      "event_id": "event-8c1eb3b1c910",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 160,
+      "simulation_time": 62.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.119099Z",
+      "event_id": "event-2b42d83b082b",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 56.533743346048304,
+          "y": 21.62699467683864
+        },
+        "resource": 0.9860000000000015
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 161,
+      "simulation_time": 63.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.125321Z",
+      "event_id": "event-7d8f8d7de46f",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 162,
+      "simulation_time": 63.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.132364Z",
+      "event_id": "event-f460f473b274",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 2,
+        "position": {
+          "x": 53.410268108276185,
+          "y": 19.128214486620944
+        },
+        "resource": 0.9856500000000016
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 163,
+      "simulation_time": 64.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.139300Z",
+      "event_id": "event-3fe828fcd229",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 164,
+      "simulation_time": 64.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.145389Z",
+      "event_id": "event-b9b747b3673b",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 49.88333169818481,
+          "y": 17.422726826777676
+        },
+        "resource": 0.9853000000000016
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 165,
+      "simulation_time": 65.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.153190Z",
+      "event_id": "event-5a3b76132d4c",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 166,
+      "simulation_time": 65.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.160091Z",
+      "event_id": "event-af9b6ab22860",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 46.024276413233885,
+          "y": 16.370257203609242
+        },
+        "resource": 0.9849500000000017
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 167,
+      "simulation_time": 66.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.167178Z",
+      "event_id": "event-e44dd8a6eb1c",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 168,
+      "simulation_time": 66.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.173773Z",
+      "event_id": "event-62675344da03",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 42.16522112828296,
+          "y": 15.317787580440807
+        },
+        "resource": 0.9846000000000017
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 169,
+      "simulation_time": 67.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.180486Z",
+      "event_id": "event-a66759475b1e",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 170,
+      "simulation_time": 67.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.186595Z",
+      "event_id": "event-39d0b099bce0",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 38.30616584333203,
+          "y": 14.265317957272373
+        },
+        "resource": 0.9842500000000017
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 171,
+      "simulation_time": 68.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.192811Z",
+      "event_id": "event-b35efbee2ecf",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 172,
+      "simulation_time": 68.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.199457Z",
+      "event_id": "event-e208032b8bc8",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 34.447110558381105,
+          "y": 13.212848334103938
+        },
+        "resource": 0.9839000000000018
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 173,
+      "simulation_time": 69.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.206103Z",
+      "event_id": "event-4e619a871ffc",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 174,
+      "simulation_time": 69.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.212534Z",
+      "event_id": "event-50de388e5718",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 3,
+        "position": {
+          "x": 30.588055273430175,
+          "y": 12.160378710935502
+        },
+        "resource": 0.9835500000000018
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 175,
+      "simulation_time": 70.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.220930Z",
+      "event_id": "event-c2c88de87542",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 176,
+      "simulation_time": 70.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.228301Z",
+      "event_id": "event-71440bc56a75",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 4,
+        "position": {
+          "x": 26.690269872463126,
+          "y": 12.735495583897084
+        },
+        "resource": 0.9832000000000019
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 177,
+      "simulation_time": 71.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.235450Z",
+      "event_id": "event-309948522641",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 178,
+      "simulation_time": 71.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.242252Z",
+      "event_id": "event-a05b72698aeb",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 4,
+        "position": {
+          "x": 22.785521631727317,
+          "y": 13.603217415171708
+        },
+        "resource": 0.9828500000000019
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 179,
+      "simulation_time": 72.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.251706Z",
+      "event_id": "event-274236d34eee",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 180,
+      "simulation_time": 72.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.260113Z",
+      "event_id": "event-447fe3b47a22",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 4,
+        "position": {
+          "x": 18.880773390991507,
+          "y": 14.470939246446333
+        },
+        "resource": 0.9825000000000019
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 181,
+      "simulation_time": 73.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.267936Z",
+      "event_id": "event-0b002016296d",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 182,
+      "simulation_time": 73.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.274917Z",
+      "event_id": "event-df5a5c04d537",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 4,
+        "position": {
+          "x": 14.976025150255696,
+          "y": 15.338661077720957
+        },
+        "resource": 0.982150000000002
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 183,
+      "simulation_time": 74.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.281976Z",
+      "event_id": "event-c970ffe22d82",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 184,
+      "simulation_time": 74.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.289825Z",
+      "event_id": "event-88d7e26d2f9f",
+      "event_type": "ASSET_MOVED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "path_index": 5,
+        "position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "resource": 0.981800000000002
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 185,
+      "simulation_time": 75.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.299050Z",
+      "event_id": "event-38ca26d76c91",
+      "event_type": "UNLOADING_STARTED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "group_ids": [
+          "group_riverside"
+        ],
+        "people": 4,
+        "route_id": "south_detour",
+        "safe_location_id": "safe_transfer_dock"
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 186,
+      "simulation_time": 75.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.306960Z",
+      "event_id": "event-05596d8346db",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 187,
+      "simulation_time": 75.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.313781Z",
+      "event_id": "event-779622acb023",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 188,
+      "simulation_time": 76.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.320569Z",
+      "event_id": "event-55310791e9ce",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 189,
+      "simulation_time": 77.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.327698Z",
+      "event_id": "event-f4e6fcde5434",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 190,
+      "simulation_time": 78.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.336996Z",
+      "event_id": "event-3545477d07ea",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 191,
+      "simulation_time": 79.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.343811Z",
+      "event_id": "event-eb67f5c8d19d",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 192,
+      "simulation_time": 80.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.352112Z",
+      "event_id": "event-0b269d30e214",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 193,
+      "simulation_time": 81.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.361696Z",
+      "event_id": "event-927d95fe3ff6",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 194,
+      "simulation_time": 82.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.371170Z",
+      "event_id": "event-f45a878719ed",
+      "event_type": "TICK",
+      "payload": {
+        "dt": 1.0
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 195,
+      "simulation_time": 83.0,
+      "source": "simulation_clock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.380685Z",
+      "event_id": "event-a56bb64f313c",
+      "event_type": "ACTION_COMPLETED",
+      "payload": {
+        "action_type": "evacuate_to_safety",
+        "asset_id": "rescue_boat_1",
+        "phase": "arrival_at_safe_location",
+        "route_id": "south_detour"
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 196,
+      "simulation_time": 84.0,
+      "source": "flood_environment",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.389324Z",
+      "event_id": "event-e496b41851ec",
+      "event_type": "PEOPLE_DELIVERED",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "group_ids": [
+          "group_riverside"
+        ],
+        "people": 4,
+        "route_id": "south_detour",
+        "safe_location_id": "safe_transfer_dock"
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 197,
+      "simulation_time": 84.0,
+      "source": "safe_transfer_dock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.397101Z",
+      "event_id": "event-a984a65d51f1",
+      "event_type": "ASSET_STANDBY",
+      "payload": {
+        "asset_id": "rescue_boat_1",
+        "reason": "rescue_handoff_complete",
+        "safe_location_id": "safe_transfer_dock"
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 198,
+      "simulation_time": 84.0,
+      "source": "safe_transfer_dock",
+      "visibility": "both"
+    },
+    {
+      "created_at": "2026-07-15T08:16:18.404745Z",
+      "event_id": "event-4149e3f3d86d",
+      "event_type": "OUTCOME",
+      "payload": {
+        "action_type": "evacuate_to_safety",
+        "asset_id": "rescue_boat_1",
+        "group_ids": [
+          "group_riverside"
+        ],
+        "metrics_already_applied": true,
+        "reason": "people_delivered_to_safe_transfer_dock",
+        "rescued_people": 4,
+        "route_id": "south_detour",
+        "success": true
+      },
+      "run_id": "sample-step02",
+      "scenario_level": "CORE",
+      "schema_version": "simulation-event-v1.1",
+      "sequence": 199,
+      "simulation_time": 84.0,
+      "source": "safe_transfer_dock",
+      "visibility": "both"
+    }
+  ],
+  "recent_records": [
+    {
+      "claim": {
+        "claim_id": "claim-d678d7597497",
+        "confidence": 0.8280000000000001,
+        "confidence_semantics": "predicted probability that the bounded survey completes",
+        "created_at": "2026-07-15T08:16:17.374867Z",
+        "grounding": {
+          "asset_id": "survey_drone_1",
+          "purpose": "resolve_missing_evidence",
+          "route_id": "north_channel"
+        },
+        "layer": "practical",
+        "text": "survey_drone_1 should verify North Channel now."
+      },
+      "consumer_actions": [],
+      "created_at": "2026-07-15T08:16:17.377394Z",
+      "evidence_refs": [
+        "wm-evidence-4ac5e2ca624e"
+      ],
+      "failed_gates": [
+        "model_support",
+        "observation_freshness"
+      ],
+      "final_status": "qualify",
+      "metadata": {
+        "action": {
+          "action_id": "action-208d3d675d5f",
+          "action_type": "verify_route",
+          "actor_id": "survey_drone_1",
+          "destination": null,
+          "origin": null,
+          "parameters": {
+            "expected_information_yield": 0.7,
+            "purpose": "resolve_pending_route_claim"
+          },
+          "route_id": "north_channel"
+        },
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "kind": "reconnaissance",
+        "lineage_key": "practical|verify_route|survey_drone_1|north_channel|none",
+        "operator_requested": false,
+        "plan_id": "verify:survey_drone_1:north_channel",
+        "plan_name": "Verify North Channel",
+        "prediction": {
+          "arrival_time_s": 30.0,
+          "assumptions": [
+            "model_conditional_prediction",
+            "bounded_information_gathering_action"
+          ],
+          "hazard_score": 0.13735048,
+          "model_support": 0.583119,
+          "out_of_distribution_score": 0.0625,
+          "plan_id": "verify:survey_drone_1:north_channel",
+          "resource_margin": 0.72,
+          "rollout_horizon": 1,
+          "success_probability": 0.8280000000000001,
+          "uncertainty": 0.2867524
+        },
+        "route_id": "north_channel",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 51.014495200000006,
+        "voi": 0.5796
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "a fresh observation window"
+      ],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-1a984421d6a25e32ada5",
+      "record_version": 1,
+      "repair": "Limit the action to evidence gathering; monitor and do not commit the rescue branch yet.",
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": null,
+      "supersedes_record_version": null
+    },
+    {
+      "claim": {
+        "claim_id": "claim-d678d7597497",
+        "confidence": 0.8280000000000001,
+        "confidence_semantics": "predicted probability that the bounded survey completes",
+        "created_at": "2026-07-15T08:16:17.374867Z",
+        "grounding": {
+          "asset_id": "survey_drone_1",
+          "purpose": "resolve_missing_evidence",
+          "route_id": "north_channel"
+        },
+        "layer": "practical",
+        "text": "survey_drone_1 should verify North Channel now."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-ef15790f6f31",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.378107Z",
+          "decision": "qualify",
+          "reason": "A bounded reversible probe may proceed to resolve the named uncertainty.",
+          "record_id": "trace-1a984421d6a25e32ada5",
+          "record_version": 1
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.377394Z",
+      "evidence_refs": [
+        "wm-evidence-4ac5e2ca624e"
+      ],
+      "failed_gates": [
+        "model_support",
+        "observation_freshness"
+      ],
+      "final_status": "qualify",
+      "metadata": {
+        "action": {
+          "action_id": "action-208d3d675d5f",
+          "action_type": "verify_route",
+          "actor_id": "survey_drone_1",
+          "destination": null,
+          "origin": null,
+          "parameters": {
+            "expected_information_yield": 0.7,
+            "purpose": "resolve_pending_route_claim"
+          },
+          "route_id": "north_channel"
+        },
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "kind": "reconnaissance",
+        "lineage_key": "practical|verify_route|survey_drone_1|north_channel|none",
+        "operator_requested": false,
+        "plan_id": "verify:survey_drone_1:north_channel",
+        "plan_name": "Verify North Channel",
+        "prediction": {
+          "arrival_time_s": 30.0,
+          "assumptions": [
+            "model_conditional_prediction",
+            "bounded_information_gathering_action"
+          ],
+          "hazard_score": 0.13735048,
+          "model_support": 0.583119,
+          "out_of_distribution_score": 0.0625,
+          "plan_id": "verify:survey_drone_1:north_channel",
+          "resource_margin": 0.72,
+          "rollout_horizon": 1,
+          "success_probability": 0.8280000000000001,
+          "uncertainty": 0.2867524
+        },
+        "route_id": "north_channel",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 51.014495200000006,
+        "voi": 0.5796
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "a fresh observation window"
+      ],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-1a984421d6a25e32ada5",
+      "record_version": 2,
+      "repair": "Limit the action to evidence gathering; monitor and do not commit the rescue branch yet.",
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-1a984421d6a25e32ada5",
+      "supersedes_record_version": 1
+    },
+    {
+      "claim": {
+        "claim_id": "claim-81ef6672e96c",
+        "confidence": 0.3647059749904886,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.375572Z",
+        "grounding": {
+          "arrival_time_s": 24.55302376396358,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "north_channel"
+        },
+        "layer": "predictive",
+        "text": "North Channel will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [],
+      "created_at": "2026-07-15T08:16:17.380273Z",
+      "evidence_refs": [
+        "wm-evidence-246093413812"
+      ],
+      "failed_gates": [
+        "model_support",
+        "out_of_distribution",
+        "uncertainty",
+        "observation_freshness"
+      ],
+      "final_status": "defer",
+      "metadata": {
+        "action": {
+          "action_id": "action-abdb2040012c",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "north_channel"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.0460853136636317,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|north_channel|group_riverside",
+        "navigation_distance": 98.21209505585432,
+        "navigation_summary": "waterway path via north_channel to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "plan_name": "Boat to Riverside Apartments via North Channel",
+        "prediction": {
+          "arrival_time_s": 24.55302376396358,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.5444154015095037,
+          "model_support": 0.03495285,
+          "out_of_distribution_score": 0.53,
+          "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+          "resource_margin": 0.8418784798895267,
+          "rollout_horizon": 1,
+          "success_probability": 0.3647059749904886,
+          "uncertainty": 0.5293198029999999
+        },
+        "route_id": "north_channel",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 26.492333993077132
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "current observation or verification for the out-of-support region",
+        "narrower calibrated uncertainty",
+        "a fresh observation window"
+      ],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-7f1b0da5953b4317bb59",
+      "record_version": 1,
+      "repair": "Verify north_channel or choose a supported alternative.",
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": null,
+      "supersedes_record_version": null
+    },
+    {
+      "claim": {
+        "claim_id": "claim-81ef6672e96c",
+        "confidence": 0.3647059749904886,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.375572Z",
+        "grounding": {
+          "arrival_time_s": 24.55302376396358,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "north_channel"
+        },
+        "layer": "predictive",
+        "text": "North Channel will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-6ec897301f77",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.381219Z",
+          "decision": "hold",
+          "reason": "One or more hard technical gates failed.",
+          "record_id": "trace-7f1b0da5953b4317bb59",
+          "record_version": 1
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.380273Z",
+      "evidence_refs": [
+        "wm-evidence-246093413812"
+      ],
+      "failed_gates": [
+        "model_support",
+        "out_of_distribution",
+        "uncertainty",
+        "observation_freshness"
+      ],
+      "final_status": "defer",
+      "metadata": {
+        "action": {
+          "action_id": "action-abdb2040012c",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "north_channel"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.0460853136636317,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|north_channel|group_riverside",
+        "navigation_distance": 98.21209505585432,
+        "navigation_summary": "waterway path via north_channel to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "plan_name": "Boat to Riverside Apartments via North Channel",
+        "prediction": {
+          "arrival_time_s": 24.55302376396358,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.5444154015095037,
+          "model_support": 0.03495285,
+          "out_of_distribution_score": 0.53,
+          "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+          "resource_margin": 0.8418784798895267,
+          "rollout_horizon": 1,
+          "success_probability": 0.3647059749904886,
+          "uncertainty": 0.5293198029999999
+        },
+        "route_id": "north_channel",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 26.492333993077132
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "current observation or verification for the out-of-support region",
+        "narrower calibrated uncertainty",
+        "a fresh observation window"
+      ],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-7f1b0da5953b4317bb59",
+      "record_version": 2,
+      "repair": "Verify north_channel or choose a supported alternative.",
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-7f1b0da5953b4317bb59",
+      "supersedes_record_version": 1
+    },
+    {
+      "claim": {
+        "claim_id": "claim-c71678a92e98",
+        "confidence": 0.6834764478012328,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.376008Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "south_detour"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [],
+      "created_at": "2026-07-15T08:16:17.384292Z",
+      "evidence_refs": [
+        "wm-evidence-1698cd3c34ec"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-d84804e11d80",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38029652167447636,
+          "model_support": 0.7191945,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+          "resource_margin": 0.8553000808473489,
+          "rollout_horizon": 1,
+          "success_probability": 0.6834764478012328,
+          "uncertainty": 0.24193831000000002
+        },
+        "route_id": "south_detour",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 60.30249143484149
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-9f429ee5ae90dce700c5",
+      "record_version": 1,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": null,
+      "supersedes_record_version": null
+    },
+    {
+      "claim": {
+        "claim_id": "claim-c71678a92e98",
+        "confidence": 0.6834764478012328,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.376008Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "south_detour"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-eb190694cc5a",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.385716Z",
+          "decision": "clear",
+          "reason": "All declared technical gates passed for this action class.",
+          "record_id": "trace-9f429ee5ae90dce700c5",
+          "record_version": 1
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.384292Z",
+      "evidence_refs": [
+        "wm-evidence-1698cd3c34ec"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-d84804e11d80",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38029652167447636,
+          "model_support": 0.7191945,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+          "resource_margin": 0.8553000808473489,
+          "rollout_horizon": 1,
+          "success_probability": 0.6834764478012328,
+          "uncertainty": 0.24193831000000002
+        },
+        "route_id": "south_detour",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 60.30249143484149
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-9f429ee5ae90dce700c5",
+      "record_version": 2,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-9f429ee5ae90dce700c5",
+      "supersedes_record_version": 1
+    },
+    {
+      "claim": {
+        "claim_id": "claim-81ef6672e96c",
+        "confidence": 0.3647059749904886,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.375572Z",
+        "grounding": {
+          "arrival_time_s": 24.55302376396358,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "north_channel"
+        },
+        "layer": "predictive",
+        "text": "North Channel will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-6ec897301f77",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.381219Z",
+          "decision": "hold",
+          "reason": "One or more hard technical gates failed.",
+          "record_id": "trace-7f1b0da5953b4317bb59",
+          "record_version": 1
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.380273Z",
+      "evidence_refs": [
+        "wm-evidence-246093413812",
+        "wm-evidence-246093413812-revision-3"
+      ],
+      "failed_gates": [
+        "model_support",
+        "out_of_distribution",
+        "uncertainty",
+        "observation_freshness",
+        "realized_contradiction"
+      ],
+      "final_status": "reject",
+      "metadata": {
+        "action": {
+          "action_id": "action-abdb2040012c",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "north_channel"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.0460853136636317,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|north_channel|group_riverside",
+        "navigation_distance": 98.21209505585432,
+        "navigation_summary": "waterway path via north_channel to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "plan_name": "Boat to Riverside Apartments via North Channel",
+        "prediction": {
+          "arrival_time_s": 24.55302376396358,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.5444154015095037,
+          "model_support": 0.03495285,
+          "out_of_distribution_score": 0.53,
+          "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+          "resource_margin": 0.8418784798895267,
+          "rollout_horizon": 1,
+          "success_probability": 0.3647059749904886,
+          "uncertainty": 0.5293198029999999
+        },
+        "revision_reason": "route observation contradicted the predictive premise",
+        "route_id": "north_channel",
+        "trigger_event_id": "event-389a2920b1f2",
+        "utility": 26.492333993077132
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "current observation or verification for the out-of-support region",
+        "narrower calibrated uncertainty",
+        "a fresh observation window"
+      ],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-7f1b0da5953b4317bb59",
+      "record_version": 3,
+      "repair": "Invalidate only plans licensed by this route premise and generate alternatives.",
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-7f1b0da5953b4317bb59",
+      "supersedes_record_version": 2
+    },
+    {
+      "claim": {
+        "claim_id": "claim-73e6cae2b181",
+        "confidence": 0.6783116990178076,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.512757Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "south_detour"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [],
+      "created_at": "2026-07-15T08:16:17.514866Z",
+      "evidence_refs": [
+        "wm-evidence-3b80058e40fa"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-d3bda867ae93",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38756182293617797,
+          "model_support": 0.6561997037576035,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+          "resource_margin": 0.8552054120973489,
+          "rollout_horizon": 1,
+          "success_probability": 0.6783116990178076,
+          "uncertainty": 0.2683961244218065
+        },
+        "route_id": "south_detour",
+        "semantic_revision_of": {
+          "record_id": "trace-9f429ee5ae90dce700c5",
+          "record_version": 2
+        },
+        "utility": 59.83434107062544
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-9f429ee5ae90dce700c5",
+      "record_version": 3,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-9f429ee5ae90dce700c5",
+      "supersedes_record_version": 2
+    },
+    {
+      "claim": {
+        "claim_id": "claim-73e6cae2b181",
+        "confidence": 0.6783116990178076,
+        "confidence_semantics": "model-conditional plan success probability",
+        "created_at": "2026-07-15T08:16:17.512757Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_id": "group_riverside",
+          "route_id": "south_detour"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to reach Riverside Apartments."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-d5b1c1bea3cb",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.516404Z",
+          "decision": "clear",
+          "reason": "All declared technical gates passed for this action class.",
+          "record_id": "trace-9f429ee5ae90dce700c5",
+          "record_version": 3
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.514866Z",
+      "evidence_refs": [
+        "wm-evidence-3b80058e40fa"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-d3bda867ae93",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "group_riverside",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200.0,
+            "group_id": "group_riverside",
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_id": "group_riverside",
+        "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "plan_name": "Boat to Riverside Apartments via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38756182293617797,
+          "model_support": 0.6561997037576035,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+          "resource_margin": 0.8552054120973489,
+          "rollout_horizon": 1,
+          "success_probability": 0.6783116990178076,
+          "uncertainty": 0.2683961244218065
+        },
+        "route_id": "south_detour",
+        "semantic_revision_of": {
+          "record_id": "trace-9f429ee5ae90dce700c5",
+          "record_version": 2
+        },
+        "utility": 59.83434107062544
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-9f429ee5ae90dce700c5",
+      "record_version": 4,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-9f429ee5ae90dce700c5",
+      "supersedes_record_version": 3
+    },
+    {
+      "claim": {
+        "claim_id": "claim-a51f32ff074f",
+        "confidence": 0.6780727786921599,
+        "confidence_semantics": "model-conditional evacuation success probability",
+        "created_at": "2026-07-15T08:16:17.899675Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_ids": [
+            "group_riverside"
+          ],
+          "route_id": "south_detour",
+          "safe_location_id": "safe_transfer_dock"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to deliver 4 onboard people to the Safe Transfer Dock."
+      },
+      "consumer_actions": [],
+      "created_at": "2026-07-15T08:16:17.902157Z",
+      "evidence_refs": [
+        "wm-evidence-32b78d914628"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-f36a82a17f7a",
+          "action_type": "evacuate_to_safety",
+          "actor_id": "rescue_boat_1",
+          "destination": "safe_transfer_dock",
+          "origin": "incident_pickup",
+          "parameters": {
+            "group_ids": [
+              "group_riverside"
+            ],
+            "people_count": 4,
+            "safe_location_id": "safe_transfer_dock",
+            "safe_location_label": "Safe Transfer Dock"
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_ids": [
+          "group_riverside"
+        ],
+        "kind": "evacuation",
+        "lineage_key": "predictive|evacuate_to_safety|rescue_boat_1|south_detour|safe_transfer_dock",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to Safe Transfer Dock",
+        "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+        "plan_name": "Evacuate 4 people to safety via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38821160984680003,
+          "model_support": 0.6714244266326308,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+          "resource_margin": 0.84577837459735,
+          "rollout_horizon": 1,
+          "success_probability": 0.6780727786921599,
+          "uncertainty": 0.26200174081429506
+        },
+        "priority": 1000,
+        "route_id": "south_detour",
+        "utility": 143.56340868579284
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-7dc8944d0689d235885b",
+      "record_version": 1,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": null,
+      "supersedes_record_version": null
+    },
+    {
+      "claim": {
+        "claim_id": "claim-a51f32ff074f",
+        "confidence": 0.6780727786921599,
+        "confidence_semantics": "model-conditional evacuation success probability",
+        "created_at": "2026-07-15T08:16:17.899675Z",
+        "grounding": {
+          "arrival_time_s": 25.762155449411225,
+          "asset_id": "rescue_boat_1",
+          "group_ids": [
+            "group_riverside"
+          ],
+          "route_id": "south_detour",
+          "safe_location_id": "safe_transfer_dock"
+        },
+        "layer": "predictive",
+        "text": "South Detour will remain traversable long enough for rescue_boat_1 to deliver 4 onboard people to the Safe Transfer Dock."
+      },
+      "consumer_actions": [
+        {
+          "consumer": "mission-controller",
+          "consumer_action_id": "consumer-9aaaef2e4fea",
+          "consumer_policy_version": "trace-dynamic-v1",
+          "created_at": "2026-07-15T08:16:17.903486Z",
+          "decision": "clear",
+          "reason": "All declared technical gates passed for this action class.",
+          "record_id": "trace-7dc8944d0689d235885b",
+          "record_version": 1
+        }
+      ],
+      "created_at": "2026-07-15T08:16:17.902157Z",
+      "evidence_refs": [
+        "wm-evidence-32b78d914628"
+      ],
+      "failed_gates": [],
+      "final_status": "accept",
+      "metadata": {
+        "action": {
+          "action_id": "action-f36a82a17f7a",
+          "action_type": "evacuate_to_safety",
+          "actor_id": "rescue_boat_1",
+          "destination": "safe_transfer_dock",
+          "origin": "incident_pickup",
+          "parameters": {
+            "group_ids": [
+              "group_riverside"
+            ],
+            "people_count": 4,
+            "safe_location_id": "safe_transfer_dock",
+            "safe_location_label": "Safe Transfer Dock"
+          },
+          "route_id": "south_detour"
+        },
+        "asset_id": "rescue_boat_1",
+        "controller_version": "dynamic-mission-controller-d0.2-step02",
+        "cost": 2.1468462874509355,
+        "group_ids": [
+          "group_riverside"
+        ],
+        "kind": "evacuation",
+        "lineage_key": "predictive|evacuate_to_safety|rescue_boat_1|south_detour|safe_transfer_dock",
+        "navigation_distance": 103.0486217976449,
+        "navigation_summary": "waterway path via south_detour to Safe Transfer Dock",
+        "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+        "plan_name": "Evacuate 4 people to safety via South Detour",
+        "prediction": {
+          "arrival_time_s": 25.762155449411225,
+          "assumptions": [
+            "model_conditional_prediction",
+            "route_geometry_is_current",
+            "weather_forecast_is_stable_over_the_action_prefix"
+          ],
+          "hazard_score": 0.38821160984680003,
+          "model_support": 0.6714244266326308,
+          "out_of_distribution_score": 0.25,
+          "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+          "resource_margin": 0.84577837459735,
+          "rollout_horizon": 1,
+          "success_probability": 0.6780727786921599,
+          "uncertainty": 0.26200174081429506
+        },
+        "priority": 1000,
+        "route_id": "south_detour",
+        "utility": 143.56340868579284
+      },
+      "missing_items": [],
+      "policy_version": "trace-dynamic-v1",
+      "record_id": "trace-7dc8944d0689d235885b",
+      "record_version": 2,
+      "repair": null,
+      "schema_version": "trace-student-v1",
+      "supersedes_record_id": "trace-7dc8944d0689d235885b",
+      "supersedes_record_version": 1
+    }
+  ],
+  "run_id": "sample-step02",
+  "running": false,
+  "trace_chain_valid": true,
+  "truth": {
+    "assets": {
+      "rescue_boat_1": {
+        "action_started_at": 49.0,
+        "action_type": null,
+        "asset_id": "rescue_boat_1",
+        "asset_type": "rescue_boat",
+        "assigned_group_id": null,
+        "assigned_route_id": null,
+        "authorization_record_id": "trace-7dc8944d0689d235885b",
+        "authorization_record_version": 2,
+        "capacity": 6,
+        "heading_degrees": 167.47119229084848,
+        "home_position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "interruption_reason": null,
+        "mission_phase": "standby",
+        "operating_cost": 5.0,
+        "passenger_count": 0,
+        "passenger_group_ids": [],
+        "path": [],
+        "path_index": 0,
+        "path_segments": [],
+        "position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "resource": 0.981800000000002,
+        "safe_location_id": "safe_transfer_dock",
+        "safe_position": {
+          "x": 12.0,
+          "y": 16.0
+        },
+        "speed": 4.0,
+        "status": "standby",
+        "target": null,
+        "weather_tolerance": 0.85
+      },
+      "survey_drone_1": {
+        "action_started_at": 0.0,
+        "action_type": null,
+        "asset_id": "survey_drone_1",
+        "asset_type": "survey_drone",
+        "assigned_group_id": null,
+        "assigned_route_id": null,
+        "authorization_record_id": "trace-1a984421d6a25e32ada5",
+        "authorization_record_version": 2,
+        "capacity": 0,
+        "heading_degrees": 50.411869152317074,
+        "home_position": {
+          "x": 17.0,
+          "y": 12.0
+        },
+        "interruption_reason": null,
+        "mission_phase": "idle",
+        "operating_cost": 2.0,
+        "passenger_count": 0,
+        "passenger_group_ids": [],
+        "path": [],
+        "path_index": 0,
+        "path_segments": [],
+        "position": {
+          "x": 60.0,
+          "y": 64.0
+        },
+        "resource": 0.8118999999999998,
+        "safe_location_id": null,
+        "safe_position": null,
+        "speed": 8.0,
+        "status": "available",
+        "target": null,
+        "weather_tolerance": 0.7
+      }
+    },
+    "communications_available": true,
+    "global_water_level": 0.24765449999999978,
+    "groups": {
+      "group_riverside": {
+        "alert_count": 1,
+        "assigned_asset_id": null,
+        "cancelled": false,
+        "condition": "rescued",
+        "deadline_s": 1200.0,
+        "discovered": true,
+        "group_id": "group_riverside",
+        "label": "Riverside Apartments",
+        "last_alert_at": 0.0,
+        "people": 4,
+        "people_delivered": 4,
+        "people_onboard": 0,
+        "people_waiting": 0,
+        "position": {
+          "x": 88.0,
+          "y": 66.0
+        },
+        "rescue_phase": "delivered",
+        "rescued": true,
+        "safe_location_id": "safe_transfer_dock",
+        "severity": 0.551395506984375,
+        "source_call_id": "event-389a2920b1f2"
+      }
+    },
+    "last_shock": null,
+    "routes": {
+      "north_channel": {
+        "blockage_position": {
+          "x": 60.0,
+          "y": 64.0
+        },
+        "blocked_segment_index": 3,
+        "debris_blocked": true,
+        "edge_open": [
+          true,
+          true,
+          true,
+          false,
+          true
+        ],
+        "end_location_id": "riverside_apartments",
+        "label": "North Channel",
+        "last_changed_at": 0.0,
+        "mode": "water",
+        "nominal_travel_s": 600.0,
+        "open": false,
+        "route_id": "north_channel",
+        "start_location_id": "rescue_base",
+        "susceptibility": 1.2,
+        "water_depth": 0.3491854000000007,
+        "waypoints": [
+          {
+            "x": 12.0,
+            "y": 16.0
+          },
+          {
+            "x": 24.0,
+            "y": 33.0
+          },
+          {
+            "x": 42.0,
+            "y": 51.0
+          },
+          {
+            "x": 60.0,
+            "y": 64.0
+          },
+          {
+            "x": 78.0,
+            "y": 70.0
+          },
+          {
+            "x": 88.0,
+            "y": 66.0
+          }
+        ]
+      },
+      "south_detour": {
+        "blockage_position": null,
+        "blocked_segment_index": null,
+        "debris_blocked": false,
+        "edge_open": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "end_location_id": "riverside_apartments",
+        "label": "South Detour",
+        "last_changed_at": 0.0,
+        "mode": "water",
+        "nominal_travel_s": 1080.0,
+        "open": true,
+        "route_id": "south_detour",
+        "start_location_id": "rescue_base",
+        "susceptibility": 0.85,
+        "water_depth": 0.2265063249999997,
+        "waypoints": [
+          {
+            "x": 12.0,
+            "y": 16.0
+          },
+          {
+            "x": 30.0,
+            "y": 12.0
+          },
+          {
+            "x": 52.0,
+            "y": 18.0
+          },
+          {
+            "x": 72.0,
+            "y": 34.0
+          },
+          {
+            "x": 84.0,
+            "y": 52.0
+          },
+          {
+            "x": 88.0,
+            "y": 66.0
+          }
+        ]
+      }
+    },
+    "simulation_time": 84.0,
+    "weather_severity": 0.65
+  }
+}

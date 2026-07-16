@@ -1,0 +1,395 @@
+[
+  {
+    "event_type": "EMERGENCY_CALL",
+    "payload": {
+      "deadline_s": 1200.0,
+      "group_id": "group_riverside",
+      "location_label": "Riverside Apartments",
+      "people": 4,
+      "position": {
+        "x": 88.0,
+        "y": 66.0
+      },
+      "safe_location_id": "safe_transfer_dock",
+      "severity": 0.55
+    },
+    "sequence": 2,
+    "time": 0.0
+  },
+  {
+    "event_type": "ACTION_STARTED",
+    "payload": {
+      "action_type": "verify_route",
+      "asset_id": "survey_drone_1",
+      "commitment_id": "commitment-c091c5440336",
+      "group_id": null,
+      "navigation_distance": 67.47592163134935,
+      "navigation_summary": "aerial survey to North Channel",
+      "path": [
+        {
+          "x": 60.0,
+          "y": 64.0
+        }
+      ],
+      "path_segments": [
+        {
+          "direction": "direct",
+          "edge_index": null,
+          "from_position": {
+            "x": 17.0,
+            "y": 12.0
+          },
+          "mode": "air",
+          "route_id": null,
+          "segment_id": "segment-9ed4796ecff2",
+          "to_position": {
+            "x": 60.0,
+            "y": 64.0
+          }
+        }
+      ],
+      "plan_id": "verify:survey_drone_1:north_channel",
+      "record_id": "trace-1a984421d6a25e32ada5",
+      "record_version": 2,
+      "route_id": "north_channel",
+      "target": {
+        "x": 60.0,
+        "y": 64.0
+      }
+    },
+    "sequence": 21,
+    "time": 0.0
+  },
+  {
+    "event_type": "ACTION_STARTED",
+    "payload": {
+      "action_type": "dispatch_rescue_boat",
+      "asset_id": "rescue_boat_1",
+      "commitment_id": "commitment-2a58efdfe0a6",
+      "group_id": "group_riverside",
+      "navigation_distance": 103.0486217976449,
+      "navigation_summary": "waterway path via south_detour to pickup at Riverside Apartments",
+      "path": [
+        {
+          "x": 30.0,
+          "y": 12.0
+        },
+        {
+          "x": 52.0,
+          "y": 18.0
+        },
+        {
+          "x": 72.0,
+          "y": 34.0
+        },
+        {
+          "x": 84.0,
+          "y": 52.0
+        },
+        {
+          "x": 88.0,
+          "y": 66.0
+        }
+      ],
+      "path_segments": [
+        {
+          "direction": "forward",
+          "edge_index": 0,
+          "from_position": {
+            "x": 12.0,
+            "y": 16.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-22ecc54a2ad1",
+          "to_position": {
+            "x": 30.0,
+            "y": 12.0
+          }
+        },
+        {
+          "direction": "forward",
+          "edge_index": 1,
+          "from_position": {
+            "x": 30.0,
+            "y": 12.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-d75f33aac5dd",
+          "to_position": {
+            "x": 52.0,
+            "y": 18.0
+          }
+        },
+        {
+          "direction": "forward",
+          "edge_index": 2,
+          "from_position": {
+            "x": 52.0,
+            "y": 18.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-779e52631638",
+          "to_position": {
+            "x": 72.0,
+            "y": 34.0
+          }
+        },
+        {
+          "direction": "forward",
+          "edge_index": 3,
+          "from_position": {
+            "x": 72.0,
+            "y": 34.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-e75ad128a87d",
+          "to_position": {
+            "x": 84.0,
+            "y": 52.0
+          }
+        },
+        {
+          "direction": "forward",
+          "edge_index": 4,
+          "from_position": {
+            "x": 84.0,
+            "y": 52.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-bf4b5e77a35a",
+          "to_position": {
+            "x": 88.0,
+            "y": 66.0
+          }
+        }
+      ],
+      "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+      "record_id": "trace-9f429ee5ae90dce700c5",
+      "record_version": 4,
+      "route_id": "south_detour",
+      "target": {
+        "x": 88.0,
+        "y": 66.0
+      }
+    },
+    "sequence": 55,
+    "time": 11.0
+  },
+  {
+    "event_type": "BOARDING_STARTED",
+    "payload": {
+      "asset_id": "rescue_boat_1",
+      "group_id": "group_riverside",
+      "people": 4,
+      "route_id": "south_detour"
+    },
+    "sequence": 108,
+    "time": 37.0
+  },
+  {
+    "event_type": "PEOPLE_PICKED_UP",
+    "payload": {
+      "asset_id": "rescue_boat_1",
+      "group_id": "group_riverside",
+      "people": 4,
+      "route_id": "south_detour"
+    },
+    "sequence": 125,
+    "time": 49.0
+  },
+  {
+    "event_type": "OUTCOME",
+    "payload": {
+      "action_type": "dispatch_rescue_boat",
+      "asset_id": "rescue_boat_1",
+      "group_id": "group_riverside",
+      "people_picked_up": 4,
+      "reason": "pickup_completed",
+      "rescued_people": 0,
+      "route_id": "south_detour",
+      "success": true
+    },
+    "sequence": 127,
+    "time": 49.0
+  },
+  {
+    "event_type": "ACTION_STARTED",
+    "payload": {
+      "action_type": "evacuate_to_safety",
+      "asset_id": "rescue_boat_1",
+      "commitment_id": "commitment-12700e331559",
+      "group_id": null,
+      "navigation_distance": 103.0486217976449,
+      "navigation_summary": "waterway path via south_detour to Safe Transfer Dock",
+      "path": [
+        {
+          "x": 84.0,
+          "y": 52.0
+        },
+        {
+          "x": 72.0,
+          "y": 34.0
+        },
+        {
+          "x": 52.0,
+          "y": 18.0
+        },
+        {
+          "x": 30.0,
+          "y": 12.0
+        },
+        {
+          "x": 12.0,
+          "y": 16.0
+        }
+      ],
+      "path_segments": [
+        {
+          "direction": "reverse",
+          "edge_index": 4,
+          "from_position": {
+            "x": 88.0,
+            "y": 66.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-e53f64f67810",
+          "to_position": {
+            "x": 84.0,
+            "y": 52.0
+          }
+        },
+        {
+          "direction": "reverse",
+          "edge_index": 3,
+          "from_position": {
+            "x": 84.0,
+            "y": 52.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-8efd4693cb54",
+          "to_position": {
+            "x": 72.0,
+            "y": 34.0
+          }
+        },
+        {
+          "direction": "reverse",
+          "edge_index": 2,
+          "from_position": {
+            "x": 72.0,
+            "y": 34.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-897dbb58cebf",
+          "to_position": {
+            "x": 52.0,
+            "y": 18.0
+          }
+        },
+        {
+          "direction": "reverse",
+          "edge_index": 1,
+          "from_position": {
+            "x": 52.0,
+            "y": 18.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-8e8e67f82d06",
+          "to_position": {
+            "x": 30.0,
+            "y": 12.0
+          }
+        },
+        {
+          "direction": "reverse",
+          "edge_index": 0,
+          "from_position": {
+            "x": 30.0,
+            "y": 12.0
+          },
+          "mode": "water",
+          "route_id": "south_detour",
+          "segment_id": "segment-3a964a1d2416",
+          "to_position": {
+            "x": 12.0,
+            "y": 16.0
+          }
+        }
+      ],
+      "plan_id": "evacuate:rescue_boat_1:south_detour:group_riverside",
+      "record_id": "trace-7dc8944d0689d235885b",
+      "record_version": 2,
+      "route_id": "south_detour",
+      "target": {
+        "x": 12.0,
+        "y": 16.0
+      }
+    },
+    "sequence": 133,
+    "time": 49.0
+  },
+  {
+    "event_type": "UNLOADING_STARTED",
+    "payload": {
+      "asset_id": "rescue_boat_1",
+      "group_ids": [
+        "group_riverside"
+      ],
+      "people": 4,
+      "route_id": "south_detour",
+      "safe_location_id": "safe_transfer_dock"
+    },
+    "sequence": 186,
+    "time": 75.0
+  },
+  {
+    "event_type": "PEOPLE_DELIVERED",
+    "payload": {
+      "asset_id": "rescue_boat_1",
+      "group_ids": [
+        "group_riverside"
+      ],
+      "people": 4,
+      "route_id": "south_detour",
+      "safe_location_id": "safe_transfer_dock"
+    },
+    "sequence": 197,
+    "time": 84.0
+  },
+  {
+    "event_type": "ASSET_STANDBY",
+    "payload": {
+      "asset_id": "rescue_boat_1",
+      "reason": "rescue_handoff_complete",
+      "safe_location_id": "safe_transfer_dock"
+    },
+    "sequence": 198,
+    "time": 84.0
+  },
+  {
+    "event_type": "OUTCOME",
+    "payload": {
+      "action_type": "evacuate_to_safety",
+      "asset_id": "rescue_boat_1",
+      "group_ids": [
+        "group_riverside"
+      ],
+      "metrics_already_applied": true,
+      "reason": "people_delivered_to_safe_transfer_dock",
+      "rescued_people": 4,
+      "route_id": "south_detour",
+      "success": true
+    },
+    "sequence": 199,
+    "time": 84.0
+  }
+]

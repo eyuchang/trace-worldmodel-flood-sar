@@ -1,0 +1,10 @@
+policy_version: trace-flood-v1
+min_model_support: 0.60
+max_ood_score: 0.35
+max_uncertainty: 0.30
+max_rollout_horizon: 8
+max_observation_age_s: 120.0
+require_authority_for:
+  - dispatch_rescue_boat
+  - deploy_ground_team
+allow_qualified_reversible_probe: true

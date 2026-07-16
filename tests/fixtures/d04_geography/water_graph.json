@@ -1,0 +1,248 @@
+{
+  "mode": "water",
+  "directed": false,
+  "nodes": [
+    {
+      "node_id": "w0",
+      "longitude": -121.8,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "w1",
+      "longitude": -121.79,
+      "latitude": 38.005
+    },
+    {
+      "node_id": "w2",
+      "longitude": -121.78,
+      "latitude": 38.01
+    },
+    {
+      "node_id": "w3",
+      "longitude": -121.77,
+      "latitude": 38.005
+    },
+    {
+      "node_id": "w4",
+      "longitude": -121.76,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "w5",
+      "longitude": -121.79,
+      "latitude": 37.995
+    },
+    {
+      "node_id": "w6",
+      "longitude": -121.78,
+      "latitude": 37.99
+    },
+    {
+      "node_id": "w7",
+      "longitude": -121.77,
+      "latitude": 37.995
+    }
+  ],
+  "edges": [
+    {
+      "start": "w0",
+      "end": "w1",
+      "edge_id": "we0",
+      "osm_way_id": 100,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 0",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.8,
+          38.0
+        ],
+        [
+          -121.79,
+          38.005
+        ]
+      ]
+    },
+    {
+      "start": "w1",
+      "end": "w2",
+      "edge_id": "we1",
+      "osm_way_id": 101,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 1",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.005
+        ],
+        [
+          -121.78,
+          38.01
+        ]
+      ]
+    },
+    {
+      "start": "w2",
+      "end": "w3",
+      "edge_id": "we2",
+      "osm_way_id": 102,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 2",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.78,
+          38.01
+        ],
+        [
+          -121.77,
+          38.005
+        ]
+      ]
+    },
+    {
+      "start": "w3",
+      "end": "w4",
+      "edge_id": "we3",
+      "osm_way_id": 103,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 3",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.77,
+          38.005
+        ],
+        [
+          -121.76,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "w0",
+      "end": "w5",
+      "edge_id": "we4",
+      "osm_way_id": 104,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 4",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.8,
+          38.0
+        ],
+        [
+          -121.79,
+          37.995
+        ]
+      ]
+    },
+    {
+      "start": "w5",
+      "end": "w6",
+      "edge_id": "we5",
+      "osm_way_id": 105,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 5",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          37.995
+        ],
+        [
+          -121.78,
+          37.99
+        ]
+      ]
+    },
+    {
+      "start": "w6",
+      "end": "w7",
+      "edge_id": "we6",
+      "osm_way_id": 106,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 6",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.78,
+          37.99
+        ],
+        [
+          -121.77,
+          37.995
+        ]
+      ]
+    },
+    {
+      "start": "w7",
+      "end": "w4",
+      "edge_id": "we7",
+      "osm_way_id": 107,
+      "length_m": 1000.0,
+      "mode": "water",
+      "name": "Fixture Channel 7",
+      "tags": {
+        "waterway": "canal"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.77,
+          37.995
+        ],
+        [
+          -121.76,
+          38.0
+        ]
+      ]
+    }
+  ]
+}

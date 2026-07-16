@@ -1,0 +1,12 @@
+[console_scripts]
+trace-jepa-build-geography = trace_jepa.workbench.geography_builder:main
+trace-jepa-call = trace_jepa.emergency_cli:main
+trace-jepa-d04 = trace_jepa.workbench.d04_server:main
+trace-jepa-d05 = trace_jepa.workbench.d05_server:main
+trace-jepa-demo = trace_jepa.demo:main
+trace-jepa-download = trace_jepa.perception.download:main
+trace-jepa-dynamic-demo = trace_jepa.workbench.demo:main
+trace-jepa-render = trace_jepa.scenario.visualize:main
+trace-jepa-ui = trace_jepa.workbench.cli:main
+trace-jepa-verify = trace_jepa.verify:main
+trace-jepa-visualize = trace_jepa.scenario.visualize:main

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1458" viewBox="0 0 1200 1458">
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<style>.title{font:700 30px Arial;fill:#0f172a}.seq{font:700 18px Arial;fill:white}.kind{font:700 17px Arial;fill:#1d4ed8}.body{font:16px Arial;fill:#0f172a}</style>
+<text x="70" y="55" class="title">Emergency call to authorized rescue: action timeline</text>
+<line x1="105" y1="100" x2="105" y2="1296" stroke="#94a3b8" stroke-width="5"/>
+<circle cx="105" cy="100" r="25" fill="#1d4ed8"/>
+<text x="105" y="106" text-anchor="middle" class="seq">01</text>
+<rect x="155" y="69" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="95" class="kind">CALL RECEIVED</text>
+<text x="180" y="120" class="body">Emergency call reports 4 people at Riverside Apartments.</text>
+<circle cx="105" cy="192" r="25" fill="#1d4ed8"/>
+<text x="105" y="198" text-anchor="middle" class="seq">02</text>
+<rect x="155" y="161" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="187" class="kind">MISSION STATE</text>
+<text x="180" y="212" class="body">Mission Controller grounds the incident at Riverside Apartments; North Channel is unknown.</text>
+<circle cx="105" cy="284" r="25" fill="#1d4ed8"/>
+<text x="105" y="290" text-anchor="middle" class="seq">03</text>
+<rect x="155" y="253" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="279" class="kind">PLAN ASSESSED</text>
+<text x="180" y="304" class="body">Dispatch rescue_boat_1 from rescue_base to riverside_apartments via North Channel -&gt; HOLD (support=0.28, OOD=0.82).</text>
+<circle cx="105" cy="376" r="25" fill="#1d4ed8"/>
+<text x="105" y="382" text-anchor="middle" class="seq">04</text>
+<rect x="155" y="345" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="371" class="kind">PLAN ASSESSED</text>
+<text x="180" y="396" class="body">Send survey_drone_1 to verify North Channel -&gt; CLEAR (support=0.97, OOD=0.04).</text>
+<circle cx="105" cy="468" r="25" fill="#1d4ed8"/>
+<text x="105" y="474" text-anchor="middle" class="seq">05</text>
+<rect x="155" y="437" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="463" class="kind">PLAN ASSESSED</text>
+<text x="180" y="488" class="body">Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -&gt; CLEAR (support=0.93, OOD=0.08).</text>
+<circle cx="105" cy="560" r="25" fill="#1d4ed8"/>
+<text x="105" y="566" text-anchor="middle" class="seq">06</text>
+<rect x="155" y="529" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="555" class="kind">ACTION SELECTED</text>
+<text x="180" y="580" class="body">Mission Controller selects: survey drone 1 verifies north channel.</text>
+<circle cx="105" cy="652" r="25" fill="#1d4ed8"/>
+<text x="105" y="658" text-anchor="middle" class="seq">07</text>
+<rect x="155" y="621" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="647" class="kind">ACTION DISPATCHED</text>
+<text x="180" y="672" class="body">Authorized command sent to survey_drone_1.</text>
+<circle cx="105" cy="744" r="25" fill="#1d4ed8"/>
+<text x="105" y="750" text-anchor="middle" class="seq">08</text>
+<rect x="155" y="713" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="739" class="kind">OBSERVATION RECEIVED</text>
+<text x="180" y="764" class="body">survey_drone_1 reports north_channel is blocked.</text>
+<circle cx="105" cy="836" r="25" fill="#1d4ed8"/>
+<text x="105" y="842" text-anchor="middle" class="seq">09</text>
+<rect x="155" y="805" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="831" class="kind">TRACE REVISED</text>
+<text x="180" y="856" class="body">TRACE rejects the northern-route claim and preserves the completed verification action.</text>
+<circle cx="105" cy="928" r="25" fill="#1d4ed8"/>
+<text x="105" y="934" text-anchor="middle" class="seq">10</text>
+<rect x="155" y="897" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="923" class="kind">REPLANNING</text>
+<text x="180" y="948" class="body">Planner repairs only the route-dependent rescue branch.</text>
+<circle cx="105" cy="1020" r="25" fill="#1d4ed8"/>
+<text x="105" y="1026" text-anchor="middle" class="seq">11</text>
+<rect x="155" y="989" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="1015" class="kind">PLAN REASSESSED</text>
+<text x="180" y="1040" class="body">Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -&gt; CLEAR.</text>
+<circle cx="105" cy="1112" r="25" fill="#1d4ed8"/>
+<text x="105" y="1118" text-anchor="middle" class="seq">12</text>
+<rect x="155" y="1081" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="1107" class="kind">FINAL ACTION SELECTED</text>
+<text x="180" y="1132" class="body">Mission Controller selects: rescue boat 1 dispatches to riverside apartments via south detour.</text>
+<circle cx="105" cy="1204" r="25" fill="#1d4ed8"/>
+<text x="105" y="1210" text-anchor="middle" class="seq">13</text>
+<rect x="155" y="1173" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="1199" class="kind">FINAL ACTION DISPATCHED</text>
+<text x="180" y="1224" class="body">Incident Commander approval and TRACE clearance authorize rescue_boat_1.</text>
+<circle cx="105" cy="1296" r="25" fill="#1d4ed8"/>
+<text x="105" y="1302" text-anchor="middle" class="seq">14</text>
+<rect x="155" y="1265" width="970" height="63" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+<text x="180" y="1291" class="kind">RESCUE OUTCOME</text>
+<text x="180" y="1316" class="body">Rescue completed: success=True, people_reached=4.</text>
+</svg>

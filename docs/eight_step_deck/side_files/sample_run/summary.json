@@ -1,0 +1,894 @@
+{
+  "emergency_call": {
+    "call_id": "call-379dfd4ad3e5",
+    "caller_contact": null,
+    "caller_name": null,
+    "deadline_s": 1200,
+    "normalized_location_id": "riverside_apartments",
+    "people_count": 4,
+    "raw_text": "Emergency. Four residents are stranded at Riverside Apartments. Flood water is rising and the road is inaccessible.",
+    "received_at": "2026-07-14T20:13:16.522695Z",
+    "reported_location": "Riverside Apartments",
+    "source": "emergency_phone"
+  },
+  "entities": {
+    "environment": "FloodEnvironment",
+    "fleet": [
+      "survey_drone_1",
+      "rescue_boat_1"
+    ],
+    "incident_commander": "incident_commander_1",
+    "mission_controller": "mission-controller-v2",
+    "offline_scorer_in_control_loop": false
+  },
+  "final_action": {
+    "action_id": "action-78341a0ff9cb",
+    "action_type": "dispatch_rescue_boat",
+    "actor_id": "rescue_boat_1",
+    "destination": "riverside_apartments",
+    "origin": "rescue_base",
+    "parameters": {
+      "deadline_s": 1200,
+      "people_count": 4
+    },
+    "route_id": "south_detour"
+  },
+  "final_commitment": {
+    "action": {
+      "action_id": "action-78341a0ff9cb",
+      "action_type": "dispatch_rescue_boat",
+      "actor_id": "rescue_boat_1",
+      "destination": "riverside_apartments",
+      "origin": "rescue_base",
+      "parameters": {
+        "deadline_s": 1200,
+        "people_count": 4
+      },
+      "route_id": "south_detour"
+    },
+    "authorizing_record_id": "trace-2733d8dbf6f9",
+    "authorizing_record_version": 2,
+    "commitment_id": "commitment-018c312ec090",
+    "consumer_policy_version": "trace-flood-v1",
+    "created_at": "2026-07-14T20:13:16.530398Z"
+  },
+  "final_commitment_id": "commitment-018c312ec090",
+  "final_outcome": {
+    "action": {
+      "action_id": "action-78341a0ff9cb",
+      "action_type": "dispatch_rescue_boat",
+      "actor_id": "rescue_boat_1",
+      "destination": "riverside_apartments",
+      "origin": "rescue_base",
+      "parameters": {
+        "deadline_s": 1200,
+        "people_count": 4
+      },
+      "route_id": "south_detour"
+    },
+    "created_at": "2026-07-14T20:13:16.530563Z",
+    "observations": {
+      "destination": "riverside_apartments",
+      "people_reached": 4,
+      "route_id": "south_detour",
+      "route_status": "open"
+    },
+    "outcome_id": "outcome-8c6da555f255",
+    "reason": "rescue_completed",
+    "success": true
+  },
+  "final_selected_plan": "south-detour",
+  "first_action": {
+    "action_id": "action-e5f844ea8ff6",
+    "action_type": "verify_route",
+    "actor_id": "survey_drone_1",
+    "destination": "north_channel",
+    "origin": "drone_pad",
+    "parameters": {
+      "purpose": "resolve_route_access"
+    },
+    "route_id": "north_channel"
+  },
+  "first_commitment": {
+    "action": {
+      "action_id": "action-e5f844ea8ff6",
+      "action_type": "verify_route",
+      "actor_id": "survey_drone_1",
+      "destination": "north_channel",
+      "origin": "drone_pad",
+      "parameters": {
+        "purpose": "resolve_route_access"
+      },
+      "route_id": "north_channel"
+    },
+    "authorizing_record_id": "trace-792035ea5aad",
+    "authorizing_record_version": 2,
+    "commitment_id": "commitment-071435e0b7a6",
+    "consumer_policy_version": "trace-flood-v1",
+    "created_at": "2026-07-14T20:13:16.527733Z"
+  },
+  "first_commitment_id": "commitment-071435e0b7a6",
+  "first_outcome": {
+    "action": {
+      "action_id": "action-e5f844ea8ff6",
+      "action_type": "verify_route",
+      "actor_id": "survey_drone_1",
+      "destination": "north_channel",
+      "origin": "drone_pad",
+      "parameters": {
+        "purpose": "resolve_route_access"
+      },
+      "route_id": "north_channel"
+    },
+    "created_at": "2026-07-14T20:13:16.527864Z",
+    "observations": {
+      "drone_battery": 0.74,
+      "route_id": "north_channel",
+      "route_status": "blocked",
+      "source": "survey_drone_1"
+    },
+    "outcome_id": "outcome-b1d4d493d2d8",
+    "reason": "route_observed",
+    "success": true
+  },
+  "first_selected_plan": "verify-north",
+  "initial_assessments": [
+    {
+      "authority_present": true,
+      "claim_confidence": 0.92,
+      "claim_confidence_semantics": "Teaching proxy copied from plan success probability; not a separately calibrated claim probability.",
+      "decision": "hold",
+      "failed_gates": [
+        "model_support",
+        "out_of_distribution"
+      ],
+      "grounded_action": {
+        "action_id": "action-4f4766fd0bc5",
+        "action_type": "dispatch_rescue_boat",
+        "actor_id": "rescue_boat_1",
+        "destination": "riverside_apartments",
+        "origin": "rescue_base",
+        "parameters": {
+          "deadline_s": 1200,
+          "people_count": 4
+        },
+        "route_id": "north_channel"
+      },
+      "missing_items": [
+        "evidence inside the declared model support",
+        "current observation or verification for the out-of-support region"
+      ],
+      "model_support": 0.28,
+      "out_of_distribution_score": 0.82,
+      "plan_id": "north-direct",
+      "plan_name": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via North Channel",
+      "predicted_plan_success_probability": 0.92,
+      "record_id": "trace-a375d7568886",
+      "record_version": 2,
+      "repair": "Send survey_drone_1 to verify north_channel before dispatching rescue_boat_1.",
+      "trace_status": "defer",
+      "uncertainty": 0.08,
+      "utility": 0.825
+    },
+    {
+      "authority_present": false,
+      "claim_confidence": 0.98,
+      "claim_confidence_semantics": "Teaching proxy copied from plan success probability; not a separately calibrated claim probability.",
+      "decision": "clear",
+      "failed_gates": [],
+      "grounded_action": {
+        "action_id": "action-e5f844ea8ff6",
+        "action_type": "verify_route",
+        "actor_id": "survey_drone_1",
+        "destination": "north_channel",
+        "origin": "drone_pad",
+        "parameters": {
+          "purpose": "resolve_route_access"
+        },
+        "route_id": "north_channel"
+      },
+      "missing_items": [],
+      "model_support": 0.97,
+      "out_of_distribution_score": 0.04,
+      "plan_id": "verify-north",
+      "plan_name": "Send survey_drone_1 to verify North Channel",
+      "predicted_plan_success_probability": 0.98,
+      "record_id": "trace-792035ea5aad",
+      "record_version": 2,
+      "repair": null,
+      "trace_status": "accept",
+      "uncertainty": 0.04,
+      "utility": 0.9
+    },
+    {
+      "authority_present": true,
+      "claim_confidence": 0.82,
+      "claim_confidence_semantics": "Teaching proxy copied from plan success probability; not a separately calibrated claim probability.",
+      "decision": "clear",
+      "failed_gates": [],
+      "grounded_action": {
+        "action_id": "action-7b98f144e841",
+        "action_type": "dispatch_rescue_boat",
+        "actor_id": "rescue_boat_1",
+        "destination": "riverside_apartments",
+        "origin": "rescue_base",
+        "parameters": {
+          "deadline_s": 1200,
+          "people_count": 4
+        },
+        "route_id": "south_detour"
+      },
+      "missing_items": [],
+      "model_support": 0.93,
+      "out_of_distribution_score": 0.08,
+      "plan_id": "south-detour",
+      "plan_name": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour",
+      "predicted_plan_success_probability": 0.82,
+      "record_id": "trace-e9d855f711c3",
+      "record_version": 2,
+      "repair": null,
+      "trace_status": "accept",
+      "uncertainty": 0.14,
+      "utility": 0.685
+    }
+  ],
+  "initial_controller_knowledge": {
+    "assets": {
+      "rescue_boat_1": {
+        "capacity": 6,
+        "location": "rescue_base",
+        "type": "rescue_boat"
+      },
+      "survey_drone_1": {
+        "battery": 0.82,
+        "location": "drone_pad",
+        "type": "survey_drone"
+      }
+    },
+    "boat_capacity": 6,
+    "drone_battery": 0.82,
+    "emergency_call": {
+      "call_id": "call-379dfd4ad3e5",
+      "deadline_s": 1200,
+      "normalized_location_id": "riverside_apartments",
+      "people_count": 4,
+      "received_at": "2026-07-14T20:13:16.522695+00:00",
+      "reported_location": "Riverside Apartments",
+      "source": "emergency_phone"
+    },
+    "locations": {
+      "drone_pad": {
+        "kind": "drone_base",
+        "label": "Drone Pad",
+        "position": [
+          17,
+          12
+        ]
+      },
+      "incident_command": {
+        "kind": "command_post",
+        "label": "Incident Command",
+        "position": [
+          8,
+          7
+        ]
+      },
+      "rescue_base": {
+        "kind": "response_base",
+        "label": "Rescue Base",
+        "position": [
+          12,
+          16
+        ]
+      },
+      "riverside_apartments": {
+        "aliases": [
+          "Riverside apartment complex",
+          "88 River Road",
+          "River Road apartments"
+        ],
+        "kind": "incident_site",
+        "label": "Riverside Apartments",
+        "position": [
+          88,
+          66
+        ]
+      }
+    },
+    "mission": {
+      "deadline_minutes": 20,
+      "deadline_s": 1200,
+      "destination_id": "riverside_apartments",
+      "origin_id": "rescue_base",
+      "people_to_rescue": 4
+    },
+    "north_route_open": null,
+    "north_route_verified": false,
+    "routes": {
+      "north_channel": {
+        "label": "North Channel",
+        "nominal_travel_s": 600.0,
+        "report": "unknown",
+        "verified": false,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            24,
+            33
+          ],
+          [
+            42,
+            51
+          ],
+          [
+            60,
+            64
+          ],
+          [
+            78,
+            70
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      },
+      "south_detour": {
+        "label": "South Detour",
+        "nominal_travel_s": 1080.0,
+        "report": "open",
+        "verified": true,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            30,
+            12
+          ],
+          [
+            52,
+            18
+          ],
+          [
+            72,
+            34
+          ],
+          [
+            84,
+            52
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      }
+    },
+    "scenario_id": "riverside-flood-v1",
+    "south_route_open": true,
+    "stranded_people": 4,
+    "weather_severity": 0.65
+  },
+  "initial_mission_controller_knowledge": {
+    "assets": {
+      "rescue_boat_1": {
+        "capacity": 6,
+        "location": "rescue_base",
+        "type": "rescue_boat"
+      },
+      "survey_drone_1": {
+        "battery": 0.82,
+        "location": "drone_pad",
+        "type": "survey_drone"
+      }
+    },
+    "boat_capacity": 6,
+    "drone_battery": 0.82,
+    "emergency_call": {
+      "call_id": "call-379dfd4ad3e5",
+      "deadline_s": 1200,
+      "normalized_location_id": "riverside_apartments",
+      "people_count": 4,
+      "received_at": "2026-07-14T20:13:16.522695+00:00",
+      "reported_location": "Riverside Apartments",
+      "source": "emergency_phone"
+    },
+    "locations": {
+      "drone_pad": {
+        "kind": "drone_base",
+        "label": "Drone Pad",
+        "position": [
+          17,
+          12
+        ]
+      },
+      "incident_command": {
+        "kind": "command_post",
+        "label": "Incident Command",
+        "position": [
+          8,
+          7
+        ]
+      },
+      "rescue_base": {
+        "kind": "response_base",
+        "label": "Rescue Base",
+        "position": [
+          12,
+          16
+        ]
+      },
+      "riverside_apartments": {
+        "aliases": [
+          "Riverside apartment complex",
+          "88 River Road",
+          "River Road apartments"
+        ],
+        "kind": "incident_site",
+        "label": "Riverside Apartments",
+        "position": [
+          88,
+          66
+        ]
+      }
+    },
+    "mission": {
+      "deadline_minutes": 20,
+      "deadline_s": 1200,
+      "destination_id": "riverside_apartments",
+      "origin_id": "rescue_base",
+      "people_to_rescue": 4
+    },
+    "north_route_open": null,
+    "north_route_verified": false,
+    "routes": {
+      "north_channel": {
+        "label": "North Channel",
+        "nominal_travel_s": 600.0,
+        "report": "unknown",
+        "verified": false,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            24,
+            33
+          ],
+          [
+            42,
+            51
+          ],
+          [
+            60,
+            64
+          ],
+          [
+            78,
+            70
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      },
+      "south_detour": {
+        "label": "South Detour",
+        "nominal_travel_s": 1080.0,
+        "report": "open",
+        "verified": true,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            30,
+            12
+          ],
+          [
+            52,
+            18
+          ],
+          [
+            72,
+            34
+          ],
+          [
+            84,
+            52
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      }
+    },
+    "scenario_id": "riverside-flood-v1",
+    "south_route_open": true,
+    "stranded_people": 4,
+    "weather_severity": 0.65
+  },
+  "record_chain_valid": true,
+  "replanned_assessments": [
+    {
+      "authority_present": true,
+      "claim_confidence": 0.82,
+      "claim_confidence_semantics": "Teaching proxy copied from plan success probability; not a separately calibrated claim probability.",
+      "decision": "clear",
+      "failed_gates": [],
+      "grounded_action": {
+        "action_id": "action-78341a0ff9cb",
+        "action_type": "dispatch_rescue_boat",
+        "actor_id": "rescue_boat_1",
+        "destination": "riverside_apartments",
+        "origin": "rescue_base",
+        "parameters": {
+          "deadline_s": 1200,
+          "people_count": 4
+        },
+        "route_id": "south_detour"
+      },
+      "missing_items": [],
+      "model_support": 0.93,
+      "out_of_distribution_score": 0.08,
+      "plan_id": "south-detour",
+      "plan_name": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour",
+      "predicted_plan_success_probability": 0.82,
+      "record_id": "trace-2733d8dbf6f9",
+      "record_version": 2,
+      "repair": null,
+      "trace_status": "accept",
+      "uncertainty": 0.14,
+      "utility": 0.685
+    }
+  ],
+  "replanned_mission_controller_knowledge": {
+    "assets": {
+      "rescue_boat_1": {
+        "capacity": 6,
+        "location": "rescue_base",
+        "type": "rescue_boat"
+      },
+      "survey_drone_1": {
+        "battery": 0.74,
+        "location": "drone_pad",
+        "type": "survey_drone"
+      }
+    },
+    "boat_capacity": 6,
+    "drone_battery": 0.74,
+    "emergency_call": {
+      "call_id": "call-379dfd4ad3e5",
+      "deadline_s": 1200,
+      "normalized_location_id": "riverside_apartments",
+      "people_count": 4,
+      "received_at": "2026-07-14T20:13:16.522695+00:00",
+      "reported_location": "Riverside Apartments",
+      "source": "emergency_phone"
+    },
+    "locations": {
+      "drone_pad": {
+        "kind": "drone_base",
+        "label": "Drone Pad",
+        "position": [
+          17,
+          12
+        ]
+      },
+      "incident_command": {
+        "kind": "command_post",
+        "label": "Incident Command",
+        "position": [
+          8,
+          7
+        ]
+      },
+      "rescue_base": {
+        "kind": "response_base",
+        "label": "Rescue Base",
+        "position": [
+          12,
+          16
+        ]
+      },
+      "riverside_apartments": {
+        "aliases": [
+          "Riverside apartment complex",
+          "88 River Road",
+          "River Road apartments"
+        ],
+        "kind": "incident_site",
+        "label": "Riverside Apartments",
+        "position": [
+          88,
+          66
+        ]
+      }
+    },
+    "mission": {
+      "deadline_minutes": 20,
+      "deadline_s": 1200,
+      "destination_id": "riverside_apartments",
+      "origin_id": "rescue_base",
+      "people_to_rescue": 4
+    },
+    "north_route_open": false,
+    "north_route_verified": true,
+    "routes": {
+      "north_channel": {
+        "label": "North Channel",
+        "nominal_travel_s": 600.0,
+        "report": "blocked",
+        "verified": true,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            24,
+            33
+          ],
+          [
+            42,
+            51
+          ],
+          [
+            60,
+            64
+          ],
+          [
+            78,
+            70
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      },
+      "south_detour": {
+        "label": "South Detour",
+        "nominal_travel_s": 1080.0,
+        "report": "open",
+        "verified": true,
+        "waypoints": [
+          [
+            12,
+            16
+          ],
+          [
+            30,
+            12
+          ],
+          [
+            52,
+            18
+          ],
+          [
+            72,
+            34
+          ],
+          [
+            84,
+            52
+          ],
+          [
+            88,
+            66
+          ]
+        ]
+      }
+    },
+    "scenario_id": "riverside-flood-v1",
+    "south_route_open": true,
+    "stranded_people": 4,
+    "weather_severity": 0.65
+  },
+  "rescued": true,
+  "revisions": [
+    {
+      "reason": "survey_drone_1 observed that north_channel is blocked.",
+      "record_id": "trace-a375d7568886",
+      "record_version": 3,
+      "status": "reject"
+    }
+  ],
+  "scenario": "riverside-flood-v1",
+  "simulation_ground_truth_after_run": {
+    "active_call_id": "call-379dfd4ad3e5",
+    "rescued": true,
+    "route_status": {
+      "north_channel": "blocked",
+      "south_detour": "open"
+    },
+    "scenario_id": "riverside-flood-v1",
+    "stranded_people": 4
+  },
+  "simulation_ground_truth_at_time_zero": {
+    "active_call_id": "call-379dfd4ad3e5",
+    "rescued": false,
+    "route_status": {
+      "north_channel": "blocked",
+      "south_detour": "open"
+    },
+    "scenario_id": "riverside-flood-v1",
+    "stranded_people": 4
+  },
+  "timeline": [
+    {
+      "details": {
+        "call_id": "call-379dfd4ad3e5",
+        "normalized_location_id": "riverside_apartments",
+        "people_count": 4
+      },
+      "event_type": "call_received",
+      "message": "Emergency call reports 4 people at Riverside Apartments.",
+      "sequence": 1
+    },
+    {
+      "details": {
+        "deadline_s": 1200,
+        "destination_id": "riverside_apartments"
+      },
+      "event_type": "mission_state",
+      "message": "Mission Controller grounds the incident at Riverside Apartments; North Channel is unknown.",
+      "sequence": 2
+    },
+    {
+      "details": {
+        "decision": "hold",
+        "plan_id": "north-direct",
+        "record_id": "trace-a375d7568886",
+        "trace_status": "defer"
+      },
+      "event_type": "plan_assessed",
+      "message": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via North Channel -> HOLD (support=0.28, OOD=0.82).",
+      "sequence": 3
+    },
+    {
+      "details": {
+        "decision": "clear",
+        "plan_id": "verify-north",
+        "record_id": "trace-792035ea5aad",
+        "trace_status": "accept"
+      },
+      "event_type": "plan_assessed",
+      "message": "Send survey_drone_1 to verify North Channel -> CLEAR (support=0.97, OOD=0.04).",
+      "sequence": 4
+    },
+    {
+      "details": {
+        "decision": "clear",
+        "plan_id": "south-detour",
+        "record_id": "trace-e9d855f711c3",
+        "trace_status": "accept"
+      },
+      "event_type": "plan_assessed",
+      "message": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -> CLEAR (support=0.93, OOD=0.08).",
+      "sequence": 5
+    },
+    {
+      "details": {
+        "action": {
+          "action_id": "action-e5f844ea8ff6",
+          "action_type": "verify_route",
+          "actor_id": "survey_drone_1",
+          "destination": "north_channel",
+          "origin": "drone_pad",
+          "parameters": {
+            "purpose": "resolve_route_access"
+          },
+          "route_id": "north_channel"
+        },
+        "plan_id": "verify-north"
+      },
+      "event_type": "action_selected",
+      "message": "Mission Controller selects: survey drone 1 verifies north channel.",
+      "sequence": 6
+    },
+    {
+      "details": {
+        "authorizing_record_id": "trace-792035ea5aad",
+        "authorizing_record_version": 2,
+        "commitment_id": "commitment-071435e0b7a6"
+      },
+      "event_type": "action_dispatched",
+      "message": "Authorized command sent to survey_drone_1.",
+      "sequence": 7
+    },
+    {
+      "details": {
+        "observations": {
+          "drone_battery": 0.74,
+          "route_id": "north_channel",
+          "route_status": "blocked",
+          "source": "survey_drone_1"
+        },
+        "outcome_id": "outcome-b1d4d493d2d8"
+      },
+      "event_type": "observation_received",
+      "message": "survey_drone_1 reports north_channel is blocked.",
+      "sequence": 8
+    },
+    {
+      "details": {
+        "record_id": "trace-a375d7568886",
+        "record_version": 3
+      },
+      "event_type": "trace_revised",
+      "message": "TRACE rejects the northern-route claim and preserves the completed verification action.",
+      "sequence": 9
+    },
+    {
+      "details": {},
+      "event_type": "replanning",
+      "message": "Planner repairs only the route-dependent rescue branch.",
+      "sequence": 10
+    },
+    {
+      "details": {
+        "decision": "clear",
+        "plan_id": "south-detour",
+        "record_id": "trace-2733d8dbf6f9"
+      },
+      "event_type": "plan_reassessed",
+      "message": "Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -> CLEAR.",
+      "sequence": 11
+    },
+    {
+      "details": {
+        "action": {
+          "action_id": "action-78341a0ff9cb",
+          "action_type": "dispatch_rescue_boat",
+          "actor_id": "rescue_boat_1",
+          "destination": "riverside_apartments",
+          "origin": "rescue_base",
+          "parameters": {
+            "deadline_s": 1200,
+            "people_count": 4
+          },
+          "route_id": "south_detour"
+        },
+        "plan_id": "south-detour"
+      },
+      "event_type": "final_action_selected",
+      "message": "Mission Controller selects: rescue boat 1 dispatches to riverside apartments via south detour.",
+      "sequence": 12
+    },
+    {
+      "details": {
+        "authorizing_record_id": "trace-2733d8dbf6f9",
+        "authorizing_record_version": 2,
+        "commitment_id": "commitment-018c312ec090"
+      },
+      "event_type": "final_action_dispatched",
+      "message": "Incident Commander approval and TRACE clearance authorize rescue_boat_1.",
+      "sequence": 13
+    },
+    {
+      "details": {
+        "observations": {
+          "destination": "riverside_apartments",
+          "people_reached": 4,
+          "route_id": "south_detour",
+          "route_status": "open"
+        },
+        "outcome_id": "outcome-8c6da555f255"
+      },
+      "event_type": "rescue_outcome",
+      "message": "Rescue completed: success=True, people_reached=4.",
+      "sequence": 14
+    }
+  ]
+}

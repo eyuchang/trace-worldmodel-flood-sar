@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.805,
+          38.0
+        ]
+      },
+      "properties": {
+        "facility_id": "hospital-fixture",
+        "kind": "selected_hospital",
+        "name": "Fixture Hospital"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.8,
+          38.0
+        ]
+      },
+      "properties": {
+        "facility_id": "port-fixture",
+        "kind": "selected_transfer_port",
+        "name": "Fixture Transfer Port"
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+scenario_version: riverside-flood-v1
+name: Riverside Flood Search-and-Rescue
+coordinate_system: local_map_units
+
+map:
+  x_limits: [0, 100]
+  y_limits: [0, 80]
+  flood_polygon:
+    - [0, 24]
+    - [18, 22]
+    - [36, 31]
+    - [52, 28]
+    - [72, 38]
+    - [100, 32]
+    - [100, 80]
+    - [0, 80]
+
+locations:
+  incident_command:
+    label: Incident Command
+    position: [8, 7]
+  rescue_base:
+    label: Rescue Base
+    position: [12, 16]
+  drone_pad:
+    label: Drone Pad
+    position: [17, 12]
+  riverside_apartments:
+    label: Riverside Apartments
+    position: [88, 66]
+
+routes:
+  north_channel:
+    label: North Channel
+    waypoints:
+      - [12, 16]
+      - [24, 33]
+      - [42, 51]
+      - [60, 64]
+      - [78, 70]
+      - [88, 66]
+    hidden_status: blocked
+    initial_report: unknown
+    blockage_position: [60, 64]
+    nominal_travel_s: 600
+  south_detour:
+    label: South Detour
+    waypoints:
+      - [12, 16]
+      - [30, 12]
+      - [52, 18]
+      - [72, 34]
+      - [84, 52]
+      - [88, 66]
+    hidden_status: open
+    initial_report: open
+    nominal_travel_s: 1080
+
+assets:
+  survey_drone_1:
+    type: survey_drone
+    location: drone_pad
+    battery: 0.82
+  rescue_boat_1:
+    type: rescue_boat
+    location: rescue_base
+    capacity: 6
+
+mission:
+  origin: rescue_base
+  pickup_location: riverside_apartments
+  people_to_rescue: 4
+  deadline_s: 1200
+
+conditions:
+  weather_severity: 0.65
+  verification_battery_cost: 0.08

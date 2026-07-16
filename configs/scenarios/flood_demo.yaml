@@ -1,0 +1,23 @@
+scenario_version: riverside-flood-v1
+name: Riverside flood search-and-rescue
+hidden_simulation_state:
+  north_channel_open: false
+  south_detour_open: true
+  stranded_people: 4
+  weather_severity: 0.65
+mission_controller_initial_knowledge:
+  north_channel_verified: false
+  north_channel_report: unknown
+  south_detour_report: open
+mission:
+  origin_id: rescue_base
+  destination_id: riverside_apartments
+  people_to_rescue: 4
+  deadline_minutes: 20
+assets:
+  survey_drone_1:
+    battery: 0.82
+    position_id: drone_pad
+  rescue_boat_1:
+    capacity: 6
+    position_id: rescue_base

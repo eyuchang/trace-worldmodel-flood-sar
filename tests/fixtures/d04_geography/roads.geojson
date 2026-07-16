@@ -1,0 +1,821 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "re0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            37.992
+          ],
+          [
+            -121.79,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re0",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            37.992
+          ],
+          [
+            -121.805,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re1",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            37.992
+          ],
+          [
+            -121.775,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re2",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            37.992
+          ],
+          [
+            -121.79,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re3",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            37.992
+          ],
+          [
+            -121.76,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re4",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            37.992
+          ],
+          [
+            -121.775,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re5",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            38.0
+          ],
+          [
+            -121.79,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re6",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.0
+          ],
+          [
+            -121.805,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re7",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re8",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.0
+          ],
+          [
+            -121.775,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re8",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re9",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.0
+          ],
+          [
+            -121.79,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re9",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re10",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.0
+          ],
+          [
+            -121.76,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re10",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re11",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            38.0
+          ],
+          [
+            -121.775,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re11",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re12",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            38.008
+          ],
+          [
+            -121.79,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re12",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re13",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.008
+          ],
+          [
+            -121.805,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re13",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re14",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.008
+          ],
+          [
+            -121.775,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re14",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re15",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.008
+          ],
+          [
+            -121.79,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re15",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re16",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.008
+          ],
+          [
+            -121.76,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re16",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re17",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            38.008
+          ],
+          [
+            -121.775,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re17",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re18",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            37.992
+          ],
+          [
+            -121.805,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re18",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re19",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            38.0
+          ],
+          [
+            -121.805,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re19",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re20",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            37.992
+          ],
+          [
+            -121.79,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re20",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re21",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.0
+          ],
+          [
+            -121.79,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re21",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re22",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            37.992
+          ],
+          [
+            -121.775,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re22",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re23",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.0
+          ],
+          [
+            -121.775,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re23",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re24",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            37.992
+          ],
+          [
+            -121.76,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re24",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re25",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            38.0
+          ],
+          [
+            -121.76,
+            37.992
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re25",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re26",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            38.0
+          ],
+          [
+            -121.805,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re26",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re27",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.805,
+            38.008
+          ],
+          [
+            -121.805,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re27",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re28",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.0
+          ],
+          [
+            -121.79,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re28",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re29",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.008
+          ],
+          [
+            -121.79,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re29",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re30",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.0
+          ],
+          [
+            -121.775,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re30",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re31",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.775,
+            38.008
+          ],
+          [
+            -121.775,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re31",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re32",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            38.0
+          ],
+          [
+            -121.76,
+            38.008
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re32",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "re33",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.76,
+            38.008
+          ],
+          [
+            -121.76,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "re33",
+        "mode": "road",
+        "name": "Fixture Road",
+        "open": true,
+        "congestion": 0.0
+      }
+    }
+  ]
+}

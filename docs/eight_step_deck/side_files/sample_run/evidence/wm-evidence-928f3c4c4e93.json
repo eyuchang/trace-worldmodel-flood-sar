@@ -1,0 +1,52 @@
+{
+  "action_schema_version": "flood-actions-v1",
+  "assumptions": [
+    "route_report_is_fresh"
+  ],
+  "calibration_version": "toy-calibration-v1",
+  "candidate_plan_id": "south-detour",
+  "created_at": "2026-07-14T20:13:16.528946Z",
+  "decisively_contradicted": false,
+  "encoder_version": "mock-video-v1",
+  "evidence_id": "wm-evidence-928f3c4c4e93",
+  "fleet_state_hash": "d59e2f355a56e049fca381716420217d615fc5f17d1836773c8494dd3d41ec70",
+  "fusion_version": "flood-fusion-v1",
+  "model_support": 0.93,
+  "observation_age_s": 10.0,
+  "observation_window_hash": "fe4f3ee09e3376062f7ba7e9076945ea858a488ce5fbe9b9315ec4d192cc2447",
+  "out_of_distribution_score": 0.08,
+  "predicted_claims": [
+    "south_detour is traversable and rescue_boat_1 can reach riverside_apartments before the deadline."
+  ],
+  "prediction_residual": null,
+  "predictor_version": "toy-action-prefix-v2",
+  "reachability_evidence": {
+    "arrival_time_s": 1080.0,
+    "claim_confidence": 0.82,
+    "claim_confidence_semantics": "Teaching proxy copied from plan success probability; not a separately calibrated claim probability.",
+    "grounded_action": {
+      "action_id": "action-78341a0ff9cb",
+      "action_type": "dispatch_rescue_boat",
+      "actor_id": "rescue_boat_1",
+      "destination": "riverside_apartments",
+      "origin": "rescue_base",
+      "parameters": {
+        "deadline_s": 1200,
+        "people_count": 4
+      },
+      "route_id": "south_detour"
+    },
+    "hazard_score": 0.18,
+    "predicted_plan_success_probability": 0.82,
+    "resource_margin": 0.2
+  },
+  "realized_outcome": null,
+  "rollout_consistency": 0.86,
+  "rollout_horizon": 7,
+  "rollout_id": "rollout-56f9078d422f",
+  "semantic_probe_versions": [
+    "flood-probe-v2"
+  ],
+  "training_snapshot": "synthetic-flood-v1",
+  "uncertainty": 0.14
+}

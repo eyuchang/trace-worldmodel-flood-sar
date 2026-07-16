@@ -1,0 +1,12 @@
+{
+  "call_id": "call-379dfd4ad3e5",
+  "caller_contact": null,
+  "caller_name": null,
+  "deadline_s": 1200,
+  "normalized_location_id": "riverside_apartments",
+  "people_count": 4,
+  "raw_text": "Emergency. Four residents are stranded at Riverside Apartments. Flood water is rising and the road is inaccessible.",
+  "received_at": "2026-07-14T20:13:16.522695Z",
+  "reported_location": "Riverside Apartments",
+  "source": "emergency_phone"
+}

@@ -1,0 +1,250 @@
+Metadata-Version: 2.4
+Name: trace-jepa-flood-sar
+Version: 0.5.0
+Summary: Dynamic TRACE-gated JEPA research workbench for flood search-and-rescue
+Author: TRACE-JEPA teaching project
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.26
+Requires-Dist: pydantic>=2.7
+Requires-Dist: PyYAML>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+Requires-Dist: httpx>=0.27; extra == "dev"
+Provides-Extra: ui
+Requires-Dist: fastapi>=0.115; extra == "ui"
+Requires-Dist: uvicorn>=0.30; extra == "ui"
+Requires-Dist: websockets>=13; extra == "ui"
+Requires-Dist: httpx>=0.27; extra == "ui"
+Requires-Dist: networkx>=3.3; extra == "ui"
+Provides-Extra: ml
+Requires-Dist: torch>=2.2; extra == "ml"
+Requires-Dist: torchvision>=0.17; extra == "ml"
+Provides-Extra: jepa
+Requires-Dist: torch>=2.2; extra == "jepa"
+Requires-Dist: torchvision>=0.17; extra == "jepa"
+Requires-Dist: timm>=1.0; extra == "jepa"
+Requires-Dist: einops>=0.8; extra == "jepa"
+Requires-Dist: opencv-python-headless>=4.10; extra == "jepa"
+Provides-Extra: viz
+Provides-Extra: all
+Requires-Dist: pytest>=8; extra == "all"
+Requires-Dist: ruff>=0.6; extra == "all"
+Requires-Dist: httpx>=0.27; extra == "all"
+Requires-Dist: networkx>=3.3; extra == "all"
+Requires-Dist: fastapi>=0.115; extra == "all"
+Requires-Dist: uvicorn>=0.30; extra == "all"
+Requires-Dist: websockets>=13; extra == "all"
+Requires-Dist: torch>=2.2; extra == "all"
+Requires-Dist: torchvision>=0.17; extra == "all"
+Requires-Dist: timm>=1.0; extra == "all"
+Requires-Dist: einops>=0.8; extra == "all"
+Requires-Dist: opencv-python-headless>=4.10; extra == "all"
+
+# TRACE-JEPA Dynamic Flood-SAR Workbench
+
+## Dynamic browser UI quick start
+
+```bash
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate trace-jepa
+python -m pip install -e ".[ui,dev]"
+pytest
+trace-jepa-ui --host 127.0.0.1 --port 8000
+open http://127.0.0.1:8000
+```
+
+The D0.2 UI exposes live S1-S5 controls, an operational map, TRACE records, metrics, and an immutable event timeline. See [`docs/DYNAMIC_WORKBENCH.md`](docs/DYNAMIC_WORKBENCH.md). The current world model is a transparent surrogate; V-JEPA integration is a later release behind the same model-service boundary.
+
+### D0.2 Step 2: rescue means safe delivery
+
+The boat now performs a complete lifecycle: graph-valid outbound travel, boarding, a separately TRACE-gated evacuation to the Safe Transfer Dock, unloading, and standby. A pickup does not count as a rescue until the people are delivered to safety. The emergency-call form also distinguishes a current waiting total from additional people, and the map uses animated boat and drone SVGs. See [`docs/STEP_02_RESCUE_LIFECYCLE_AND_ANIMATION.md`](docs/STEP_02_RESCUE_LIFECYCLE_AND_ANIMATION.md).
+
+---
+
+# TRACE-JEPA Flood Search-and-Rescue Starter
+
+This repository is a teaching implementation of a TRACE-gated learned world model for flood search-and-rescue.
+
+**Begin with the mission, not the model:** read [`docs/MISSION_BRIEF.md`](docs/MISSION_BRIEF.md) before running code. It defines every entity, who knows what, who may authorize action, and what the demo is intended to prove. Then read [`docs/TRACE_RECORD_WALKTHROUGH.md`](docs/TRACE_RECORD_WALKTHROUGH.md) to see how the scenario becomes an evidence object, a hold, a revision, and a final commitment.
+
+## The system in one sentence
+
+A central **Mission Controller** proposes rescue actions, uses a **World Model** to predict their consequences, calls the **TRACE Gate** to decide whether the recorded evidence may authorize them, and dispatches only cleared commands to a survey drone or rescue boat in the **Flood Environment**.
+
+```text
+Flood Environment <-> Drone / Boat <-> Mission Controller <-> Incident Commander
+                                      |
+                                      +-- Mission State
+                                      +-- Planner
+                                      +-- World Model
+                                      +-- TRACE Gate
+                                      +-- Action Dispatcher
+```
+
+There is no operational “evaluator agent.” Hidden simulation ground truth belongs to the Flood Environment. Offline evaluation reads truth and logs only after the run.
+
+## What the first demo does
+
+Four residents are isolated at Riverside Apartments. The North Channel is faster but unverified; the South Detour is slower but reported open. Hidden simulation truth says the North Channel is blocked.
+
+The demo should:
+
+1. propose a north dispatch, a drone verification action, and a south dispatch;
+2. show a high north-route success estimate (`0.92`) together with low model support (`0.28`) and high OOD score (`0.82`);
+3. hold the irreversible north dispatch;
+4. clear or qualify the reversible drone verification;
+5. preserve the failed prediction in an append-only revision;
+6. clear the supported south dispatch;
+7. record exactly which TRACE version authorized the boat command.
+
+The numerical outputs of the first predictor are deterministic test fixtures. They teach the accountability path; they are not research results.
+
+
+## Eight-step implementation walkthrough
+
+The faithful operational walkthrough is in [`docs/EIGHT_STEP_IMPLEMENTATION.md`](docs/EIGHT_STEP_IMPLEMENTATION.md). The slide deck and exact side-code copies are under `docs/eight_step_deck/`. The eight steps are:
+
+1. accept and ground the emergency call;
+2. build Mission Controller knowledge;
+3. generate grounded candidate actions;
+4. predict consequences and formulate typed claims;
+5. write TRACE records and apply the gate;
+6. authorize and execute the drone verification;
+7. append a revision and locally replan;
+8. authorize the final boat dispatch and persist the outcome.
+
+The deck also crosswalks these operational steps to TRACE's eight writer stages and explicitly labels the parts not yet implemented, including open-ended argument detection, debate, attack-graph settlement, V-JEPA inference, a general HTN/MRTA planner, and a live human approval interface.
+
+## Two learning modes
+
+- **Core mode:** runs on an ordinary laptop with a deterministic mock encoder and toy predictor. It teaches environment knowledge, typed actions, the TRACE runtime, evidence ledger, commitment gate, and revision loop.
+- **JEPA mode:** loads Meta's official V-JEPA 2.1 encoder and replaces the mock visual features. Students still train their own flood-domain action-conditioned predictor.
+
+## Fastest start
+
+```bash
+conda create -n trace-jepa python=3.12 -y
+conda activate trace-jepa
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+trace-jepa-verify
+pytest
+```
+
+Run the system from an emergency call:
+
+```bash
+trace-jepa-call \
+  --call-file examples/calls/riverside_call.txt \
+  --output artifacts/runs/call_001
+```
+
+The equivalent inline call is:
+
+```bash
+trace-jepa-call \
+  --call "Emergency. Four residents are stranded at Riverside Apartments." \
+  --output artifacts/runs/call_002
+```
+
+The terminal prints each subsequent action. Open the generated vector views:
+
+```bash
+open artifacts/runs/call_001/figures/mission_controller_knowledge.svg
+open artifacts/runs/call_001/figures/action_timeline.svg
+```
+
+Open the generated vector views:
+
+```bash
+open artifacts/runs/scenario_brief/operational_cast.svg
+open artifacts/runs/scenario_brief/mission_controller_knowledge.svg
+open artifacts/runs/scenario_brief/simulation_ground_truth.svg
+```
+
+The first map contains only what the Mission Controller may know. The second is simulation ground truth for teaching and after-the-fact evaluation.
+
+## Add V-JEPA 2.1
+
+Install the correct PyTorch build for the machine, then:
+
+```bash
+pip install -e ".[jepa]"
+trace-jepa-download --model vjepa2_1_vit_base_384
+```
+
+The downloader constructs the official architecture from a pinned upstream revision, downloads the official checkpoint to `models/external/vjepa2/`, verifies the state dictionary, and writes a SHA-256 model manifest.
+
+The class default is the official 80M-parameter V-JEPA 2.1 ViT-B/16 checkpoint at 384-pixel resolution. V-JEPA 2.1 is used as a **frozen visual representation backbone**, not as a complete rescue simulator.
+
+## Project layout
+
+```text
+trace-jepa-flood-sar/
+├── configs/                 model, policy, action, and scenario versions
+├── data/                    raw logs, processed trajectories, manifests
+├── docs/                    mission brief, tutorial, data contract, instructor notes
+├── models/                  course checkpoints, external weights, manifests
+├── labs/                    six student laboratory handouts
+├── scripts/                 scenario renderer and one-command lab entry points
+├── src/trace_jepa/
+│   ├── controller.py        the central Mission Controller
+│   ├── contracts/           typed records, evidence, actions, outcomes, and claims
+│   ├── runtime/             append-only repository, ledger, gate, consumers
+│   ├── perception/          mock and V-JEPA encoders
+│   ├── fusion/              relational rescue-state assembly
+│   ├── planning/            candidate plans and local repair
+│   ├── predictor/           toy and trainable action-prefix predictors
+│   ├── claims/              latent-to-claim probes
+│   └── scenario/            Flood Environment and vector visualizer
+├── tests/                   implementation invariants and smoke tests
+└── third_party/             optional local clone of official V-JEPA code
+```
+
+## Validated core commands
+
+```bash
+PYTHONPATH=src pytest
+PYTHONPATH=src python -m trace_jepa.scenario.visualize \
+  --output artifacts/runs/scenario_brief
+PYTHONPATH=src python -m trace_jepa.demo \
+  --output artifacts/runs/validated_demo
+python scripts/generate_synthetic_dataset.py \
+  --episodes 1000 \
+  --output data/processed/synthetic_flood_trajectories.npz
+python scripts/train_action_predictor.py \
+  --dataset data/processed/synthetic_flood_trajectories.npz \
+  --output models/checkpoints/toy_action_predictor.pt \
+  --epochs 100
+```
+
+The complete build sequence is in [`docs/STUDENT_TUTORIAL.md`](docs/STUDENT_TUTORIAL.md).
+
+## Architectural boundary
+
+The full target stack is:
+
+```text
+V-JEPA 2.1 encoder
++ flood-state fusion
++ custom action-prefix predictor
++ calibrated semantic probes
++ TRACE runtime
++ human authority boundary
+```
+
+It does not implement “download V-JEPA and call it a simulator.” The Flood Environment supplies realized outcomes; TRACE governs when model-conditional predictions may license durable action.
+
+
+## D0.4 real-geography workbench
+
+See `docs/D04_STEP3_COMPLETE_FILES.md`.
+
+## D0.5 predictive scheduling
+
+D0.5 adds zoom-safe asset markers, restored simulation-speed control,
+parallel response preparation, dynamic transfer-dock selection, early
+ambulance dispatch, TRACE timing records, and boat standby at the selected
+dock. See `docs/D05_PREDICTIVE_SCHEDULING.md`.

@@ -1,0 +1,89 @@
+{
+  "scenario_id": "fixture_d04",
+  "bbox": {
+    "south": 37.985,
+    "west": -121.81,
+    "north": 38.015,
+    "east": -121.755
+  },
+  "camera": {
+    "center": [
+      -121.7825,
+      38.0
+    ],
+    "zoom": 13.0,
+    "pitch": 55,
+    "bearing": -18,
+    "max_pitch": 75
+  },
+  "hospital": {
+    "facility_id": "hospital-fixture",
+    "kind": "hospital",
+    "name": "Fixture Hospital",
+    "longitude": -121.805,
+    "latitude": 38.0,
+    "road_node": "r10"
+  },
+  "transfer_port": {
+    "facility_id": "port-fixture",
+    "kind": "marina",
+    "name": "Fixture Transfer Port",
+    "longitude": -121.8,
+    "latitude": 38.0,
+    "water_node": "w0",
+    "road_node": "r10",
+    "derived": false
+  },
+  "boat_bases": [
+    {
+      "node_id": "w0",
+      "longitude": -121.8,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "w4",
+      "longitude": -121.76,
+      "latitude": 38.0
+    }
+  ],
+  "drone_bases": [
+    {
+      "node_id": "w0",
+      "longitude": -121.8,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "w2",
+      "longitude": -121.78,
+      "latitude": 38.01
+    },
+    {
+      "node_id": "w6",
+      "longitude": -121.78,
+      "latitude": 37.99
+    }
+  ],
+  "ambulance_bases": [
+    {
+      "node_id": "r10",
+      "longitude": -121.805,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "r10",
+      "longitude": -121.805,
+      "latitude": 38.0
+    }
+  ],
+  "demo_water_nodes": [
+    "w4",
+    "w6"
+  ],
+  "water_maximum_snap_m": 600.0,
+  "road_maximum_snap_m": 900.0,
+  "source": {
+    "provider": "fixture",
+    "query_system": "none",
+    "built_at_utc": "2026-01-01T00:00:00Z"
+  }
+}

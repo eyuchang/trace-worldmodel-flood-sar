@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRACE-JEPA Flood-SAR Decision Workbench</title>
+  <link
+    rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23102c43'/%3E%3Cpath d='M12 34h40M20 24h24M26 14h12' stroke='%238dd3ff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
+  />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="eyebrow">TRACE-JEPA · D0.2 Step 3</div>
+      <h1>Flood-SAR Decision Workbench</h1>
+    </div>
+    <div class="top-status">
+      <span id="connectionBadge" class="status-pill offline">offline</span>
+      <span id="runBadge" class="status-pill neutral">paused</span>
+      <span class="time-pill"><span id="simTime">0.0</span> s</span>
+    </div>
+  </header>
+
+  <nav class="runbar" aria-label="Simulation controls">
+    <button id="startBtn" class="button primary">▶ Start</button>
+    <button id="pauseBtn" class="button">Pause</button>
+    <button id="stepBtn" class="button">Step 1 s</button>
+    <button id="planBtn" class="button">Re-evaluate now</button>
+    <button id="resetBtn" class="button danger-ghost">Reset</button>
+    <div class="runbar-spacer"></div>
+    <label class="compact-control">Speed
+      <input id="speedRange" type="range" min="0.1" max="20" step="0.1" value="1" />
+      <span id="speedValue">1.0×</span>
+    </label>
+    <label class="toggle-control">
+      <input id="authorityToggle" type="checkbox" checked />
+      <span>Commander approval</span>
+    </label>
+    <button id="exportBtn" class="button ghost">Export</button>
+  </nav>
+
+  <main class="app-shell">
+    <aside class="surface controls-surface">
+      <div class="surface-head">
+        <div>
+          <h2>Scenario changes</h2>
+          <p>Every applied change is logged and followed by an explicit reasoning cycle.</p>
+        </div>
+      </div>
+
+      <div class="scenario-tabs" role="tablist">
+        <button class="scenario-tab active" data-tab="mission">Call</button>
+        <button class="scenario-tab" data-tab="s1">S1</button>
+        <button class="scenario-tab" data-tab="s2">S2</button>
+        <button class="scenario-tab" data-tab="s3">S3</button>
+        <button class="scenario-tab" data-tab="s4">S4</button>
+        <button class="scenario-tab" data-tab="s5">S5</button>
+      </div>
+
+      <section id="tab-mission" class="scenario-pane active">
+        <div class="scenario-explainer">
+          <strong>Emergency call</strong>
+          <span>Adds controller-visible demand. For a repeat call at the same active location, explicitly choose whether the number is the current total still waiting or additional people. The UI updates one incident marker and does not reveal hidden route truth.</span>
+        </div>
+        <label>Location<input id="callLocation" value="Riverside Apartments" /></label>
+        <div class="field-row two">
+          <label>X<input id="callX" type="number" value="88" /></label>
+          <label>Y<input id="callY" type="number" value="66" /></label>
+        </div>
+        <div class="field-row two">
+          <label>People currently waiting<input id="callPeople" type="number" value="4" min="1" /></label>
+          <label>Severity<input id="callSeverity" type="number" value="0.55" min="0" max="1" step="0.05" /></label>
+        </div>
+        <label>People-count meaning
+          <select id="callCountSemantics">
+            <option value="current_waiting" selected>Current total still waiting</option>
+            <option value="additional_people">Additional people at this incident</option>
+          </select>
+        </label>
+        <label>Deadline (s)<input id="callDeadline" type="number" value="1200" min="30" /></label>
+        <button id="submitCallBtn" class="button primary full">Create/update incident & reason</button>
+        <div id="callResult" class="call-result" role="status" aria-live="polite">
+          No incident submitted yet.
+        </div>
+      </section>
+
+      <section id="tab-s1" class="scenario-pane">
+        <div class="scenario-explainer">
+          <strong>S1 · Uncertainty</strong>
+          <span>Recomputes sensor reliability, support, OOD and uncertainty. Predictive and survey TRACE lineages receive new versions.</span>
+        </div>
+        <label>Drone report accuracy <output id="s1AccuracyOut">0.92</output>
+          <input id="s1Accuracy" type="range" min="0" max="1" step="0.01" value="0.92" />
+        </label>
+        <label>Sensor noise <output id="s1NoiseOut">0.12</output>
+          <input id="s1Noise" type="range" min="0" max="1" step="0.01" value="0.12" />
+        </label>
+        <div class="field-row two">
+          <label>Latency (s)<input id="s1Latency" type="number" value="2" min="0" max="600" /></label>
+          <label>Seed<input id="s1Seed" type="number" value="7" /></label>
+        </div>
+        <label>Packet loss <output id="s1PacketOut">0.02</output>
+          <input id="s1Packet" type="range" min="0" max="1" step="0.01" value="0.02" />
+        </label>
+        <label>OOD severity <output id="s1OodOut">0.25</output>
+          <input id="s1Ood" type="range" min="0" max="1" step="0.01" value="0.25" />
+        </label>
+        <button id="applyS1Btn" class="button primary full">Apply & re-evaluate</button>
+      </section>
+
+      <section id="tab-s2" class="scenario-pane">
+        <div class="scenario-explainer">
+          <strong>S2 · Dynamic world</strong>
+          <span>Recomputes flood forecasts, route-edge availability, observation age and clearance validity.</span>
+        </div>
+        <label>Rain intensity <output id="s2RainOut">0.25</output>
+          <input id="s2Rain" type="range" min="0" max="1" step="0.01" value="0.25" />
+        </label>
+        <label>Upstream inflow <output id="s2InflowOut">0.20</output>
+          <input id="s2Inflow" type="range" min="0" max="1" step="0.01" value="0.20" />
+        </label>
+        <label>Water-rise rate<input id="s2Rise" type="number" value="0.00015" min="0" max="0.1" step="0.00005" /></label>
+        <div class="field-row two">
+          <label>Closure depth<input id="s2Closure" type="number" value="0.72" min="0.05" max="2" step="0.01" /></label>
+          <label>Clearance horizon<input id="s2Horizon" type="number" value="180" min="5" /></label>
+        </div>
+        <label>Observation freshness (s)<input id="s2Freshness" type="number" value="120" min="1" /></label>
+        <button id="applyS2Btn" class="button primary full">Apply & re-evaluate</button>
+      </section>
+
+      <section id="tab-s3" class="scenario-pane">
+        <div class="scenario-explainer">
+          <strong>S3 · Allocation</strong>
+          <span>Recomputes practical trade-offs, resource conflicts and the selected asset. Route evidence remains separate.</span>
+        </div>
+        <label>Mission budget<input id="s3Budget" type="number" value="1000" min="0" step="25" /></label>
+        <div class="field-row three">
+          <label>Severity wt.<input id="s3SeverityWeight" type="number" value="1" min="0" step="0.1" /></label>
+          <label>Deadline wt.<input id="s3DeadlineWeight" type="number" value="1" min="0" step="0.1" /></label>
+          <label>Risk wt.<input id="s3RiskWeight" type="number" value="1" min="0" step="0.1" /></label>
+        </div>
+        <button id="applyS3Btn" class="button primary full">Apply priorities & re-evaluate</button>
+        <details>
+          <summary>Add a stranded group</summary>
+          <label>Label<input id="groupLabel" value="East School Roof" /></label>
+          <div class="field-row three">
+            <label>X<input id="groupX" type="number" value="70" /></label>
+            <label>Y<input id="groupY" type="number" value="58" /></label>
+            <label>People<input id="groupPeople" type="number" value="3" min="1" /></label>
+          </div>
+          <div class="field-row two">
+            <label>Severity<input id="groupSeverity" type="number" value="0.7" min="0" max="1" step="0.05" /></label>
+            <label>Deadline<input id="groupDeadline" type="number" value="900" min="30" /></label>
+          </div>
+          <button id="addGroupBtn" class="button full">Add group & reason</button>
+        </details>
+        <details>
+          <summary>Add an asset</summary>
+          <label>Asset type<select id="assetType"><option value="helicopter">Helicopter</option><option value="rescue_boat">Rescue boat</option><option value="survey_drone">Survey drone</option><option value="ground_team">Ground team</option></select></label>
+          <div class="field-row three">
+            <label>X<input id="assetX" type="number" value="10" /></label>
+            <label>Y<input id="assetY" type="number" value="8" /></label>
+            <label>Capacity<input id="assetCapacity" type="number" value="6" /></label>
+          </div>
+          <div class="field-row two">
+            <label>Speed<input id="assetSpeed" type="number" value="12" min="0.1" step="0.5" /></label>
+            <label>Resource<input id="assetResource" type="number" value="1" min="0" max="1" step="0.05" /></label>
+          </div>
+          <button id="addAssetBtn" class="button full">Add asset & reason</button>
+        </details>
+      </section>
+
+      <section id="tab-s4" class="scenario-pane">
+        <div class="scenario-explainer">
+          <strong>S4 · Shock</strong>
+          <span>A truth-only shock changes the world but does not revise TRACE until observed. A controller-visible shock triggers immediate re-evaluation.</span>
+        </div>
+        <label>Shock type<select id="shockType"><option value="communication_loss">Communication loss</option><option value="communication_restore">Communication restored</option><option value="sensor_degradation">Sensor degradation</option><option value="levee_breach">Levee breach</option><option value="road_submergence">Route submergence</option><option value="wind_shift">Wind shift</option><option value="group_deterioration">Group deterioration</option><option value="asset_grounded">Asset grounded</option><option value="fuel_limit">Fuel limit</option></select></label>
+        <label>Target<input id="shockTarget" placeholder="south_detour, rescue_boat_1, …" /></label>
+        <label>Severity <output id="shockSeverityOut">0.60</output>
+          <input id="shockSeverity" type="range" min="0" max="1" step="0.05" value="0.6" />
+        </label>
+        <label>Who knows immediately?<select id="shockVisibility"><option value="truth">Simulation truth only</option><option value="both">Mission Controller and truth</option><option value="controller">Controller report only</option></select></label>
+        <button id="injectShockBtn" class="button danger full">Inject shock</button>
+      </section>
+
+      <section id="tab-s5" class="scenario-pane">
+        <div class="scenario-explainer">
+          <strong>S5 · Reconnaissance</strong>
+          <span>Recomputes survey safety, information yield and which pending TRACE defer should be resolved first.</span>
+        </div>
+        <label>Drone endurance <output id="s5EnduranceOut">0.82</output>
+          <input id="s5Endurance" type="range" min="0" max="1" step="0.01" value="0.82" />
+        </label>
+        <label>Sensor quality <output id="s5QualityOut">0.90</output>
+          <input id="s5Quality" type="range" min="0" max="1" step="0.01" value="0.90" />
+        </label>
+        <label>Sector weather <output id="s5WeatherOut">0.25</output>
+          <input id="s5Weather" type="range" min="0" max="1" step="0.01" value="0.25" />
+        </label>
+        <label>Value-of-information weight<input id="s5Voi" type="number" value="0.7" min="0" max="5" step="0.1" /></label>
+        <button id="applyS5Btn" class="button primary full">Apply & re-evaluate</button>
+        <label>Request survey<select id="surveyRoute"><option value="north_channel">North Channel</option><option value="south_detour">South Detour</option></select></label>
+        <button id="requestSurveyBtn" class="button full">Request survey & reason</button>
+      </section>
+    </aside>
+
+    <section class="surface map-surface">
+      <div class="map-head">
+        <div>
+          <h2>Operational map</h2>
+          <p id="mapSubtitle">Mission Controller knowledge</p>
+        </div>
+        <div class="view-switch" id="viewToggle">
+          <button class="active" data-view="controller">Controller</button>
+          <button data-view="truth">Truth</button>
+          <button data-view="difference">Difference</button>
+        </div>
+      </div>
+      <div id="decisionBanner" class="decision-banner neutral">
+        <div class="decision-kicker">Current operational decision</div>
+        <div id="decisionTitle" class="decision-title">No plan has been evaluated yet.</div>
+        <div id="decisionReason" class="decision-reason">Submit a call or run a reasoning cycle.</div>
+      </div>
+      <div id="mapFrame">
+        <div id="map" aria-label="Flood rescue geospatial operational map"></div>
+        <svg id="mapSvg" viewBox="0 0 1000 650" aria-hidden="true"></svg>
+        <div id="mapLoadStatus">Loading geographic map…</div>
+        <div id="mapReferenceBadge">Synthetic display georeference · planning still uses local graph coordinates</div>
+      </div>
+      <div class="map-legend">
+        <span><i class="dot open"></i> Open</span>
+        <span><i class="dot blocked"></i> Blocked</span>
+        <span><i class="dot unknown"></i> Unknown</span>
+        <span><i class="dot mismatch"></i> Knowledge mismatch</span>
+        <span><i class="line planned"></i> Authorized path</span>
+      </div>
+    </section>
+
+    <aside class="surface reasoning-surface">
+      <div class="surface-head">
+        <div>
+          <h2>Why did the decision change?</h2>
+          <p>The latest S1-S5 input is followed from trigger to commitment.</p>
+        </div>
+      </div>
+      <div id="changeSummary" class="change-summary empty">No user change has been applied yet.</div>
+      <div id="reasoningFlow" class="reasoning-flow"></div>
+      <details class="inspector-details">
+        <summary>Selected map object</summary>
+        <pre id="objectInspector">Click a route, asset, or group.</pre>
+      </details>
+    </aside>
+
+    <section class="surface lower-surface">
+      <div class="lower-tabs">
+        <button class="lower-tab active" data-lower="trace">TRACE updates</button>
+        <button class="lower-tab" data-lower="timeline">Event timeline</button>
+        <button class="lower-tab" data-lower="metrics">Metrics</button>
+      </div>
+      <div id="lower-trace" class="lower-pane active">
+        <div id="traceList" class="trace-grid"></div>
+      </div>
+      <div id="lower-timeline" class="lower-pane">
+        <div id="timeline" class="timeline"></div>
+      </div>
+      <div id="lower-metrics" class="lower-pane metrics-pane">
+        <div id="statsGrid" class="stats-strip"></div>
+        <canvas id="metricChart"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <footer>Research simulator only. Pickup is not rescue completion: people count as rescued only after delivery to the safe transfer dock. Hidden simulation truth never enters Mission Controller state unless an observation event carries it.</footer>
+  <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" defer></script>
+  <script src="/static/maplibre_overlays.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

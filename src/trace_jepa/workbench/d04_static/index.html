@@ -1,0 +1,1963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+
+  <title>TRACE-JEPA D0.4 Real Geography Workbench</title>
+
+  <link
+    rel="icon"
+    href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg'
+           viewBox='0 0 64 64'>
+        <rect width='64' height='64' rx='12'
+              fill='%231e4c73'/>
+        <path d='M10 42 L32 14 L54 42 Z'
+              fill='%23ffffff'/>
+      </svg>"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
+  />
+
+  <style>
+    :root {
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #152637;
+      background: #e9eef2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid #aebbc5;
+      border-radius: 7px;
+      padding: 7px 11px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #edf5fa;
+    }
+
+    button.primary {
+      border-color: #1e5b83;
+      background: #1e5b83;
+      color: white;
+    }
+
+    button.danger {
+      border-color: #b91c1c;
+      color: #991b1b;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    #app {
+      display: grid;
+      grid-template-rows: 54px 1fr;
+      height: 100vh;
+    }
+
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #bdc8cf;
+      background: #f9fbfc;
+      z-index: 10;
+    }
+
+    #toolbar .title {
+      margin-right: auto;
+      font-weight: 750;
+      letter-spacing: 0.01em;
+    }
+
+    #toolbar .clock {
+      min-width: 88px;
+      font-variant-numeric: tabular-nums;
+      color: #42586a;
+    }
+
+    #workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      min-height: 0;
+    }
+
+    #mapFrame {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: #d9e3e9;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+
+    #mapNotice {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 5;
+      max-width: 510px;
+      padding: 8px 11px;
+      border-radius: 7px;
+      color: white;
+      background: rgba(17, 42, 60, 0.88);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    #locationStatus {
+      position: absolute;
+      left: 12px;
+      bottom: 14px;
+      z-index: 6;
+      padding: 8px 11px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      font-size: 12px;
+    }
+
+    #side {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      border-left: 1px solid #b9c5cd;
+      background: #f8fafb;
+    }
+
+    #modeTabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid #c4ced5;
+    }
+
+    #modeTabs button {
+      border: 0;
+      border-radius: 0;
+      padding: 11px 4px;
+      background: transparent;
+      font-weight: 650;
+    }
+
+    #modeTabs button.active {
+      color: #174f76;
+      background: #e5f0f7;
+      box-shadow: inset 0 -3px 0 #24688f;
+    }
+
+    .mode {
+      display: none;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .mode.active {
+      display: block;
+    }
+
+    .card {
+      margin-bottom: 11px;
+      padding: 11px;
+      border: 1px solid #c8d2d8;
+      border-radius: 9px;
+      background: white;
+    }
+
+    .card h3 {
+      margin: 0 0 9px;
+      font-size: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: #4e6272;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid #bac6ce;
+      border-radius: 6px;
+      padding: 7px;
+      background: white;
+    }
+
+    .row {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .row > * {
+      flex: 1;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .metric {
+      padding: 8px 4px;
+      border-radius: 7px;
+      background: #eef4f7;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 19px;
+      color: #174f76;
+    }
+
+    .list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .list-item {
+      padding: 8px;
+      border: 1px solid #d4dce1;
+      border-radius: 7px;
+      background: #fbfcfd;
+      font-size: 12px;
+    }
+
+    .list-item strong {
+      color: #173f5b;
+    }
+
+    .trace-item {
+      border-left: 5px solid #718096;
+    }
+
+    .trace-item.clear {
+      border-left-color: #15803d;
+    }
+
+    .trace-item.hold,
+    .trace-item.escalate {
+      border-left-color: #c2410c;
+    }
+
+    .trace-item.preempt {
+      border-left-color: #7c3aed;
+    }
+
+    .message {
+      border-left: 4px solid #2f7399;
+    }
+
+    .message[data-event="RESCUE_COMPLETED"],
+    .message[data-event="PEOPLE_DELIVERED"] {
+      border-left-color: #15803d;
+    }
+
+    .message[data-event="PREEMPTION_PENDING"],
+    .message[data-event="PREEMPTION_EXECUTED"] {
+      border-left-color: #7c3aed;
+    }
+
+    .asset-marker {
+      position: relative;
+      display: grid;
+      place-items: center;
+      filter:
+        drop-shadow(0 2px 2px rgba(0, 0, 0, 0.34));
+      cursor: pointer;
+      transform-origin: center;
+    }
+
+    .asset-marker svg {
+      display: block;
+      overflow: visible;
+    }
+
+    .asset-marker .badge {
+      position: absolute;
+      right: -7px;
+      top: -7px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: #be123c;
+      border: 2px solid white;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .asset-marker.preempting {
+      animation: pulse 800ms ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      from {
+        transform: scale(1);
+      }
+
+      to {
+        transform: scale(1.16);
+      }
+    }
+
+    .drone-rotor {
+      transform-origin: center;
+      animation: spin 500ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .incident-marker {
+      display: grid;
+      place-items: center;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 7px;
+      border-radius: 18px;
+      color: white;
+      border: 3px solid white;
+      background: #c2410c;
+      box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .incident-marker.completed {
+      background: #15803d;
+    }
+
+    .incident-marker.onboard {
+      background: #7c3aed;
+    }
+
+    .incident-marker.transfer {
+      background: #075985;
+    }
+
+    .temporary-location {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 4px solid white;
+      background: #dc2626;
+      box-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+    }
+
+    .facility-marker {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 3px solid white;
+      border-radius: 50%;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.36);
+      cursor: pointer;
+    }
+
+    .facility-marker.hospital {
+      background: #c62828;
+      font-size: 21px;
+    }
+
+    .facility-marker.transfer_port {
+      background: #075985;
+      font-size: 19px;
+    }
+
+    .facility-marker.base {
+      width: 24px;
+      height: 24px;
+      background: #334155;
+      font-size: 12px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: #607583;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #e6edf2;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .maplibregl-popup-content {
+      font-size: 12px;
+      min-width: 190px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <div class="title">
+        TRACE-JEPA D0.4 · Real Geography and Hospital Transfer
+      </div>
+
+      <div class="clock" id="clock">
+        t = 0.0 s
+      </div>
+
+      <button id="startButton" class="primary">
+        Start
+      </button>
+
+      <button id="pauseButton">
+        Pause
+      </button>
+
+      <button id="stepButton">
+        Step
+      </button>
+
+      <button id="resetButton">
+        Reset
+      </button>
+
+      <button id="preemptionDemoButton">
+        Run preemption demo
+      </button>
+    </div>
+
+    <div id="workspace">
+      <div id="mapFrame">
+        <div id="map"></div>
+
+        <div id="mapNotice">
+          Real OpenStreetMap waterway and road routing.
+          Drones move only when assigned to an alarm.
+          Boat patients transfer at the river port and
+          continue by ambulance to the selected hospital.
+        </div>
+
+        <div id="locationStatus">
+          Press “Choose incident location,” then click the map.
+        </div>
+      </div>
+
+      <aside id="side">
+        <div id="modeTabs">
+          <button data-mode="operations" class="active">
+            Operations
+          </button>
+
+          <button data-mode="reasoning">
+            Reasoning
+          </button>
+
+          <button data-mode="experiment">
+            S1-S5
+          </button>
+        </div>
+
+        <section id="operations" class="mode active">
+          <div class="card">
+            <h3>New emergency alert</h3>
+
+            <button
+              id="chooseLocationButton"
+              class="primary"
+            >
+              Choose incident location on map
+            </button>
+
+            <div
+              id="selectedLocation"
+              class="small"
+              style="margin: 8px 0"
+            >
+              No map location selected.
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="peopleInput">
+                  People
+                </label>
+
+                <input
+                  id="peopleInput"
+                  type="number"
+                  min="1"
+                  value="4"
+                />
+              </div>
+
+              <div class="field">
+                <label for="severityInput">
+                  Severity 1–5
+                </label>
+
+                <input
+                  id="severityInput"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value="3"
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="deadlineInput">
+                  Deadline, minutes
+                </label>
+
+                <input
+                  id="deadlineInput"
+                  type="number"
+                  min="1"
+                  value="20"
+                />
+              </div>
+
+              <div class="field">
+                <label for="accessHintInput">
+                  Caller access hint
+                </label>
+
+                <select id="accessHintInput">
+                  <option value="auto">
+                    Unknown / let drone determine
+                  </option>
+                  <option value="water">
+                    Caller reports water access
+                  </option>
+                  <option value="land">
+                    Caller reports road access
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="descriptionInput">
+                Emergency description
+              </label>
+
+              <textarea
+                id="descriptionInput"
+                rows="2"
+              >People require flood rescue.</textarea>
+            </div>
+
+            <button
+              id="submitIncidentButton"
+              class="primary"
+              disabled
+            >
+              Submit alert
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>Mission totals</h3>
+
+            <div class="metrics">
+              <div class="metric">
+                <strong id="waitingMetric">0</strong>
+                Waiting
+              </div>
+
+              <div class="metric">
+                <strong id="onboardMetric">0</strong>
+                Onboard
+              </div>
+
+              <div class="metric">
+                <strong id="transferMetric">0</strong>
+                At port
+              </div>
+
+              <div class="metric">
+                <strong id="deliveredMetric">0</strong>
+                Hospital
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Fleet</h3>
+            <div id="fleetList" class="list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Incidents</h3>
+            <div id="incidentList" class="list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Recent mission activity</h3>
+            <div id="messageList" class="list"></div>
+          </div>
+        </section>
+
+        <section id="reasoning" class="mode">
+          <div class="card">
+            <h3>Current schedule</h3>
+            <div id="taskList" class="list"></div>
+          </div>
+
+          <div class="card">
+            <h3>TRACE decisions</h3>
+            <div id="traceList" class="list"></div>
+          </div>
+        </section>
+
+        <section id="experiment" class="mode">
+          <div class="card">
+            <h3>S1 · Reconnaissance uncertainty</h3>
+
+            <div class="field">
+              <label for="sensorNoiseInput">
+                Sensor noise
+              </label>
+
+              <input
+                id="sensorNoiseInput"
+                type="range"
+                min="0"
+                max="0.7"
+                step="0.01"
+                value="0.04"
+              />
+
+              <div id="sensorNoiseValue" class="small">
+                0.04
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>S2 · Dynamic river</h3>
+
+            <div class="field">
+              <label for="riverLevelInput">
+                River level
+              </label>
+
+              <input
+                id="riverLevelInput"
+                type="range"
+                min="0"
+                max="1.5"
+                step="0.01"
+                value="0.32"
+              />
+
+              <div id="riverLevelValue" class="small">
+                0.32
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>S3/S4 · Reactive scheduling</h3>
+
+            <div class="field">
+              <label for="preemptionMarginInput">
+                Minimum priority advantage for preemption
+              </label>
+
+              <input
+                id="preemptionMarginInput"
+                type="number"
+                min="0"
+                value="15"
+              />
+            </div>
+
+            <button id="applyParametersButton">
+              Apply and re-audit
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>S4 · Shock injector</h3>
+
+            <div class="field">
+              <label for="shockTypeInput">
+                Shock
+              </label>
+
+              <select id="shockTypeInput">
+                <option value="ground_asset">
+                  Ground asset
+                </option>
+                <option value="restore_asset">
+                  Restore asset
+                </option>
+                <option value="close_water_edge">
+                  Close water edge
+                </option>
+                <option value="open_water_edge">
+                  Open water edge
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="shockTargetInput">
+                Target asset or edge ID
+              </label>
+
+              <input
+                id="shockTargetInput"
+                value="rescue_boat_2"
+              />
+            </div>
+
+            <button id="injectShockButton" class="danger">
+              Inject shock
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>Map controls</h3>
+
+            <label>
+              <input
+                id="lockCameraCheckbox"
+                type="checkbox"
+              />
+              Lock map camera
+            </label>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script
+    src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"
+  ></script>
+
+  <script>
+    const API_ROOT = "/api/d04";
+
+    let currentSnapshot = null;
+    let geography = null;
+    let cameraApplied = false;
+
+    let placementArmed = false;
+    let selectedLocation = null;
+    let temporaryMarker = null;
+
+    const assetMarkers = new Map();
+    const incidentMarkers = new Map();
+    const facilityMarkers = new Map();
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style:
+        "https://tiles.openfreemap.org/styles/liberty",
+      center: [-121.78, 38.00],
+      zoom: 11.8,
+      pitch: 55,
+      bearing: -18,
+      maxPitch: 75,
+      antialias: true,
+    });
+
+    map.addControl(
+      new maplibregl.NavigationControl({
+        showZoom: true,
+        showCompass: true,
+        visualizePitch: true,
+      }),
+      "top-right",
+    );
+
+    map.addControl(
+      new maplibregl.ScaleControl({
+        unit: "metric",
+      }),
+      "bottom-right",
+    );
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    async function postJson(path, payload = {}) {
+      const response = await fetch(
+        path,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(
+          `${response.status}: ${body}`,
+        );
+      }
+
+      return response.json();
+    }
+
+    function emptyCollection() {
+      return {
+        type: "FeatureCollection",
+        features: [],
+      };
+    }
+
+    function assetRouteFeatures(snapshot) {
+      return {
+        type: "FeatureCollection",
+        features: snapshot.assets
+          .filter(
+            (asset) =>
+              Array.isArray(asset.remaining_route)
+              && asset.remaining_route.length >= 2,
+          )
+          .map((asset) => ({
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: asset.remaining_route,
+            },
+            properties: {
+              asset_id: asset.asset_id,
+              color: asset.color,
+              state: asset.state,
+            },
+          })),
+      };
+    }
+
+    function addMapSourcesAndLayers() {
+      map.addSource(
+        "water-network",
+        {
+          type: "geojson",
+          data: geography.waterways,
+        },
+      );
+
+      map.addSource(
+        "asset-routes",
+        {
+          type: "geojson",
+          data: emptyCollection(),
+        },
+      );
+
+      map.addLayer({
+        id: "water-navigation-casing",
+        type: "line",
+        source: "water-network",
+        layout: {
+          "line-cap": "round",
+          "line-join": "round",
+        },
+        paint: {
+          "line-color": "#ffffff",
+          "line-width": 6,
+          "line-opacity": 0.72,
+        },
+      });
+
+      map.addLayer({
+        id: "water-navigation-centerline",
+        type: "line",
+        source: "water-network",
+        layout: {
+          "line-cap": "round",
+          "line-join": "round",
+        },
+        paint: {
+          "line-color": "#087ca7",
+          "line-width": 3,
+          "line-opacity": 0.94,
+        },
+      });
+
+      map.addLayer({
+        id: "authorized-asset-routes",
+        type: "line",
+        source: "asset-routes",
+        layout: {
+          "line-cap": "round",
+          "line-join": "round",
+        },
+        paint: {
+          "line-color": [
+            "coalesce",
+            ["get", "color"],
+            "#1d4ed8",
+          ],
+          "line-width": 5,
+          "line-opacity": 0.86,
+          "line-dasharray": [1.3, 1.0],
+        },
+      });
+    }
+
+    function droneSvg(color) {
+      return `
+        <svg viewBox="0 0 64 64"
+             width="100%"
+             height="100%">
+          <g fill="none"
+             stroke="${color}"
+             stroke-width="5"
+             stroke-linecap="round">
+            <path d="M19 19 L45 45" />
+            <path d="M45 19 L19 45" />
+          </g>
+
+          <g class="drone-rotor"
+             fill="#ffffff"
+             stroke="${color}"
+             stroke-width="4">
+            <circle cx="14" cy="14" r="9" />
+            <circle cx="50" cy="14" r="9" />
+            <circle cx="14" cy="50" r="9" />
+            <circle cx="50" cy="50" r="9" />
+          </g>
+
+          <rect x="24"
+                y="24"
+                width="16"
+                height="16"
+                rx="4"
+                fill="${color}"
+                stroke="#ffffff"
+                stroke-width="3" />
+
+          <circle cx="32"
+                  cy="38"
+                  r="4"
+                  fill="#111827" />
+        </svg>
+      `;
+    }
+
+    function boatSvg(color) {
+      return `
+        <svg viewBox="0 0 80 64"
+             width="100%"
+             height="100%">
+          <path
+            d="M8 37 L72 37 L61 55 L19 55 Z"
+            fill="${color}"
+            stroke="#ffffff"
+            stroke-width="3"
+          />
+
+          <path
+            d="M25 21 L54 21 L63 37 L18 37 Z"
+            fill="#eef7fb"
+            stroke="${color}"
+            stroke-width="3"
+          />
+
+          <rect x="30"
+                y="26"
+                width="10"
+                height="7"
+                fill="#20465d" />
+
+          <rect x="44"
+                y="26"
+                width="10"
+                height="7"
+                fill="#20465d" />
+
+          <path
+            d="M39 21 L39 10"
+            stroke="${color}"
+            stroke-width="3" />
+
+          <path
+            d="M15 60 Q25 55 35 60 T55 60 T75 60"
+            fill="none"
+            stroke="#79c5e4"
+            stroke-width="4"
+          />
+        </svg>
+      `;
+    }
+
+    function ambulanceSvg(color) {
+      return `
+        <svg viewBox="0 0 88 64"
+             width="100%"
+             height="100%">
+          <rect
+            x="8"
+            y="18"
+            width="59"
+            height="34"
+            rx="7"
+            fill="#ffffff"
+            stroke="${color}"
+            stroke-width="4"
+          />
+
+          <path
+            d="M67 28 L78 34 L80 52 L66 52 Z"
+            fill="${color}"
+            stroke="#ffffff"
+            stroke-width="2"
+          />
+
+          <rect x="20"
+                y="24"
+                width="24"
+                height="5"
+                rx="2"
+                fill="${color}" />
+
+          <rect x="29"
+                y="15"
+                width="6"
+                height="24"
+                fill="${color}" />
+
+          <circle cx="24"
+                  cy="54"
+                  r="7"
+                  fill="#1f2937"
+                  stroke="#ffffff"
+                  stroke-width="2" />
+
+          <circle cx="65"
+                  cy="54"
+                  r="7"
+                  fill="#1f2937"
+                  stroke="#ffffff"
+                  stroke-width="2" />
+
+          <rect x="14"
+                y="12"
+                width="13"
+                height="6"
+                rx="3"
+                fill="#2563eb" />
+
+          <rect x="28"
+                y="12"
+                width="13"
+                height="6"
+                rx="3"
+                fill="#dc2626" />
+        </svg>
+      `;
+    }
+
+    function assetIcon(asset) {
+      if (asset.kind === "drone") {
+        return droneSvg(asset.color);
+      }
+
+      if (asset.kind === "boat") {
+        return boatSvg(asset.color);
+      }
+
+      return ambulanceSvg(asset.color);
+    }
+
+    function createAssetMarker(asset) {
+      const element = document.createElement("div");
+
+      element.className =
+        `asset-marker ${asset.kind}`;
+
+      element.style.width =
+        `${asset.marker_size}px`;
+
+      element.style.height =
+        `${asset.marker_size}px`;
+
+      element.innerHTML = assetIcon(asset);
+
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      badge.hidden = true;
+
+      element.appendChild(badge);
+
+      const marker = new maplibregl.Marker({
+        element,
+        anchor: "center",
+      })
+        .setLngLat([
+          asset.longitude,
+          asset.latitude,
+        ])
+        .addTo(map);
+
+      const popup = new maplibregl.Popup({
+        offset: 22,
+      });
+
+      element.addEventListener("click", () => {
+        popup
+          .setLngLat(marker.getLngLat())
+          .setHTML(`
+            <strong>${asset.asset_id}</strong><br/>
+            Type: ${asset.kind}<br/>
+            State: ${asset.state}<br/>
+            Capacity: ${asset.capacity}<br/>
+            Cargo: ${asset.cargo_count}
+          `)
+          .addTo(map);
+      });
+
+      return {
+        marker,
+        element,
+        badge,
+        animation: null,
+      };
+    }
+
+    function animateAssetMarker(
+      record,
+      target,
+    ) {
+      if (record.animation !== null) {
+        cancelAnimationFrame(record.animation);
+      }
+
+      const start = record.marker.getLngLat();
+
+      const startPoint = [
+        start.lng,
+        start.lat,
+      ];
+
+      const endPoint = [
+        target.longitude,
+        target.latitude,
+      ];
+
+      const startedAt = performance.now();
+      const duration = 390;
+
+      const frame = (now) => {
+        const raw = Math.min(
+          1,
+          (now - startedAt) / duration,
+        );
+
+        const eased =
+          1 - Math.pow(1 - raw, 3);
+
+        record.marker.setLngLat([
+          startPoint[0]
+            + (endPoint[0] - startPoint[0])
+            * eased,
+          startPoint[1]
+            + (endPoint[1] - startPoint[1])
+            * eased,
+        ]);
+
+        if (raw < 1) {
+          record.animation =
+            requestAnimationFrame(frame);
+        } else {
+          record.animation = null;
+        }
+      };
+
+      record.animation =
+        requestAnimationFrame(frame);
+    }
+
+    function updateAssetMarkers(snapshot) {
+      const activeIds = new Set();
+
+      snapshot.assets.forEach((asset) => {
+        activeIds.add(asset.asset_id);
+
+        let record = assetMarkers.get(
+          asset.asset_id,
+        );
+
+        if (!record) {
+          record = createAssetMarker(asset);
+          assetMarkers.set(asset.asset_id, record);
+        }
+
+        record.element.classList.toggle(
+          "preempting",
+          Boolean(asset.pending_task_id),
+        );
+
+        record.element.title =
+          `${asset.asset_id}: ${asset.state}`;
+
+        if (asset.cargo_count > 0) {
+          record.badge.hidden = false;
+          record.badge.textContent =
+            String(asset.cargo_count);
+        } else {
+          record.badge.hidden = true;
+        }
+
+        animateAssetMarker(record, asset);
+      });
+
+      for (
+        const [assetId, record]
+        of assetMarkers.entries()
+      ) {
+        if (activeIds.has(assetId)) {
+          continue;
+        }
+
+        record.marker.remove();
+        assetMarkers.delete(assetId);
+      }
+    }
+
+    function createIncidentMarker(incident) {
+      const element = document.createElement("div");
+      element.className = "incident-marker";
+
+      const marker = new maplibregl.Marker({
+        element,
+        anchor: "center",
+      })
+        .setLngLat([
+          incident.longitude,
+          incident.latitude,
+        ])
+        .addTo(map);
+
+      const popup = new maplibregl.Popup({
+        offset: 20,
+      });
+
+      element.addEventListener("click", () => {
+        popup
+          .setLngLat(marker.getLngLat())
+          .setHTML(`
+            <strong>${incident.incident_id}</strong><br/>
+            Access: ${incident.access_mode}<br/>
+            Status: ${incident.status}<br/>
+            Waiting: ${incident.people_waiting}<br/>
+            Onboard: ${incident.people_onboard}<br/>
+            At port: ${incident.people_at_transfer}<br/>
+            Hospital: ${incident.people_delivered}
+          `)
+          .addTo(map);
+      });
+
+      return {
+        marker,
+        element,
+      };
+    }
+
+    function updateIncidentMarkers(snapshot) {
+      const activeIds = new Set();
+
+      snapshot.incidents.forEach((incident) => {
+        activeIds.add(incident.incident_id);
+
+        let record = incidentMarkers.get(
+          incident.incident_id,
+        );
+
+        if (!record) {
+          record = createIncidentMarker(incident);
+
+          incidentMarkers.set(
+            incident.incident_id,
+            record,
+          );
+        }
+
+        record.marker.setLngLat([
+          incident.longitude,
+          incident.latitude,
+        ]);
+
+        record.element.textContent =
+          String(
+            incident.people_waiting
+            || incident.people_onboard
+            || incident.people_at_transfer
+            || incident.people_delivered
+            || 0,
+          );
+
+        record.element.classList.toggle(
+          "completed",
+          incident.status === "completed",
+        );
+
+        record.element.classList.toggle(
+          "onboard",
+          incident.people_onboard > 0,
+        );
+
+        record.element.classList.toggle(
+          "transfer",
+          incident.people_at_transfer > 0,
+        );
+
+        record.element.title =
+          `${incident.incident_id}: ${incident.status}`;
+      });
+
+      for (
+        const [incidentId, record]
+        of incidentMarkers.entries()
+      ) {
+        if (activeIds.has(incidentId)) {
+          continue;
+        }
+
+        record.marker.remove();
+        incidentMarkers.delete(incidentId);
+      }
+    }
+
+    function addFacilityMarker(
+      facility,
+      markerType,
+      symbol,
+    ) {
+      if (
+        facilityMarkers.has(
+          facility.facility_id,
+        )
+      ) {
+        return;
+      }
+
+      const element = document.createElement("div");
+
+      element.className =
+        `facility-marker ${markerType}`;
+
+      element.textContent = symbol;
+      element.title = facility.name;
+
+      const marker = new maplibregl.Marker({
+        element,
+        anchor: "center",
+      })
+        .setLngLat([
+          facility.longitude,
+          facility.latitude,
+        ])
+        .setPopup(
+          new maplibregl.Popup({
+            offset: 20,
+          }).setHTML(`
+            <strong>${facility.name}</strong><br/>
+            ${markerType.replace("_", " ")}
+          `),
+        )
+        .addTo(map);
+
+      facilityMarkers.set(
+        facility.facility_id,
+        marker,
+      );
+    }
+
+    function updateFacilityMarkers(snapshot) {
+      addFacilityMarker(
+        snapshot.facilities.hospital,
+        "hospital",
+        "✚",
+      );
+
+      addFacilityMarker(
+        snapshot.facilities.transfer_port,
+        "transfer_port",
+        "⚓",
+      );
+    }
+
+    function renderFleet(snapshot) {
+      byId("fleetList").innerHTML =
+        snapshot.assets
+          .map((asset) => `
+            <div class="list-item">
+              <strong>${asset.asset_id}</strong>
+              <span class="status-pill">
+                ${asset.kind}
+              </span>
+              <br/>
+              ${asset.state}
+              ${asset.grounded ? " · GROUNDED" : ""}
+              ${asset.current_task_id
+                ? `<br/>Task: ${asset.current_task_id}`
+                : ""}
+              ${asset.pending_task_id
+                ? `<br/><b>Pending preemption:</b>
+                   ${asset.pending_task_id}`
+                : ""}
+              ${asset.cargo_count
+                ? `<br/>Carrying: ${asset.cargo_count}`
+                : ""}
+            </div>
+          `)
+          .join("");
+    }
+
+    function renderIncidents(snapshot) {
+      byId("incidentList").innerHTML =
+        snapshot.incidents.length
+          ? snapshot.incidents
+              .map((incident) => `
+                <div class="list-item">
+                  <strong>${incident.incident_id}</strong>
+                  <span class="status-pill">
+                    ${incident.access_mode}
+                  </span>
+                  <br/>
+                  ${incident.status}
+                  <br/>
+                  Waiting ${incident.people_waiting}
+                  · Onboard ${incident.people_onboard}
+                  · Port ${incident.people_at_transfer}
+                  · Hospital ${incident.people_delivered}
+                  ${incident.assigned_asset_id
+                    ? `<br/>Assigned:
+                       ${incident.assigned_asset_id}`
+                    : ""}
+                </div>
+              `)
+              .join("")
+          : '<div class="small">No active alerts.</div>';
+    }
+
+    function renderTasks(snapshot) {
+      const sorted = [...snapshot.tasks].sort(
+        (a, b) => b.priority - a.priority,
+      );
+
+      byId("taskList").innerHTML =
+        sorted.length
+          ? sorted
+              .map((task) => `
+                <div class="list-item">
+                  <strong>${task.task_id}</strong>
+                  · ${task.task_kind}
+                  <br/>
+                  Incident ${task.incident_id}
+                  <br/>
+                  Priority ${task.priority.toFixed(1)}
+                  · ${task.status}
+                  ${task.assigned_asset_id
+                    ? `<br/>Asset:
+                       ${task.assigned_asset_id}`
+                    : ""}
+                  ${task.suspended_count
+                    ? `<br/>Suspended:
+                       ${task.suspended_count} time(s)`
+                    : ""}
+                </div>
+              `)
+              .join("")
+          : '<div class="small">No tasks.</div>';
+    }
+
+    function renderTrace(snapshot) {
+      const entries = [
+        ...snapshot.trace_entries,
+      ].reverse();
+
+      byId("traceList").innerHTML =
+        entries.length
+          ? entries
+              .map((entry) => {
+                const preempt =
+                  entry.event_type.includes(
+                    "PREEMPT",
+                  );
+
+                const className = preempt
+                  ? "preempt"
+                  : entry.decision.toLowerCase();
+
+                return `
+                  <div class=
+                    "list-item trace-item ${className}">
+                    <strong>
+                      ${entry.event_type}
+                    </strong>
+                    · ${entry.decision}
+                    <br/>
+                    ${entry.claim}
+                    <br/>
+                    <span class="small">
+                      Action:
+                      ${entry.action.type || "none"}
+                    </span>
+                  </div>
+                `;
+              })
+              .join("")
+          : '<div class="small">No TRACE records.</div>';
+    }
+
+    function renderMessages(snapshot) {
+      const entries = [
+        ...snapshot.messages,
+      ]
+        .reverse()
+        .slice(0, 30);
+
+      byId("messageList").innerHTML =
+        entries
+          .map((message) => `
+            <div
+              class="list-item message"
+              data-event="${message.event_type}"
+            >
+              <strong>
+                t=${message.simulation_time.toFixed(1)}
+                · ${message.event_type}
+              </strong>
+              <br/>
+              ${message.text}
+            </div>
+          `)
+          .join("");
+    }
+
+    function applyCamera(snapshot) {
+      if (cameraApplied) {
+        return;
+      }
+
+      const bbox = snapshot.map.bbox;
+
+      map.fitBounds(
+        [
+          [bbox.west, bbox.south],
+          [bbox.east, bbox.north],
+        ],
+        {
+          padding: 35,
+          pitch: snapshot.map.pitch,
+          bearing: snapshot.map.bearing,
+          duration: 0,
+        },
+      );
+
+      cameraApplied = true;
+    }
+
+    function renderSnapshot(snapshot) {
+      currentSnapshot = snapshot;
+      applyCamera(snapshot);
+
+      byId("clock").textContent =
+        `t = ${snapshot.simulation_time.toFixed(1)} s`;
+
+      byId("waitingMetric").textContent =
+        snapshot.metrics.people_waiting;
+
+      byId("onboardMetric").textContent =
+        snapshot.metrics.people_onboard;
+
+      byId("transferMetric").textContent =
+        snapshot.metrics.people_at_transfer;
+
+      byId("deliveredMetric").textContent =
+        snapshot.metrics.people_delivered;
+
+      byId("sensorNoiseInput").value =
+        snapshot.config.sensor_noise;
+
+      byId("riverLevelInput").value =
+        snapshot.config.river_level;
+
+      byId("preemptionMarginInput").value =
+        snapshot.config.preemption_margin;
+
+      byId("sensorNoiseValue").textContent =
+        Number(
+          snapshot.config.sensor_noise,
+        ).toFixed(2);
+
+      byId("riverLevelValue").textContent =
+        Number(
+          snapshot.config.river_level,
+        ).toFixed(2);
+
+      if (map.loaded()) {
+        map
+          .getSource("asset-routes")
+          .setData(
+            assetRouteFeatures(snapshot),
+          );
+
+        updateAssetMarkers(snapshot);
+        updateIncidentMarkers(snapshot);
+        updateFacilityMarkers(snapshot);
+      }
+
+      renderFleet(snapshot);
+      renderIncidents(snapshot);
+      renderTasks(snapshot);
+      renderTrace(snapshot);
+      renderMessages(snapshot);
+    }
+
+    map.on("load", async () => {
+      geography = await fetch(
+        `${API_ROOT}/geography`,
+      ).then((response) => response.json());
+
+      addMapSourcesAndLayers();
+
+      const snapshot = await fetch(
+        `${API_ROOT}/state`,
+      ).then((response) => response.json());
+
+      renderSnapshot(snapshot);
+    });
+
+    map.on("click", (event) => {
+      if (!placementArmed) {
+        return;
+      }
+
+      selectedLocation = {
+        longitude: event.lngLat.lng,
+        latitude: event.lngLat.lat,
+      };
+
+      if (temporaryMarker) {
+        temporaryMarker.remove();
+      }
+
+      const element =
+        document.createElement("div");
+
+      element.className =
+        "temporary-location";
+
+      temporaryMarker =
+        new maplibregl.Marker({
+          element,
+          anchor: "center",
+        })
+          .setLngLat(event.lngLat)
+          .addTo(map);
+
+      byId("selectedLocation").textContent =
+        `${event.lngLat.lat.toFixed(5)}, `
+        + `${event.lngLat.lng.toFixed(5)}`;
+
+      byId("submitIncidentButton").disabled =
+        false;
+
+      byId("locationStatus").textContent =
+        "Location selected. Complete the alert form.";
+
+      placementArmed = false;
+      map.getCanvas().style.cursor = "";
+    });
+
+    byId("chooseLocationButton")
+      .addEventListener("click", () => {
+        placementArmed = true;
+        map.getCanvas().style.cursor =
+          "crosshair";
+
+        byId("locationStatus").textContent =
+          "Click the emergency location on the map.";
+      });
+
+    byId("submitIncidentButton")
+      .addEventListener("click", async () => {
+        if (!selectedLocation) {
+          return;
+        }
+
+        await postJson(
+          `${API_ROOT}/incidents`,
+          {
+            ...selectedLocation,
+            people:
+              Number(byId("peopleInput").value),
+            severity:
+              Number(byId("severityInput").value),
+            deadline_min:
+              Number(byId("deadlineInput").value),
+            access_hint:
+              byId("accessHintInput").value,
+            description:
+              byId("descriptionInput").value,
+          },
+        );
+
+        selectedLocation = null;
+
+        if (temporaryMarker) {
+          temporaryMarker.remove();
+          temporaryMarker = null;
+        }
+
+        byId("selectedLocation").textContent =
+          "No map location selected.";
+
+        byId("submitIncidentButton").disabled =
+          true;
+
+        byId("locationStatus").textContent =
+          "Alert submitted. A drone is being considered.";
+      });
+
+    byId("startButton").addEventListener(
+      "click",
+      () => postJson(
+        `${API_ROOT}/control`,
+        { action: "start" },
+      ),
+    );
+
+    byId("pauseButton").addEventListener(
+      "click",
+      () => postJson(
+        `${API_ROOT}/control`,
+        { action: "pause" },
+      ),
+    );
+
+    byId("stepButton").addEventListener(
+      "click",
+      () => postJson(
+        `${API_ROOT}/control`,
+        {
+          action: "step",
+          seconds: 1,
+        },
+      ),
+    );
+
+    byId("resetButton").addEventListener(
+      "click",
+      () => postJson(
+        `${API_ROOT}/control`,
+        { action: "reset" },
+      ),
+    );
+
+    byId("preemptionDemoButton")
+      .addEventListener("click", () => {
+        postJson(
+          `${API_ROOT}/demo/preemption`,
+        );
+      });
+
+    byId("sensorNoiseInput")
+      .addEventListener("input", (event) => {
+        byId("sensorNoiseValue").textContent =
+          Number(event.target.value).toFixed(2);
+      });
+
+    byId("riverLevelInput")
+      .addEventListener("input", (event) => {
+        byId("riverLevelValue").textContent =
+          Number(event.target.value).toFixed(2);
+      });
+
+    byId("applyParametersButton")
+      .addEventListener("click", () => {
+        postJson(
+          `${API_ROOT}/config`,
+          {
+            sensor_noise:
+              Number(
+                byId("sensorNoiseInput").value,
+              ),
+            river_level:
+              Number(
+                byId("riverLevelInput").value,
+              ),
+            preemption_margin:
+              Number(
+                byId(
+                  "preemptionMarginInput",
+                ).value,
+              ),
+          },
+        );
+      });
+
+    byId("injectShockButton")
+      .addEventListener("click", () => {
+        postJson(
+          `${API_ROOT}/shock`,
+          {
+            shock_type:
+              byId("shockTypeInput").value,
+            target:
+              byId("shockTargetInput").value,
+            severity: 1.0,
+          },
+        );
+      });
+
+    function setCameraLocked(locked) {
+      const operations = [
+        map.dragPan,
+        map.scrollZoom,
+        map.boxZoom,
+        map.dragRotate,
+        map.keyboard,
+        map.touchZoomRotate,
+      ];
+
+      operations.forEach((operation) => {
+        if (locked) {
+          operation.disable();
+        } else {
+          operation.enable();
+        }
+      });
+    }
+
+    byId("lockCameraCheckbox")
+      .addEventListener("change", (event) => {
+        setCameraLocked(event.target.checked);
+      });
+
+    document
+      .querySelectorAll("#modeTabs button")
+      .forEach((button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            document
+              .querySelectorAll(
+                "#modeTabs button",
+              )
+              .forEach((candidate) => {
+                candidate.classList.toggle(
+                  "active",
+                  candidate === button,
+                );
+              });
+
+            document
+              .querySelectorAll(".mode")
+              .forEach((panel) => {
+                panel.classList.toggle(
+                  "active",
+                  panel.id
+                    === button.dataset.mode,
+                );
+              });
+          },
+        );
+      });
+
+    function connectWebSocket() {
+      const protocol =
+        window.location.protocol === "https:"
+          ? "wss"
+          : "ws";
+
+      const websocket = new WebSocket(
+        `${protocol}://${window.location.host}/ws/d04`,
+      );
+
+      websocket.onmessage = (event) => {
+        renderSnapshot(
+          JSON.parse(event.data),
+        );
+      };
+
+      websocket.onclose = () => {
+        window.setTimeout(
+          connectWebSocket,
+          1_000,
+        );
+      };
+
+      websocket.onerror = () => {
+        websocket.close();
+      };
+    }
+
+    connectWebSocket();
+  </script>
+</body>
+</html>

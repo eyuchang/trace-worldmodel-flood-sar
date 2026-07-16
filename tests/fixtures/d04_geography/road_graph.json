@@ -1,0 +1,918 @@
+{
+  "mode": "road",
+  "directed": true,
+  "nodes": [
+    {
+      "node_id": "r00",
+      "longitude": -121.805,
+      "latitude": 37.992
+    },
+    {
+      "node_id": "r01",
+      "longitude": -121.79,
+      "latitude": 37.992
+    },
+    {
+      "node_id": "r02",
+      "longitude": -121.775,
+      "latitude": 37.992
+    },
+    {
+      "node_id": "r03",
+      "longitude": -121.76,
+      "latitude": 37.992
+    },
+    {
+      "node_id": "r10",
+      "longitude": -121.805,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "r11",
+      "longitude": -121.79,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "r12",
+      "longitude": -121.775,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "r13",
+      "longitude": -121.76,
+      "latitude": 38.0
+    },
+    {
+      "node_id": "r20",
+      "longitude": -121.805,
+      "latitude": 38.008
+    },
+    {
+      "node_id": "r21",
+      "longitude": -121.79,
+      "latitude": 38.008
+    },
+    {
+      "node_id": "r22",
+      "longitude": -121.775,
+      "latitude": 38.008
+    },
+    {
+      "node_id": "r23",
+      "longitude": -121.76,
+      "latitude": 38.008
+    }
+  ],
+  "edges": [
+    {
+      "start": "r00",
+      "end": "r01",
+      "edge_id": "re0",
+      "osm_way_id": 200,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          37.992
+        ],
+        [
+          -121.79,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r01",
+      "end": "r00",
+      "edge_id": "re1",
+      "osm_way_id": 201,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          37.992
+        ],
+        [
+          -121.805,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r01",
+      "end": "r02",
+      "edge_id": "re2",
+      "osm_way_id": 202,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          37.992
+        ],
+        [
+          -121.775,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r02",
+      "end": "r01",
+      "edge_id": "re3",
+      "osm_way_id": 203,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          37.992
+        ],
+        [
+          -121.79,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r02",
+      "end": "r03",
+      "edge_id": "re4",
+      "osm_way_id": 204,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          37.992
+        ],
+        [
+          -121.76,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r03",
+      "end": "r02",
+      "edge_id": "re5",
+      "osm_way_id": 205,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          37.992
+        ],
+        [
+          -121.775,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r10",
+      "end": "r11",
+      "edge_id": "re6",
+      "osm_way_id": 206,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          38.0
+        ],
+        [
+          -121.79,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r11",
+      "end": "r10",
+      "edge_id": "re7",
+      "osm_way_id": 207,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.0
+        ],
+        [
+          -121.805,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r11",
+      "end": "r12",
+      "edge_id": "re8",
+      "osm_way_id": 208,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.0
+        ],
+        [
+          -121.775,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r12",
+      "end": "r11",
+      "edge_id": "re9",
+      "osm_way_id": 209,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.0
+        ],
+        [
+          -121.79,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r12",
+      "end": "r13",
+      "edge_id": "re10",
+      "osm_way_id": 210,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.0
+        ],
+        [
+          -121.76,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r13",
+      "end": "r12",
+      "edge_id": "re11",
+      "osm_way_id": 211,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          38.0
+        ],
+        [
+          -121.775,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r20",
+      "end": "r21",
+      "edge_id": "re12",
+      "osm_way_id": 212,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          38.008
+        ],
+        [
+          -121.79,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r21",
+      "end": "r20",
+      "edge_id": "re13",
+      "osm_way_id": 213,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.008
+        ],
+        [
+          -121.805,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r21",
+      "end": "r22",
+      "edge_id": "re14",
+      "osm_way_id": 214,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.008
+        ],
+        [
+          -121.775,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r22",
+      "end": "r21",
+      "edge_id": "re15",
+      "osm_way_id": 215,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.008
+        ],
+        [
+          -121.79,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r22",
+      "end": "r23",
+      "edge_id": "re16",
+      "osm_way_id": 216,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.008
+        ],
+        [
+          -121.76,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r23",
+      "end": "r22",
+      "edge_id": "re17",
+      "osm_way_id": 217,
+      "length_m": 1200.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          38.008
+        ],
+        [
+          -121.775,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r00",
+      "end": "r10",
+      "edge_id": "re18",
+      "osm_way_id": 218,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          37.992
+        ],
+        [
+          -121.805,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r10",
+      "end": "r00",
+      "edge_id": "re19",
+      "osm_way_id": 219,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          38.0
+        ],
+        [
+          -121.805,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r01",
+      "end": "r11",
+      "edge_id": "re20",
+      "osm_way_id": 220,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          37.992
+        ],
+        [
+          -121.79,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r11",
+      "end": "r01",
+      "edge_id": "re21",
+      "osm_way_id": 221,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.0
+        ],
+        [
+          -121.79,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r02",
+      "end": "r12",
+      "edge_id": "re22",
+      "osm_way_id": 222,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          37.992
+        ],
+        [
+          -121.775,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r12",
+      "end": "r02",
+      "edge_id": "re23",
+      "osm_way_id": 223,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.0
+        ],
+        [
+          -121.775,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r03",
+      "end": "r13",
+      "edge_id": "re24",
+      "osm_way_id": 224,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          37.992
+        ],
+        [
+          -121.76,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r13",
+      "end": "r03",
+      "edge_id": "re25",
+      "osm_way_id": 225,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          38.0
+        ],
+        [
+          -121.76,
+          37.992
+        ]
+      ]
+    },
+    {
+      "start": "r10",
+      "end": "r20",
+      "edge_id": "re26",
+      "osm_way_id": 226,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          38.0
+        ],
+        [
+          -121.805,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r20",
+      "end": "r10",
+      "edge_id": "re27",
+      "osm_way_id": 227,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.805,
+          38.008
+        ],
+        [
+          -121.805,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r11",
+      "end": "r21",
+      "edge_id": "re28",
+      "osm_way_id": 228,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.0
+        ],
+        [
+          -121.79,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r21",
+      "end": "r11",
+      "edge_id": "re29",
+      "osm_way_id": 229,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.79,
+          38.008
+        ],
+        [
+          -121.79,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r12",
+      "end": "r22",
+      "edge_id": "re30",
+      "osm_way_id": 230,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.0
+        ],
+        [
+          -121.775,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r22",
+      "end": "r12",
+      "edge_id": "re31",
+      "osm_way_id": 231,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.775,
+          38.008
+        ],
+        [
+          -121.775,
+          38.0
+        ]
+      ]
+    },
+    {
+      "start": "r13",
+      "end": "r23",
+      "edge_id": "re32",
+      "osm_way_id": 232,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          38.0
+        ],
+        [
+          -121.76,
+          38.008
+        ]
+      ]
+    },
+    {
+      "start": "r23",
+      "end": "r13",
+      "edge_id": "re33",
+      "osm_way_id": 233,
+      "length_m": 900.0,
+      "mode": "road",
+      "name": "Fixture Road",
+      "tags": {
+        "highway": "residential"
+      },
+      "open": true,
+      "congestion": 0.0,
+      "closure_reason": null,
+      "coordinates": [
+        [
+          -121.76,
+          38.008
+        ],
+        [
+          -121.76,
+          38.0
+        ]
+      ]
+    }
+  ]
+}

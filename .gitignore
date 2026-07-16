@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Editors
+.vscode/
+.idea/
+
+# Model and data artifacts
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+models/external/vjepa2/*
+!models/external/vjepa2/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+artifacts/records/*
+!artifacts/records/.gitkeep
+artifacts/evidence/*
+!artifacts/evidence/.gitkeep
+artifacts/commitments/*
+!artifacts/commitments/.gitkeep
+artifacts/runs/*
+!artifacts/runs/.gitkeep
+
+# Third-party source is cloned locally, not redistributed
+third_party/vjepa2/
+
+# Torch / Hugging Face caches when redirected into the project
+.cache/
+artifacts/dynamic/*
+artifacts/dynamic_demo/*
+!artifacts/dynamic_demo/.gitkeep

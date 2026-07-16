@@ -1,0 +1,54 @@
+{
+  "config": {
+    "auto_plan": true,
+    "commander_authority_present": true,
+    "planning_interval_s": 5.0,
+    "rescue": {
+      "merge_alert_radius": 2.0,
+      "pickup_base_s": 6.0,
+      "pickup_per_person_s": 1.5,
+      "post_rescue_policy": "standby_at_safe_location",
+      "safe_location_id": "safe_transfer_dock",
+      "unload_base_s": 5.0,
+      "unload_per_person_s": 1.0
+    },
+    "s1": {
+      "drone_report_accuracy": 0.92,
+      "observation_latency_s": 2.0,
+      "ood_severity": 0.25,
+      "packet_loss": 0.02,
+      "seed": 7,
+      "sensor_noise": 0.12
+    },
+    "s2": {
+      "clearance_horizon_s": 180.0,
+      "observation_freshness_s": 120.0,
+      "rain_intensity": 0.25,
+      "route_closure_depth": 0.72,
+      "upstream_inflow": 0.2,
+      "water_rise_rate": 0.00015
+    },
+    "s3": {
+      "conflict_policy": "serialize",
+      "deadline_weight": 1.0,
+      "mission_budget": 1000.0,
+      "risk_weight": 1.0,
+      "severity_weight": 1.0
+    },
+    "s5": {
+      "default_drone_endurance": 0.82,
+      "max_pending_surveys": 3,
+      "sector_weather": 0.25,
+      "sensor_quality": 0.9,
+      "value_of_information_weight": 0.7
+    },
+    "simulation_speed": 1.0
+  },
+  "controller_version": "dynamic-mission-controller-d0.2-step02",
+  "event_chain_valid": true,
+  "event_count": 199,
+  "predictor_version": "dynamic-surrogate-predictor-v1.1",
+  "run_id": "sample-step02",
+  "scenario_path": "configs/scenarios/riverside_flood_dynamic_v2.yaml",
+  "trace_chain_valid": true
+}

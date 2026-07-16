@@ -1,0 +1,17 @@
+action_schema_version: flood-actions-v1
+actions:
+  verify_route:
+    actor_type: survey_drone
+    reversible: true
+    parameters:
+      - route_id
+      - purpose
+  dispatch_rescue_boat:
+    actor_type: rescue_boat
+    reversible: false
+    parameters:
+      - origin
+      - destination
+      - route_id
+      - people_count
+      - deadline_s

@@ -1,0 +1,197 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "we0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.8,
+            38.0
+          ],
+          [
+            -121.79,
+            38.005
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we0",
+        "mode": "water",
+        "name": "Fixture Channel 0",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            38.005
+          ],
+          [
+            -121.78,
+            38.01
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we1",
+        "mode": "water",
+        "name": "Fixture Channel 1",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.78,
+            38.01
+          ],
+          [
+            -121.77,
+            38.005
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we2",
+        "mode": "water",
+        "name": "Fixture Channel 2",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.77,
+            38.005
+          ],
+          [
+            -121.76,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we3",
+        "mode": "water",
+        "name": "Fixture Channel 3",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.8,
+            38.0
+          ],
+          [
+            -121.79,
+            37.995
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we4",
+        "mode": "water",
+        "name": "Fixture Channel 4",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.79,
+            37.995
+          ],
+          [
+            -121.78,
+            37.99
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we5",
+        "mode": "water",
+        "name": "Fixture Channel 5",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.78,
+            37.99
+          ],
+          [
+            -121.77,
+            37.995
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we6",
+        "mode": "water",
+        "name": "Fixture Channel 6",
+        "open": true,
+        "congestion": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "we7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -121.77,
+            37.995
+          ],
+          [
+            -121.76,
+            38.0
+          ]
+        ]
+      },
+      "properties": {
+        "edge_id": "we7",
+        "mode": "water",
+        "name": "Fixture Channel 7",
+        "open": true,
+        "congestion": 0.0
+      }
+    }
+  ]
+}

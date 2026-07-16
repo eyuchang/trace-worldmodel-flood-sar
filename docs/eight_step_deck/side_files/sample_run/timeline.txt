@@ -1,0 +1,14 @@
+[01] CALL RECEIVED      Emergency call reports 4 people at Riverside Apartments.
+[02] MISSION STATE      Mission Controller grounds the incident at Riverside Apartments; North Channel is unknown.
+[03] PLAN ASSESSED      Dispatch rescue_boat_1 from rescue_base to riverside_apartments via North Channel -> HOLD (support=0.28, OOD=0.82).
+[04] PLAN ASSESSED      Send survey_drone_1 to verify North Channel -> CLEAR (support=0.97, OOD=0.04).
+[05] PLAN ASSESSED      Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -> CLEAR (support=0.93, OOD=0.08).
+[06] ACTION SELECTED    Mission Controller selects: survey drone 1 verifies north channel.
+[07] ACTION DISPATCHED  Authorized command sent to survey_drone_1.
+[08] OBSERVATION RECEIVED survey_drone_1 reports north_channel is blocked.
+[09] TRACE REVISED      TRACE rejects the northern-route claim and preserves the completed verification action.
+[10] REPLANNING         Planner repairs only the route-dependent rescue branch.
+[11] PLAN REASSESSED    Dispatch rescue_boat_1 from rescue_base to riverside_apartments via South Detour -> CLEAR.
+[12] FINAL ACTION SELECTED Mission Controller selects: rescue boat 1 dispatches to riverside apartments via south detour.
+[13] FINAL ACTION DISPATCHED Incident Commander approval and TRACE clearance authorize rescue_boat_1.
+[14] RESCUE OUTCOME     Rescue completed: success=True, people_reached=4.
