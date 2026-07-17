@@ -1,6 +1,6 @@
-# TRACE-JEPA Flood-SAR Workbench
+# TRACE-WorldModel Flood-SAR Workbench
 
-TRACE-JEPA is a teaching and research workbench for studying System-2 reasoning, evidence-gated planning, causal analysis, and multi-agent coordination in dynamic flood search-and-rescue operations.
+TRACE-WorldModel is a teaching and research workbench for studying System-2 reasoning, evidence-gated planning, causal analysis, and multi-agent coordination in dynamic flood search-and-rescue operations.
 
 The current verified implementation is **D0.5 Predictive Scheduling**.
 
@@ -138,7 +138,7 @@ data/geography/antioch_delta_real_v1/road_graph.json
 
 They are distributed separately through GitHub Releases:
 
-<https://github.com/eyuchang/trace-jepa-flood-sar/releases>
+<https://github.com/eyuchang/trace-worldmodel-flood-sar/releases>
 
 Expected release asset:
 
@@ -361,7 +361,7 @@ TRACE is intended to make planning decisions inspectable, revisable, and auditab
 ## Project layout
 
 ```text
-trace-jepa-flood-sar/
+trace-worldmodel-flood-sar/
 ├── configs/                 scenario, model, policy, and strategy settings
 ├── data/                    geography, manifests, and generated data
 ├── docs/                    mission brief, tutorials, and instructor notes
@@ -500,4 +500,4 @@ All consequential actions must remain subject to qualified human authorization a
 
 ## Author
 
-Developed by Professor Edward Chang at Stanford University as part of the TRACE-JEPA and *The Path to AGI* research and teaching program.
+Developed by Professor Edward Chang at Stanford University as part of the TRACE-WorldModel and *The Path to AGI* research and teaching program.
