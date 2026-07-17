@@ -24,6 +24,22 @@ trace_jepa       = temporary internal Python package name
 trace-jepa-*     = temporary CLI command prefix
 ```
 
+
+## Research papers
+
+This repository implements the first end-to-end Flood-SAR workbench for the TRACE-WorldModel research program.
+
+The foundational TRACE schema is described in:
+
+- Edward Y. Chang and Emily J. Chang.  
+  **TRACE: An Operational Reasoning Schema for Auditable Agentic Commitments.**  
+  arXiv:2607.12480, 2026.  
+  <https://arxiv.org/abs/2607.12480>
+
+TRACE-WorldModel builds on TRACE by moving from typed reasoning records and commitment gates to an active world-model workbench: simulated or learned predictions become TRACE-gated evidence before they can affect rescue planning, dispatch, revision, or completion.
+
+A separate TRACE-WorldModel paper is planned for the Flood-SAR implementation and evaluation.
+
 ## System overview
 
 The workbench simulates a major flooding event in the San Francisco Bay Area and Delta waterways.
