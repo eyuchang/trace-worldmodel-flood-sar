@@ -1,0 +1,580 @@
+{
+  "elements": [
+    {
+      "id": 358795498,
+      "lat": 38.0499202,
+      "lon": -121.703843,
+      "tags": {
+        "ele": "2",
+        "gnis:feature_id": "253388",
+        "name": "Eddos Harbor",
+        "waterway": "dock"
+      },
+      "type": "node"
+    },
+    {
+      "id": 358821262,
+      "lat": 38.0179767,
+      "lon": -121.747732,
+      "tags": {
+        "ele": "1",
+        "gnis:feature_id": "1701782",
+        "name": "Lauritzen Yacht Harbor",
+        "waterway": "dock"
+      },
+      "type": "node"
+    },
+    {
+      "id": 358821266,
+      "lat": 38.0185322,
+      "lon": -121.7557877,
+      "tags": {
+        "ele": "0",
+        "gnis:feature_id": "1701787",
+        "name": "Lloyds Holiday Harbor",
+        "waterway": "dock"
+      },
+      "type": "node"
+    },
+    {
+      "id": 358821314,
+      "lat": 38.0196432,
+      "lon": -121.7585656,
+      "tags": {
+        "ele": "1",
+        "gnis:feature_id": "1701819",
+        "name": "San Joaquin Harbor",
+        "waterway": "dock"
+      },
+      "type": "node"
+    },
+    {
+      "id": 2955419053,
+      "lat": 38.0119247,
+      "lon": -121.7325962,
+      "tags": {
+        "leisure": "marina"
+      },
+      "type": "node"
+    },
+    {
+      "id": 9763986791,
+      "lat": 38.0107149,
+      "lon": -121.733045,
+      "tags": {
+        "addr:city": "Oakley",
+        "addr:country": "US",
+        "addr:state": "CA",
+        "addr:street": "100 Big Break Rd",
+        "leisure": "marina",
+        "name": "Big Break Marina Holdings LLC",
+        "opening_hours": "Mo-Fr 08:00-17:00",
+        "operator": "Thi Vo",
+        "payment": "MasterCard, Amex, Cash, Visa, Discover, Checks, Invoice",
+        "phone": "+1 925-679-0900",
+        "postal_code": "94561",
+        "website": "https://www.bigbreakmarina.com"
+      },
+      "type": "node"
+    },
+    {
+      "center": {
+        "lat": 37.9826454,
+        "lon": -121.803181
+      },
+      "id": 31556915,
+      "nodes": [
+        352842382,
+        353113211,
+        353113281,
+        353113212,
+        5552266814,
+        353113213,
+        5552266815,
+        5552266816,
+        358821231,
+        353113017,
+        12863724524,
+        353113292,
+        353113018,
+        12863724526,
+        353113019,
+        352842735,
+        352842380,
+        352842382
+      ],
+      "tags": {
+        "addr:city": "Antioch",
+        "addr:housenumber": "3901",
+        "addr:postcode": "94509",
+        "addr:street": "Lone Tree Way",
+        "amenity": "hospital",
+        "emergency": "yes",
+        "gnis:feature_id": "1701759",
+        "healthcare": "hospital",
+        "name": "Sutter Delta Medical Center",
+        "opening_hours": "24/7",
+        "operator": "Sutter Health",
+        "operator:type": "private",
+        "operator:website": "https://www.sutterhealth.org/",
+        "operator:wikidata": "Q7650154",
+        "operator:wikipedia": "en:Sutter Health",
+        "phone": "+1 925 779 7200",
+        "website": "https://www.sutterhealth.org/delta",
+        "wikidata": "Q7650150",
+        "wikipedia": "en:Sutter Delta Medical Center"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0173002,
+        "lon": -121.7708734
+      },
+      "id": 35799494,
+      "nodes": [
+        418558827,
+        418558828,
+        418558829,
+        418558830,
+        418558827
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0284292,
+        "lon": -121.8493384
+      },
+      "id": 35836395,
+      "nodes": [
+        418986570,
+        418986571,
+        418986572,
+        418986573,
+        418986575,
+        418986576,
+        418986578,
+        418986579,
+        418986570
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0181314,
+        "lon": -121.8143098
+      },
+      "id": 35836508,
+      "nodes": [
+        418987287,
+        418987288,
+        418987289,
+        418987290,
+        418987291,
+        418987292,
+        418987293,
+        418987294,
+        418987295,
+        418987287
+      ],
+      "tags": {
+        "area": "yes",
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 37.9508127,
+        "lon": -121.7748562
+      },
+      "id": 123074822,
+      "nodes": [
+        1373593925,
+        12612373392,
+        12612373393,
+        12612373390,
+        12612373391,
+        1373592842,
+        11270157524,
+        1373592563,
+        1390372850,
+        1373592415,
+        1373592423,
+        1373592431,
+        1373592510,
+        1373592513,
+        1373592530,
+        8881986046,
+        1373592467,
+        1373592464,
+        1373592727,
+        5293088650,
+        1390372851,
+        12583243518,
+        1390372852,
+        12583243519,
+        1373593925
+      ],
+      "tags": {
+        "addr:city": "Antioch",
+        "addr:housenumber": "4501",
+        "addr:postcode": "94531",
+        "addr:street": "Sand Creek Road",
+        "amenity": "hospital",
+        "emergency": "yes",
+        "healthcare": "hospital",
+        "name": "Kaiser Permanente Antioch Medical Center",
+        "opening_hours": "24/7",
+        "operator": "Kaiser Permanente",
+        "operator:short": "KP",
+        "operator:type": "private",
+        "operator:website": "https://healthy.kaiserpermanente.org/",
+        "operator:wikidata": "Q1721601",
+        "operator:wikipedia": "en:Kaiser Permanente",
+        "phone": "+1 925 813 6500",
+        "website": "https://thrive.kaiserpermanente.org/care-near-you/northern-california/diablo/locations/antioch-medical-center/"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0123279,
+        "lon": -121.7283611
+      },
+      "id": 292029625,
+      "nodes": [
+        6268786988,
+        2955419056
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0284109,
+        "lon": -121.7516074
+      },
+      "id": 435410501,
+      "nodes": [
+        4333268878,
+        4333268867,
+        4333268881,
+        8486947224,
+        4333268866,
+        4333268875,
+        8486947225,
+        4333268880,
+        4333268885,
+        4333268873,
+        8486947222,
+        8486947223,
+        4333268884,
+        4333268876,
+        4333268878
+      ],
+      "tags": {
+        "area": "yes",
+        "man_made": "pier",
+        "source": "Bing"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0272007,
+        "lon": -121.7515931
+      },
+      "id": 435410503,
+      "nodes": [
+        4333268868,
+        4333268874,
+        4333268870,
+        8486947228,
+        4333268883,
+        4333268879,
+        8486947229,
+        4333268869,
+        4333268871,
+        8486947226,
+        4333268877,
+        4333268882,
+        8486947227,
+        4333268872,
+        4333268868
+      ],
+      "tags": {
+        "area": "yes",
+        "man_made": "pier",
+        "source": "Bing"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0199176,
+        "lon": -121.8213569
+      },
+      "id": 473656172,
+      "nodes": [
+        4677270903,
+        4677270904,
+        4677270905,
+        4677270906
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0195907,
+        "lon": -121.8215543
+      },
+      "id": 473656173,
+      "nodes": [
+        4677270907,
+        4677270908,
+        4677270909
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0192665,
+        "lon": -121.8215508
+      },
+      "id": 473656174,
+      "nodes": [
+        4677270910,
+        4677270911,
+        4677270912,
+        4677270913
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.018868,
+        "lon": -121.8217861
+      },
+      "id": 473656175,
+      "nodes": [
+        4677270914,
+        4677270915,
+        4677270916,
+        4677270917
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0197862,
+        "lon": -121.8210969
+      },
+      "id": 473656176,
+      "nodes": [
+        4677270917,
+        4677270912,
+        4677270909,
+        4677270904,
+        4677270923,
+        4677270918,
+        4677270919
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0203422,
+        "lon": -121.821331
+      },
+      "id": 473656177,
+      "nodes": [
+        4677270920,
+        4677270921,
+        4677270922,
+        4677270923
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0198415,
+        "lon": -121.8218531
+      },
+      "id": 473656178,
+      "nodes": [
+        4677270924,
+        418987247,
+        418987248,
+        418987250,
+        418987251,
+        418987252,
+        418987253,
+        418987254,
+        418987255,
+        4677270924
+      ],
+      "tags": {
+        "leisure": "marina",
+        "name": "Antioch Marina",
+        "seamark:harbour:category": "marina",
+        "seamark:type": "harbour",
+        "website": "http://www.ci.antioch.ca.us/antioch-marina/"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0210227,
+        "lon": -121.7507164
+      },
+      "id": 666329677,
+      "nodes": [
+        6238352779,
+        6238352781,
+        6238352780
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0202808,
+        "lon": -121.7507092
+      },
+      "id": 666329679,
+      "nodes": [
+        6238352781,
+        4942042434
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0179918,
+        "lon": -121.7498301
+      },
+      "id": 666329687,
+      "nodes": [
+        6238353694,
+        1699565259,
+        31934182,
+        31986038,
+        6238353695,
+        6238353696,
+        6930119309,
+        6930119297,
+        524705948,
+        524705695,
+        4635243513,
+        4635243514,
+        6238352778,
+        6238353694
+      ],
+      "tags": {
+        "leisure": "marina",
+        "name": "Driftwood Marina",
+        "seamark:harbour:category": "marina",
+        "seamark:type": "harbour"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0124995,
+        "lon": -121.7283053
+      },
+      "id": 666337214,
+      "nodes": [
+        6238445421,
+        2955419056,
+        6238445422
+      ],
+      "tags": {
+        "man_made": "pier"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 37.981493,
+        "lon": -121.8048022
+      },
+      "id": 1389686825,
+      "nodes": [
+        12863724527,
+        12863724528,
+        12863724529,
+        12863724530,
+        12863724531,
+        12863724532,
+        12863724527
+      ],
+      "tags": {
+        "amenity": "hospital",
+        "healthcare": "hospital",
+        "operator": "Sutter Health",
+        "operator:type": "private",
+        "operator:wikidata": "Q7650154"
+      },
+      "type": "way"
+    },
+    {
+      "center": {
+        "lat": 38.0298474,
+        "lon": -121.8156824
+      },
+      "id": 1461686290,
+      "nodes": [
+        13406827677,
+        13406827678,
+        13406827679,
+        13406827680,
+        13406827677
+      ],
+      "tags": {
+        "area": "yes",
+        "man_made": "pier"
+      },
+      "type": "way"
+    }
+  ],
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+    "timestamp_osm_base": "2026-07-16T05:41:51Z"
+  },
+  "version": 0.6
+}

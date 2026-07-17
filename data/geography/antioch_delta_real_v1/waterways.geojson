@@ -1,0 +1,5645 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7413967,
+            38.0251453
+          ],
+          [
+            -121.7418416,
+            38.0250539
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-0",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7388508,
+            38.0258584
+          ],
+          [
+            -121.7413967,
+            38.0251453
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-45",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-45",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7418416,
+            38.0250539
+          ],
+          [
+            -121.7452743,
+            38.0248042
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-1",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7452743,
+            38.0248042
+          ],
+          [
+            -121.7470218,
+            38.024796
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-2",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7470218,
+            38.024796
+          ],
+          [
+            -121.7499622,
+            38.024694
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-3",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7499622,
+            38.024694
+          ],
+          [
+            -121.7544682,
+            38.0247756
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-4",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7544682,
+            38.0247756
+          ],
+          [
+            -121.756652,
+            38.0250853
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-5",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.756652,
+            38.0250853
+          ],
+          [
+            -121.7592913,
+            38.0256769
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-6",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7592913,
+            38.0256769
+          ],
+          [
+            -121.7611816,
+            38.0253951
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-7",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7592913,
+            38.0256769
+          ],
+          [
+            -121.7646734,
+            38.0286697
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-0",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7611816,
+            38.0253951
+          ],
+          [
+            -121.7679279,
+            38.0230303
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-8",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7679279,
+            38.0230303
+          ],
+          [
+            -121.7745379,
+            38.0207142
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-9",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7745379,
+            38.0207142
+          ],
+          [
+            -121.7816344,
+            38.0189092
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-10",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7816344,
+            38.0189092
+          ],
+          [
+            -121.7866758,
+            38.018475
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-11",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7866758,
+            38.018475
+          ],
+          [
+            -121.7907968,
+            38.0185783
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-12",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7907968,
+            38.0185783
+          ],
+          [
+            -121.7947732,
+            38.0195961
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-13",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7947732,
+            38.0195961
+          ],
+          [
+            -121.7991979,
+            38.0208304
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-14",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7991979,
+            38.0208304
+          ],
+          [
+            -121.8000904,
+            38.0210433
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83150194-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83150194-15",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7961428,
+            38.0229334
+          ],
+          [
+            -121.8000904,
+            38.0210433
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-10",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6909308,
+            38.0535909
+          ],
+          [
+            -121.6916193,
+            38.052897
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-0",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6890274,
+            38.0550194
+          ],
+          [
+            -121.6909308,
+            38.0535909
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-22",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-22",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6916193,
+            38.052897
+          ],
+          [
+            -121.6931902,
+            38.050596
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-1",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6931902,
+            38.050596
+          ],
+          [
+            -121.693871,
+            38.0498334
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-2",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.693871,
+            38.0498334
+          ],
+          [
+            -121.6941991,
+            38.049363
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-3",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6941991,
+            38.049363
+          ],
+          [
+            -121.6945225,
+            38.0490162
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-4",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6945225,
+            38.0490162
+          ],
+          [
+            -121.6955768,
+            38.0476757
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-5",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6955768,
+            38.0476757
+          ],
+          [
+            -121.6958944,
+            38.0470824
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-6",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6958944,
+            38.0470824
+          ],
+          [
+            -121.6967015,
+            38.0462583
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-7",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6967015,
+            38.0462583
+          ],
+          [
+            -121.6969038,
+            38.0459883
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-8",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6969038,
+            38.0459883
+          ],
+          [
+            -121.6975058,
+            38.0453571
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-9",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6975058,
+            38.0453571
+          ],
+          [
+            -121.69805,
+            38.044873
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-10",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.69805,
+            38.044873
+          ],
+          [
+            -121.6989622,
+            38.0443905
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-11",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6989622,
+            38.0443905
+          ],
+          [
+            -121.699664,
+            38.0442197
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-12",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.699664,
+            38.0442197
+          ],
+          [
+            -121.7004538,
+            38.0439285
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-13",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7004538,
+            38.0439285
+          ],
+          [
+            -121.7014947,
+            38.0434712
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-14",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7014947,
+            38.0434712
+          ],
+          [
+            -121.7032794,
+            38.0425257
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-15",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7032794,
+            38.0425257
+          ],
+          [
+            -121.7051442,
+            38.0418287
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-16",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-16",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7051442,
+            38.0418287
+          ],
+          [
+            -121.7063283,
+            38.0414351
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-17",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-17",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7063283,
+            38.0414351
+          ],
+          [
+            -121.7078949,
+            38.0407376
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-18",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-18",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7078949,
+            38.0407376
+          ],
+          [
+            -121.7093769,
+            38.0398914
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-19",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-19",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7093769,
+            38.0398914
+          ],
+          [
+            -121.7102159,
+            38.0395198
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-20",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-20",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7102159,
+            38.0395198
+          ],
+          [
+            -121.710475,
+            38.0394472
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-21",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-21",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.710475,
+            38.0394472
+          ],
+          [
+            -121.7120499,
+            38.0391886
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-22",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-22",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7120499,
+            38.0391886
+          ],
+          [
+            -121.7138167,
+            38.0387895
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-23",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-23",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7138167,
+            38.0387895
+          ],
+          [
+            -121.7151579,
+            38.0384133
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-24",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-24",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7151579,
+            38.0384133
+          ],
+          [
+            -121.7156514,
+            38.038222
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-25",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-25",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7156514,
+            38.038222
+          ],
+          [
+            -121.7167952,
+            38.0379503
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-26",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-26",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7167952,
+            38.0379503
+          ],
+          [
+            -121.7179516,
+            38.0375985
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-27",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-27",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7179516,
+            38.0375985
+          ],
+          [
+            -121.7194667,
+            38.0372974
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-28",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-28",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7194667,
+            38.0372974
+          ],
+          [
+            -121.7201643,
+            38.0371151
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-29",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-29",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7201643,
+            38.0371151
+          ],
+          [
+            -121.7220875,
+            38.0362034
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-30",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-30",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7220875,
+            38.0362034
+          ],
+          [
+            -121.7239304,
+            38.0351365
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-31",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-31",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7239304,
+            38.0351365
+          ],
+          [
+            -121.7249354,
+            38.0344032
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-32",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-32",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7249354,
+            38.0344032
+          ],
+          [
+            -121.7261891,
+            38.0333109
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-33",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-33",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7261891,
+            38.0333109
+          ],
+          [
+            -121.7272882,
+            38.0321222
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-34",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-34",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7272882,
+            38.0321222
+          ],
+          [
+            -121.7284702,
+            38.0313286
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-35",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-35",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7284702,
+            38.0313286
+          ],
+          [
+            -121.7299763,
+            38.0301425
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-36",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-36",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7299763,
+            38.0301425
+          ],
+          [
+            -121.7310746,
+            38.0296931
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-37",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-37",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7310746,
+            38.0296931
+          ],
+          [
+            -121.7319169,
+            38.0292594
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-38",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-38",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7319169,
+            38.0292594
+          ],
+          [
+            -121.7331706,
+            38.0284757
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-39",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-39",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7331706,
+            38.0284757
+          ],
+          [
+            -121.7338243,
+            38.0280288
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-40",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-40",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7338243,
+            38.0280288
+          ],
+          [
+            -121.7347929,
+            38.0273666
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-41",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-41",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7347929,
+            38.0273666
+          ],
+          [
+            -121.7352638,
+            38.0270261
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-42",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-42",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7352638,
+            38.0270261
+          ],
+          [
+            -121.7358799,
+            38.0264909
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-43",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-43",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7358799,
+            38.0264909
+          ],
+          [
+            -121.7388508,
+            38.0258584
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155332-44",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155332-44",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6283142,
+            38.0500902
+          ],
+          [
+            -121.6284752,
+            38.050054
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-0",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6284752,
+            38.050054
+          ],
+          [
+            -121.6293094,
+            38.0498517
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-1",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6293094,
+            38.0498517
+          ],
+          [
+            -121.6297664,
+            38.0498141
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-2",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6297664,
+            38.0498141
+          ],
+          [
+            -121.6308154,
+            38.0499212
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-3",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6308154,
+            38.0499212
+          ],
+          [
+            -121.6316382,
+            38.0502146
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-4",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6316382,
+            38.0502146
+          ],
+          [
+            -121.6322225,
+            38.0502167
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-5",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6322225,
+            38.0502167
+          ],
+          [
+            -121.6325863,
+            38.0502589
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-6",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6325863,
+            38.0502589
+          ],
+          [
+            -121.6340824,
+            38.0506122
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-7",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6340824,
+            38.0506122
+          ],
+          [
+            -121.6344651,
+            38.0507347
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-8",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6344651,
+            38.0507347
+          ],
+          [
+            -121.6349817,
+            38.0509661
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-9",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6349817,
+            38.0509661
+          ],
+          [
+            -121.6351423,
+            38.051093
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-10",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6351423,
+            38.051093
+          ],
+          [
+            -121.6354028,
+            38.0513871
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-11",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6354028,
+            38.0513871
+          ],
+          [
+            -121.6356274,
+            38.0516984
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-12",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6356274,
+            38.0516984
+          ],
+          [
+            -121.6357943,
+            38.0520687
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-13",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6357943,
+            38.0520687
+          ],
+          [
+            -121.6359984,
+            38.0530545
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-14",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6359984,
+            38.0530545
+          ],
+          [
+            -121.6372341,
+            38.053607
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-15",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6372341,
+            38.053607
+          ],
+          [
+            -121.6378751,
+            38.0538038
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-16",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-16",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6378751,
+            38.0538038
+          ],
+          [
+            -121.6389942,
+            38.0540006
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-17",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-17",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6389942,
+            38.0540006
+          ],
+          [
+            -121.6394362,
+            38.053903
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-18",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-18",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6394362,
+            38.053903
+          ],
+          [
+            -121.6398938,
+            38.0538716
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-19",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-19",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6398938,
+            38.0538716
+          ],
+          [
+            -121.6403512,
+            38.0539079
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-20",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-20",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6403512,
+            38.0539079
+          ],
+          [
+            -121.6410703,
+            38.0540285
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-21",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-21",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6410703,
+            38.0540285
+          ],
+          [
+            -121.6415506,
+            38.0541516
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-22",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-22",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6415506,
+            38.0541516
+          ],
+          [
+            -121.6426037,
+            38.0545104
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-23",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-23",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6426037,
+            38.0545104
+          ],
+          [
+            -121.642959,
+            38.054675
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-24",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-24",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.642959,
+            38.054675
+          ],
+          [
+            -121.643271,
+            38.0548639
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-25",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-25",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.643271,
+            38.0548639
+          ],
+          [
+            -121.6442754,
+            38.0549568
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-26",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-26",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6442754,
+            38.0549568
+          ],
+          [
+            -121.645076,
+            38.0551201
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-27",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-27",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.645076,
+            38.0551201
+          ],
+          [
+            -121.6454205,
+            38.0552197
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-28",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-28",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6454205,
+            38.0552197
+          ],
+          [
+            -121.6458248,
+            38.055289
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-29",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-29",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6458248,
+            38.055289
+          ],
+          [
+            -121.646825,
+            38.0555553
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-30",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-30",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.646825,
+            38.0555553
+          ],
+          [
+            -121.6473556,
+            38.0557947
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-31",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-31",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6473556,
+            38.0557947
+          ],
+          [
+            -121.6475371,
+            38.0557713
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-32",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-32",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6475371,
+            38.0557713
+          ],
+          [
+            -121.6482269,
+            38.0557692
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-33",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-33",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6482269,
+            38.0557692
+          ],
+          [
+            -121.6486359,
+            38.0558027
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-34",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-34",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6486359,
+            38.0558027
+          ],
+          [
+            -121.6498963,
+            38.0556009
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-35",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-35",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6498963,
+            38.0556009
+          ],
+          [
+            -121.6511311,
+            38.0553196
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-36",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-36",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6511311,
+            38.0553196
+          ],
+          [
+            -121.6516713,
+            38.0552332
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-37",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-37",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6516713,
+            38.0552332
+          ],
+          [
+            -121.6522225,
+            38.0552119
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-38",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-38",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6522225,
+            38.0552119
+          ],
+          [
+            -121.6526357,
+            38.0552309
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-39",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-39",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6526357,
+            38.0552309
+          ],
+          [
+            -121.6532705,
+            38.0553154
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-40",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-40",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6532705,
+            38.0553154
+          ],
+          [
+            -121.6540227,
+            38.0554814
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-41",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-41",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6540227,
+            38.0554814
+          ],
+          [
+            -121.6551045,
+            38.0557847
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-42",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-42",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6551045,
+            38.0557847
+          ],
+          [
+            -121.6554699,
+            38.0558555
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-43",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-43",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6554699,
+            38.0558555
+          ],
+          [
+            -121.655668,
+            38.0560525
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-44",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-44",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.655668,
+            38.0560525
+          ],
+          [
+            -121.6562361,
+            38.0564147
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-45",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-45",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6562361,
+            38.0564147
+          ],
+          [
+            -121.6567606,
+            38.0566366
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-46",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-46",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6567606,
+            38.0566366
+          ],
+          [
+            -121.6573275,
+            38.0567825
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-47",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-47",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6573275,
+            38.0567825
+          ],
+          [
+            -121.6579649,
+            38.0568533
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-48",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-48",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6579649,
+            38.0568533
+          ],
+          [
+            -121.6585625,
+            38.0568521
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-49",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-49",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6585625,
+            38.0568521
+          ],
+          [
+            -121.6599841,
+            38.0567625
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-50",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-50",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6599841,
+            38.0567625
+          ],
+          [
+            -121.6629459,
+            38.0564435
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-51",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-51",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6629459,
+            38.0564435
+          ],
+          [
+            -121.6643693,
+            38.0563706
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-52",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-52",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6643693,
+            38.0563706
+          ],
+          [
+            -121.6651514,
+            38.0563609
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-53",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-53",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6651514,
+            38.0563609
+          ],
+          [
+            -121.6660235,
+            38.0564083
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-54",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-54",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6660235,
+            38.0564083
+          ],
+          [
+            -121.6676602,
+            38.0566033
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-55",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-55",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6676602,
+            38.0566033
+          ],
+          [
+            -121.668916,
+            38.0568611
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-56",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-56",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.668916,
+            38.0568611
+          ],
+          [
+            -121.6699883,
+            38.0571831
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-57",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-57",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6699883,
+            38.0571831
+          ],
+          [
+            -121.6737937,
+            38.058619
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-58",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-58",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6737937,
+            38.058619
+          ],
+          [
+            -121.6746559,
+            38.0588664
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-59",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-59",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6746559,
+            38.0588664
+          ],
+          [
+            -121.6755972,
+            38.0590352
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-60",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-60",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6755972,
+            38.0590352
+          ],
+          [
+            -121.6761896,
+            38.0590995
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-61",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-61",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6761896,
+            38.0590995
+          ],
+          [
+            -121.6777535,
+            38.0590815
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-62",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-62",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6777535,
+            38.0590815
+          ],
+          [
+            -121.679005,
+            38.0593183
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-63",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-63",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.679005,
+            38.0593183
+          ],
+          [
+            -121.6811729,
+            38.0602783
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-83155383-64",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-83155383-64",
+        "mode": "water",
+        "name": "False River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6804846,
+            38.0623159
+          ],
+          [
+            -121.6811729,
+            38.0602783
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-16",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-16",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6811729,
+            38.0602783
+          ],
+          [
+            -121.6827984,
+            38.0593301
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-17",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-17",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7848178,
+            38.0388255
+          ],
+          [
+            -121.784891,
+            38.0344087
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122588-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122588-0",
+        "mode": "water",
+        "name": "Mayberry Cut",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7857707,
+            38.0393525
+          ],
+          [
+            -121.7848178,
+            38.0388255
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-11",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7848178,
+            38.0388255
+          ],
+          [
+            -121.7834557,
+            38.0382581
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-12",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.784891,
+            38.0344087
+          ],
+          [
+            -121.7849191,
+            38.032709
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122588-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122588-1",
+        "mode": "water",
+        "name": "Mayberry Cut",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.784891,
+            38.0344087
+          ],
+          [
+            -121.7839101,
+            38.0339967
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-0",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7849191,
+            38.032709
+          ],
+          [
+            -121.7850038,
+            38.0274955
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122588-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122588-2",
+        "mode": "water",
+        "name": "Mayberry Cut",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7850038,
+            38.0274955
+          ],
+          [
+            -121.7850393,
+            38.0253093
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122588-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122588-3",
+        "mode": "water",
+        "name": "Mayberry Cut",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7846905,
+            38.027934
+          ],
+          [
+            -121.7850038,
+            38.0274955
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-8",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.77756,
+            38.0266786
+          ],
+          [
+            -121.7850393,
+            38.0253093
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-7",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7850393,
+            38.0253093
+          ],
+          [
+            -121.7923839,
+            38.0240479
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-8",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.783355,
+            38.0520164
+          ],
+          [
+            -121.7833851,
+            38.0519891
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-0",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7827788,
+            38.0523229
+          ],
+          [
+            -121.783355,
+            38.0520164
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-913331950-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-913331950-0",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7833851,
+            38.0519891
+          ],
+          [
+            -121.7833878,
+            38.0519548
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-1",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7833878,
+            38.0519548
+          ],
+          [
+            -121.7832503,
+            38.0517769
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-2",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7832503,
+            38.0517769
+          ],
+          [
+            -121.7832355,
+            38.0517254
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-3",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7832355,
+            38.0517254
+          ],
+          [
+            -121.7832642,
+            38.051676
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-4",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7832642,
+            38.051676
+          ],
+          [
+            -121.7876361,
+            38.0486778
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-5",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7876361,
+            38.0486778
+          ],
+          [
+            -121.7880416,
+            38.0474643
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-6",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7880416,
+            38.0474643
+          ],
+          [
+            -121.7878997,
+            38.0457238
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-7",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7878997,
+            38.0457238
+          ],
+          [
+            -121.7872914,
+            38.0427857
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-8",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7872914,
+            38.0427857
+          ],
+          [
+            -121.7865007,
+            38.0405821
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-9",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7865007,
+            38.0405821
+          ],
+          [
+            -121.7857707,
+            38.0393525
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-10",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7834557,
+            38.0382581
+          ],
+          [
+            -121.7822146,
+            38.0379451
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-13",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7834557,
+            38.0382581
+          ],
+          [
+            -121.7837267,
+            38.0375132
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-0",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7822146,
+            38.0379451
+          ],
+          [
+            -121.7789139,
+            38.0368741
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-14",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7789139,
+            38.0368741
+          ],
+          [
+            -121.7769271,
+            38.0357387
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-15",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7769271,
+            38.0357387
+          ],
+          [
+            -121.7757544,
+            38.0348011
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-16",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-16",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7757544,
+            38.0348011
+          ],
+          [
+            -121.7735444,
+            38.0324375
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-17",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-17",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7735444,
+            38.0324375
+          ],
+          [
+            -121.7730628,
+            38.0319455
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-18",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-18",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7730628,
+            38.0319455
+          ],
+          [
+            -121.7722264,
+            38.0317668
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-19",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-19",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7722264,
+            38.0317668
+          ],
+          [
+            -121.7710504,
+            38.0319105
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-20",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-20",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7710504,
+            38.0319105
+          ],
+          [
+            -121.7701583,
+            38.0321181
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-21",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-21",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7701583,
+            38.0321181
+          ],
+          [
+            -121.7684754,
+            38.0325653
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-22",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-22",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7684754,
+            38.0325653
+          ],
+          [
+            -121.7666303,
+            38.0326931
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-23",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-23",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7666303,
+            38.0326931
+          ],
+          [
+            -121.7652391,
+            38.0328291
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-24",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-24",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7652391,
+            38.0328291
+          ],
+          [
+            -121.7643545,
+            38.0326763
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-25",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-25",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7643545,
+            38.0326763
+          ],
+          [
+            -121.7637018,
+            38.0324073
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-26",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-26",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7637018,
+            38.0324073
+          ],
+          [
+            -121.7633431,
+            38.0320378
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-27",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-27",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7633431,
+            38.0320378
+          ],
+          [
+            -121.7634148,
+            38.0315231
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-28",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-28",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7634148,
+            38.0315231
+          ],
+          [
+            -121.7637627,
+            38.0308655
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-29",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-29",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7637627,
+            38.0308655
+          ],
+          [
+            -121.7646734,
+            38.0286697
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668122589-30",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668122589-30",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7646734,
+            38.0286697
+          ],
+          [
+            -121.7665955,
+            38.0288663
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-1",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.748304,
+            38.0397224
+          ],
+          [
+            -121.7489094,
+            38.0396203
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-0",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7489094,
+            38.0396203
+          ],
+          [
+            -121.7523402,
+            38.0399552
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-1",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7523402,
+            38.0399552
+          ],
+          [
+            -121.7564805,
+            38.040166
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-2",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7564805,
+            38.040166
+          ],
+          [
+            -121.7589836,
+            38.0402155
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-3",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7589836,
+            38.0402155
+          ],
+          [
+            -121.759818,
+            38.0403891
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-4",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.759818,
+            38.0403891
+          ],
+          [
+            -121.7613607,
+            38.0409719
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-5",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7613607,
+            38.0409719
+          ],
+          [
+            -121.763423,
+            38.0429308
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-6",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.763423,
+            38.0429308
+          ],
+          [
+            -121.7648713,
+            38.0439846
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-7",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7648713,
+            38.0439846
+          ],
+          [
+            -121.7695784,
+            38.0467493
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-8",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7695784,
+            38.0467493
+          ],
+          [
+            -121.7732622,
+            38.0489312
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-9",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7732622,
+            38.0489312
+          ],
+          [
+            -121.7758597,
+            38.0501461
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-10",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7758597,
+            38.0501461
+          ],
+          [
+            -121.7782526,
+            38.0521916
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-11",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7782526,
+            38.0521916
+          ],
+          [
+            -121.7798331,
+            38.0529247
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-12",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7798331,
+            38.0529247
+          ],
+          [
+            -121.7802975,
+            38.0530555
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-13",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7802975,
+            38.0530555
+          ],
+          [
+            -121.7808654,
+            38.0530612
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-14",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7808654,
+            38.0530612
+          ],
+          [
+            -121.7812891,
+            38.0529401
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-15",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7812891,
+            38.0529401
+          ],
+          [
+            -121.7827788,
+            38.0523229
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-668149975-16",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-668149975-16",
+        "mode": "water",
+        "name": "Mayberry Slough",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6812015,
+            38.0845726
+          ],
+          [
+            -121.6813614,
+            38.0840231
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-0",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-0",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6813614,
+            38.0840231
+          ],
+          [
+            -121.6813978,
+            38.0831673
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-1",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6813978,
+            38.0831673
+          ],
+          [
+            -121.6813405,
+            38.0823481
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-2",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6813405,
+            38.0823481
+          ],
+          [
+            -121.6811374,
+            38.0813977
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-3",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6811374,
+            38.0813977
+          ],
+          [
+            -121.6806389,
+            38.079547
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-4",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6806389,
+            38.079547
+          ],
+          [
+            -121.6804638,
+            38.0781979
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-5",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6804638,
+            38.0781979
+          ],
+          [
+            -121.6800484,
+            38.0765529
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-6",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6800484,
+            38.0765529
+          ],
+          [
+            -121.6795279,
+            38.0746502
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-7",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6795279,
+            38.0746502
+          ],
+          [
+            -121.6791255,
+            38.0712161
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-8",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6791255,
+            38.0712161
+          ],
+          [
+            -121.6789431,
+            38.0692819
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-9",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6789431,
+            38.0692819
+          ],
+          [
+            -121.6789431,
+            38.068319
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-10",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6789431,
+            38.068319
+          ],
+          [
+            -121.6790182,
+            38.0670943
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-11",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6790182,
+            38.0670943
+          ],
+          [
+            -121.6791478,
+            38.0658348
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-12",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-12",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6791478,
+            38.0658348
+          ],
+          [
+            -121.6793169,
+            38.0651697
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-13",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-13",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6793169,
+            38.0651697
+          ],
+          [
+            -121.679674,
+            38.0641365
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-14",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-14",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.679674,
+            38.0641365
+          ],
+          [
+            -121.6804846,
+            38.0623159
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-15",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-15",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6827984,
+            38.0593301
+          ],
+          [
+            -121.6839236,
+            38.0583401
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-18",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-18",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6839236,
+            38.0583401
+          ],
+          [
+            -121.6859748,
+            38.0570159
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-19",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-19",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6859748,
+            38.0570159
+          ],
+          [
+            -121.6876349,
+            38.0560571
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-20",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-20",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.6876349,
+            38.0560571
+          ],
+          [
+            -121.6890274,
+            38.0550194
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-905068645-21",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-905068645-21",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7665955,
+            38.0288663
+          ],
+          [
+            -121.7684416,
+            38.0287085
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-2",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7684416,
+            38.0287085
+          ],
+          [
+            -121.7702322,
+            38.0283829
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-3",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7702322,
+            38.0283829
+          ],
+          [
+            -121.7731071,
+            38.0274131
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-4",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7731071,
+            38.0274131
+          ],
+          [
+            -121.7768041,
+            38.0268033
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-5",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7768041,
+            38.0268033
+          ],
+          [
+            -121.77756,
+            38.0266786
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-6",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7772247,
+            38.0279615
+          ],
+          [
+            -121.7768041,
+            38.0268033
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-11",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-11",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7923839,
+            38.0240479
+          ],
+          [
+            -121.7961428,
+            38.0229334
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833822-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833822-9",
+        "mode": "water",
+        "name": "San Joaquin River",
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7839101,
+            38.0339967
+          ],
+          [
+            -121.783404,
+            38.0333544
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-1",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7838322,
+            38.0359206
+          ],
+          [
+            -121.7839101,
+            38.0339967
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-2",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7839101,
+            38.0339967
+          ],
+          [
+            -121.7838249,
+            38.0324259
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-3",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.783404,
+            38.0333544
+          ],
+          [
+            -121.7826279,
+            38.0329956
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-2",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-2",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7826279,
+            38.0329956
+          ],
+          [
+            -121.7820936,
+            38.0327563
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-3",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-3",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7820936,
+            38.0327563
+          ],
+          [
+            -121.7813889,
+            38.0322519
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-4",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7813889,
+            38.0322519
+          ],
+          [
+            -121.7807899,
+            38.0316839
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-5",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7807899,
+            38.0316839
+          ],
+          [
+            -121.7801097,
+            38.0309706
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-6",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7801097,
+            38.0309706
+          ],
+          [
+            -121.7792608,
+            38.0303042
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-7",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7792608,
+            38.0303042
+          ],
+          [
+            -121.7782556,
+            38.0294405
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-8",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-8",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7782556,
+            38.0294405
+          ],
+          [
+            -121.7773595,
+            38.0283608
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-9",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-9",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7773595,
+            38.0283608
+          ],
+          [
+            -121.7772247,
+            38.0279615
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833823-10",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833823-10",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7837267,
+            38.0375132
+          ],
+          [
+            -121.7838322,
+            38.0359206
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-1",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-1",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7838249,
+            38.0324259
+          ],
+          [
+            -121.7838394,
+            38.0311998
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-4",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-4",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7838394,
+            38.0311998
+          ],
+          [
+            -121.7839413,
+            38.0293062
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-5",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-5",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7839413,
+            38.0293062
+          ],
+          [
+            -121.7843122,
+            38.0285098
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-6",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-6",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            -121.7843122,
+            38.0285098
+          ],
+          [
+            -121.7846905,
+            38.027934
+          ]
+        ],
+        "type": "LineString"
+      },
+      "id": "osm-water-1455833825-7",
+      "properties": {
+        "congestion": 0.0,
+        "edge_id": "osm-water-1455833825-7",
+        "mode": "water",
+        "name": null,
+        "open": true
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}

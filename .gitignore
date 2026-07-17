@@ -1,37 +1,152 @@
+# -------------------------------------------------------------------
+# macOS
+# -------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# -------------------------------------------------------------------
 # Python
+# -------------------------------------------------------------------
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
 .ruff_cache/
-.venv/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
 
+# -------------------------------------------------------------------
+# Python and Conda environments
+# -------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# -------------------------------------------------------------------
+# Secrets and local configuration
+# -------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# -------------------------------------------------------------------
 # Editors
+# -------------------------------------------------------------------
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Model and data artifacts
-models/checkpoints/*
-!models/checkpoints/.gitkeep
-models/external/vjepa2/*
-!models/external/vjepa2/.gitkeep
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-artifacts/records/*
-!artifacts/records/.gitkeep
-artifacts/evidence/*
-!artifacts/evidence/.gitkeep
-artifacts/commitments/*
-!artifacts/commitments/.gitkeep
+# -------------------------------------------------------------------
+# Temporary and repair files
+# -------------------------------------------------------------------
+*.bak
+*.orig
+*.rej
+*.before_*
+tmp/
+temp/
+.cache/
+
+# -------------------------------------------------------------------
+# Logs
+# -------------------------------------------------------------------
+*.log
+logs/
+
+# -------------------------------------------------------------------
+# Runtime TRACE artifacts
+# Preserve only .gitkeep placeholders
+# -------------------------------------------------------------------
 artifacts/runs/*
 !artifacts/runs/.gitkeep
 
-# Third-party source is cloned locally, not redistributed
-third_party/vjepa2/
+artifacts/records/*
+!artifacts/records/.gitkeep
 
-# Torch / Hugging Face caches when redirected into the project
-.cache/
+artifacts/evidence/*
+!artifacts/evidence/.gitkeep
+
+artifacts/commitments/*
+!artifacts/commitments/.gitkeep
+
+# -------------------------------------------------------------------
+# Downloaded and generated data
+# -------------------------------------------------------------------
+data/raw/*
+!data/raw/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+# -------------------------------------------------------------------
+# Model weights and external model repositories
+# -------------------------------------------------------------------
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+
+models/external/*
+!models/external/.gitkeep
+
+# -------------------------------------------------------------------
+# Large media and packaged downloads
+# Store these in GitHub Releases or Google Drive
+# -------------------------------------------------------------------
+*.mov
+*.mp4
+*.m4v
+*.m4a
+*.aiff
+*.wav
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# -------------------------------------------------------------------
+# LaTeX / Beamer generated files
+# Track .tex source; publish generated PDF separately
+# -------------------------------------------------------------------
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# -------------------------------------------------------------------
+# Jupyter
+# -------------------------------------------------------------------
+.ipynb_checkpoints/
+
+# Large generated Antioch Delta geography assets
+# Distributed through GitHub Releases, not normal Git history
+data/geography/antioch_delta_real_v1/roads.geojson
+data/geography/antioch_delta_real_v1/road_graph.json
+
+# Generated D0.4 and dynamic simulation runs
+artifacts/d04/*
+!artifacts/d04/.gitkeep
+
 artifacts/dynamic/*
-artifacts/dynamic_demo/*
-!artifacts/dynamic_demo/.gitkeep
+!artifacts/dynamic/.gitkeep

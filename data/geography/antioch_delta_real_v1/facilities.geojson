@@ -1,0 +1,593 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          -121.703843,
+          38.0499202
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-358795498",
+        "kind": "dock",
+        "name": "Eddos Harbor",
+        "osm_id": 358795498,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.747732,
+          38.0179767
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-358821262",
+        "kind": "dock",
+        "name": "Lauritzen Yacht Harbor",
+        "osm_id": 358821262,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7557877,
+          38.0185322
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-358821266",
+        "kind": "dock",
+        "name": "Lloyds Holiday Harbor",
+        "osm_id": 358821266,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7585656,
+          38.0196432
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-358821314",
+        "kind": "dock",
+        "name": "San Joaquin Harbor",
+        "osm_id": 358821314,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7325962,
+          38.0119247
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-2955419053",
+        "kind": "marina",
+        "name": "Unnamed marina",
+        "osm_id": 2955419053,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.733045,
+          38.0107149
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-node-9763986791",
+        "kind": "marina",
+        "name": "Big Break Marina Holdings LLC",
+        "osm_id": 9763986791,
+        "osm_type": "node"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.803181,
+          37.9826454
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-31556915",
+        "kind": "hospital",
+        "name": "Sutter Delta Medical Center",
+        "osm_id": 31556915,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7708734,
+          38.0173002
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-35799494",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 35799494,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8493384,
+          38.0284292
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-35836395",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 35836395,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8143098,
+          38.0181314
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-35836508",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 35836508,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7748562,
+          37.9508127
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-123074822",
+        "kind": "hospital",
+        "name": "Kaiser Permanente Antioch Medical Center",
+        "osm_id": 123074822,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7283611,
+          38.0123279
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-292029625",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 292029625,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7516074,
+          38.0284109
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-435410501",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 435410501,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7515931,
+          38.0272007
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-435410503",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 435410503,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8213569,
+          38.0199176
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656172",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656172,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8215543,
+          38.0195907
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656173",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656173,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8215508,
+          38.0192665
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656174",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656174,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8217861,
+          38.018868
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656175",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656175,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8210969,
+          38.0197862
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656176",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656176,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.821331,
+          38.0203422
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656177",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 473656177,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8218531,
+          38.0198415
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-473656178",
+        "kind": "marina",
+        "name": "Antioch Marina",
+        "osm_id": 473656178,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7507164,
+          38.0210227
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-666329677",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 666329677,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7507092,
+          38.0202808
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-666329679",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 666329679,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7498301,
+          38.0179918
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-666329687",
+        "kind": "marina",
+        "name": "Driftwood Marina",
+        "osm_id": 666329687,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7283053,
+          38.0124995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-666337214",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 666337214,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8048022,
+          37.981493
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-1389686825",
+        "kind": "hospital",
+        "name": "Unnamed hospital",
+        "osm_id": 1389686825,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8156824,
+          38.0298474
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-1461686290",
+        "kind": "pier",
+        "name": "Unnamed pier",
+        "osm_id": 1461686290,
+        "osm_type": "way"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.803181,
+          37.9826454
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "osm-way-31556915",
+        "kind": "selected_hospital",
+        "name": "Sutter Delta Medical Center",
+        "osm_id": 31556915,
+        "osm_type": "way",
+        "road_node": "353113285"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8000904,
+          38.0210433
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "derived": false,
+        "facility_id": "osm-way-35836508",
+        "kind": "selected_transfer_port",
+        "name": "Unnamed pier",
+        "road_node": "262770783",
+        "source_facility": {
+          "facility_id": "osm-way-35836508",
+          "kind": "pier",
+          "latitude": 38.0181314,
+          "longitude": -121.8143098,
+          "name": "Unnamed pier",
+          "osm_id": 35836508,
+          "osm_type": "way",
+          "tags": {
+            "area": "yes",
+            "man_made": "pier"
+          }
+        },
+        "water_node": "10289113401"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8000904,
+          38.0210433
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "boat-base-1",
+        "kind": "boat_base",
+        "name": "Boat Base 1",
+        "node_id": "10289113401"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.6283142,
+          38.0500902
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "boat-base-2",
+        "kind": "boat_base",
+        "name": "Boat Base 2",
+        "node_id": "966928431"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.8000904,
+          38.0210433
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "drone-base-1",
+        "kind": "drone_base",
+        "name": "Drone Base 1",
+        "node_id": "10289113401"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.6283142,
+          38.0500902
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "drone-base-2",
+        "kind": "drone_base",
+        "name": "Drone Base 2",
+        "node_id": "966928431"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -121.7151579,
+          38.0384133
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "facility_id": "drone-base-3",
+        "kind": "drone_base",
+        "name": "Drone Base 3",
+        "node_id": "967447739"
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}

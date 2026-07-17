@@ -1200,9 +1200,16 @@
 
       element.appendChild(badge);
 
+      const iconOffsets = {
+        boat: [0, -80],
+        ambulance: [0, -150],
+        drone: [0, -80],
+      };
+
       const marker = new maplibregl.Marker({
         element,
         anchor: "center",
+        offset: iconOffsets[asset.kind] ?? [0, 0],
       })
         .setLngLat([
           asset.longitude,
@@ -1407,7 +1414,9 @@
     function updateIncidentMarkers(snapshot) {
       const activeIds = new Set();
 
-      snapshot.incidents.forEach((incident) => {
+      snapshot.incidents
+      .filter((incident) => incident.status !== "completed")
+      .forEach((incident) => {
         activeIds.add(incident.incident_id);
 
         let record = incidentMarkers.get(
@@ -1571,30 +1580,33 @@
     }
 
     function renderIncidents(snapshot) {
-      byId("incidentList").innerHTML =
-        snapshot.incidents.length
-          ? snapshot.incidents
-              .map((incident) => `
-                <div class="list-item">
-                  <strong>${incident.incident_id}</strong>
-                  <span class="status-pill">
-                    ${incident.access_mode}
-                  </span>
-                  <br/>
-                  ${incident.status}
-                  <br/>
-                  Waiting ${incident.people_waiting}
-                  · Onboard ${incident.people_onboard}
-                  · Port ${incident.people_at_transfer}
-                  · Hospital ${incident.people_delivered}
-                  ${incident.assigned_asset_id
-                    ? `<br/>Assigned:
-                       ${incident.assigned_asset_id}`
-                    : ""}
-                </div>
-              `)
-              .join("")
-          : '<div class="small">No active alerts.</div>';
+       const activeIncidents = snapshot.incidents.filter(
+         (incident) => incident.status !== "completed",
+        );
+
+     byId("incidentList").innerHTML =
+       activeIncidents.length
+         ? activeIncidents
+          .map((incident) => `
+            <div class="list-item">
+              <strong>${incident.incident_id}</strong>
+              <span class="status-pill">
+                ${incident.access_mode}
+              </span>
+              <br/>
+              ${incident.status}
+              <br/>
+              Waiting ${incident.people_waiting}
+              · Onboard ${incident.people_onboard}
+              · Port ${incident.people_at_transfer}
+              · Hospital ${incident.people_delivered}
+              ${incident.assigned_asset_id
+                ? `<br/>Assigned: ${incident.assigned_asset_id}`
+                : ""}
+            </div>
+          `)
+          .join("")
+      : '<div class="small">No active alerts.</div>';
     }
 
     function renderTasks(snapshot) {

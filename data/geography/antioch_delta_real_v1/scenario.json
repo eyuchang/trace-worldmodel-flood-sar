@@ -1,0 +1,130 @@
+{
+  "ambulance_bases": [
+    {
+      "latitude": 37.9826454,
+      "longitude": -121.803181,
+      "node_id": "353113285"
+    },
+    {
+      "latitude": 37.9826454,
+      "longitude": -121.803181,
+      "node_id": "353113285"
+    }
+  ],
+  "bbox": {
+    "east": -121.68,
+    "north": 38.07,
+    "south": 37.93,
+    "west": -121.88
+  },
+  "boat_bases": [
+    {
+      "latitude": 38.0210433,
+      "longitude": -121.8000904,
+      "node_id": "10289113401"
+    },
+    {
+      "latitude": 38.0500902,
+      "longitude": -121.6283142,
+      "node_id": "966928431"
+    }
+  ],
+  "camera": {
+    "bearing": -18,
+    "center": [
+      -121.78,
+      38.0
+    ],
+    "max_pitch": 75,
+    "pitch": 55,
+    "zoom": 11.8
+  },
+  "demo_water_nodes": [
+    "966928431",
+    "6256408676"
+  ],
+  "drone_bases": [
+    {
+      "latitude": 38.0210433,
+      "longitude": -121.8000904,
+      "node_id": "10289113401"
+    },
+    {
+      "latitude": 38.0500902,
+      "longitude": -121.6283142,
+      "node_id": "966928431"
+    },
+    {
+      "latitude": 38.0384133,
+      "longitude": -121.7151579,
+      "node_id": "967447739"
+    }
+  ],
+  "hospital": {
+    "facility_id": "osm-way-31556915",
+    "kind": "hospital",
+    "latitude": 37.9826454,
+    "longitude": -121.803181,
+    "name": "Sutter Delta Medical Center",
+    "osm_id": 31556915,
+    "osm_type": "way",
+    "road_node": "353113285",
+    "tags": {
+      "addr:city": "Antioch",
+      "addr:housenumber": "3901",
+      "addr:postcode": "94509",
+      "addr:street": "Lone Tree Way",
+      "amenity": "hospital",
+      "emergency": "yes",
+      "gnis:feature_id": "1701759",
+      "healthcare": "hospital",
+      "name": "Sutter Delta Medical Center",
+      "opening_hours": "24/7",
+      "operator": "Sutter Health",
+      "operator:type": "private",
+      "operator:website": "https://www.sutterhealth.org/",
+      "operator:wikidata": "Q7650154",
+      "operator:wikipedia": "en:Sutter Health",
+      "phone": "+1 925 779 7200",
+      "website": "https://www.sutterhealth.org/delta",
+      "wikidata": "Q7650150",
+      "wikipedia": "en:Sutter Delta Medical Center"
+    }
+  },
+  "road_maximum_snap_m": 700.0,
+  "scenario_id": "antioch_delta_real_v1",
+  "source": {
+    "built_at_utc": "2026-07-16T05:43:13.776668+00:00",
+    "configuration_sha256": "d272786de4211afba087ae94bf20fedc599404bfff45662c1a6012327ba16604",
+    "facility_endpoint": "https://overpass-api.de/api/interpreter",
+    "facility_payload_sha256": "85884d1ee66f076345aa70210068527183d12ec7cfab9bbe5e98460cfee1336c",
+    "network_endpoint": "https://overpass.kumi.systems/api/interpreter",
+    "network_payload_sha256": "9eaddc7c7cb65150557a05c199a681c75719bfff18cf1f1c2264d674da1c08be",
+    "provider": "OpenStreetMap contributors",
+    "query_system": "Overpass API"
+  },
+  "transfer_port": {
+    "derived": false,
+    "facility_id": "osm-way-35836508",
+    "kind": "pier",
+    "latitude": 38.0210433,
+    "longitude": -121.8000904,
+    "name": "Unnamed pier",
+    "road_node": "262770783",
+    "source_facility": {
+      "facility_id": "osm-way-35836508",
+      "kind": "pier",
+      "latitude": 38.0181314,
+      "longitude": -121.8143098,
+      "name": "Unnamed pier",
+      "osm_id": 35836508,
+      "osm_type": "way",
+      "tags": {
+        "area": "yes",
+        "man_made": "pier"
+      }
+    },
+    "water_node": "10289113401"
+  },
+  "water_maximum_snap_m": 450.0
+}
