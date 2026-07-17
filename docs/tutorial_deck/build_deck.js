@@ -9,10 +9,10 @@ const {
 
 const pptx = new pptxgen();
 pptx.layout = 'LAYOUT_WIDE';
-pptx.author = 'TRACE-JEPA teaching project';
+pptx.author = 'TRACE-WorldModel teaching project';
 pptx.subject = 'Flood search-and-rescue implementation tutorial';
-pptx.title = 'TRACE-JEPA Flood Rescue Implementation: Emergency Call to Authorized Rescue';
-pptx.company = 'TRACE-JEPA';
+pptx.title = 'TRACE-WorldModel Flood Rescue Implementation: Emergency Call to Authorized Rescue';
+pptx.company = 'TRACE-WorldModel';
 pptx.lang = 'en-US';
 pptx.theme = {
   headFontFace: 'Aptos Display',
@@ -59,7 +59,7 @@ function addTitle(slide, title, subtitle) {
 }
 
 function addFooter(slide, slideNo, note) {
-  slide.addText(`TRACE-JEPA flood rescue tutorial · ${slideNo}`, {
+  slide.addText(`TRACE-WorldModel flood rescue tutorial · ${slideNo}`, {
     x: 0.45, y: 7.18, w: 3.5, h: 0.18,
     fontSize: 7.5, color: '64748B', margin: 0,
   });
@@ -183,7 +183,7 @@ const asset = (p) => `docs/tutorial_deck/assets/${p}`;
   const slide = pptx.addSlide();
   slide.background = { color: '0B1220' };
   slide.addImage({ path: asset('flood_rescue_cover_16x9.png'), x: 0, y: 0, w: W, h: H });
-  slide.addText('TRACE-JEPA Flood Rescue Implementation', {
+  slide.addText('TRACE-WorldModel Flood Rescue Implementation', {
     x: 0.55, y: 0.46, w: 8.8, h: 0.55,
     fontFace: 'Aptos Display', fontSize: 31, bold: true, color: 'FFFFFF',
     margin: 0,

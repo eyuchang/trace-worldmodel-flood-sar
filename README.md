@@ -1,8 +1,7 @@
+
 # TRACE-WorldModel Flood-SAR
 
 TRACE-WorldModel is an active TRACE architecture for auditable world models.
-
-This repository provides the first end-to-end implementation: **Flood-SAR D0.5 Predictive Scheduling**, a dynamic rescue-planning workbench with drones, boats, ambulances, real geography, TRACE-gated scheduling, and revision.
 
 The current verified implementation is **D0.5 Predictive Scheduling**.
 
@@ -185,6 +184,7 @@ data/geography/antioch_delta_real_v1/road_graph.json
 
 They are distributed separately through GitHub Releases:
 
+<https://github.com/eyuchang/trace-worldmodel-flood-sar/releases>
 ```text
 https://github.com/eyuchang/trace-worldmodel-flood-sar/releases
 ```

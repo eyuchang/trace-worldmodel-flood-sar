@@ -18,7 +18,7 @@ const pptx = new pptxgen();
 pptx.defineLayout({ name: 'WIDE', width: 13.333, height: 7.5 });
 pptx.layout = 'WIDE';
 pptx.author = 'Edward Y. Chang';
-pptx.subject = 'Faithful eight-step implementation walkthrough for TRACE-JEPA flood search-and-rescue';
+pptx.subject = 'Faithful eight-step implementation walkthrough for TRACE-WorldModel flood search-and-rescue';
 pptx.title = 'Closing the Loop: Flood-SAR Implementation in Eight Verified Steps';
 pptx.company = 'Stanford University';
 pptx.lang = 'en-US';
@@ -61,7 +61,7 @@ function title(slide, text, subtitle) {
 }
 
 function footer(slide, n, note='') {
-  slide.addText(`TRACE-JEPA Flood-SAR · ${n}`, { x: 0.45, y: 7.18, w: 3.3, h: 0.18, fontSize: 7.5, color: C.slate, margin: 0 });
+  slide.addText(`TRACE-WorldModel Flood-SAR · ${n}`, { x: 0.45, y: 7.18, w: 3.3, h: 0.18, fontSize: 7.5, color: C.slate, margin: 0 });
   if (note) slide.addText(note, { x: 6.2, y: 7.18, w: 6.6, h: 0.18, fontSize: 7.5, color: C.slate, align: 'right', margin: 0 });
 }
 

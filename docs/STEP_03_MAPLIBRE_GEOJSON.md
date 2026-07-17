@@ -3,7 +3,7 @@
 ## Purpose
 
 Checkpoint A proved that a real pitched vector map could load inside the existing
-TRACE-JEPA browser shell. Step 3 makes that map operational: routes, graph-edge
+TRACE-WorldModel browser shell. Step 3 makes that map operational: routes, graph-edge
 status, authorized paths, assets, incidents, hazards, the flood polygon, and the
 safe transfer dock are now generated from every WebSocket snapshot as GeoJSON.
 
@@ -21,7 +21,7 @@ GeoJSON for display.
   `coalesce` and typed fallback values so nullable operational fields cannot create
   that warning. A one-time warning from the external base style is non-fatal.
 - `Injected script ... shard loaded` is produced by a browser extension/content
-  script, not by TRACE-JEPA.
+  script, not by TRACE-WorldModel.
 
 ## New source file
 
@@ -85,7 +85,7 @@ local graph nodes and edges.
 
 - mismatches are orange;
 - unknown controller state versus known truth is a mismatch;
-- the base map does not change, only TRACE-JEPA overlays change.
+- the base map does not change, only TRACE-WorldModel overlays change.
 
 ## Verify
 

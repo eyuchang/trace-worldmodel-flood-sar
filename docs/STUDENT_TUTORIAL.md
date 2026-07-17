@@ -1,4 +1,4 @@
-# Student Tutorial: Build TRACE-JEPA for Flood Search-and-Rescue
+# Student Tutorial: Build TRACE-WorldModel for Flood Search-and-Rescue
 
 This tutorial starts at ground zero and ends with a small closed-loop system. Work through it in order. Each phase has a purpose, an input, an output, and an exit condition.
 

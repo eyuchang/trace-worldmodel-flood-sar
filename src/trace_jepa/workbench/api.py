@@ -71,7 +71,7 @@ def create_app(
             run.export_manifest()
 
     app = FastAPI(
-        title="TRACE-JEPA Dynamic Flood-SAR Workbench",
+        title="TRACE-WorldModel Dynamic Flood-SAR Workbench",
         version="0.2.2",
         description="Event-sourced S1-S5 research simulator and TRACE control console.",
         lifespan=lifespan,

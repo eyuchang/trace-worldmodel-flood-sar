@@ -32,7 +32,7 @@ def _svg_document(body: str, *, title: str, width: int = SVG_WIDTH, height: int 
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}"
      viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">
   <title id="title">{escape(title)}</title>
-  <desc id="desc">TRACE-JEPA flood search-and-rescue teaching figure.</desc>
+  <desc id="desc">TRACE-WorldModel flood search-and-rescue teaching figure.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3"
             orient="auto" markerUnits="strokeWidth">
@@ -238,7 +238,7 @@ def render_operational_cast(output_path: Path) -> Path:
 
     return _write(
         Path(output_path),
-        _svg_document("\n".join(parts), title="TRACE-JEPA operational cast"),
+        _svg_document("\n".join(parts), title="TRACE-WorldModel operational cast"),
     )
 
 
@@ -412,7 +412,7 @@ def render_scenario(scenario_path: Path, output: Path) -> dict[str, Path]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Render the TRACE-JEPA operational cast and flood-rescue knowledge views"
+        description="Render the TRACE-WorldModel operational cast and flood-rescue knowledge views"
     )
     parser.add_argument("--scenario", type=Path, default=DEFAULT_SCENARIO)
     parser.add_argument("--output", type=Path, default=Path("artifacts/runs/scenario_brief"))

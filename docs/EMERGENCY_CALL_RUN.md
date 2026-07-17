@@ -1,4 +1,4 @@
-# Run TRACE-JEPA from an Emergency Call
+# Run TRACE-WorldModel from an Emergency Call
 
 ## Input
 

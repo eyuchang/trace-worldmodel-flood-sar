@@ -56,7 +56,7 @@ class DynamicMissionController:
 
     The current predictor is a transparent surrogate with computed support,
     uncertainty, OOD, and validity horizons. Its interface is deliberately the
-    same one that a later TRACE-JEPA model service will implement.
+    same one that a later TRACE-WorldModel model service will implement.
     """
 
     version = "dynamic-mission-controller-d0.2-step02"

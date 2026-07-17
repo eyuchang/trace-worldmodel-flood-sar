@@ -1,4 +1,4 @@
-# TRACE-JEPA flood-rescue tutorial deck side files
+# TRACE-WorldModel flood-rescue tutorial deck side files
 
 The PowerPoint deck contains every short command block and every code fragment needed to explain the first implementation stages. Longer files are stored here and referenced by slide number and side-file label.
 

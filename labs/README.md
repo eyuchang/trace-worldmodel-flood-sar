@@ -1,4 +1,4 @@
-# TRACE-JEPA Laboratory Sequence
+# TRACE-WorldModel Laboratory Sequence
 
 Read [`../docs/MISSION_BRIEF.md`](../docs/MISSION_BRIEF.md) before Lab 1. Students should understand the operational cast before seeing the neural-network stack.
 

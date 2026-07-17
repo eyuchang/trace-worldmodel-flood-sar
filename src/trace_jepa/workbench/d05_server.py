@@ -1492,7 +1492,7 @@ def create_app(
             task.cancel()
 
     application = FastAPI(
-        title="TRACE-JEPA D0.5 Concurrent Scheduling Workbench",
+        title="TRACE-WorldModel D0.5 Concurrent Scheduling Workbench",
         lifespan=lifespan,
     )
 
@@ -1622,7 +1622,7 @@ app: FastAPI | None = None
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Run TRACE-JEPA D0.5 with concurrent scheduling, dynamic docks, "
+            "Run TRACE-WorldModel D0.5 with concurrent scheduling, dynamic docks, "
             "and zoom-aware vehicle rendering."
         )
     )

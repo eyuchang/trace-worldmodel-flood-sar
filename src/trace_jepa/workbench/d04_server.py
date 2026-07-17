@@ -2559,7 +2559,7 @@ def create_app(
 
     application = FastAPI(
         title=(
-            "TRACE-JEPA D0.4 "
+            "TRACE-WorldModel D0.4 "
             "Real Geography Workbench"
         ),
         lifespan=lifespan,
@@ -2768,7 +2768,7 @@ app: FastAPI | None = None
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Run the TRACE-JEPA D0.4 real-geography "
+            "Run the TRACE-WorldModel D0.4 real-geography "
             "multi-asset workbench."
         )
     )

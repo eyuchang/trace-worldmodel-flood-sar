@@ -1,4 +1,4 @@
-# TRACE-JEPA Dynamic Flood-SAR Workbench (D0.2)
+# TRACE-WorldModel Dynamic Flood-SAR Workbench (D0.2)
 
 This release is the first executable shell for the S1-S5 research program in Chapter 9.
 It is a research simulator, not a live emergency-dispatch system.
@@ -33,7 +33,7 @@ contracts.
 source "$HOME/miniforge3/etc/profile.d/conda.sh"
 conda activate trace-jepa
 
-cd "$HOME/Projects/trace_jepa_dynamic_workbench"
+cd "$HOME/Projects/trace_worldmodel_flood_sar"
 python -m pip install -e ".[ui,dev]"
 pytest
 trace-jepa-ui --host 127.0.0.1 --port 8000

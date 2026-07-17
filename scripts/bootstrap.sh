@@ -16,4 +16,4 @@ elif [[ "$mode" != "core" ]]; then
   exit 2
 fi
 
-echo "TRACE-JEPA $mode environment is ready."
+echo "TRACE-WorldModel $mode environment is ready."

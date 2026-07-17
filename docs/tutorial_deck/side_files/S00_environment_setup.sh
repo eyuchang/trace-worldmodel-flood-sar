@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage 0: native Python environment for TRACE-JEPA flood SAR.
+# Stage 0: native Python environment for TRACE-WorldModel flood SAR.
 # On Apple Silicon, use native osx-arm64 Conda/Miniforge.
 
 set -euo pipefail

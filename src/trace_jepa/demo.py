@@ -55,7 +55,7 @@ def run_demo(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the laptop-safe TRACE-JEPA flood-SAR Mission Controller demo"
+        description="Run the laptop-safe TRACE-WorldModel flood-SAR Mission Controller demo"
     )
     parser.add_argument(
         "--output",

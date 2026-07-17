@@ -1,13 +1,13 @@
-# TRACE-JEPA Flood-SAR  
+# TRACE-WorldModel Flood-SAR  
 ## Student Setup and Clone Guide for macOS
 
-This guide prepares a MacBook for the TRACE-JEPA D0.5 Flood-SAR workshop.
+This guide prepares a MacBook for the TRACE-WorldModel D0.5 Flood-SAR workshop.
 
 Complete the installation, clone, geography download, and first test run **before the scheduled code lab** whenever possible.
 
 ## What students will install
 
-- TRACE-JEPA source repository
+- TRACE-WorldModel source repository
 - Python 3.12 environment
 - D0.5 browser workbench
 - Antioch Delta road and waterway geography
@@ -16,7 +16,7 @@ Complete the installation, clone, geography download, and first test run **befor
 ## Repository information
 
 ```text
-Repository: eyuchang/trace-jepa-flood-sar
+Repository: eyuchang/trace-worldmodel-flood-sar
 Main branch: main
 Workshop release: v0.5-workshop
 Browser URL: http://127.0.0.1:8030/d05
@@ -42,7 +42,7 @@ Before beginning:
 1. Create or use a GitHub account.
 2. Send your GitHub username to the instructor.
 3. Accept the GitHub repository invitation.
-4. Confirm that you can open the TRACE-JEPA repository while signed in.
+4. Confirm that you can open the TRACE-WorldModel repository while signed in.
 
 GitHub authentication is account-based. You authenticate GitHub CLI once on your Mac; you do not need a separate authentication code for each repository.
 
@@ -154,7 +154,7 @@ Git operations protocol: https
 Verify that your account can access the repository:
 
 ```bash
-gh repo view eyuchang/trace-jepa-flood-sar
+gh repo view eyuchang/trace-worldmodel-flood-sar
 ```
 
 Do not continue until this command succeeds.
@@ -173,13 +173,13 @@ cd "$HOME/Projects"
 Clone the repository:
 
 ```bash
-gh repo clone eyuchang/trace-jepa-flood-sar
+gh repo clone eyuchang/trace-worldmodel-flood-sar
 ```
 
 Enter the repository:
 
 ```bash
-cd "$HOME/Projects/trace-jepa-flood-sar"
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
 ```
 
 Verify:
@@ -242,7 +242,7 @@ Download the archive and checksum from the `v0.5-workshop` release:
 
 ```bash
 gh release download v0.5-workshop \
-  --repo eyuchang/trace-jepa-flood-sar \
+  --repo eyuchang/trace-worldmodel-flood-sar \
   --pattern 'antioch_delta_real_v1.tar.gz*' \
   --dir "$HOME/Downloads/trace-jepa-assets"
 ```
@@ -294,7 +294,7 @@ Delete it and download it again instead.
 Return to the repository:
 
 ```bash
-cd "$HOME/Projects/trace-jepa-flood-sar"
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
 ```
 
 Extract the archive:
@@ -382,12 +382,12 @@ Python 3.12
 
 ---
 
-# 13. Install TRACE-JEPA
+# 13. Install TRACE-WorldModel
 
 From the repository root:
 
 ```bash
-cd "$HOME/Projects/trace-jepa-flood-sar"
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
 ```
 
 Upgrade pip:
@@ -396,7 +396,7 @@ Upgrade pip:
 python -m pip install --upgrade pip
 ```
 
-Install TRACE-JEPA and workshop dependencies:
+Install TRACE-WorldModel and workshop dependencies:
 
 ```bash
 python -m pip install -e ".[ui,dev]"
@@ -522,7 +522,7 @@ Control + C
 Before pulling updates, inspect your working tree:
 
 ```bash
-cd "$HOME/Projects/trace-jepa-flood-sar"
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
 git status
 ```
 
@@ -556,7 +556,7 @@ gh auth status
 Check access:
 
 ```bash
-gh repo view eyuchang/trace-jepa-flood-sar
+gh repo view eyuchang/trace-worldmodel-flood-sar
 ```
 
 Possible causes:
@@ -572,7 +572,7 @@ List available releases:
 
 ```bash
 gh release list \
-  --repo eyuchang/trace-jepa-flood-sar
+  --repo eyuchang/trace-worldmodel-flood-sar
 ```
 
 Expected release:
@@ -598,7 +598,7 @@ Download them again using Section 8.
 Repeat the extraction step:
 
 ```bash
-cd "$HOME/Projects/trace-jepa-flood-sar"
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
 
 tar -xzf \
   "$HOME/Downloads/trace-jepa-assets/antioch_delta_real_v1.tar.gz" \
@@ -653,7 +653,7 @@ Identify the process:
 lsof -nP -iTCP:8030 -sTCP:LISTEN
 ```
 
-Stop only the stale TRACE-JEPA process, or ask the instructor for assistance.
+Stop only the stale TRACE-WorldModel process, or ask the instructor for assistance.
 
 ---
 
@@ -670,7 +670,7 @@ Before Day 3, confirm:
 - [ ] Checksum verified
 - [ ] Geography extracted
 - [ ] Conda environment created
-- [ ] TRACE-JEPA installed
+- [ ] TRACE-WorldModel installed
 - [ ] Verification command passed
 - [ ] Tests passed
 - [ ] D0.5 browser opened
