@@ -120,6 +120,13 @@ Or open this address manually:
 http://127.0.0.1:8030/d05
 ```
 
+## Student installation guide
+
+Workshop participants should complete the detailed macOS setup before Day 3:
+
+- [Student Setup and Clone Guide for macOS](docs/STUDENT_SETUP_MAC.md)
+
+
 ## Geography data
 
 Two large generated geography files are intentionally excluded from normal Git history:
@@ -382,6 +389,7 @@ Begin with:
 - [`docs/D04_STEP3_COMPLETE_FILES.md`](docs/D04_STEP3_COMPLETE_FILES.md)
 - [`docs/D05_PREDICTIVE_SCHEDULING.md`](docs/D05_PREDICTIVE_SCHEDULING.md)
 - [`docs/STUDENT_TUTORIAL.md`](docs/STUDENT_TUTORIAL.md)
+- [Student Setup and Clone Guide for macOS](docs/STUDENT_SETUP_MAC.md)
 
 ## Important source files
 
