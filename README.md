@@ -1,8 +1,43 @@
-# TRACE-WorldModel Flood-SAR Workbench
 
-TRACE-WorldModel is a teaching and research workbench for studying System-2 reasoning, evidence-gated planning, causal analysis, and multi-agent coordination in dynamic flood search-and-rescue operations.
+# TRACE-WorldModel Flood-SAR
+
+TRACE-WorldModel is an active TRACE architecture for auditable world models.
 
 The current verified implementation is **D0.5 Predictive Scheduling**.
+
+## Naming note
+
+This repository was formerly developed under the TRACE-JEPA Flood-SAR name.
+
+The public framework name is now **TRACE-WorldModel**.
+
+For compatibility, the Python package currently remains `trace_jepa`, and some CLI commands still use the `trace-jepa-*` prefix. These names will be migrated only after the paper and workshop release stabilize.
+
+In this repository:
+
+```text
+TRACE-WorldModel = public framework name
+Flood-SAR        = first end-to-end implementation
+V-JEPA / AdaJEPA = optional future learned-world-model plug-ins
+trace_jepa       = temporary internal Python package name
+trace-jepa-*     = temporary CLI command prefix
+```
+
+
+## Research papers
+
+This repository implements the first end-to-end Flood-SAR workbench for the TRACE-WorldModel research program.
+
+The foundational TRACE schema is described in:
+
+- Edward Y. Chang and Emily J. Chang.  
+  **TRACE: An Operational Reasoning Schema for Auditable Agentic Commitments.**  
+  arXiv:2607.12480, 2026.  
+  <https://arxiv.org/abs/2607.12480>
+
+TRACE-WorldModel builds on TRACE by moving from typed reasoning records and commitment gates to an active world-model workbench: simulated or learned predictions become TRACE-gated evidence before they can affect rescue planning, dispatch, revision, or completion.
+
+A separate TRACE-WorldModel paper is planned for the Flood-SAR implementation and evaluation.
 
 ## System overview
 
@@ -59,9 +94,11 @@ The architecture combines:
 - **TRACE** — evidence logging, validation, decision records, timing records, revision, and audit;
 - **Trivium** — causal reasoning, uncertainty analysis, and missing-evidence identification;
 - **SagaLLM** — multi-step planning, resource coordination, handoffs, compensation, and repair;
-- **JEPA model-service boundary** — an interface for future learned latent prediction.
+- **World-model service boundary** — a common interface through which transparent simulators, graph-based predictors, learned latent models, or future JEPA/AdaJEPA modules can provide predictive evidence.
 
-The current world model is a transparent simulator. Learned JEPA integration is planned behind the same model-service boundary.
+The current world model is a transparent, auditable simulator over mission state, fleet state, road and waterway graphs, transfer docks, hospitals, and dynamic incidents.
+
+Learned latent prediction is optional future work behind the same world-model service boundary.
 
 ## Current release
 
@@ -78,9 +115,19 @@ The current world model is a transparent simulator. Learned JEPA integration is 
 - Python 3.12
 - Conda or Miniforge
 - Git
+- GitHub CLI, recommended for private repo access and release assets
 - Modern web browser
 
 ## Quick start
+
+Clone the repository:
+
+```bash
+mkdir -p "$HOME/Projects"
+cd "$HOME/Projects"
+gh repo clone eyuchang/trace-worldmodel-flood-sar
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
+```
 
 Activate the environment:
 
@@ -126,7 +173,6 @@ Workshop participants should complete the detailed macOS setup before Day 3:
 
 - [Student Setup and Clone Guide for macOS](docs/STUDENT_SETUP_MAC.md)
 
-
 ## Geography data
 
 Two large generated geography files are intentionally excluded from normal Git history:
@@ -139,17 +185,47 @@ data/geography/antioch_delta_real_v1/road_graph.json
 They are distributed separately through GitHub Releases:
 
 <https://github.com/eyuchang/trace-worldmodel-flood-sar/releases>
+```text
+https://github.com/eyuchang/trace-worldmodel-flood-sar/releases
+```
 
-Expected release asset:
+Expected release assets:
 
 ```text
 antioch_delta_real_v1.tar.gz
+antioch_delta_real_v1.tar.gz.sha256
+```
+
+Download the geography assets:
+
+```bash
+mkdir -p "$HOME/Downloads/trace-jepa-assets"
+
+gh release download v0.5-workshop \
+  --repo eyuchang/trace-worldmodel-flood-sar \
+  --pattern "antioch_delta_real_v1.tar.gz*" \
+  --dir "$HOME/Downloads/trace-jepa-assets"
+```
+
+Verify the checksum:
+
+```bash
+cd "$HOME/Downloads/trace-jepa-assets"
+shasum -a 256 -c antioch_delta_real_v1.tar.gz.sha256
+```
+
+Expected result:
+
+```text
+antioch_delta_real_v1.tar.gz: OK
 ```
 
 After downloading the archive, extract it from the repository root:
 
 ```bash
-tar -xzf "$HOME/Downloads/antioch_delta_real_v1.tar.gz" \
+cd "$HOME/Projects/trace-worldmodel-flood-sar"
+
+tar -xzf "$HOME/Downloads/trace-jepa-assets/antioch_delta_real_v1.tar.gz" \
   -C data/geography
 ```
 
@@ -379,6 +455,8 @@ trace-worldmodel-flood-sar/
 └── third_party/             optional external dependencies
 ```
 
+The repository name has changed to `trace-worldmodel-flood-sar`. The internal package path remains `src/trace_jepa/` for compatibility.
+
 ## Important documentation
 
 Begin with:
@@ -400,6 +478,7 @@ Begin with:
 - `src/trace_jepa/controller.py`
 - `src/trace_jepa/runtime/`
 - `src/trace_jepa/planning/`
+- `src/trace_jepa/predictor/`
 
 ## Testing
 
@@ -455,28 +534,32 @@ See:
 
 These materials remain useful for teaching the core TRACE accountability path.
 
-## V-JEPA extension
+## Optional learned world-model extension
 
-The optional V-JEPA mode uses Meta’s V-JEPA encoder as a frozen visual representation backbone.
+TRACE-WorldModel does not require a learned latent model to run the current Flood-SAR D0.5 workbench.
 
-Install optional JEPA dependencies:
+The D0.5 release uses a transparent simulator and graph-based mission model so that students can inspect every state transition.
+
+Future extensions may attach learned latent predictors, including V-JEPA or AdaJEPA-style modules, behind the same world-model service boundary.
+
+Optional install, if the learned-model extension is enabled:
 
 ```bash
 python -m pip install -e ".[jepa]"
 ```
 
-Download the configured model:
+Optional model download, if configured:
 
 ```bash
 trace-jepa-download --model vjepa2_1_vit_base_384
 ```
 
-V-JEPA is not treated as a complete rescue simulator. It provides learned visual representations behind the model-service boundary.
+V-JEPA is not treated as a complete rescue simulator. It may provide learned visual representations or latent predictions, but TRACE remains responsible for evidence validation, gating, revision, and authority separation.
 
-The target architecture is:
+The target extension architecture is:
 
 ```text
-V-JEPA encoder
+learned visual encoder, such as V-JEPA
 + flood-state fusion
 + action-conditioned predictor
 + calibrated semantic probes
