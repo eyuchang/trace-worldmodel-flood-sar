@@ -315,12 +315,12 @@
       filter:
         drop-shadow(0 2px 2px rgba(0, 0, 0, 0.34));
       cursor: pointer;
-      transform-origin: center;
     }
 
     .asset-marker svg {
       display: block;
       overflow: visible;
+      transform-origin: center;
     }
 
     .asset-marker .badge {
@@ -340,7 +340,7 @@
       font-weight: 750;
     }
 
-    .asset-marker.preempting {
+    .asset-marker.preempting > svg {
       animation: pulse 800ms ease-in-out infinite alternate;
     }
 
@@ -1200,16 +1200,9 @@
 
       element.appendChild(badge);
 
-      const iconOffsets = {
-        boat: [0, -80],
-        ambulance: [0, -150],
-        drone: [0, -80],
-      };
-
       const marker = new maplibregl.Marker({
         element,
         anchor: "center",
-        offset: iconOffsets[asset.kind] ?? [0, 0],
       })
         .setLngLat([
           asset.longitude,

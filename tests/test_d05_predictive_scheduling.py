@@ -202,3 +202,7 @@ def test_ui_scales_markers_and_shows_predictive_schedule() -> None:
     assert 'id="scheduleList"' in html
     assert "transfer_schedules" in html
     assert "task_timings" in html
+    assert "iconOffsets" not in html
+    assert "offset: iconOffsets" not in html
+    assert ".asset-marker.preempting > svg" in html
+    assert ".asset-marker.preempting {" not in html
