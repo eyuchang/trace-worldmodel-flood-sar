@@ -59,7 +59,7 @@ def query_overpass(
 ) -> tuple[dict[str, Any], str]:
     headers = {
         "User-Agent": (
-            "TRACE-JEPA-Flood-SAR-research/0.4 "
+            "TRACE-WorldModel-Flood-SAR-research/0.4 "
             "(cached geography builder)"
         )
     }
@@ -1038,7 +1038,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Download and cache the real OpenStreetMap geography "
-            "used by the TRACE-JEPA D0.4 workbench."
+            "used by the TRACE-WorldModel D0.4 workbench."
         )
     )
 

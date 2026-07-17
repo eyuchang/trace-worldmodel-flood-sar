@@ -1,5 +1,5 @@
 /*
- * TRACE-JEPA Flood-SAR: MapLibre operational overlays.
+ * TRACE-WorldModel Flood-SAR: MapLibre operational overlays.
  *
  * This module is intentionally framework-free. It converts the existing
  * local simulation coordinates into a display-only geographic reference,

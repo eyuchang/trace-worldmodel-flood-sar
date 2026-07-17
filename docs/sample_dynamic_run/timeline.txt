@@ -1,4 +1,4 @@
-    0.0s  RUN_CREATED               {'scenario_path': '/mnt/data/trace_jepa_dynamic_workbench/configs/scenarios/riverside_flood_v1.yaml', 'version': 'D0.1'}
+    0.0s  RUN_CREATED               {'scenario_path': '/mnt/data/trace_worldmodel_flood_sar/configs/scenarios/riverside_flood_v1.yaml', 'version': 'D0.1'}
     0.0s  TICK                      {'dt': 5.0}
     5.0s  PLAN_CYCLE                {}
     5.0s  PLAN_PROPOSED             {'action': {'action_id': 'action-a1e9871a8aa3', 'action_type': 'verify_route', 'actor_id': 'survey_drone_1', 'destination': None, 'origin': None, 'parameters': {'expected_information_yield': 0.7, 'purpose': 'resolve_pending_route_claim'}, 'route_id': 'north_channel'}, 'name': 'Verify North Channel', 'plan_id': 'verify:north_channel:5', 'utility': 51.014495200000006}

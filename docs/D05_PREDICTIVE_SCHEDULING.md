@@ -53,7 +53,7 @@ dock, and the predicted rendezvous/hospital time.
 ```bash
 source "$HOME/miniforge3/etc/profile.d/conda.sh"
 conda activate trace-jepa
-cd "$HOME/Projects/trace_jepa_dynamic_workbench"
+cd "$HOME/Projects/trace_worldmodel_flood_sar"
 python -m pip install -e ".[ui,dev]"
 ```
 

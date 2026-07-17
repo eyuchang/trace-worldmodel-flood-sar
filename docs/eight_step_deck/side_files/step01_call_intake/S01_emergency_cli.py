@@ -56,7 +56,7 @@ def run_from_emergency_call(args: argparse.Namespace) -> dict:
     controller = MissionController(environment=environment, runtime=runtime)
 
     if not args.quiet:
-        print("\nTRACE-JEPA flood rescue")
+        print("\nTRACE-WorldModel flood rescue")
         print("=" * 72)
         print(f"Call:     {call.raw_text}")
         print(f"Location: {call.reported_location} -> {call.normalized_location_id}")

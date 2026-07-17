@@ -5,7 +5,7 @@ The full D0.1 ZIP is the safest option. To apply only the patch to an existing v
 ```bash
 cd "$HOME/Projects/trace_jepa_flood_sar_starter"
 cp -R . "../trace_jepa_flood_sar_starter.before-d0.1"
-unzip "$HOME/Downloads/trace_jepa_dynamic_workbench_D0_1_patch.zip" -d .
+unzip "$HOME/Downloads/trace_worldmodel_flood_sar_D0_1_patch.zip" -d .
 python -m pip install -e ".[ui,dev]"
 pytest
 trace-jepa-ui --host 127.0.0.1 --port 8000

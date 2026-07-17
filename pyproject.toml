@@ -3,12 +3,12 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "trace-jepa-flood-sar"
+name = "trace-worldmodel-flood-sar"
 version = "0.5.0"
-description = "Dynamic TRACE-gated JEPA research workbench for flood search-and-rescue"
+description = "TRACE-WorldModel Flood-SAR: an auditable world-model workbench for flood search-and-rescue"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{name = "TRACE-JEPA teaching project"}]
+authors = [{name = "TRACE-WorldModel teaching project"}]
 dependencies = [
   "numpy>=1.26",
   "pydantic>=2.7",
