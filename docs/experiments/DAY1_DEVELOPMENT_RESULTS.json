@@ -1,0 +1,65 @@
+{
+  "branch_source": {
+    "evidence_source_tree_sha256": "bb2ca86c3d14d82bb1dc788b30ca5e76fd21256c00ef5b1f305e65ad4786b340",
+    "review_source_tree_sha256": "85fd563f00d28915942e524dc32590fdbdc6d513434e99677479df0e03f475da",
+    "source_inventory_difference": {
+      "category": "cli_help_text_only",
+      "path": "scripts/run_day1_amendment_1.py"
+    }
+  },
+  "evidence": {
+    "g2_result_file_sha256": "fa2a352530afcaef25a0e509241ee57583c9fe3cd072dec007b0a3ca78aef280",
+    "g2_result_semantic_sha256": "c749764ef73100118eef2517efa30d5e478d6570cf3c370b315e65ac10d8ce72",
+    "manifest_file_sha256": "362ac590413448a3e46441adc9cbfcddb1acba5d7a22b2a0d1cbcbb8fcc77bee",
+    "manifest_semantic_sha256": "f957cd3eca031d9765958e3fb2bf557050cfdf49e8e541bde9aabb53cbf3af19",
+    "result_semantic_sha256": "d689a61da21868f82121d0315ae86066cbbbc6458bb50db330ca9ff09ac26723",
+    "smoke_result_file_sha256": "6a5a7c683ea61be6f3944d48ed7a1bef0b12ee3d83f179cfadf5268d0c278997",
+    "smoke_result_semantic_sha256": "c1759f353790fb0d8054a44a43568b94fb570fdde5d817282a187c4c894a7b16"
+  },
+  "g2": {
+    "complete_valid_cells": 20,
+    "executed_commitment_units": 19,
+    "held_commitment_units": 25,
+    "raw_proposal_records": 5146,
+    "stale_execution_rate": 0.3157894736842105,
+    "stale_executions": 6,
+    "status": "passed",
+    "unique_proposed_commitment_units": 44,
+    "unit_coverage": 0.4318181818181818
+  },
+  "partitions": {
+    "inferential_use": false,
+    "test_accessed": false,
+    "validation_accessed": false
+  },
+  "protocol_hashes": {
+    "amendment_1_sha256": "a80201e714f44300fd96f378b1c16c1ce515ef9fdd2b0b7b93c2afeea6fea896",
+    "amendment_2_sha256": "6c771ac3539bb6f869fec444e9d906d330b2ac4983bea20a26a982e1ac443709",
+    "canonical_sha256": "c08f03fb35ef8485533fbd45b66cdbcb40b1dec4c3616addeff1a9b122836a7c"
+  },
+  "schema_version": "trace-day1-development-results-v1",
+  "smoke": {
+    "common_random_numbers_valid": true,
+    "complete_valid_cells": 9,
+    "policy_count": 3,
+    "scientific_provenance_valid": true,
+    "seed_count": 3,
+    "status": "passed",
+    "structural_only": true
+  },
+  "verification": {
+    "full_test_skipped": 1,
+    "full_test_status": "passed",
+    "full_tests_passed": 161,
+    "implementation_qa_cells_valid": 3,
+    "preserved_protocol_cells_valid": 98,
+    "total_cells_validated": 101,
+    "verify_d05_status": "passed"
+  },
+  "workload_hashes": {
+    "v1_file_sha256": "97750a6aa65bfe723a1eeca028397f8e14cfe14d19c04b54ef8f04d80d0c93c8",
+    "v1_semantic_sha256": "41f3972951570455d3655f5296ba9c850b3bce3b1530a4462d4945d8b8fbbc4d",
+    "v2_file_sha256": "2a3188caf1c3951f431186a97453d853624a44ae6809472735f34e21d9d06a22",
+    "v2_semantic_sha256": "4a337853338c6e082986978e4cb920c3728dc797d5a302b2a907ce3eae4020f2"
+  }
+}
