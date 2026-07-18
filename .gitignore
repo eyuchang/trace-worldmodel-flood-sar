@@ -150,3 +150,6 @@ artifacts/d04/*
 
 artifacts/dynamic/*
 !artifacts/dynamic/.gitkeep
+
+# Generated experiment matrices (the private Day-1 default lives outside the repo)
+/runs/

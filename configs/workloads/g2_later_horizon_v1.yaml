@@ -1,0 +1,28 @@
+schema_version: trace-evaluation-workload-v1
+workload_id: g2-later-horizon-v1
+amendment_id: g2-workload-amendment-1
+partition: development
+regime: R-B
+design_basis: >-
+  One late incident at the declared R-B boundary window, preceded by one
+  policy-invariant exact gauge baseline; no time-zero demand is included.
+scheduler_version: registered-evaluation-workload-v1
+event_order: shocks-gauge-samples-gauge-deliveries-incidents-tick-v1
+common_gauge_observations:
+  - observation_id: common-south-gauge-6420
+    route_id: south_detour
+    sampled_at: 6420.0
+    delivered_at: 6425.0
+    cost: 0.2
+incidents:
+  - incident_id: later-riverside-6443
+    group_id: group_riverside_late_6443
+    scheduled_at: 6443.0
+    location_label: Riverside Apartments
+    position:
+      x: 88.0
+      y: 66.0
+    people: 4
+    severity: 0.55
+    deadline_s: 7643.0
+    safe_location_id: safe_transfer_dock

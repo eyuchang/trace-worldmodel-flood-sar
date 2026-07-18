@@ -16,7 +16,21 @@ from trace_jepa.contracts import (
     WorldModelEvidence,
 )
 from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
+from trace_jepa.refresh import (
+    ClaimView,
+    NoRefreshPolicy,
+    PendingCommitment,
+    RefreshDecision,
+    RefreshMode,
+    RefreshPolicy,
+    RefreshState,
+)
+from trace_jepa.refresh.channels import build_channel_menu
 from trace_jepa.util import sha256_value
+from trace_jepa.workbench.beliefs import (
+    project_controller_route_depth,
+    route_threshold_failure_probability,
+)
 from trace_jepa.workbench.models import Position, WorkbenchState
 from trace_jepa.workbench.navigation import NavigationError, plan_route_constrained_action
 
@@ -63,10 +77,20 @@ class DynamicMissionController:
     predictor_version = "dynamic-surrogate-predictor-v1.1"
     probe_version = "dynamic-flood-probes-v1.1"
 
-    def __init__(self, runtime: TraceRuntime):
+    def __init__(
+        self,
+        runtime: TraceRuntime,
+        *,
+        refresh_scheduler: RefreshPolicy | None = None,
+        epsilon_c: float = 1.0,
+    ):
         self.runtime = runtime
+        self.legacy_autonomous_recon = refresh_scheduler is None
+        self.refresh_experiment_mode = refresh_scheduler is not None
+        self.refresh_scheduler = refresh_scheduler or NoRefreshPolicy()
+        self.epsilon_c = float(epsilon_c)
 
-    def refresh_policy(self, state: WorkbenchState) -> None:
+    def _sync_gate_policy(self, state: WorkbenchState) -> None:
         current = self.runtime.policy.config
         self.runtime.policy = PolicyEngine(
             PolicyConfig(
@@ -123,7 +147,14 @@ class DynamicMissionController:
             state.config.s1.ood_severity
             + unknown_penalty
             + weather_penalty
-            + 0.12 * max(0.0, route.water_depth - 0.45)
+            + 0.12
+            * max(
+                0.0,
+                project_controller_route_depth(
+                    state, route_id, state.truth.simulation_time
+                )
+                - 0.45,
+            )
         )
         status_support = {
             "open": 0.72 + 0.22 * belief.confidence,
@@ -144,13 +175,11 @@ class DynamicMissionController:
 
         base_success = {"open": 0.91, "blocked": 0.05, "unknown": 0.70}[belief.status]
         effective_travel_s = float(travel_s if travel_s is not None else route.nominal_travel_s)
-        forecast_rise = (
-            effective_travel_s
-            * state.config.s2.water_rise_rate
-            * (0.25 + state.config.s2.rain_intensity + state.config.s2.upstream_inflow)
-            * route.susceptibility
+        predicted_depth = project_controller_route_depth(
+            state,
+            route_id,
+            state.truth.simulation_time + effective_travel_s,
         )
-        predicted_depth = route.water_depth + forecast_rise
         dynamic_risk = _clamp(predicted_depth / max(0.05, state.config.s2.route_closure_depth))
         success = _clamp(
             base_success
@@ -387,7 +416,12 @@ class DynamicMissionController:
                     < state.config.s2.clearance_horizon_s * 0.25
                 )
                 requested = route_id in state.controller.requested_surveys
-                if requested or belief.status == "unknown" or age > state.config.s2.observation_freshness_s or expiring:
+                legacy_due = self.legacy_autonomous_recon and (
+                    belief.status == "unknown"
+                    or age > state.config.s2.observation_freshness_s
+                    or expiring
+                )
+                if requested or legacy_due:
                     plan_id = f"verify:{drone_id}:{route_id}"
                     action = ActionInstance(
                         action_type="verify_route",
@@ -686,7 +720,7 @@ class DynamicMissionController:
     def assess(
         self, state: WorkbenchState, *, trigger_event_id: str | None = None
     ) -> list[AssessedCandidate]:
-        self.refresh_policy(state)
+        self._sync_gate_policy(state)
         assessed: list[AssessedCandidate] = []
         for plan, prediction, claim in self.candidates(state):
             evidence = self._evidence(state, plan, prediction, claim)
@@ -764,6 +798,317 @@ class DynamicMissionController:
                 )
             )
         return assessed
+
+    @property
+    def refresh_scheduler_active(self) -> bool:
+        return self.refresh_scheduler.name != "none"
+
+    def _route_has_pending_evidence(
+        self, state: WorkbenchState, route_id: str | None
+    ) -> bool:
+        if route_id is None:
+            return False
+        if route_id in state.controller.requested_surveys:
+            return True
+        if any(
+            item.get("route_id") == route_id
+            for item in state.controller.pending_evidence
+        ):
+            return True
+        return any(
+            asset.action_type == "verify_route"
+            and asset.assigned_route_id == route_id
+            and asset.status in {"assigned", "moving"}
+            for asset in state.controller.known_assets.values()
+        )
+
+    def _refresh_channel_menu(
+        self,
+        state: WorkbenchState,
+        item: AssessedCandidate,
+    ):
+        action = item.plan.first_action
+        route_id = action.route_id
+        drone_flight_time = 0.0
+        drones = [
+            asset
+            for asset in state.controller.known_assets.values()
+            if asset.asset_type == "survey_drone"
+            and asset.status in {"available", "standby"}
+            and asset.resource > 0.05
+        ]
+        if route_id and drones:
+            target = _midpoint(state.truth.routes[route_id].waypoints)
+            drone_flight_time = max(
+                0.0,
+                _distance(drones[0].position, target) / max(0.1, drones[0].speed),
+            )
+        if route_id is None:
+            return ()
+        failure_probability = route_threshold_failure_probability(
+            state,
+            route_id,
+            state.truth.simulation_time + item.prediction.arrival_time_s,
+        )
+        channels = build_channel_menu(
+            failure_probability=failure_probability,
+            failure_loss=100.0,
+            safe_loss=15.0,
+            drone_accuracy=(
+                state.config.s1.drone_report_accuracy
+                * state.config.s5.sensor_quality
+            ),
+            drone_flight_time_s=drone_flight_time,
+            gauge_gate_clear_probability=self._gate_clear_probability(
+                state,
+                item,
+                route_id=route_id,
+                failure_probability=failure_probability,
+                accuracy=1.0,
+                latency_s=5.0,
+                delivery_probability=1.0,
+            ),
+            drone_gate_clear_probability=self._gate_clear_probability(
+                state,
+                item,
+                route_id=route_id,
+                failure_probability=failure_probability,
+                accuracy=max(
+                    0.5,
+                    min(
+                        1.0,
+                        state.config.s1.drone_report_accuracy
+                        * state.config.s5.sensor_quality,
+                    ),
+                ),
+                latency_s=drone_flight_time,
+                delivery_probability=1.0 - state.config.s1.packet_loss,
+            ),
+        )
+        if not drones:
+            channels = tuple(
+                channel
+                for channel in channels
+                if channel.channel != "drone_survey"
+            )
+        return channels
+
+    def _gate_clear_probability(
+        self,
+        state: WorkbenchState,
+        item: AssessedCandidate,
+        *,
+        route_id: str,
+        failure_probability: float,
+        accuracy: float,
+        latency_s: float,
+        delivery_probability: float,
+    ) -> float:
+        """Preposterior probability of literal CLEAR under the frozen gate."""
+
+        p_failure = _clamp(failure_probability)
+        p_open_report = (
+            (1.0 - p_failure) * accuracy
+            + p_failure * (1.0 - accuracy)
+        )
+        outcome_probabilities = {
+            "open": p_open_report,
+            "blocked": 1.0 - p_open_report,
+        }
+        clear_probability = 0.0
+        sample_time = state.truth.simulation_time
+        for reported_status, probability in outcome_probabilities.items():
+            hypothetical = state.model_copy(deep=True)
+            projected_depth = project_controller_route_depth(
+                state, route_id, sample_time
+            )
+            if reported_status == "open":
+                observed_depth = min(
+                    projected_depth,
+                    state.config.s2.route_closure_depth - 1e-9,
+                )
+            else:
+                observed_depth = max(
+                    projected_depth,
+                    state.config.s2.route_closure_depth,
+                )
+            prior = hypothetical.controller.route_beliefs[route_id]
+            hypothetical.controller.route_beliefs[route_id] = prior.model_copy(
+                update={
+                    "status": reported_status,
+                    "confidence": accuracy,
+                    "observed_at": sample_time,
+                    "source": "preposterior_channel_outcome",
+                    "clearance_valid_until": (
+                        sample_time + state.config.s2.clearance_horizon_s
+                        if reported_status == "open"
+                        else None
+                    ),
+                    "water_depth": observed_depth,
+                    "depth_observed_at": sample_time,
+                }
+            )
+            hypothetical.truth.simulation_time = sample_time + latency_s
+            hypothetical.controller.simulation_time = sample_time + latency_s
+            action = item.plan.first_action
+            prediction = self._route_prediction(
+                hypothetical,
+                plan_id=item.plan.plan_id,
+                route_id=route_id,
+                asset_id=action.actor_id,
+                travel_s=item.prediction.arrival_time_s,
+            )
+            evidence = self._evidence(
+                hypothetical,
+                item.plan,
+                prediction,
+                item.record.claim,
+            )
+            evaluation = self.runtime.policy.evaluate(
+                item.record.claim,
+                evidence,
+                action_name=action.action_type,
+                reversible=item.plan.reversible_first_action,
+                authority_present=hypothetical.config.commander_authority_present,
+            )
+            if evaluation.decision.value == "clear":
+                clear_probability += probability
+        return _clamp(clear_probability * delivery_probability)
+
+    def decide_refresh(
+        self,
+        state: WorkbenchState,
+        assessed: list[AssessedCandidate],
+    ) -> tuple[AssessedCandidate | None, RefreshDecision]:
+        operational = [
+            item
+            for item in assessed
+            if item.plan.first_action.action_type != "verify_route"
+        ]
+        if not operational:
+            return None, self.refresh_scheduler.decide(
+                RefreshState(now=state.truth.simulation_time), (), None
+            )
+        provisionally_selected = self.select(state, assessed)
+        if (
+            provisionally_selected is not None
+            and provisionally_selected.plan.first_action.action_type == "verify_route"
+        ):
+            return None, self.refresh_scheduler.decide(
+                RefreshState(now=state.truth.simulation_time), (), None
+            )
+        target = provisionally_selected or max(
+            operational, key=lambda item: item.plan.utility
+        )
+        action = target.plan.first_action
+        route_id = action.route_id
+        belief = (
+            state.controller.route_beliefs.get(route_id) if route_id else None
+        )
+        now = state.truth.simulation_time
+        observation_age = self._route_age(state, route_id) if route_id else 0.0
+        claim = ClaimView(
+            claim_id=target.record.claim.claim_id,
+            model_support=target.prediction.model_support,
+            out_of_distribution_score=target.prediction.out_of_distribution_score,
+            uncertainty=target.prediction.uncertainty,
+            rollout_horizon=target.prediction.rollout_horizon,
+            observation_age_s=observation_age,
+            validity_until=belief.clearance_valid_until if belief else None,
+            observed_innovation=(
+                belief.observed_innovation
+                if belief is not None
+                and belief.innovation_received_at is not None
+                and math.isclose(
+                    belief.innovation_received_at,
+                    now,
+                    rel_tol=0.0,
+                    abs_tol=1e-9,
+                )
+                else None
+            ),
+            innovation_tolerance=(
+                belief.innovation_tolerance
+                if belief is not None
+                and belief.innovation_received_at is not None
+                and math.isclose(
+                    belief.innovation_received_at,
+                    now,
+                    rel_tol=0.0,
+                    abs_tol=1e-9,
+                )
+                else None
+            ),
+        )
+        local_alternatives = [
+            item
+            for item in operational
+            if item is not target
+            and item.plan.first_action.action_type == action.action_type
+            and item.plan.first_action.actor_id == action.actor_id
+            and item.plan.first_action.parameters.get("group_id")
+            == action.parameters.get("group_id")
+            and item.plan.first_action.parameters.get("group_ids")
+            == action.parameters.get("group_ids")
+            and item.decision in {"clear", "qualify"}
+        ]
+        safe_alternative = max(
+            local_alternatives, key=lambda item: item.plan.utility, default=None
+        )
+        route_failure_probability = (
+            route_threshold_failure_probability(
+                state,
+                route_id,
+                now + target.prediction.arrival_time_s,
+            )
+            if route_id is not None
+            else 1.0 - target.prediction.success_probability
+        )
+        pending = PendingCommitment(
+            commitment_id=f"pending:{target.plan.plan_id}",
+            claim_id=target.record.claim.claim_id,
+            action_class=action.action_type,
+            route_id=route_id,
+            reversible=target.plan.reversible_first_action,
+            requires_authority=target.plan.requires_authority,
+            authority_present=state.config.commander_authority_present,
+            commitment_horizon_end=now + target.prediction.arrival_time_s,
+            failure_probability=route_failure_probability,
+            # The binary consequence model is execute this exposed route action
+            # versus pay the declared safe fallback loss. "fast" names the
+            # exposed action in the theorem; it is not a ranking by route speed.
+            selected_action="fast",
+            epsilon_c=self.epsilon_c,
+            failure_loss=100.0,
+            safe_loss=15.0,
+            safe_alternative_available=safe_alternative is not None,
+            pending_evidence=self._route_has_pending_evidence(state, route_id),
+            last_evidence_acquired_at=(
+                state.controller.last_refresh_acquired_at.get(route_id)
+                if route_id
+                else None
+            ),
+            observed_at=belief.observed_at if belief else None,
+            channels=self._refresh_channel_menu(state, target),
+        )
+        refresh_state = RefreshState(
+            now=now,
+            tick_s=1.0,
+            min_refresh_interval_s=5.0,
+            min_model_support=self.runtime.policy.config.min_model_support,
+            max_ood_score=self.runtime.policy.config.max_ood_score,
+            max_uncertainty=self.runtime.policy.config.max_uncertainty,
+            max_rollout_horizon=self.runtime.policy.config.max_rollout_horizon,
+            max_observation_age_s=self.runtime.policy.config.max_observation_age_s,
+        )
+        decision = self.refresh_scheduler.decide(
+            refresh_state, (claim,), pending
+        )
+        if decision.mode == RefreshMode.SAFE_ALTERNATIVE and safe_alternative:
+            decision = decision.model_copy(
+                update={"safe_alternative_plan_id": safe_alternative.plan.plan_id}
+            )
+        return target, decision
 
     def select(self, state: WorkbenchState, assessed: list[AssessedCandidate]) -> AssessedCandidate | None:
         admissible = [item for item in assessed if item.decision in {"clear", "qualify"}]

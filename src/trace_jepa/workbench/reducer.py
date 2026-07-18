@@ -15,6 +15,27 @@ from trace_jepa.workbench.models import (
     SimulationEvent,
     WorkbenchState,
 )
+from trace_jepa.workbench.beliefs import (
+    OBSERVED_DEPTH_TOLERANCE_M,
+    project_controller_route_depth,
+)
+from trace_jepa.workbench.randomness import keyed_standard_normal, keyed_uniform
+
+
+def _hashed_uniform(*key_parts: object) -> float:
+    """Compatibility wrapper for the supplied WP-E patch's test API."""
+
+    if not key_parts:
+        raise ValueError("at least one RNG key part is required")
+    return keyed_uniform(str(key_parts[0]), *key_parts[1:])
+
+
+def _hashed_gauss(*key_parts: object) -> float:
+    """Compatibility wrapper for the supplied WP-E patch's test API."""
+
+    if not key_parts:
+        raise ValueError("at least one RNG key part is required")
+    return keyed_standard_normal(str(key_parts[0]), *key_parts[1:])
 
 
 def _clamp(value: float, low: float, high: float) -> float:
@@ -77,14 +98,51 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
 
     if event.event_type == EventType.TICK:
         dt = float(payload.get("dt", 1.0))
+        if not math.isfinite(dt) or dt <= 0.0:
+            raise ValueError("TICK dt must be finite and strictly positive")
         state.truth.simulation_time += dt
         state.controller.simulation_time = state.truth.simulation_time
 
         s2 = state.config.s2
         forcing = 0.25 + 0.75 * s2.rain_intensity + 0.85 * s2.upstream_inflow
-        state.truth.global_water_level += dt * s2.water_rise_rate * forcing
-        for route in state.truth.routes.values():
-            route.water_depth += dt * s2.water_rise_rate * forcing * route.susceptibility
+        if s2.forcing_noise_std == 0.0:
+            # This branch intentionally preserves the pre-WP-E arithmetic and
+            # event payloads exactly for the zero-noise compatibility oracle.
+            state.truth.global_water_level += dt * s2.water_rise_rate * forcing
+            for route in state.truth.routes.values():
+                route.water_depth += (
+                    dt * s2.water_rise_rate * forcing * route.susceptibility
+                )
+        else:
+            # One common regional forcing innovation is shared across routes.
+            # Euler--Maruyama requires sqrt(dt), so increment variance is
+            # sigma^2 * dt rather than sigma^2 * dt^2.
+            innovation = float(payload["forcing_noise_z"])
+            if not math.isfinite(innovation):
+                raise ValueError("forcing_noise_z must be finite")
+            stochastic_increment = (
+                s2.water_rise_rate
+                * s2.forcing_noise_std
+                * math.sqrt(dt)
+                * innovation
+            )
+            state.truth.global_water_level = max(
+                0.0,
+                state.truth.global_water_level
+                + dt * s2.water_rise_rate * forcing
+                + stochastic_increment,
+            )
+            for route in state.truth.routes.values():
+                route.water_depth = max(
+                    0.0,
+                    route.water_depth
+                    + dt
+                    * s2.water_rise_rate
+                    * forcing
+                    * route.susceptibility
+                    + stochastic_increment * route.susceptibility,
+                )
+        state.truth.environment_tick_index += 1
         _refresh_route_edges(state)
 
         for group in state.truth.groups.values():
@@ -126,6 +184,59 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
         route_id = str(payload["route_id"])
         if route_id not in state.controller.requested_surveys:
             state.controller.requested_surveys.append(route_id)
+        request_id = payload.get("evidence_request_id")
+        if request_id is not None and not any(
+            item.get("evidence_request_id") == request_id
+            for item in state.controller.pending_evidence
+        ):
+            state.controller.pending_evidence.append(
+                {
+                    "evidence_request_id": str(request_id),
+                    "refresh_decision_id": payload.get("refresh_decision_id"),
+                    "channel": "drone_survey",
+                    "route_id": route_id,
+                    "requested_at": state.truth.simulation_time,
+                }
+            )
+        return
+
+    if event.event_type == EventType.GAUGE_POLL:
+        request_id = str(payload["evidence_request_id"])
+        if not any(
+            item.get("evidence_request_id") == request_id
+            for item in state.controller.pending_evidence
+        ):
+            # Never expose the sampled truth value before its declared delivery.
+            state.controller.pending_evidence.append(
+                {
+                    "evidence_request_id": request_id,
+                    "channel": "gauge_poll",
+                    "route_id": str(payload["route_id"]),
+                    "requested_at": float(payload["requested_at"]),
+                    "deliver_at": float(payload["deliver_at"]),
+                }
+            )
+        return
+
+    if event.event_type == EventType.EVIDENCE_ACQUIRED:
+        request_id = payload.get("evidence_request_id")
+        if request_id is not None:
+            state.controller.pending_evidence = [
+                item
+                for item in state.controller.pending_evidence
+                if item.get("evidence_request_id") != request_id
+            ]
+        route_id = payload.get("route_id")
+        if route_id is not None:
+            state.controller.last_refresh_acquired_at[str(route_id)] = (
+                state.truth.simulation_time
+            )
+        return
+
+    if event.event_type in {
+        EventType.REFRESH_TRIGGERED,
+        EventType.AUTH_WITHDRAWN,
+    }:
         return
 
     if event.event_type == EventType.COMMANDER_AUTHORITY:
@@ -350,6 +461,37 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
             status = str(payload["reported_status"])
             confidence = float(payload.get("confidence", 0.8))
             observed_at = float(payload.get("observed_at", state.truth.simulation_time))
+            known_route = (
+                route_id in state.truth.routes
+                and route_id in state.controller.route_beliefs
+            )
+            projected_depth = (
+                project_controller_route_depth(state, route_id, observed_at)
+                if known_route
+                else None
+            )
+            projected_status = (
+                "open"
+                if projected_depth is not None
+                and projected_depth < state.config.s2.route_closure_depth
+                else "blocked"
+            )
+            categorical_innovation = (
+                float(status != projected_status)
+                if known_route and status in {"open", "blocked"}
+                else None
+            )
+            representative_depth = projected_depth
+            if status == "open" and projected_depth is not None:
+                representative_depth = min(
+                    projected_depth,
+                    state.config.s2.route_closure_depth - 1e-9,
+                )
+            elif status == "blocked" and projected_depth is not None:
+                representative_depth = max(
+                    projected_depth,
+                    state.config.s2.route_closure_depth,
+                )
             state.controller.route_beliefs[route_id] = RouteBelief(
                 route_id=route_id,
                 status=status if status in {"open", "blocked", "unknown"} else "unknown",
@@ -363,6 +505,48 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
                 ),
                 report_id=event.event_id,
                 blocked_segment_index=payload.get("blocked_segment_index"),
+                water_depth=representative_depth,
+                depth_observed_at=observed_at,
+                observed_innovation=categorical_innovation,
+                innovation_tolerance=(
+                    0.5 if categorical_innovation is not None else None
+                ),
+                innovation_received_at=state.truth.simulation_time,
+            )
+        elif kind == "route_depth":
+            route_id = str(payload["route_id"])
+            depth = max(0.0, float(payload["water_depth"]))
+            observed_at = float(payload["observed_at"])
+            expected_depth = project_controller_route_depth(
+                state, route_id, observed_at
+            )
+            status = (
+                "open"
+                if depth < state.config.s2.route_closure_depth
+                else "blocked"
+            )
+            state.controller.route_beliefs[route_id] = RouteBelief(
+                route_id=route_id,
+                status=status,
+                confidence=1.0,
+                observed_at=observed_at,
+                source=str(payload.get("source", "gauge_poll")),
+                clearance_valid_until=(
+                    observed_at + state.config.s2.clearance_horizon_s
+                    if status == "open"
+                    else None
+                ),
+                report_id=event.event_id,
+                blocked_segment_index=(
+                    state.controller.route_beliefs[route_id].blocked_segment_index
+                    if route_id in state.controller.route_beliefs
+                    else None
+                ),
+                water_depth=depth,
+                depth_observed_at=observed_at,
+                observed_innovation=depth - expected_depth,
+                innovation_tolerance=OBSERVED_DEPTH_TOLERANCE_M,
+                innovation_received_at=state.truth.simulation_time,
             )
         elif kind == "group":
             group = GroupState.model_validate(payload["group"])
@@ -613,6 +797,11 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
 
     if event.event_type == EventType.ACTION_COMPLETED:
         asset_id = str(payload["asset_id"])
+        state.controller.active_commitments = [
+            item
+            for item in state.controller.active_commitments
+            if item.get("asset_id") != asset_id
+        ]
         if asset_id in state.truth.assets:
             asset = state.truth.assets[asset_id]
             asset.status = (

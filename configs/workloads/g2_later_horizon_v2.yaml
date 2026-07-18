@@ -1,0 +1,30 @@
+schema_version: trace-evaluation-workload-v1
+workload_id: g2-later-horizon-v2
+amendment_id: day1-measurement-amendment-2
+partition: development
+regime: R-B
+design_basis: >-
+  Event schedule is byte-for-byte equivalent in meaning to workload v1. This
+  version binds the post-smoke measurement-contract correction: one stable
+  plan_id is one commitment, while every TRACE proposal record remains in the
+  forensic ledger.
+scheduler_version: registered-evaluation-workload-v1
+event_order: shocks-gauge-samples-gauge-deliveries-incidents-tick-v1
+common_gauge_observations:
+  - observation_id: common-south-gauge-6420
+    route_id: south_detour
+    sampled_at: 6420.0
+    delivered_at: 6425.0
+    cost: 0.2
+incidents:
+  - incident_id: later-riverside-6443
+    group_id: group_riverside_late_6443
+    scheduled_at: 6443.0
+    location_label: Riverside Apartments
+    position:
+      x: 88.0
+      y: 66.0
+    people: 4
+    severity: 0.55
+    deadline_s: 7643.0
+    safe_location_id: safe_transfer_dock

@@ -1,0 +1,4 @@
+TEST-ONLY PROTOCOL FIXTURE
+
+This file exists only to provide deterministic protocol bytes to unit tests.
+It is not the experiment protocol and must not be used for research runs.

@@ -50,6 +50,10 @@ class EventType(str, Enum):
     INJECT_SHOCK = "INJECT_SHOCK"
     SET_S5_PARAMETERS = "SET_S5_PARAMETERS"
     REQUEST_SURVEY = "REQUEST_SURVEY"
+    GAUGE_POLL = "GAUGE_POLL"
+    REFRESH_TRIGGERED = "REFRESH_TRIGGERED"
+    EVIDENCE_ACQUIRED = "EVIDENCE_ACQUIRED"
+    AUTH_WITHDRAWN = "AUTH_WITHDRAWN"
     COMMANDER_AUTHORITY = "COMMANDER_AUTHORITY"
     ROUTE_STATUS_CHANGED = "ROUTE_STATUS_CHANGED"
     OBSERVATION = "OBSERVATION"
@@ -126,6 +130,7 @@ class S1Parameters(Model):
 
 class S2Parameters(Model):
     rain_intensity: float = Field(default=0.25, ge=0.0, le=1.0)
+    forcing_noise_std: float = Field(default=0.0, ge=0.0, le=2.0)
     upstream_inflow: float = Field(default=0.20, ge=0.0, le=1.0)
     water_rise_rate: float = Field(default=0.00015, ge=0.0, le=0.1)
     route_closure_depth: float = Field(default=0.72, ge=0.05, le=2.0)
@@ -207,6 +212,11 @@ class RouteBelief(Model):
     clearance_valid_until: float | None = None
     report_id: str | None = None
     blocked_segment_index: int | None = None
+    water_depth: float | None = Field(default=None, ge=0.0)
+    depth_observed_at: float | None = Field(default=None, ge=0.0)
+    observed_innovation: float | None = None
+    innovation_tolerance: float | None = Field(default=None, ge=0.0)
+    innovation_received_at: float | None = Field(default=None, ge=0.0)
 
 
 class AssetState(Model):
@@ -312,6 +322,7 @@ class GroupState(Model):
 
 class TruthState(Model):
     simulation_time: float = 0.0
+    environment_tick_index: int = Field(default=0, ge=0)
     routes: dict[str, RouteTruth]
     assets: dict[str, AssetState]
     groups: dict[str, GroupState]
@@ -359,6 +370,8 @@ class ControllerState(Model):
     known_groups: dict[str, GroupState]
     pending_claims: list[dict[str, Any]] = Field(default_factory=list)
     requested_surveys: list[str] = Field(default_factory=list)
+    pending_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    last_refresh_acquired_at: dict[str, float] = Field(default_factory=dict)
     active_commitments: list[dict[str, Any]] = Field(default_factory=list)
     last_plan_cycle_at: float = -1.0
     last_selected_plan: dict[str, Any] | None = None

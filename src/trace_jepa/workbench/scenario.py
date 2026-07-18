@@ -145,6 +145,10 @@ def load_initial_state(run_id: str, scenario_path: str | Path) -> WorkbenchState
             observed_at=0.0 if initial_report != "unknown" else None,
             source="scenario_initial_report" if initial_report != "unknown" else None,
             clearance_valid_until=120.0 if initial_report == "open" else None,
+            water_depth=(
+                routes[route_id].water_depth if initial_report == "open" else None
+            ),
+            depth_observed_at=0.0 if initial_report == "open" else None,
         )
 
     controller = ControllerState(

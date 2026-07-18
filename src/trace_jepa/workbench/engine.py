@@ -8,7 +8,7 @@ from collections import deque
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-from trace_jepa.contracts import ActionInstance
+from trace_jepa.refresh import RefreshDecision, RefreshMode, RefreshPolicy
 from trace_jepa.runtime import (
     CommitmentLog,
     EvidenceLedger,
@@ -36,6 +36,12 @@ from trace_jepa.workbench.models import (
     WorkbenchState,
 )
 from trace_jepa.workbench.reducer import apply_event
+from trace_jepa.workbench.randomness import (
+    RNG_SCHEMA_VERSION,
+    SEED_NAMESPACE,
+    keyed_standard_normal,
+    keyed_uniform,
+)
 from trace_jepa.workbench.scenario import load_initial_state
 from trace_jepa.workbench.store import EventStore
 
@@ -69,6 +75,8 @@ class DynamicRun:
         run_id: str | None = None,
         scenario_path: str | Path,
         artifact_root: str | Path,
+        refresh_scheduler: RefreshPolicy | None = None,
+        epsilon_c: float = 1.0,
     ) -> None:
         self.run_id = run_id or new_id("run")
         self.scenario_path = Path(scenario_path)
@@ -80,6 +88,7 @@ class DynamicRun:
         self.recent_events: deque[SimulationEvent] = deque(maxlen=100)
         self._subscribers: list[Subscriber] = []
         self._scheduled: list[dict[str, Any]] = []
+        self._refresh_request_context: dict[str, dict[str, Any]] = {}
         self._rng = random.Random(self.state.config.s1.seed)
         self._lock = asyncio.Lock()
         self._plan_requested = True
@@ -95,7 +104,11 @@ class DynamicRun:
             commitments=CommitmentLog(self.artifact_root / "commitments" / "commitments.jsonl"),
             policy=policy,
         )
-        self.controller = DynamicMissionController(self.runtime)
+        self.controller = DynamicMissionController(
+            self.runtime,
+            refresh_scheduler=refresh_scheduler,
+            epsilon_c=epsilon_c,
+        )
         self.emit(
             EventType.RUN_CREATED,
             source="workbench",
@@ -178,6 +191,7 @@ class DynamicRun:
             self.state = self._initial_state.model_copy(deep=True)
             self.recent_events.clear()
             self._scheduled.clear()
+            self._refresh_request_context.clear()
             self._rng = random.Random(self.state.config.s1.seed)
             self._plan_requested = True
             self.event_store.clear()
@@ -440,7 +454,29 @@ class DynamicRun:
     async def step(self, dt: float = 1.0) -> None:
         async with self._lock:
             before_routes = self._route_open_map()
-            self.emit(EventType.TICK, source="simulation_clock", payload={"dt": float(dt)})
+            tick_dt = float(dt)
+            tick_payload: dict[str, Any] = {"dt": tick_dt}
+            if self.state.config.s2.forcing_noise_std > 0.0:
+                tick_index = self.state.truth.environment_tick_index
+                tick_payload.update(
+                    {
+                        "forcing_noise_z": keyed_standard_normal(
+                            "env.forcing",
+                            SEED_NAMESPACE,
+                            self.state.config.s1.seed,
+                            tick_index,
+                        ),
+                        "forcing_rng_schema": RNG_SCHEMA_VERSION,
+                        "forcing_seed_namespace": SEED_NAMESPACE,
+                        "forcing_tick_index": tick_index,
+                        "forcing_spatial_model": "common_forcing_v1",
+                    }
+                )
+            self.emit(
+                EventType.TICK,
+                source="simulation_clock",
+                payload=tick_payload,
+            )
 
             for route_id, now_open in self._route_open_map().items():
                 if before_routes.get(route_id) != now_open:
@@ -460,6 +496,19 @@ class DynamicRun:
 
             self._move_assets(float(dt))
             self._deliver_scheduled()
+
+            if self.controller.refresh_experiment_mode:
+                active_demand = any(
+                    not group.rescued
+                    and not group.cancelled
+                    and int(group.people_waiting or 0) > 0
+                    for group in self.state.controller.known_groups.values()
+                ) or any(
+                    asset.passenger_count > 0
+                    for asset in self.state.controller.known_assets.values()
+                )
+                if active_demand:
+                    self._plan_requested = True
 
             if self.state.config.auto_plan:
                 elapsed = self.state.truth.simulation_time - self.state.controller.last_plan_cycle_at
@@ -579,9 +628,26 @@ class DynamicRun:
         group_id = asset.assigned_group_id
 
         if action_type == "verify_route" and route_id:
+            refresh_context = self._refresh_request_context.pop(route_id, {})
             truth_status = "open" if self.state.truth.routes[route_id].open else "blocked"
-            delivered = self._rng.random() >= self.state.config.s1.packet_loss
-            accurate = self._rng.random() <= self.state.config.s1.drone_report_accuracy
+            observed_at = self.state.truth.simulation_time
+            observation_key = (
+                SEED_NAMESPACE,
+                self.state.config.s1.seed,
+                "drone_survey",
+                asset_id,
+                route_id,
+                self.state.truth.environment_tick_index,
+                observed_at,
+            )
+            delivered = (
+                keyed_uniform("obs.drone.delivery", *observation_key)
+                >= self.state.config.s1.packet_loss
+            )
+            accurate = (
+                keyed_uniform("obs.drone.accuracy", *observation_key)
+                <= self.state.config.s1.drone_report_accuracy
+            )
             reported_status = (
                 truth_status
                 if accurate
@@ -596,11 +662,22 @@ class DynamicRun:
                     "route_id": route_id,
                 },
             )
+            flight_duration = max(
+                0.0,
+                self.state.truth.simulation_time
+                - float(
+                    asset.action_started_at
+                    if asset.action_started_at is not None
+                    else self.state.truth.simulation_time
+                ),
+            )
             if delivered:
                 self._scheduled.append(
                     {
-                        "deliver_at": self.state.truth.simulation_time
-                        + self.state.config.s1.observation_latency_s,
+                        # WP3 defines drone latency as flight time. The report
+                        # therefore reaches the controller at flight completion,
+                        # with no unmodelled post-flight delivery gap.
+                        "deliver_at": self.state.truth.simulation_time,
                         "kind": "route_observation",
                         "payload": {
                             "kind": "route",
@@ -613,17 +690,53 @@ class DynamicRun:
                                 * self.state.config.s5.sensor_quality,
                             ),
                             "source": asset_id,
-                            "observed_at": self.state.truth.simulation_time,
+                            "observed_at": observed_at,
                             "accurate": accurate,
                             "blocked_segment_index": (
                                 self.state.truth.routes[route_id].blocked_segment_index
                                 if truth_status == "blocked"
                                 else None
                             ),
+                            "refresh_decision_id": refresh_context.get(
+                                "refresh_decision_id"
+                            ),
+                            "evidence_request_id": refresh_context.get(
+                                "evidence_request_id"
+                            ),
+                            "claim_id": refresh_context.get("claim_id"),
+                            "commitment_id": refresh_context.get(
+                                "commitment_id"
+                            ),
+                            "latency_s": flight_duration,
+                            "cost": 5.0 + flight_duration * 0.0009,
                         },
                     }
                 )
             else:
+                self.emit(
+                    EventType.EVIDENCE_ACQUIRED,
+                    source="drone_survey",
+                    scenario_level=ScenarioLevel.S5,
+                    visibility=EventVisibility.AUDIT,
+                    payload={
+                        "refresh_decision_id": refresh_context.get(
+                            "refresh_decision_id"
+                        ),
+                        "evidence_request_id": refresh_context.get(
+                            "evidence_request_id"
+                        ),
+                        "channel": "drone_survey",
+                        "route_id": route_id,
+                        "asset_id": asset_id,
+                        "observed_at": observed_at,
+                        "latency_s": flight_duration,
+                        "cost": 5.0 + flight_duration * 0.0009,
+                        "usable": False,
+                        "accurate": accurate,
+                        "claim_id": refresh_context.get("claim_id"),
+                        "commitment_id": refresh_context.get("commitment_id"),
+                    },
+                )
                 self.emit(
                     EventType.OUTCOME,
                     source="communications",
@@ -894,6 +1007,58 @@ class DynamicRun:
             }
         )
 
+    def _request_gauge_poll(
+        self,
+        *,
+        route_id: str,
+        decision: RefreshDecision,
+        refresh_decision_id: str,
+        evidence_request_id: str,
+    ) -> str:
+        requested_at = self.state.truth.simulation_time
+        deliver_at = requested_at + 5.0
+        sampled_depth = self.state.truth.routes[route_id].water_depth
+        self.emit(
+            EventType.GAUGE_POLL,
+            source="gauge_poll",
+            scenario_level=ScenarioLevel.S5,
+            visibility=EventVisibility.AUDIT,
+            payload={
+                "refresh_decision_id": refresh_decision_id,
+                "evidence_request_id": evidence_request_id,
+                "route_id": route_id,
+                "requested_at": requested_at,
+                "sampled_at": requested_at,
+                "deliver_at": deliver_at,
+                "sampled_water_depth": sampled_depth,
+                "cost": 0.2,
+                "latency_s": 5.0,
+                "policy": decision.policy,
+                "claim_id": decision.claim_id,
+                "commitment_id": decision.commitment_id,
+            },
+        )
+        self._scheduled.append(
+            {
+                "deliver_at": deliver_at,
+                "kind": "gauge_observation",
+                "payload": {
+                    "refresh_decision_id": refresh_decision_id,
+                    "evidence_request_id": evidence_request_id,
+                    "kind": "route_depth",
+                    "route_id": route_id,
+                    "water_depth": sampled_depth,
+                    "source": "gauge_poll",
+                    "observed_at": requested_at,
+                    "cost": 0.2,
+                    "latency_s": 5.0,
+                    "claim_id": decision.claim_id,
+                    "commitment_id": decision.commitment_id,
+                },
+            }
+        )
+        return evidence_request_id
+
     def _deliver_scheduled(self) -> None:
         due = [
             item
@@ -905,14 +1070,87 @@ class DynamicRun:
             kind = item["kind"]
             payload = item["payload"]
 
+            if kind == "gauge_observation":
+                event = self.emit(
+                    EventType.OBSERVATION,
+                    source="gauge_poll",
+                    scenario_level=ScenarioLevel.S1,
+                    visibility=EventVisibility.CONTROLLER,
+                    payload={
+                        key: value
+                        for key, value in payload.items()
+                        if key
+                        not in {"cost", "latency_s", "claim_id", "commitment_id"}
+                    },
+                )
+                self.emit(
+                    EventType.EVIDENCE_ACQUIRED,
+                    source="gauge_poll",
+                    scenario_level=ScenarioLevel.S5,
+                    visibility=EventVisibility.AUDIT,
+                    payload={
+                        "evidence_request_id": payload["evidence_request_id"],
+                        "refresh_decision_id": payload["refresh_decision_id"],
+                        "channel": "gauge_poll",
+                        "route_id": payload["route_id"],
+                        "observation_event_id": event.event_id,
+                        "observed_at": payload["observed_at"],
+                        "delivered_at": self.state.truth.simulation_time,
+                        "latency_s": payload["latency_s"],
+                        "cost": payload["cost"],
+                        "usable": True,
+                        "claim_id": payload["claim_id"],
+                        "commitment_id": payload["commitment_id"],
+                    },
+                )
+                self._plan_requested = True
+                continue
+
             if kind == "route_observation":
+                observation_payload = {
+                    key: value
+                    for key, value in payload.items()
+                    if key
+                    not in {
+                        "refresh_decision_id",
+                        "evidence_request_id",
+                        "claim_id",
+                        "commitment_id",
+                        "latency_s",
+                        "cost",
+                    }
+                }
                 event = self.emit(
                     EventType.OBSERVATION,
                     source=str(payload.get("source", "sensor")),
                     scenario_level=ScenarioLevel.S1,
                     visibility=EventVisibility.CONTROLLER,
-                    payload=payload,
+                    payload=observation_payload,
                 )
+                if "cost" in payload:
+                    self.emit(
+                        EventType.EVIDENCE_ACQUIRED,
+                        source="drone_survey",
+                        scenario_level=ScenarioLevel.S5,
+                        visibility=EventVisibility.AUDIT,
+                        payload={
+                            "refresh_decision_id": payload.get(
+                                "refresh_decision_id"
+                            ),
+                            "evidence_request_id": payload["evidence_request_id"],
+                            "channel": "drone_survey",
+                            "route_id": payload["route_id"],
+                            "observation_event_id": event.event_id,
+                            "observed_at": payload["observed_at"],
+                            "delivered_at": self.state.truth.simulation_time,
+                            "latency_s": payload["latency_s"],
+                            "cost": payload["cost"],
+                            "usable": True,
+                            "accurate": payload["accurate"],
+                            "claim_id": payload.get("claim_id"),
+                            "commitment_id": payload.get("commitment_id"),
+                        },
+                    )
                 self.emit(
                     EventType.BELIEF_UPDATE,
                     source="mission_controller",
@@ -1160,6 +1398,8 @@ class DynamicRun:
                     "plan_id": item.plan.plan_id,
                     "name": item.plan.name,
                     "utility": item.plan.utility,
+                    "record_id": item.record.record_id,
+                    "record_version": item.record.record_version,
                     "action": item.plan.first_action.model_dump(mode="json"),
                     "trigger_event_id": trigger_event_id,
                 },
@@ -1248,7 +1488,15 @@ class DynamicRun:
                 status="warning" if decision_changes else "complete",
             )
 
-        chosen = self.controller.select(self.state, assessed)
+        refresh_target, refresh_decision = self.controller.decide_refresh(
+            self.state, assessed
+        )
+        assessed_for_selection = self._apply_refresh_decision(
+            assessed,
+            target=refresh_target,
+            decision=refresh_decision,
+        )
+        chosen = self.controller.select(self.state, assessed_for_selection)
         if chosen is None:
             self.emit(
                 EventType.PLAN_SELECTED,
@@ -1329,6 +1577,20 @@ class DynamicRun:
             return
 
         commitment = self.runtime.commit(record=chosen.record, action=action)
+        truth_safe_at_execution = True
+        authorization_outside_tolerance = False
+        if action.route_id and action.route_id in self.state.truth.routes:
+            truth_safe_at_execution = self.state.truth.routes[action.route_id].open
+            belief = self.state.controller.route_beliefs[action.route_id]
+            authorization_outside_tolerance = bool(
+                belief.clearance_valid_until is not None
+                and self.state.truth.simulation_time > belief.clearance_valid_until
+            )
+        elif action.action_type == "dispatch_helicopter":
+            asset = self.state.truth.assets[action.actor_id]
+            truth_safe_at_execution = (
+                self.state.truth.weather_severity <= asset.weather_tolerance
+            )
         self.emit(
             EventType.ACTION_STARTED,
             source="action_dispatcher",
@@ -1348,6 +1610,13 @@ class DynamicRun:
                 "record_id": chosen.record.record_id,
                 "record_version": chosen.record.record_version,
                 "plan_id": chosen.plan.plan_id,
+                "truth_safe_at_execution": truth_safe_at_execution,
+                "authorization_outside_tolerance": (
+                    authorization_outside_tolerance
+                ),
+                "executed_stale": (
+                    not truth_safe_at_execution
+                ),
             },
         )
 
@@ -1373,6 +1642,123 @@ class DynamicRun:
                 selected_plan_name=chosen.plan.name,
                 decision_change="; ".join(decision_changes) or "Plan re-evaluated; decision unchanged",
             )
+
+    def _apply_refresh_decision(
+        self,
+        assessed: list[Any],
+        *,
+        target: Any | None,
+        decision: RefreshDecision,
+    ) -> list[Any]:
+        if target is None or decision.mode == RefreshMode.CONTINUE:
+            return assessed
+
+        target_action = target.plan.first_action
+        refresh_decision_id = new_id("refresh-decision")
+        evidence_request_id = (
+            new_id("evidence-request")
+            if decision.mode == RefreshMode.ACQUIRE
+            else None
+        )
+        voi_table = [
+            channel.model_dump(mode="json") for channel in decision.voi_table
+        ]
+        for family in decision.triggered_families:
+            self.emit(
+                EventType.REFRESH_TRIGGERED,
+                source="refresh_scheduler",
+                scenario_level=ScenarioLevel.S5,
+                visibility=EventVisibility.AUDIT,
+                payload={
+                    "policy": decision.policy,
+                    "refresh_decision_id": refresh_decision_id,
+                    "evidence_request_id": evidence_request_id,
+                    "claim_id": decision.claim_id,
+                    "commitment_id": decision.commitment_id,
+                    "record_id": target.record.record_id,
+                    "record_version": target.record.record_version,
+                    "plan_id": target.plan.plan_id,
+                    "route_id": target_action.route_id,
+                    "family": family.value,
+                    "q": decision.q,
+                    "d_or_margin": decision.d_or_margin,
+                    "voi_table": voi_table,
+                    "selected_channel": decision.selected_channel,
+                    "rationale": decision.rationale,
+                },
+            )
+
+        if decision.mode == RefreshMode.ACQUIRE:
+            if target_action.route_id is None:
+                raise ValueError("route evidence requires a grounded route_id")
+            if decision.selected_channel == "gauge_poll":
+                self._request_gauge_poll(
+                    route_id=target_action.route_id,
+                    decision=decision,
+                    refresh_decision_id=refresh_decision_id,
+                    evidence_request_id=str(evidence_request_id),
+                )
+            elif decision.selected_channel == "drone_survey":
+                self._refresh_request_context[target_action.route_id] = {
+                    "evidence_request_id": evidence_request_id,
+                    "refresh_decision_id": refresh_decision_id,
+                    "claim_id": decision.claim_id,
+                    "commitment_id": decision.commitment_id,
+                }
+                self.emit(
+                    EventType.REQUEST_SURVEY,
+                    source="refresh_scheduler",
+                    scenario_level=ScenarioLevel.S5,
+                    payload={
+                        "route_id": target_action.route_id,
+                        "requested_by": decision.policy,
+                        "claim_id": decision.claim_id,
+                        "commitment_id": decision.commitment_id,
+                        "evidence_request_id": evidence_request_id,
+                        "refresh_decision_id": refresh_decision_id,
+                    },
+                )
+            else:
+                raise ValueError(
+                    f"unsupported refresh channel: {decision.selected_channel}"
+                )
+            withdrawal = RefreshMode.HOLD
+        else:
+            withdrawal = decision.mode
+
+        self.emit(
+            EventType.AUTH_WITHDRAWN,
+            source="refresh_scheduler",
+            scenario_level=ScenarioLevel.S5,
+            visibility=EventVisibility.AUDIT,
+            payload={
+                "policy": decision.policy,
+                "refresh_decision_id": refresh_decision_id,
+                "evidence_request_id": evidence_request_id,
+                "claim_id": decision.claim_id,
+                "commitment_id": decision.commitment_id,
+                "plan_id": target.plan.plan_id,
+                "route_id": target_action.route_id,
+                "mode": withdrawal.value,
+                "rationale": decision.rationale,
+            },
+        )
+
+        if withdrawal == RefreshMode.SAFE_ALTERNATIVE:
+            return [
+                item
+                for item in assessed
+                if item.plan.plan_id == decision.safe_alternative_plan_id
+            ]
+        if self.state.controller.requested_surveys:
+            return [
+                item
+                for item in assessed
+                if item.plan.first_action.action_type == "verify_route"
+                and item.plan.first_action.route_id
+                in self.state.controller.requested_surveys
+            ]
+        return []
 
     def snapshot(self) -> WorkbenchSnapshot:
         records = self.runtime.repository.all()
