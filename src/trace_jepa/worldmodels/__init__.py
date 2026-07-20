@@ -6,7 +6,9 @@ it is not relabeled as an action-conditioned flood predictor.
 """
 
 from trace_jepa.worldmodels.adapters import (
+    CachedActionRouteFeatureProvider,
     CachedRouteFeatureProvider,
+    DINOWMRouteWorldModel,
     FeatureObservation,
     FrozenVJEPAFeatureProvider,
     LinearActionHead,
@@ -23,7 +25,10 @@ from trace_jepa.worldmodels.encoding import (
     ObservationEncodingSummary,
     encode_simulator_observations,
 )
-from trace_jepa.worldmodels.factory import build_cached_vjepa_route_model
+from trace_jepa.worldmodels.factory import (
+    build_cached_dinowm_route_model,
+    build_cached_vjepa_route_model,
+)
 from trace_jepa.worldmodels.simulator_observations import (
     CapturedVisualObservation,
     SimulatorSensorSnapshot,
@@ -38,7 +43,9 @@ from trace_jepa.worldmodels.versioning import (
 
 __all__ = [
     "FeatureObservation",
+    "CachedActionRouteFeatureProvider",
     "CachedRouteFeatureProvider",
+    "DINOWMRouteWorldModel",
     "FrozenVJEPAFeatureProvider",
     "GuardedPolicyEngine",
     "LinearActionHead",
@@ -53,6 +60,7 @@ __all__ = [
     "ObservationEncodingSummary",
     "encode_simulator_observations",
     "build_cached_vjepa_route_model",
+    "build_cached_dinowm_route_model",
     "CapturedVisualObservation",
     "SimulatorSensorSnapshot",
     "SimulatorVisualObservationStore",

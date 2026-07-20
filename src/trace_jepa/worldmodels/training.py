@@ -199,6 +199,7 @@ def train_development_models(
     report_path: Path,
     *,
     seed: int = 23,
+    model_bundle_path: Path | None = None,
 ) -> dict[str, object]:
     """Tune, calibrate, then evaluate once on disjoint development episodes.
 
@@ -324,6 +325,7 @@ def train_development_models(
     encoder = dict(dataset_manifest["encoder"])
     calibration_version = f"route-isotonic-v1-{sha256_value([calibrator.thresholds.tolist(), calibrator.values.tolist()])[:12]}"
     predictor_version = f"flood-route-linear-v1-{sha256_value(weights.tolist())[:12]}"
+    is_dinowm = str(encoder.get("family", "")).lower() == "dino-wm"
     metadata = {
         "checkpoint_schema_version": "flood-route-linear-head-v1",
         "encoder_version": encoder["version"],
@@ -335,6 +337,27 @@ def train_development_models(
         "visual_freshness_s": 180.0,
         "development_only": True,
         "test_rows_accessed": False,
+        "feature_schema_version": (
+            "route-dinowm-future-fusion-v1" if is_dinowm else "route-jepa-fusion-v1"
+        ),
+        "prediction_assumptions": (
+            [
+                "model_conditional_prediction",
+                "frozen_visual_encoder",
+                "action_conditioned_future_representation",
+                "controller_visible_inputs_only",
+                "calibrated_on_declared_development_distribution",
+                "visual_freshness_is_gated",
+            ]
+            if is_dinowm
+            else [
+                "model_conditional_prediction",
+                "frozen_visual_encoder",
+                "controller_visible_inputs_only",
+                "calibrated_on_declared_development_distribution",
+                "visual_freshness_is_gated",
+            ]
+        ),
     }
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
@@ -354,6 +377,33 @@ def train_development_models(
         calibration_values=calibrator.values,
         metadata_json=np.asarray(json.dumps(metadata, sort_keys=True)),
     )
+    if model_bundle_path is not None:
+        bundle_payload: dict[str, np.ndarray] = {
+            "structured_mean": normalization.structured_mean,
+            "structured_std": normalization.structured_std,
+            "visual_mean": normalization.visual_mean,
+            "visual_std": normalization.visual_std,
+            "action_names": arrays["action_names"],
+            "metadata_json": np.asarray(
+                json.dumps(
+                    {
+                        "bundle_schema": "frozen-development-outcome-models-v1",
+                        "dataset_sha256": dataset_manifest["dataset_sha256"],
+                        "training_seed": seed,
+                        "model_modes": list(MODEL_MODES),
+                        "test_rows_accessed": False,
+                    },
+                    sort_keys=True,
+                )
+            ),
+        }
+        for mode, (mode_weights, mode_calibrator, _, _) in fitted.items():
+            bundle_payload[f"{mode}_weights"] = mode_weights
+            bundle_payload[f"{mode}_calibration_thresholds"] = mode_calibrator.thresholds
+            bundle_payload[f"{mode}_calibration_values"] = mode_calibrator.values
+        model_bundle_path = Path(model_bundle_path)
+        model_bundle_path.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(model_bundle_path, **bundle_payload)
     report = {
         "report_version": "jepa-route-development-benchmark-v1",
         "dataset": str(Path(dataset_path).name),
@@ -384,3 +434,97 @@ def train_development_models(
         json.dumps(report, indent=2, sort_keys=True, allow_nan=False), encoding="utf-8"
     )
     return report
+
+
+def evaluate_frozen_model_bundle(
+    arrays: dict[str, np.ndarray],
+    model_bundle_path: Path,
+    *,
+    shuffle_seed: int,
+    bootstrap_seed: int,
+) -> dict[str, object]:
+    """Evaluate frozen development models on one externally authorized row set."""
+
+    with np.load(model_bundle_path, allow_pickle=False) as payload:
+        metadata = json.loads(str(payload["metadata_json"].item()))
+        if metadata.get("bundle_schema") != "frozen-development-outcome-models-v1":
+            raise ValueError("unsupported frozen outcome-model bundle")
+        bundle = {name: payload[name].copy() for name in payload.files}
+    if tuple(arrays["action_names"].astype(str)) != tuple(
+        bundle["action_names"].astype(str)
+    ):
+        raise ValueError("held-out action schema does not match the frozen bundle")
+    normalization = Normalization(
+        structured_mean=bundle["structured_mean"],
+        structured_std=bundle["structured_std"],
+        visual_mean=bundle["visual_mean"],
+        visual_std=bundle["visual_std"],
+    )
+    rows = np.arange(len(arrays["actions"]), dtype=np.int64)
+    rng = np.random.default_rng(shuffle_seed)
+    predictions: dict[str, np.ndarray] = {}
+    results: dict[str, dict[str, object]] = {}
+    for mode in MODEL_MODES:
+        shuffled = (
+            _shuffle_visual_by_episode(arrays, rows, rng)
+            if mode == "fused_shuffled_visual"
+            else None
+        )
+        design = _design(
+            arrays,
+            rows,
+            normalization,
+            mode,
+            shuffled_visual=shuffled,
+        )
+        weights = bundle[f"{mode}_weights"]
+        calibrator = IsotonicCalibrator(
+            thresholds=bundle[f"{mode}_calibration_thresholds"],
+            values=bundle[f"{mode}_calibration_values"],
+        )
+        prediction = _predict(design, weights)
+        prediction[:, 0] = calibrator.transform(np.clip(prediction[:, 0], 0.0, 1.0))
+        prediction[:, 2] = np.clip(prediction[:, 2], 0.0, 1.0)
+        predictions[mode] = prediction
+        results[mode] = {
+            **_binary_metrics(prediction[:, 0], arrays["outcomes"]),
+            **_regression_metrics(prediction, arrays["targets"]),
+        }
+
+    episode_ids = arrays["episode_ids"].astype(str)
+    fused_brier = (predictions["fused"][:, 0] - arrays["outcomes"]) ** 2
+    structured_brier = (
+        predictions["structured"][:, 0] - arrays["outcomes"]
+    ) ** 2
+    shuffled_brier = (
+        predictions["fused_shuffled_visual"][:, 0] - arrays["outcomes"]
+    ) ** 2
+    fused_mse = np.mean((predictions["fused"] - arrays["targets"]) ** 2, axis=1)
+    structured_mse = np.mean(
+        (predictions["structured"] - arrays["targets"]) ** 2, axis=1
+    )
+    shuffled_mse = np.mean(
+        (predictions["fused_shuffled_visual"] - arrays["targets"]) ** 2,
+        axis=1,
+    )
+    paired = {
+        "fused_minus_structured_brier": _cluster_bootstrap_difference(
+            fused_brier, structured_brier, episode_ids, seed=bootstrap_seed
+        ),
+        "fused_minus_structured_target_mse": _cluster_bootstrap_difference(
+            fused_mse, structured_mse, episode_ids, seed=bootstrap_seed + 1
+        ),
+        "fused_minus_shuffled_visual_brier": _cluster_bootstrap_difference(
+            fused_brier, shuffled_brier, episode_ids, seed=bootstrap_seed + 2
+        ),
+        "fused_minus_shuffled_visual_target_mse": _cluster_bootstrap_difference(
+            fused_mse, shuffled_mse, episode_ids, seed=bootstrap_seed + 3
+        ),
+    }
+    return {
+        "models": results,
+        "paired_episode_bootstrap": paired,
+        "episode_count": int(len(np.unique(episode_ids))),
+        "row_count": int(len(rows)),
+        "model_bundle_sha256": sha256_file(model_bundle_path),
+    }

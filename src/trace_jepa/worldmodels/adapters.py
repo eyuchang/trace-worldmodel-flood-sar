@@ -75,6 +75,41 @@ class CachedRouteFeatureProvider:
         )
 
 
+class CachedActionRouteFeatureProvider(CachedRouteFeatureProvider):
+    """Load a cached action-conditioned future feature for one observation."""
+
+    def features(self, request: RouteWorldModelRequest) -> FeatureObservation:
+        observation_id = request.visual_observation_id
+        if observation_id is None:
+            raise WorldModelInputUnavailable("route belief has no visual observation identifier")
+        if not self._safe_identifier.fullmatch(observation_id):
+            raise WorldModelInputUnavailable("visual observation identifier is not cache-safe")
+        if not self._safe_identifier.fullmatch(request.action_type):
+            raise WorldModelInputUnavailable("action type is not cache-safe")
+        cache_id = f"{observation_id}--{request.action_type}"
+        path = self.cache_dir / f"{cache_id}.npz"
+        if not path.is_file() or path.is_symlink():
+            raise WorldModelInputUnavailable(
+                f"cached action-conditioned feature is absent: {cache_id}"
+            )
+        with np.load(path, allow_pickle=False) as payload:
+            required = {"feature", "observation_hash", "action_type"}
+            if required - set(payload.files):
+                raise WorldModelInputUnavailable(
+                    "cached action-conditioned feature does not satisfy the cache schema"
+                )
+            if str(payload["action_type"].item()) != request.action_type:
+                raise WorldModelInputUnavailable("cached feature action type mismatch")
+            vector = payload["feature"].astype(np.float32)
+            observation_hash = str(payload["observation_hash"].item())
+        return FeatureObservation(
+            vector=vector,
+            observation_hash=observation_hash,
+            encoder_version=self.encoder_version,
+            encoder_checkpoint_sha256=self.encoder_checkpoint_sha256,
+        )
+
+
 class FrozenVJEPAFeatureProvider:
     """Offline-friendly wrapper around a frozen V-JEPA encoder.
 
@@ -249,6 +284,9 @@ class VJEPARouteWorldModel:
             training_snapshot=str(metadata["training_snapshot"]),
             semantic_probe_versions=tuple(metadata.get("semantic_probe_versions", ())),
             supported_action_types=self.head.action_names,
+            feature_schema_version=str(
+                metadata.get("feature_schema_version", "route-jepa-fusion-v1")
+            ),
         )
 
     @property
@@ -284,11 +322,20 @@ class VJEPARouteWorldModel:
             out_of_distribution_score=ood,
             uncertainty=uncertainty,
             rollout_horizon=max(1, int(np.ceil(request.travel_time_s / 180.0))),
-            assumptions=(
-                "model_conditional_prediction",
-                "frozen_visual_encoder",
-                "controller_visible_inputs_only",
-                "calibrated_on_declared_development_distribution",
-                "visual_freshness_is_gated",
+            assumptions=tuple(
+                self.head.metadata.get(
+                    "prediction_assumptions",
+                    (
+                        "model_conditional_prediction",
+                        "frozen_visual_encoder",
+                        "controller_visible_inputs_only",
+                        "calibrated_on_declared_development_distribution",
+                        "visual_freshness_is_gated",
+                    ),
+                )
             ),
         )
+
+
+class DINOWMRouteWorldModel(VJEPARouteWorldModel):
+    """TRACE adapter over cached DINO-WM action-conditioned future features."""

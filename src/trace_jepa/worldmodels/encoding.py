@@ -48,7 +48,8 @@ def _frames_digest(frames: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(frames).tobytes()).hexdigest()
 
 
-def _load_verified_frames(root: Path, manifest: dict[str, object]) -> np.ndarray:
+def load_verified_simulator_frames(root: Path, manifest: dict[str, object]) -> np.ndarray:
+    """Load a content-addressed observation after validating every stored digest."""
     observation_id = str(manifest.get("observation_id", ""))
     if not _SAFE_OBSERVATION_ID.fullmatch(observation_id):
         raise ValueError("simulator observation manifest has an unsafe identifier")
@@ -147,7 +148,7 @@ def encode_simulator_observations(
             skipped_audit_only += 1
             continue
 
-        frames = _load_verified_frames(observation_dir, manifest)
+        frames = load_verified_simulator_frames(observation_dir, manifest)
         cache_key = sha256_value(
             {
                 "cache_schema": FEATURE_CACHE_SCHEMA,

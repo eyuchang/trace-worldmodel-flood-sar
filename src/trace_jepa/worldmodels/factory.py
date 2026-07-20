@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from trace_jepa.worldmodels.adapters import (
+    CachedActionRouteFeatureProvider,
     CachedRouteFeatureProvider,
+    DINOWMRouteWorldModel,
     LinearActionHead,
     VJEPARouteWorldModel,
 )
@@ -27,3 +29,18 @@ def build_cached_vjepa_route_model(
         encoder_checkpoint_sha256=str(head.metadata["encoder_checkpoint_sha256"]),
     )
     return VJEPARouteWorldModel(provider, head)
+
+
+def build_cached_dinowm_route_model(
+    checkpoint_path: Path,
+    feature_cache_dir: Path,
+) -> DINOWMRouteWorldModel:
+    """Build the runtime adapter over precomputed action-conditioned futures."""
+
+    head = LinearActionHead.load(checkpoint_path)
+    provider = CachedActionRouteFeatureProvider(
+        feature_cache_dir,
+        encoder_version=str(head.metadata["encoder_version"]),
+        encoder_checkpoint_sha256=str(head.metadata["encoder_checkpoint_sha256"]),
+    )
+    return DINOWMRouteWorldModel(provider, head)

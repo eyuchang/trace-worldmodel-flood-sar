@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from pathlib import Path
 
 from trace_jepa.contracts import (
@@ -13,6 +14,7 @@ from trace_jepa.contracts import (
 )
 from trace_jepa.runtime import PolicyConfig, PolicyEngine
 from trace_jepa.worldmodels.adapters import (
+    CachedActionRouteFeatureProvider,
     CachedRouteFeatureProvider,
     FeatureObservation,
     LinearActionHead,
@@ -161,6 +163,29 @@ def test_cached_feature_provider_rejects_missing_and_unsafe_identifiers(tmp_path
     unsafe = request().model_copy(update={"visual_observation_id": "../outside"})
     with np.testing.assert_raises(WorldModelInputUnavailable):
         provider.features(unsafe)
+
+
+def test_cached_action_feature_provider_is_action_specific_and_fail_closed(tmp_path) -> None:
+    model_request = request().model_copy(
+        update={"visual_observation_id": "simobs-" + "a" * 24}
+    )
+    cache_id = f"{model_request.visual_observation_id}--{model_request.action_type}"
+    np.savez_compressed(
+        tmp_path / f"{cache_id}.npz",
+        feature=np.asarray([0.2, 0.4], dtype=np.float32),
+        observation_hash=np.asarray("observation-hash"),
+        action_type=np.asarray(model_request.action_type),
+    )
+    provider = CachedActionRouteFeatureProvider(
+        tmp_path,
+        encoder_version="dinowm-v1",
+        encoder_checkpoint_sha256="dynamics-hash",
+    )
+    feature = provider.features(model_request)
+    assert feature.vector.tolist() == pytest.approx([0.2, 0.4])
+    unsupported = model_request.model_copy(update={"action_type": "different-action"})
+    with pytest.raises(WorldModelInputUnavailable, match="absent"):
+        provider.features(unsupported)
 
 
 def evidence(version: str, calibration: str = "cal-v1") -> WorldModelEvidence:
