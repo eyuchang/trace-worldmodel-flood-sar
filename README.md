@@ -603,6 +603,40 @@ Test observations remain locked unless a complete frozen authorization manifest 
 explicitly supplied. Generated imagery, caches, checkpoints, and reports are kept
 outside Git.
 
+### Action-conditioned DINO-WM extension
+
+The second adapter follows DINO-WM rather than treating DINOv2 as a complete world
+model. Frozen DINOv2 spatial patch features feed an action-conditioned transformer
+trained to predict the next observation representation. The calibrated Flood-SAR
+head and TRACE runtime consume the predicted future representation through the
+same fail-closed service boundary.
+
+The registered workflow is:
+
+```bash
+python scripts/build_dinowm_transition_dataset.py \
+  --inventory artifacts/dinowm/development/transition_inventory.json \
+  --observation-dir artifacts/dinowm/development/observations
+
+python scripts/encode_dinowm_transitions.py \
+  --inventory artifacts/dinowm/development/transition_inventory.json \
+  --observation-dir artifacts/dinowm/development/observations \
+  --output artifacts/dinowm/development/spatial_transitions.npz
+
+python scripts/train_dinowm_confirmation.py \
+  --dataset artifacts/dinowm/development/spatial_transitions.npz \
+  --output-dir artifacts/dinowm/development/results
+```
+
+Development observations can be materialized for the runtime adapter with
+`scripts/build_dinowm_runtime_cache.py`, then injected with `--dinowm-head` and
+`--dinowm-feature-cache`. Only one learned route adapter can be active at a time.
+
+See [`docs/DINOWM_INTEGRATION_PROTOCOL.md`](docs/DINOWM_INTEGRATION_PROTOCOL.md)
+and
+[`docs/experiments/DINOWM_CONFIRMATION_RESULTS.md`](docs/experiments/DINOWM_CONFIRMATION_RESULTS.md)
+for the registered method, frozen held-out result, and claim boundary.
+
 ## Research and safety scope
 
 This repository is an educational simulator and research prototype.

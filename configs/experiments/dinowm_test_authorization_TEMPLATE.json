@@ -1,0 +1,15 @@
+{
+  "manifest_version": "flood-sar-dinowm-test-freeze-v1",
+  "protocol_sha256": "REPLACE_PROTOCOL_SHA256",
+  "code_commit": "REPLACE_CODE_COMMIT",
+  "dataset_manifest_sha256": "REPLACE_DEVELOPMENT_DATASET_MANIFEST_SHA256",
+  "predictor_checkpoint_sha256": "REPLACE_DINOWM_CHECKPOINT_SHA256",
+  "calibration_version": "REPLACE_CALIBRATION_VERSION",
+  "encoder_checkpoint_sha256": "REPLACE_DINOV2_CHECKPOINT_SHA256",
+  "outcome_checkpoint_sha256": "REPLACE_OUTCOME_HEAD_SHA256",
+  "development_report_sha256": "REPLACE_DEVELOPMENT_REPORT_SHA256",
+  "test_data_seed": 20260801,
+  "test_split_seed": 20260802,
+  "test_episode_count": 400,
+  "test_authorized": false
+}

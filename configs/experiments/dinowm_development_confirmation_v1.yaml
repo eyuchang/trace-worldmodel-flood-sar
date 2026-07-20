@@ -1,0 +1,133 @@
+protocol_version: flood-sar-dinowm-development-confirmation-v1
+status: registered_before_data_generation_or_outcome_inspection
+registered_at_utc: "2026-07-20T00:00:00Z"
+
+scientific_scope:
+  purpose: >-
+    Determine whether action-conditioned DINOv2 spatial dynamics add reproducible
+    predictive value at the existing TRACE world-model boundary.
+  trace_semantics_changed: false
+  process_dynamics_changed: false
+  claim_boundary: >-
+    The confirmation can support implementation feasibility and controlled
+    simulator-domain model value. It cannot establish field generalization,
+    operational safety, or model-family invariance.
+
+upstream:
+  project: DINO-WM
+  repository: https://github.com/gaoyuezhou/dino_wm
+  source_revision: 0a9492fa12044b852ae9e001cc74604b79c8bb0c
+  paper: https://arxiv.org/abs/2411.04983
+  encoder_repository: https://github.com/facebookresearch/dinov2
+  encoder_source_revision: 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+  encoder: dinov2_vits14
+  encoder_frozen: true
+  feature_key: x_norm_patchtokens
+
+campaign:
+  study_partition: development
+  independent_episodes: 600
+  transitions_per_episode: 2
+  data_seed: 20260730
+  split_seed: 20260731
+  split_unit: complete_episode
+  split_probabilities:
+    train: 0.55
+    tuning: 0.15
+    calibration: 0.15
+    validation: 0.15
+  observation_source: flood-sim-drone-rgb-v2
+  observation_frames: 2
+  state_frame_index: 1
+  render_size: 96
+  encoder_input_size: 112
+  process_noise: 0.0
+  test_generated: false
+  test_locked: true
+
+dynamics_model:
+  architecture: action_conditioned_spatial_transformer_residual_v1
+  input_patch_count: 64
+  input_feature_dim: 384
+  predictor_dim: 96
+  depth: 2
+  heads: 4
+  mlp_dim: 192
+  dropout: 0.1
+  objective: next_patch_embedding_mse
+  optimizer: AdamW
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  batch_size: 32
+  microbatch_size: 8
+  gradient_accumulation_steps: 4
+  max_epochs: 100
+  early_stopping_patience: 12
+  seed: 20260732
+  selection_split: tuning
+
+compute_amendment:
+  timing: before_any_checkpoint_or_development_result_was_produced_or_inspected
+  reason: >-
+    A direct 32-transition backward pass exceeded memory on the CPU-only host.
+    Four eight-transition microbatches preserve each declared 32-transition
+    optimizer update while reducing peak activation memory.
+  method_or_threshold_change: false
+
+outcome_model:
+  predicted_feature: mean_pool_predicted_future_patch_embeddings
+  modes:
+    - constant
+    - structured
+    - current_visual
+    - predicted_future_visual
+    - fused_predicted_future
+    - fused_shuffled_predicted_future
+  ridge_alphas: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
+  selection_split: tuning
+  calibration_split: calibration
+  evaluation_split: validation
+  calibration_method: isotonic
+
+controls:
+  - persistence_current_latent_as_future
+  - learned_model_with_episode_shuffled_actions_at_evaluation
+  - current_visual_feature_only
+  - episode_shuffled_predicted_future_feature
+
+uncertainty:
+  unit: complete_episode
+  method: paired_episode_cluster_bootstrap
+  confidence_level: 0.95
+  replicates: 2000
+  seed: 20260733
+
+prospective_positive_gate:
+  all_conditions_required: true
+  conditions:
+    - >-
+      Predicted-future validation latent MSE is lower than persistence and the
+      paired 95% interval for model minus persistence has an upper bound below zero.
+    - >-
+      Predicted-future validation latent MSE is lower than the shuffled-action
+      control, with a favorable point estimate.
+    - >-
+      Fused predicted-future features have lower validation point estimates than
+      structured-only on both Brier score and all-target MSE.
+    - >-
+      At least one fused-minus-structured primary-metric paired 95% interval has
+      an upper bound below zero, and fused also improves over shuffled predicted
+      futures on that same metric.
+  pass_action: freeze_exact_manifest_then_open_heldout_once
+  fail_action: keep_heldout_closed_and_report_diagnostic
+
+heldout_if_gate_passes:
+  independent_episodes: 400
+  data_seed: 20260801
+  split_seed: 20260802
+  study_partition: test
+  no_post_open_tuning: true
+  primary_metrics:
+    - brier
+    - mse_all_targets
+    - next_patch_embedding_mse

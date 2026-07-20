@@ -87,6 +87,10 @@ artifacts/commitments/*
 artifacts/jepa/*
 !artifacts/jepa/.gitkeep
 
+# Generated DINO-WM observations, spatial features, checkpoints, and reports
+artifacts/dinowm/*
+!artifacts/dinowm/.gitkeep
+
 # -------------------------------------------------------------------
 # Downloaded and generated data
 # -------------------------------------------------------------------
