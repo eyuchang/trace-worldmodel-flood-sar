@@ -1,0 +1,330 @@
+{
+  "calibration_performed": false,
+  "claim_boundary": "one held-out controlled simulator evaluation; no field-video, operational-safety, or cross-domain conclusion",
+  "current_visual_control": {
+    "episode_count": 400,
+    "model_bundle_sha256": "b7854f1b6aa3f057ad86f180d0506d584881d85a1406ca82d4bdcd97d2e9f7f9",
+    "models": {
+      "constant": {
+        "auroc": 0.5,
+        "average_precision": 0.5401747380481415,
+        "brier": 0.25,
+        "ece_10": 0.006249999999999978,
+        "mae_by_target": [
+          0.5,
+          0.12197487449273467,
+          0.19065984118729828,
+          0.09871234808117152
+        ],
+        "mse_all_targets": 0.08353278006745812,
+        "nll": 0.6931471805599452,
+        "rmse_by_target": [
+          0.5,
+          0.1435491666251475,
+          0.22237485145249247,
+          0.11863465965955895
+        ]
+      },
+      "fused": {
+        "auroc": 0.8893514611658072,
+        "average_precision": 0.8991312805359237,
+        "brier": 0.14295735071320256,
+        "ece_10": 0.08239296726814851,
+        "mae_by_target": [
+          0.22203496503496517,
+          0.008031394375619364,
+          0.0581770700147888,
+          0.007795465189133205
+        ],
+        "mse_all_targets": 0.03724854983251392,
+        "nll": 0.5068738242851052,
+        "rmse_by_target": [
+          0.3780970222218388,
+          0.009983173167099934,
+          0.07644262560732622,
+          0.009679997975632256
+        ]
+      },
+      "fused_shuffled_visual": {
+        "auroc": 0.6486607282387873,
+        "average_precision": 0.6412852098027882,
+        "brier": 0.22937848977695702,
+        "ece_10": 0.01280078256953055,
+        "mae_by_target": [
+          0.46033301430019047,
+          0.009094226446887283,
+          0.1985246866125778,
+          0.009158759006781097
+        ],
+        "mse_all_targets": 0.07331591416872942,
+        "nll": 0.6512274629728358,
+        "rmse_by_target": [
+          0.4789347448003306,
+          0.01148226320412574,
+          0.2522338550926291,
+          0.011463283769601639
+        ]
+      },
+      "structured": {
+        "auroc": 0.7958087201125176,
+        "average_precision": 0.7526912942524079,
+        "brier": 0.1793558084260686,
+        "ece_10": 0.029693553136498498,
+        "mae_by_target": [
+          0.353562854341411,
+          0.0026377782414012136,
+          0.15557260569364412,
+          0.0055401810226072745
+        ],
+        "mse_all_targets": 0.05340695447242549,
+        "nll": 0.6319497832667353,
+        "rmse_by_target": [
+          0.4235042218514602,
+          0.003347993931768624,
+          0.18498117508982068,
+          0.006538177323447371
+        ]
+      },
+      "visual": {
+        "auroc": 0.8346272855133615,
+        "average_precision": 0.8236104136043929,
+        "brier": 0.16471744160697058,
+        "ece_10": 0.06959811894917123,
+        "mae_by_target": [
+          0.29251497405991594,
+          0.15018035495963852,
+          0.10644934876962824,
+          0.12909368046800343
+        ],
+        "mse_all_targets": 0.06135241143204441,
+        "nll": 0.5293979997151849,
+        "rmse_by_target": [
+          0.4058539658633027,
+          0.18801518201324816,
+          0.1414359389653041,
+          0.15918030852695023
+        ]
+      }
+    },
+    "paired_episode_bootstrap": {
+      "fused_minus_shuffled_visual_brier": {
+        "ci_high": -0.05748457323668957,
+        "ci_low": -0.11474937750349747,
+        "estimate": -0.08642113156393563,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_shuffled_visual_target_mse": {
+        "ci_high": -0.028255559170116806,
+        "ci_low": -0.04410211904038921,
+        "estimate": -0.036067364336215484,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_brier": {
+        "ci_high": -0.007306518137131915,
+        "ci_low": -0.06592202234803389,
+        "estimate": -0.03639846771298979,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_target_mse": {
+        "ci_high": -0.008285549707777676,
+        "ci_low": -0.023638840451368104,
+        "estimate": -0.01615840463991157,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      }
+    },
+    "row_count": 800
+  },
+  "dynamics": {
+    "paired_episode_bootstrap": {
+      "model_minus_persistence_mse": {
+        "ci_high": -1.06833393102827,
+        "ci_low": -1.1521103153378074,
+        "estimate": -1.108921518942292,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "model_minus_shuffled_action_mse": {
+        "ci_high": -0.005515017514375428,
+        "ci_low": -0.013809786462844354,
+        "estimate": -0.009529145978595272,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      }
+    },
+    "persistence_cosine_distance": 0.25848368212378203,
+    "persistence_mse": 2.905198235848626,
+    "predicted_future_cosine_distance": 0.17444904618456916,
+    "predicted_future_mse": 1.7962767169063334,
+    "shuffled_action_mse": 1.8058058628849287
+  },
+  "fitting_performed": false,
+  "freeze_manifest_sha256": "2a83447c08a993f0664c0592140e618ad954f4839ad93e33923300e8c03dae7f",
+  "frozen_development_checkpoint_metadata": {
+    "best_epoch": 48,
+    "best_tuning_mse": 1.820269227027893,
+    "development_only": true,
+    "encoder": {
+      "checkpoint_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+      "family": "DINOv2",
+      "feature_dim": 384,
+      "feature_key": "x_norm_patchtokens",
+      "frozen": true,
+      "input_size": 112,
+      "model_name": "dinov2_vits14",
+      "patch_count": 64,
+      "patch_size": 14,
+      "source_revision": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+      "version": "dinov2_vits14@7764ea0f912e"
+    },
+    "objective": "next_patch_embedding_mse",
+    "test_rows_accessed": false,
+    "training_dataset_sha256": "97939e0fcbeacc28d5437fb6386d30bb7c565535584e02c19afe2dd78f39dfa0"
+  },
+  "predicted_future_outcomes": {
+    "episode_count": 400,
+    "model_bundle_sha256": "b3519bd6b7c61aa0b27e07cf9b1050a80bc1c2f950b15dd7cbf88848b72dc251",
+    "models": {
+      "constant": {
+        "auroc": 0.5,
+        "average_precision": 0.5401747380481415,
+        "brier": 0.25,
+        "ece_10": 0.006249999999999978,
+        "mae_by_target": [
+          0.5,
+          0.12197487449273467,
+          0.19065984118729828,
+          0.09871234808117152
+        ],
+        "mse_all_targets": 0.08353278006745812,
+        "nll": 0.6931471805599452,
+        "rmse_by_target": [
+          0.5,
+          0.1435491666251475,
+          0.22237485145249247,
+          0.11863465965955895
+        ]
+      },
+      "fused": {
+        "auroc": 0.8657821534614784,
+        "average_precision": 0.8620719799371297,
+        "brier": 0.15358807931048396,
+        "ece_10": 0.09117165252580145,
+        "mae_by_target": [
+          0.2362076735915043,
+          0.011171233188018458,
+          0.07115949106933483,
+          0.010167660585579727
+        ],
+        "mse_all_targets": 0.0407414809021661,
+        "nll": 0.617799096464351,
+        "rmse_by_target": [
+          0.39190317912754424,
+          0.013839810055088773,
+          0.09500005007003008,
+          0.012699289063566021
+        ]
+      },
+      "fused_shuffled_visual": {
+        "auroc": 0.650492264416315,
+        "average_precision": 0.6409949512275389,
+        "brier": 0.23278464467708082,
+        "ece_10": 0.039989741193688526,
+        "mae_by_target": [
+          0.47237579719158646,
+          0.011122039028395871,
+          0.20854505976044327,
+          0.011183168703002122
+        ],
+        "mse_all_targets": 0.0763863531793401,
+        "nll": 0.6581201853340991,
+        "rmse_by_target": [
+          0.4824776105448645,
+          0.013960268720992562,
+          0.26902150904122146,
+          0.013903474770761709
+        ]
+      },
+      "structured": {
+        "auroc": 0.7958087201125176,
+        "average_precision": 0.7526912942524079,
+        "brier": 0.1793558084260686,
+        "ece_10": 0.029693553136498498,
+        "mae_by_target": [
+          0.353562854341411,
+          0.0026377782414012136,
+          0.15557260569364412,
+          0.0055401810226072745
+        ],
+        "mse_all_targets": 0.05340695447242549,
+        "nll": 0.6319497832667353,
+        "rmse_by_target": [
+          0.4235042218514602,
+          0.003347993931768624,
+          0.18498117508982068,
+          0.006538177323447371
+        ]
+      },
+      "visual": {
+        "auroc": 0.8394030317237068,
+        "average_precision": 0.8312397318742615,
+        "brier": 0.1677520653093586,
+        "ece_10": 0.08278070966581985,
+        "mae_by_target": [
+          0.2907867279439669,
+          0.1517085140545229,
+          0.10506115624764263,
+          0.13816893909883812
+        ],
+        "mse_all_targets": 0.06271473224443923,
+        "nll": 0.7241120603210968,
+        "rmse_by_target": [
+          0.409575518444606,
+          0.18779597424103645,
+          0.13769152823711525,
+          0.16994275147583443
+        ]
+      }
+    },
+    "paired_episode_bootstrap": {
+      "fused_minus_shuffled_visual_brier": {
+        "ci_high": -0.0516095230624241,
+        "ci_low": -0.10511583266603178,
+        "estimate": -0.07919654286680565,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_shuffled_visual_target_mse": {
+        "ci_high": -0.027637426992655652,
+        "ci_low": -0.043064991032685344,
+        "estimate": -0.03564487227717401,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_brier": {
+        "ci_high": 0.0042828719108826945,
+        "ci_low": -0.054655506334525275,
+        "estimate": -0.02576772411573588,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_target_mse": {
+        "ci_high": -0.004978695511188526,
+        "ci_low": -0.020828659098140922,
+        "estimate": -0.012665473570259394,
+        "independent_episode_clusters": 400,
+        "interval_suppressed": false
+      }
+    },
+    "row_count": 800
+  },
+  "report_version": "flood-sar-dinowm-heldout-v1",
+  "test_dataset_sha256": "6fcbc1604a88ded1dcc9b03ba29ac62b574fbbf0544c5c1a666a31659bb6dcef",
+  "test_episode_count": 400,
+  "test_rows_accessed": true,
+  "test_transition_count": 800,
+  "tuning_performed": false
+}

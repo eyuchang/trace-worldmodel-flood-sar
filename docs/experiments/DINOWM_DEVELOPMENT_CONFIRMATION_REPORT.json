@@ -1,0 +1,683 @@
+{
+  "artifacts": {
+    "current_control_bundle_sha256": "b7854f1b6aa3f057ad86f180d0506d584881d85a1406ca82d4bdcd97d2e9f7f9",
+    "dynamics_checkpoint_sha256": "281c05f661563d0b19a31ac1bc03f31730d5a55dc1e3ee58335265502f4c1b09",
+    "outcome_checkpoint_sha256": "bc5c1c5c7c6293260252a2a23f3f7e8253d909aad7686cb9c0ddc9553892ec38",
+    "outcome_model_bundle_sha256": "b3519bd6b7c61aa0b27e07cf9b1050a80bc1c2f950b15dd7cbf88848b72dc251",
+    "predicted_outcome_dataset_sha256": "4c2094daabfa59f95a4a9881d97ba7b7b71eae9748f6de3ac7d186f94be783fd"
+  },
+  "current_visual_control": {
+    "calibration_split": "calibration",
+    "checkpoint": "dinov2_current_route_head_control_v1.npz",
+    "checkpoint_sha256": "4ad395aa4cf61252a7cb457ba5cd0f078ec13d69859af3cf3e7558ae008fb961",
+    "dataset": "dinov2_current_outcomes_control_v1.npz",
+    "dataset_sha256": "3d041f10250386316400e5d109d5ad6d1731fa15f75f0095bf037c82d00abbf6",
+    "evaluation_split": "validation",
+    "interpretation_boundary": "development evidence on controlled synthetic clips; it establishes integration and channel sensitivity, not cross-domain or operational effectiveness",
+    "models": {
+      "constant": {
+        "auroc": 0.5,
+        "average_precision": 0.6209821183735997,
+        "brier": 0.25,
+        "ece_10": 0.09740259740259738,
+        "mae_by_target": [
+          0.5,
+          0.12140322505653679,
+          0.18401920301960661,
+          0.10214192739554814
+        ],
+        "mse_all_targets": 0.08362387536574986,
+        "nll": 0.6931471805599453,
+        "rmse_by_target": [
+          0.5,
+          0.14343442839793988,
+          0.2217948690167284,
+          0.12136351301362369
+        ],
+        "selected_ridge_alpha": 0.0001,
+        "tuning_selection_mse": 0.08243686515552089
+      },
+      "fused": {
+        "auroc": 0.9099754558204769,
+        "average_precision": 0.9431537930754876,
+        "brier": 0.1318133976217648,
+        "ece_10": 0.0868724044051188,
+        "mae_by_target": [
+          0.2153621270504387,
+          0.009854679295441603,
+          0.06469362127787974,
+          0.00781988221067904
+        ],
+        "mse_all_targets": 0.03459527581590011,
+        "nll": 0.41184983356435995,
+        "rmse_by_target": [
+          0.36306114859830163,
+          0.012221669665759877,
+          0.07953442406354952,
+          0.009623503600191294
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.05127885186817503
+      },
+      "fused_shuffled_visual": {
+        "auroc": 0.5953716690042076,
+        "average_precision": 0.690448823471715,
+        "brier": 0.237905462403161,
+        "ece_10": 0.07121543584216707,
+        "mae_by_target": [
+          0.4687392609642357,
+          0.010756358100609525,
+          0.16934428903470608,
+          0.009554462316534772
+        ],
+        "mse_all_targets": 0.07213901510872531,
+        "nll": 0.6691443861204799,
+        "rmse_by_target": [
+          0.4877555354920749,
+          0.013194203383013456,
+          0.22436792101511394,
+          0.01164246744395241
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.1085213545531304
+      },
+      "structured": {
+        "auroc": 0.7107293127629734,
+        "average_precision": 0.760756153505611,
+        "brier": 0.21529047536697316,
+        "ece_10": 0.0821007601894327,
+        "mae_by_target": [
+          0.38667886566593473,
+          0.0027018369829706923,
+          0.15847654275989026,
+          0.005541551338769104
+        ],
+        "mse_all_targets": 0.06293841071353018,
+        "nll": 0.7678670282363825,
+        "rmse_by_target": [
+          0.4639940746830081,
+          0.003425191826760037,
+          0.19080956363049795,
+          0.006566582160368897
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.05764418105681977
+      },
+      "visual": {
+        "auroc": 0.8698281907433381,
+        "average_precision": 0.9165392295196533,
+        "brier": 0.16167932856511893,
+        "ece_10": 0.15415500755402234,
+        "mae_by_target": [
+          0.29891643193729556,
+          0.17057803721474568,
+          0.1195716553406263,
+          0.13356297628244226
+        ],
+        "mse_all_targets": 0.06303474868368221,
+        "nll": 0.5153705380341781,
+        "rmse_by_target": [
+          0.4020936813295117,
+          0.2066280867726344,
+          0.15014374221633464,
+          0.1588123313838237
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.07948374138434675
+      }
+    },
+    "paired_episode_bootstrap": {
+      "fused_minus_shuffled_visual_brier": {
+        "ci_high": -0.0437760498927384,
+        "ci_low": -0.16115176359449557,
+        "estimate": -0.1060920647816429,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_shuffled_visual_target_mse": {
+        "ci_high": -0.021059090409467587,
+        "ci_low": -0.053303895740246236,
+        "estimate": -0.03754373929282518,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_brier": {
+        "ci_high": -0.012903804256722417,
+        "ci_low": -0.15132418154117785,
+        "estimate": -0.08347710371942263,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_target_mse": {
+        "ci_high": -0.01079379835483161,
+        "ci_low": -0.047135622047269926,
+        "estimate": -0.028343134897630073,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      }
+    },
+    "precision_adequate_for_claims": true,
+    "report_version": "jepa-route-development-benchmark-v1",
+    "seed": 20260734,
+    "selection_split": "tuning",
+    "split_unit": "complete_episode",
+    "test_rows_accessed": false,
+    "validation_episode_count": 77,
+    "validation_outcome_counts": {
+      "negative": 62,
+      "positive": 92
+    }
+  },
+  "dynamics": {
+    "best_epoch": 48,
+    "best_tuning_mse": 1.820269227027893,
+    "checkpoint_sha256": "281c05f661563d0b19a31ac1bc03f31730d5a55dc1e3ee58335265502f4c1b09",
+    "dataset_sha256": "97939e0fcbeacc28d5437fb6386d30bb7c565535584e02c19afe2dd78f39dfa0",
+    "epochs_completed": 60,
+    "paired_episode_bootstrap": {
+      "model_minus_persistence_mse": {
+        "ci_high": -0.9623749326075528,
+        "ci_low": -1.179458401081031,
+        "estimate": -1.072664344968915,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "model_minus_shuffled_action_mse": {
+        "ci_high": -0.004721967215681197,
+        "ci_low": -0.024908081934720563,
+        "estimate": -0.015076297428561564,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      }
+    },
+    "report_version": "flood-sar-dinowm-dynamics-development-v1",
+    "test_rows_accessed": false,
+    "training_history": [
+      {
+        "epoch": 1,
+        "train_mse": 2.7997078828944892,
+        "tuning_mse": 2.6642420291900635
+      },
+      {
+        "epoch": 2,
+        "train_mse": 2.569928919245859,
+        "tuning_mse": 2.491051435470581
+      },
+      {
+        "epoch": 3,
+        "train_mse": 2.4278712900812756,
+        "tuning_mse": 2.3792967796325684
+      },
+      {
+        "epoch": 4,
+        "train_mse": 2.3269590103697633,
+        "tuning_mse": 2.290159225463867
+      },
+      {
+        "epoch": 5,
+        "train_mse": 2.246584761880353,
+        "tuning_mse": 2.2216131687164307
+      },
+      {
+        "epoch": 6,
+        "train_mse": 2.1822942516760913,
+        "tuning_mse": 2.1676981449127197
+      },
+      {
+        "epoch": 7,
+        "train_mse": 2.1284992594918806,
+        "tuning_mse": 2.1284942626953125
+      },
+      {
+        "epoch": 8,
+        "train_mse": 2.0868592804777406,
+        "tuning_mse": 2.090209484100342
+      },
+      {
+        "epoch": 9,
+        "train_mse": 2.0478332656586242,
+        "tuning_mse": 2.0608747005462646
+      },
+      {
+        "epoch": 10,
+        "train_mse": 2.01515988485066,
+        "tuning_mse": 2.0365114212036133
+      },
+      {
+        "epoch": 11,
+        "train_mse": 1.9876424547678935,
+        "tuning_mse": 2.01397705078125
+      },
+      {
+        "epoch": 12,
+        "train_mse": 1.9624216342400649,
+        "tuning_mse": 2.0008816719055176
+      },
+      {
+        "epoch": 13,
+        "train_mse": 1.9387737852846554,
+        "tuning_mse": 1.9790855646133423
+      },
+      {
+        "epoch": 14,
+        "train_mse": 1.9182339533122477,
+        "tuning_mse": 1.963488221168518
+      },
+      {
+        "epoch": 15,
+        "train_mse": 1.8973428598659006,
+        "tuning_mse": 1.9540739059448242
+      },
+      {
+        "epoch": 16,
+        "train_mse": 1.877340718419728,
+        "tuning_mse": 1.9434317350387573
+      },
+      {
+        "epoch": 17,
+        "train_mse": 1.863398645214454,
+        "tuning_mse": 1.930092692375183
+      },
+      {
+        "epoch": 18,
+        "train_mse": 1.8451004942020257,
+        "tuning_mse": 1.9153765439987183
+      },
+      {
+        "epoch": 19,
+        "train_mse": 1.8301478345950921,
+        "tuning_mse": 1.9101101160049438
+      },
+      {
+        "epoch": 20,
+        "train_mse": 1.817264504537373,
+        "tuning_mse": 1.9009976387023926
+      },
+      {
+        "epoch": 21,
+        "train_mse": 1.8061038843409982,
+        "tuning_mse": 1.892200231552124
+      },
+      {
+        "epoch": 22,
+        "train_mse": 1.7914388241644152,
+        "tuning_mse": 1.8814127445220947
+      },
+      {
+        "epoch": 23,
+        "train_mse": 1.780234546242598,
+        "tuning_mse": 1.889748215675354
+      },
+      {
+        "epoch": 24,
+        "train_mse": 1.7666030015774117,
+        "tuning_mse": 1.8822746276855469
+      },
+      {
+        "epoch": 25,
+        "train_mse": 1.7575695757380503,
+        "tuning_mse": 1.8666208982467651
+      },
+      {
+        "epoch": 26,
+        "train_mse": 1.744708436215947,
+        "tuning_mse": 1.8667653799057007
+      },
+      {
+        "epoch": 27,
+        "train_mse": 1.7328784565725726,
+        "tuning_mse": 1.856325387954712
+      },
+      {
+        "epoch": 28,
+        "train_mse": 1.7231175932817593,
+        "tuning_mse": 1.8605926036834717
+      },
+      {
+        "epoch": 29,
+        "train_mse": 1.719361352825355,
+        "tuning_mse": 1.8609589338302612
+      },
+      {
+        "epoch": 30,
+        "train_mse": 1.7071952153584677,
+        "tuning_mse": 1.846634030342102
+      },
+      {
+        "epoch": 31,
+        "train_mse": 1.6973999940944526,
+        "tuning_mse": 1.846198558807373
+      },
+      {
+        "epoch": 32,
+        "train_mse": 1.6897885252139764,
+        "tuning_mse": 1.8525041341781616
+      },
+      {
+        "epoch": 33,
+        "train_mse": 1.6795539218270612,
+        "tuning_mse": 1.8424309492111206
+      },
+      {
+        "epoch": 34,
+        "train_mse": 1.6734463545138727,
+        "tuning_mse": 1.853618860244751
+      },
+      {
+        "epoch": 35,
+        "train_mse": 1.666344216245853,
+        "tuning_mse": 1.8423476219177246
+      },
+      {
+        "epoch": 36,
+        "train_mse": 1.6568971032392004,
+        "tuning_mse": 1.8428977727890015
+      },
+      {
+        "epoch": 37,
+        "train_mse": 1.6479140736623676,
+        "tuning_mse": 1.835745930671692
+      },
+      {
+        "epoch": 38,
+        "train_mse": 1.6412831152270655,
+        "tuning_mse": 1.8328028917312622
+      },
+      {
+        "epoch": 39,
+        "train_mse": 1.6335078085254053,
+        "tuning_mse": 1.8337547779083252
+      },
+      {
+        "epoch": 40,
+        "train_mse": 1.6276450728227991,
+        "tuning_mse": 1.8363646268844604
+      },
+      {
+        "epoch": 41,
+        "train_mse": 1.6187489389659402,
+        "tuning_mse": 1.8367507457733154
+      },
+      {
+        "epoch": 42,
+        "train_mse": 1.6129299989955392,
+        "tuning_mse": 1.8340080976486206
+      },
+      {
+        "epoch": 43,
+        "train_mse": 1.6074161586647262,
+        "tuning_mse": 1.8330669403076172
+      },
+      {
+        "epoch": 44,
+        "train_mse": 1.6020384995999213,
+        "tuning_mse": 1.839036464691162
+      },
+      {
+        "epoch": 45,
+        "train_mse": 1.5966477651082114,
+        "tuning_mse": 1.8261525630950928
+      },
+      {
+        "epoch": 46,
+        "train_mse": 1.593306964029095,
+        "tuning_mse": 1.8333207368850708
+      },
+      {
+        "epoch": 47,
+        "train_mse": 1.5874091308273954,
+        "tuning_mse": 1.8273296356201172
+      },
+      {
+        "epoch": 48,
+        "train_mse": 1.5808636861409018,
+        "tuning_mse": 1.820269227027893
+      },
+      {
+        "epoch": 49,
+        "train_mse": 1.5756410848118825,
+        "tuning_mse": 1.8238695859909058
+      },
+      {
+        "epoch": 50,
+        "train_mse": 1.5702540717439024,
+        "tuning_mse": 1.826752781867981
+      },
+      {
+        "epoch": 51,
+        "train_mse": 1.5673501686659639,
+        "tuning_mse": 1.8300977945327759
+      },
+      {
+        "epoch": 52,
+        "train_mse": 1.5615489973041587,
+        "tuning_mse": 1.8275009393692017
+      },
+      {
+        "epoch": 53,
+        "train_mse": 1.5571724335828465,
+        "tuning_mse": 1.8279261589050293
+      },
+      {
+        "epoch": 54,
+        "train_mse": 1.5527473048059763,
+        "tuning_mse": 1.8255330324172974
+      },
+      {
+        "epoch": 55,
+        "train_mse": 1.5469948050980558,
+        "tuning_mse": 1.8249160051345825
+      },
+      {
+        "epoch": 56,
+        "train_mse": 1.545383697022459,
+        "tuning_mse": 1.8237642049789429
+      },
+      {
+        "epoch": 57,
+        "train_mse": 1.5383295260979506,
+        "tuning_mse": 1.8235819339752197
+      },
+      {
+        "epoch": 58,
+        "train_mse": 1.5343223065435292,
+        "tuning_mse": 1.8301365375518799
+      },
+      {
+        "epoch": 59,
+        "train_mse": 1.5318416759163558,
+        "tuning_mse": 1.8282018899917603
+      },
+      {
+        "epoch": 60,
+        "train_mse": 1.5257656302994598,
+        "tuning_mse": 1.8317283391952515
+      }
+    ],
+    "validation": {
+      "persistence_cosine_distance": 0.253577359939264,
+      "persistence_mse": 2.8677926591613216,
+      "predicted_future_cosine_distance": 0.17235330229201826,
+      "predicted_future_mse": 1.795128314192407,
+      "shuffled_action_mse": 1.8102046116209682
+    },
+    "validation_episode_count": 77,
+    "validation_transition_count": 154
+  },
+  "gate": {
+    "conditions": {
+      "at_least_one_outcome_metric_supported_and_beats_shuffle": true,
+      "dynamics_beats_persistence_with_supported_interval": true,
+      "dynamics_beats_shuffled_action_point_estimate": true,
+      "fused_beats_structured_on_both_primary_point_estimates": true
+    },
+    "heldout_action": "freeze_manifest_then_evaluate_once",
+    "passed": true
+  },
+  "predicted_future_outcomes": {
+    "calibration_split": "calibration",
+    "checkpoint": "dinowm_route_head_development_v1.npz",
+    "checkpoint_sha256": "bc5c1c5c7c6293260252a2a23f3f7e8253d909aad7686cb9c0ddc9553892ec38",
+    "dataset": "dinowm_predicted_future_outcomes_v1.npz",
+    "dataset_sha256": "4c2094daabfa59f95a4a9881d97ba7b7b71eae9748f6de3ac7d186f94be783fd",
+    "evaluation_split": "validation",
+    "interpretation_boundary": "development evidence on controlled synthetic clips; it establishes integration and channel sensitivity, not cross-domain or operational effectiveness",
+    "models": {
+      "constant": {
+        "auroc": 0.5,
+        "average_precision": 0.6209821183735997,
+        "brier": 0.25,
+        "ece_10": 0.09740259740259738,
+        "mae_by_target": [
+          0.5,
+          0.12140322505653679,
+          0.18401920301960661,
+          0.10214192739554814
+        ],
+        "mse_all_targets": 0.08362387536574986,
+        "nll": 0.6931471805599453,
+        "rmse_by_target": [
+          0.5,
+          0.14343442839793988,
+          0.2217948690167284,
+          0.12136351301362369
+        ],
+        "selected_ridge_alpha": 0.0001,
+        "tuning_selection_mse": 0.08243686515552089
+      },
+      "fused": {
+        "auroc": 0.8840287517531557,
+        "average_precision": 0.9281238069777664,
+        "brier": 0.14502733553743266,
+        "ece_10": 0.09957156921803328,
+        "mae_by_target": [
+          0.24207349876110457,
+          0.013422909894602405,
+          0.07698883241623718,
+          0.009732945587723994
+        ],
+        "mse_all_targets": 0.038747425174108244,
+        "nll": 0.5219617027367918,
+        "rmse_by_target": [
+          0.3808245639718737,
+          0.01631519445521082,
+          0.09771461378934553,
+          0.012166382122593472
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.05502617004538255
+      },
+      "fused_shuffled_visual": {
+        "auroc": 0.585992286115007,
+        "average_precision": 0.7111561945613409,
+        "brier": 0.24173205173232035,
+        "ece_10": 0.09813800005187559,
+        "mae_by_target": [
+          0.48109888701139564,
+          0.012209165758328358,
+          0.1840458315178873,
+          0.01090144642518928
+        ],
+        "mse_all_targets": 0.07589187537290208,
+        "nll": 0.6767122325554944,
+        "rmse_by_target": [
+          0.4916625384675144,
+          0.015039772388954252,
+          0.24785386241354626,
+          0.01333108744489084
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.13907770500753328
+      },
+      "structured": {
+        "auroc": 0.7107293127629734,
+        "average_precision": 0.760756153505611,
+        "brier": 0.21529047536697316,
+        "ece_10": 0.0821007601894327,
+        "mae_by_target": [
+          0.38667886566593473,
+          0.0027018369829706923,
+          0.15847654275989026,
+          0.005541551338769104
+        ],
+        "mse_all_targets": 0.06293841071353018,
+        "nll": 0.7678670282363825,
+        "rmse_by_target": [
+          0.4639940746830081,
+          0.003425191826760037,
+          0.19080956363049795,
+          0.006566582160368897
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.05764418105681977
+      },
+      "visual": {
+        "auroc": 0.8472124824684432,
+        "average_precision": 0.9030357350542928,
+        "brier": 0.18563280637527496,
+        "ece_10": 0.15250285055544058,
+        "mae_by_target": [
+          0.3251654548222158,
+          0.16850277827848115,
+          0.11516635494212883,
+          0.1402952088006626
+        ],
+        "mse_all_targets": 0.0689777508688394,
+        "nll": 0.8236268610098852,
+        "rmse_by_target": [
+          0.4308513181171072,
+          0.2038681453241753,
+          0.14511727923984666,
+          0.16630363718275643
+        ],
+        "selected_ridge_alpha": 10.0,
+        "tuning_selection_mse": 0.07893112451776739
+      }
+    },
+    "paired_episode_bootstrap": {
+      "fused_minus_shuffled_visual_brier": {
+        "ci_high": -0.035393006739893464,
+        "ci_low": -0.1515284786546216,
+        "estimate": -0.09670470320795266,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_shuffled_visual_target_mse": {
+        "ci_high": -0.019224383900412378,
+        "ci_low": -0.05375062000503952,
+        "estimate": -0.037144450198793845,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_brier": {
+        "ci_high": 0.003730570467975002,
+        "ci_low": -0.13901427594852106,
+        "estimate": -0.07026315281657297,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      },
+      "fused_minus_structured_target_mse": {
+        "ci_high": -0.005976679735320061,
+        "ci_low": -0.04422461081849898,
+        "estimate": -0.02419098553942194,
+        "independent_episode_clusters": 77,
+        "interval_suppressed": false
+      }
+    },
+    "precision_adequate_for_claims": true,
+    "report_version": "jepa-route-development-benchmark-v1",
+    "seed": 20260734,
+    "selection_split": "tuning",
+    "split_unit": "complete_episode",
+    "test_rows_accessed": false,
+    "validation_episode_count": 77,
+    "validation_outcome_counts": {
+      "negative": 62,
+      "positive": 92
+    }
+  },
+  "report_version": "flood-sar-dinowm-development-confirmation-v1",
+  "test_generated": false,
+  "test_rows_accessed": false,
+  "transition_dataset_sha256": "97939e0fcbeacc28d5437fb6386d30bb7c565535584e02c19afe2dd78f39dfa0"
+}
