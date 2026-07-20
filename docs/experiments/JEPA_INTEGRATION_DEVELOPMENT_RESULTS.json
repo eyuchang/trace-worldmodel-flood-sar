@@ -1,0 +1,161 @@
+{
+  "artifact_hashes": {
+    "development_head": "d1aa6adbfd974e284abea9baf7478d51119106d0bef3e97b2d1d913689e077b3",
+    "episode_inventory": "116ca1e162c8f2a242c976f80cc8d669bf721b15816ab6b29382a0d0da3b10be",
+    "executed_protocol": "bef71719f13b45fa2b95cd6797bf0acb19f6349669e9d598fafaa79fa58d8ecc",
+    "published_protocol": "0851c4da6415cdb1bf9cebe46024bca57f086d4536014dec27b1666d62585405",
+    "rq5_controlled_report": "95299a5f56c9ce54bf34f445a5a008ab766271fed24f5d493c03ffb1ac4d9363",
+    "sanitized_deterministic_report": "8c70cc101066285d26114753f26e7ae0e35ab319af1f6e951366b3a7539cb320",
+    "synchronized_dataset": "73e9a3a2d0335a036b1c04de649995af81cb10a386f1d454527f25d6286b1b25",
+    "vjepa_checkpoint": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d"
+  },
+  "development_criterion": {
+    "fused_brier_point_better_than_structured": true,
+    "fused_mse_interval_excludes_zero_favorably": true,
+    "fused_mse_point_better_than_structured": true,
+    "fused_outperforms_episode_shuffled_on_interval_supported_metric": true,
+    "satisfied": true
+  },
+  "encoder": {
+    "checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+    "feature_dimensions": 768,
+    "frozen": true,
+    "name": "V-JEPA 2.1 ViT-B/16",
+    "pretraining_predictor_used": false,
+    "source_revision": "204698b45b3712590f06245fbfba32d3be539812"
+  },
+  "models": {
+    "constant": {
+      "auroc": 0.5,
+      "average_precision": 0.5499480503511687,
+      "brier": 0.2770780907706465,
+      "ece_10": 0.17536015896671625,
+      "mae_by_target": [0.5139095876800798, 0.11600565966783148, 0.19179863189205978, 0.10143900459462946],
+      "mse_all_targets": 0.09036702390814201,
+      "nll": 0.7485268544934813,
+      "rmse_by_target": [0.5263820767946479, 0.1382606361834265, 0.22577906836534364, 0.11957346541834951],
+      "selected_ridge_alpha": 0.0001,
+      "tuning_selection_mse": 0.0832041599790578
+    },
+    "fused": {
+      "auroc": 0.9249767008387698,
+      "average_precision": 0.8805455615112997,
+      "brier": 0.1040055727001471,
+      "ece_10": 0.06462728205128203,
+      "mae_by_target": [0.18008526561158156, 0.01898360979156331, 0.03887112943637957, 0.015883359235086807],
+      "mse_all_targets": 0.026899099284373215,
+      "nll": 0.3344201884859382,
+      "rmse_by_target": [0.3224989499206234, 0.024044568934594675, 0.05124211184509405, 0.01967051387210268],
+      "selected_ridge_alpha": 10.0,
+      "tuning_selection_mse": 0.04107156152356152
+    },
+    "fused_shuffled_visual": {
+      "auroc": 0.6148648648648649,
+      "average_precision": 0.6918348940379048,
+      "brier": 0.27188825344033574,
+      "ece_10": 0.18443922449604266,
+      "mae_by_target": [0.5018615538501903, 0.016738453879399602, 0.20794932801858138, 0.015789930002105643],
+      "mse_all_targets": 0.08348321757917031,
+      "nll": 0.739049046999259,
+      "rmse_by_target": [0.5214290492869915, 0.020614508164700746, 0.24741854426120408, 0.020092856569924347],
+      "selected_ridge_alpha": 10.0,
+      "tuning_selection_mse": 0.09411936414152232
+    },
+    "structured": {
+      "auroc": 0.8597390493942219,
+      "average_precision": 0.8805129518702733,
+      "brier": 0.1612071707433447,
+      "ece_10": 0.115232290133438,
+      "mae_by_target": [0.33936588103254733, 0.00048485235882250206, 0.14745073586352453, 0.005082944397299408],
+      "mse_all_targets": 0.0485636369363483,
+      "nll": 0.4940964365279283,
+      "rmse_by_target": [0.4015061279025598, 0.0006079940511273854, 0.18168695722904235, 0.006070989884055697],
+      "selected_ridge_alpha": 1.0,
+      "tuning_selection_mse": 0.04535452426440626
+    },
+    "visual": {
+      "auroc": 0.934878844361603,
+      "average_precision": 0.8884456287883791,
+      "brier": 0.08840838991983152,
+      "ece_10": 0.05294831664826396,
+      "mae_by_target": [0.16716721874616614, 0.16581827097134985, 0.07419582563804379, 0.12470153018698964],
+      "mse_all_targets": 0.04043031994210067,
+      "nll": 0.29465436966643593,
+      "rmse_by_target": [0.29733548378829505, 0.20166667088963122, 0.0987778715183644, 0.15128243718085033],
+      "selected_ridge_alpha": 10.0,
+      "tuning_selection_mse": 0.07339947192919337
+    }
+  },
+  "paired_episode_bootstrap": {
+    "fused_minus_episode_shuffled_brier": {
+      "ci_high": -0.1029951007388924,
+      "ci_low": -0.22803969049805475,
+      "estimate": -0.16788268074043108,
+      "independent_episode_clusters": 66
+    },
+    "fused_minus_episode_shuffled_mse": {
+      "ci_high": -0.03890823139495776,
+      "ci_low": -0.0719456085664539,
+      "estimate": -0.056584118294797085,
+      "independent_episode_clusters": 66
+    },
+    "fused_minus_structured_brier": {
+      "ci_high": 0.02020513436844241,
+      "ci_low": -0.13006599035673783,
+      "estimate": -0.05720159804340213,
+      "independent_episode_clusters": 66
+    },
+    "fused_minus_structured_mse": {
+      "ci_high": -0.0007401292906921049,
+      "ci_low": -0.04182933826556026,
+      "estimate": -0.021664537651975076,
+      "independent_episode_clusters": 66
+    }
+  },
+  "protocol_amendments": {
+    "negative_control": "complete-episode shuffling replaced independent action-row shuffling",
+    "publication_prose": {
+      "method_or_threshold_change": false,
+      "scope": "development-gate failure clause and claim-boundary terminology only"
+    },
+    "temporal_sampling": "16 frames at step 4 replaced a dense 64-frame CPU path before official model comparison"
+  },
+  "report_version": "jepa-synchronized-simulator-development-summary-v2",
+  "rq5_controlled_diagnostic": {
+    "decisions": 20,
+    "guarded_holds_during_unqualified_interval": 3,
+    "guarded_unsafe_clears": 0,
+    "legacy_unsafe_clears": 3,
+    "registry_chain_valid": true,
+    "test_seeds_accessed": false
+  },
+  "status": "development_only",
+  "study": {
+    "action_rows": 800,
+    "data_seed": 20260722,
+    "episode_count": 400,
+    "evaluation_split": "validation",
+    "frame_step": 4,
+    "sampled_frames": 16,
+    "split_episode_counts": {
+      "calibration": 61,
+      "train": 220,
+      "tuning": 53,
+      "validation": 66
+    },
+    "split_seed": 20260723,
+    "split_unit": "complete_episode",
+    "test_generated": false,
+    "test_rows_accessed": false,
+    "validation_outcome_counts": {
+      "negative": 58,
+      "positive": 74
+    }
+  },
+  "target_names": [
+    "route_success_probability",
+    "arrival_time_scaled",
+    "hazard_score",
+    "remaining_resource_margin"
+  ]
+}

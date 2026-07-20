@@ -540,7 +540,9 @@ TRACE-WorldModel does not require a learned latent model to run the current Floo
 
 The D0.5 release uses a transparent simulator and graph-based mission model so that students can inspect every state transition.
 
-Future extensions may attach learned latent predictors, including V-JEPA or AdaJEPA-style modules, behind the same world-model service boundary.
+An isolated development extension now attaches the open-source V-JEPA 2.1 visual
+encoder behind the same world-model service boundary. The transparent surrogate
+remains the default, and the learned path must be explicitly injected.
 
 Optional install, if the learned-model extension is enabled:
 
@@ -566,6 +568,40 @@ learned visual encoder, such as V-JEPA
 + TRACE runtime
 + human authority boundary
 ```
+
+The implemented development workflow adds episode-level split isolation,
+frozen-feature caching, a flood-domain action head, calibration, structured and
+shuffled-feature controls, provenance-carrying evidence, and an additive
+model-version guard. See
+[`docs/JEPA_INTEGRATION_PROTOCOL.md`](docs/JEPA_INTEGRATION_PROTOCOL.md). Its
+synchronized simulator results are integration evidence, not field validation.
+
+The learned path uses a separate observation/encoding boundary. A delivered drone
+survey writes content-addressed simulator imagery; the offline encoder verifies it
+and populates the feature cache; the runtime adapter reads only the cached feature
+identified by controller-visible evidence. A missing feature fails closed.
+
+Run the optional dynamic workbench with a development head and feature cache:
+
+```bash
+trace-jepa-ui \
+  --jepa-head artifacts/jepa/simulator_official_v2/flood_route_head_dev_v1.npz \
+  --jepa-feature-cache artifacts/jepa/simulator_official_v2/cache \
+  --visual-observation-dir artifacts/jepa/live_observations
+```
+
+Populate the cache for newly captured development observations:
+
+```bash
+python scripts/encode_simulator_observations.py \
+  --encoder vjepa \
+  --observations artifacts/jepa/live_observations \
+  --cache-dir artifacts/jepa/simulator_official_v2/cache
+```
+
+Test observations remain locked unless a complete frozen authorization manifest is
+explicitly supplied. Generated imagery, caches, checkpoints, and reports are kept
+outside Git.
 
 ## Research and safety scope
 
