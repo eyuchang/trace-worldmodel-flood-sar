@@ -1,0 +1,79 @@
+protocol_version: jepa-synchronized-simulator-development-v1
+status: development_frozen_before_official_encoding
+publication_provenance:
+  executed_protocol_sha256: bef71719f13b45fa2b95cd6797bf0acb19f6349669e9d598fafaa79fa58d8ecc
+  amendment_scope: public_facing_prose_only
+  amended_fields:
+    - development_interpretation_rule_failure_clause
+    - claim_boundary
+  method_or_threshold_change: false
+observation_source:
+  sensor_model_version: flood-sim-drone-rgb-v2
+  synchronized: true
+  condition: conditional_on_delivered_drone_evidence
+  raw_truth_controller_visible: false
+  field_generalization_claim: false
+  sampled_frames: 16
+  frame_step: 4
+  source_frame_span: 61
+campaign:
+  independent_episodes: 400
+  data_seed: 20260722
+  split_seed: 20260723
+  split_unit: complete_episode
+  split_probabilities:
+    train: 0.55
+    tuning: 0.15
+    calibration: 0.15
+    validation: 0.15
+  process_noise: 0.0
+  label_oracle: workbench_zero_process_noise_water_update_at_action_arrival_v1
+  test_generated: false
+  test_locked: true
+compute_amendment:
+  timing: before_any_official_model_comparison_was_trained_or_inspected
+  reason: >-
+    The initial 64-token-frame encoding path was not viable on the available
+    CPU-only host. The pinned upstream ViT-B Kinetics-400 and COIN evaluation
+    configs use 16 frames with frame_step 4, which spans the same 64 source-frame
+    interval with an upstream-supported temporal sample.
+encoder:
+  family: V-JEPA 2.1
+  hub_entry: vjepa2_1_vit_base_384
+  source_revision: 204698b45b3712590f06245fbfba32d3be539812
+  checkpoint_sha256: 848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d
+  frozen: true
+  pretraining_predictor_used: false
+models:
+  - constant
+  - structured
+  - visual
+  - fused
+  - fused_shuffled_visual
+selection:
+  split: tuning
+  ridge_alphas: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
+calibration:
+  split: calibration
+  method: isotonic
+evaluation:
+  split: validation
+  primary_metrics:
+    - brier
+    - mse_all_targets
+  secondary_metrics:
+    - nll
+    - ece_10
+    - auroc
+    - average_precision
+  uncertainty: paired_episode_cluster_bootstrap_95_percent
+development_interpretation_rule: >-
+  Treat the visual channel as showing development-stage added value only if fused
+  has a lower point estimate than structured on both primary metrics, at least one
+  paired 95 percent interval excludes zero in the favorable direction, and the
+  fused result also improves over shuffled-visual control on that metric.
+development_gate_failure_state: heldout_test_closed
+claim_boundary: >-
+  This campaign can establish synchronized prototype integration, provenance,
+  leakage resistance, and simulator-channel sensitivity. It cannot establish
+  field-video generalization, operational safety, or cross-domain superiority.

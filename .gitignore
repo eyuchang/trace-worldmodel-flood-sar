@@ -83,6 +83,10 @@ artifacts/evidence/*
 artifacts/commitments/*
 !artifacts/commitments/.gitkeep
 
+# Generated JEPA feature caches, checkpoints, and run reports
+artifacts/jepa/*
+!artifacts/jepa/.gitkeep
+
 # -------------------------------------------------------------------
 # Downloaded and generated data
 # -------------------------------------------------------------------

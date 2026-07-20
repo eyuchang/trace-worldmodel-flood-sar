@@ -1,0 +1,10 @@
+{
+  "manifest_version": "jepa-test-authorization-v1",
+  "protocol_sha256": "REPLACE_AFTER_PROTOCOL_REVIEW",
+  "code_commit": "REPLACE_WITH_FROZEN_COMMIT",
+  "dataset_manifest_sha256": "REPLACE_WITH_FROZEN_DEVELOPMENT_DATASET_MANIFEST_HASH",
+  "predictor_checkpoint_sha256": "REPLACE_WITH_FROZEN_PREDICTOR_HASH",
+  "calibration_version": "REPLACE_WITH_FROZEN_CALIBRATION_VERSION",
+  "test_authorized": false,
+  "template_status": "inactive; placeholder values are rejected by the test-data boundary"
+}

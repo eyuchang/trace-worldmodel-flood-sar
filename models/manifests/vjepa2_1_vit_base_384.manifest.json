@@ -1,0 +1,24 @@
+{
+  "checkpoint": {
+    "encoder_key": "ema_encoder",
+    "file_name": "vjepa2_1_vitb_dist_vitG_384.pt",
+    "local_path_recorded": false,
+    "sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+    "size_bytes": 1664223428,
+    "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitb_dist_vitG_384.pt"
+  },
+  "crop_size": 384,
+  "downloaded_at": "2026-07-20T10:27:38.480056+00:00",
+  "encoder_type": "VisionTransformer",
+  "hub_entry": "vjepa2_1_vit_base_384",
+  "hub_repo": "facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812",
+  "manifest_version": "vjepa-download-v3",
+  "platform": "macOS-26.5-arm64-arm-64bit",
+  "preprocessor_entry": "vjepa2_preprocessor",
+  "pretraining_predictor_type": "VisionTransformerPredictor",
+  "python_version": "3.12.13 | packaged by conda-forge | (main, Mar  5 2026, 17:06:14) [Clang 19.1.7 ]",
+  "role": "frozen_visual_encoder",
+  "torch_hub_cache_path_recorded": false,
+  "torch_version": "2.13.0",
+  "scope_note": "The returned self-supervised pretraining predictor is distinct from the flood-domain action-conditioned predictor used by this integration."
+}
