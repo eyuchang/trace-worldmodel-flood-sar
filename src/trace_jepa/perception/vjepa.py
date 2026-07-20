@@ -91,6 +91,18 @@ class VJEPA2Encoder:
         elif tensor.shape[1] not in (1, 3):
             raise ValueError("cannot infer channel dimension")
         transformed = self.processor(tensor)
+        # The official V-JEPA 2.1 preprocessor returns a one-element list of
+        # clips, while lightweight test doubles commonly return the clip
+        # directly.  Accept both representations, but reject multi-view output
+        # rather than silently selecting a view that was not declared by this
+        # adapter's data contract.
+        if isinstance(transformed, (list, tuple)):
+            if len(transformed) != 1:
+                raise ValueError(
+                    "official preprocessor returned multiple clips; "
+                    "single-window encoding requires exactly one"
+                )
+            transformed = transformed[0]
         if transformed.ndim == 4:
             transformed = transformed.unsqueeze(0)
         if transformed.ndim != 5:

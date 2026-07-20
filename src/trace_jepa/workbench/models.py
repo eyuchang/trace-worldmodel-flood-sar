@@ -211,6 +211,10 @@ class RouteBelief(Model):
     source: str | None = None
     clearance_valid_until: float | None = None
     report_id: str | None = None
+    visual_observation_id: str | None = None
+    visual_observation_hash: str | None = None
+    visual_observed_at: float | None = Field(default=None, ge=0.0)
+    visual_sensor_version: str | None = None
     blocked_segment_index: int | None = None
     water_depth: float | None = Field(default=None, ge=0.0)
     depth_observed_at: float | None = Field(default=None, ge=0.0)

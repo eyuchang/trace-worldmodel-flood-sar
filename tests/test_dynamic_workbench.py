@@ -17,6 +17,28 @@ def make_run(tmp_path: Path) -> DynamicRun:
     return DynamicRun(scenario_path=SCENARIO, artifact_root=tmp_path / "runs")
 
 
+def test_api_factory_forwards_optional_world_model_and_visual_store(tmp_path) -> None:
+    class SpyModel:
+        pass
+
+    from trace_jepa.worldmodels.simulator_observations import (
+        SimulatorVisualObservationStore,
+    )
+
+    model = SpyModel()
+    store = SimulatorVisualObservationStore(
+        tmp_path / "observations", num_frames=2, size=32
+    )
+    app = create_app(
+        scenario_path=SCENARIO,
+        artifact_root=tmp_path / "api-runs",
+        route_world_model=model,
+        visual_observation_store=store,
+    )
+    assert app.state.run.controller.route_world_model is model
+    assert app.state.run.visual_observation_store is store
+
+
 def test_truth_is_not_initial_controller_knowledge(tmp_path: Path) -> None:
     run = make_run(tmp_path)
     assert run.state.truth.routes["north_channel"].open is False

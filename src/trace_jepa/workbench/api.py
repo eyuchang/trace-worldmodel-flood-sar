@@ -4,7 +4,7 @@ import asyncio
 import math
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -14,6 +14,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from trace_jepa.util import new_id
 from trace_jepa.workbench.engine import DynamicRun, SimulationLoop
 from trace_jepa.workbench.models import EventType, EventVisibility, ScenarioLevel
+
+if TYPE_CHECKING:
+    from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.simulator_observations import (
+        SimulatorVisualObservationStore,
+    )
 
 
 class RequestModel(BaseModel):
@@ -51,6 +57,8 @@ def create_app(
     *,
     scenario_path: str | Path | None = None,
     artifact_root: str | Path | None = None,
+    route_world_model: RouteWorldModel | None = None,
+    visual_observation_store: SimulatorVisualObservationStore | None = None,
 ) -> FastAPI:
     repo_root = Path(__file__).resolve().parents[3]
     scenario = Path(
@@ -58,7 +66,12 @@ def create_app(
         or repo_root / "configs" / "scenarios" / "riverside_flood_dynamic_v2.yaml"
     )
     artifacts = Path(artifact_root or repo_root / "artifacts" / "dynamic")
-    run = DynamicRun(scenario_path=scenario, artifact_root=artifacts)
+    run = DynamicRun(
+        scenario_path=scenario,
+        artifact_root=artifacts,
+        route_world_model=route_world_model,
+        visual_observation_store=visual_observation_store,
+    )
     loop = SimulationLoop(run)
 
     @asynccontextmanager

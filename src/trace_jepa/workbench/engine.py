@@ -6,7 +6,7 @@ import math
 import random
 from collections import deque
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from trace_jepa.refresh import RefreshDecision, RefreshMode, RefreshPolicy
 from trace_jepa.runtime import (
@@ -45,6 +45,13 @@ from trace_jepa.workbench.randomness import (
 from trace_jepa.workbench.scenario import load_initial_state
 from trace_jepa.workbench.store import EventStore
 
+if TYPE_CHECKING:
+    from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.simulator_observations import (
+        SimulatorVisualObservationStore,
+    )
+    from trace_jepa.worldmodels.versioning import ModelRegistry
+
 
 Subscriber = Callable[[WorkbenchSnapshot], Awaitable[None]]
 
@@ -77,6 +84,12 @@ class DynamicRun:
         artifact_root: str | Path,
         refresh_scheduler: RefreshPolicy | None = None,
         epsilon_c: float = 1.0,
+        route_world_model: RouteWorldModel | None = None,
+        model_registry: ModelRegistry | None = None,
+        visual_observation_store: SimulatorVisualObservationStore | None = None,
+        observation_episode_id: str | None = None,
+        observation_study_partition: str = "development",
+        test_authorization_manifest: str | Path | None = None,
     ) -> None:
         self.run_id = run_id or new_id("run")
         self.scenario_path = Path(scenario_path)
@@ -92,6 +105,21 @@ class DynamicRun:
         self._rng = random.Random(self.state.config.s1.seed)
         self._lock = asyncio.Lock()
         self._plan_requested = True
+        self.visual_observation_store = visual_observation_store
+        self.observation_episode_id = observation_episode_id or self.run_id
+        if observation_study_partition not in {"development", "test"}:
+            raise ValueError("observation_study_partition must be development or test")
+        if observation_study_partition == "test":
+            from trace_jepa.worldmodels.simulator_observations import (
+                validate_test_authorization,
+            )
+
+            validate_test_authorization(
+                Path(test_authorization_manifest)
+                if test_authorization_manifest is not None
+                else None
+            )
+        self.observation_study_partition = observation_study_partition
 
         policy = PolicyEngine(
             PolicyConfig.from_yaml(
@@ -108,6 +136,8 @@ class DynamicRun:
             self.runtime,
             refresh_scheduler=refresh_scheduler,
             epsilon_c=epsilon_c,
+            route_world_model=route_world_model,
+            model_registry=model_registry,
         )
         self.emit(
             EventType.RUN_CREATED,
@@ -653,6 +683,37 @@ class DynamicRun:
                 if accurate
                 else ("blocked" if truth_status == "open" else "open")
             )
+            visual_observation = None
+            if self.visual_observation_store is not None:
+                from trace_jepa.worldmodels.simulator_observations import (
+                    SENSOR_MODEL_VERSION,
+                    SimulatorSensorSnapshot,
+                )
+
+                route_truth = self.state.truth.routes[route_id]
+                visual_observation = self.visual_observation_store.capture(
+                    SimulatorSensorSnapshot(
+                        run_id=self.run_id,
+                        episode_id=self.observation_episode_id,
+                        study_partition=self.observation_study_partition,
+                        route_id=route_id,
+                        asset_id=asset_id,
+                        observed_at=observed_at,
+                        environment_tick_index=self.state.truth.environment_tick_index,
+                        sensor_seed=self.state.config.s1.seed,
+                        water_depth_m=route_truth.water_depth,
+                        route_closure_depth_m=self.state.config.s2.route_closure_depth,
+                        debris_blocked=route_truth.debris_blocked,
+                        rain_intensity=self.state.config.s2.rain_intensity,
+                        upstream_inflow=self.state.config.s2.upstream_inflow,
+                        weather_severity=self.state.truth.weather_severity,
+                        sensor_noise=self.state.config.s1.sensor_noise,
+                        sensor_quality=self.state.config.s5.sensor_quality,
+                        packet_delivered=delivered,
+                        categorical_report_accurate=accurate,
+                        sensor_model_version=SENSOR_MODEL_VERSION,
+                    )
+                )
             self.emit(
                 EventType.ACTION_COMPLETED,
                 source="flood_environment",
@@ -709,6 +770,16 @@ class DynamicRun:
                             ),
                             "latency_s": flight_duration,
                             "cost": 5.0 + flight_duration * 0.0009,
+                            **(
+                                {
+                                    "visual_observation_id": visual_observation.observation_id,
+                                    "visual_observation_hash": visual_observation.observation_hash,
+                                    "visual_observed_at": observed_at,
+                                    "visual_sensor_version": SENSOR_MODEL_VERSION,
+                                }
+                                if visual_observation is not None
+                                else {}
+                            ),
                         },
                     }
                 )
@@ -735,6 +806,15 @@ class DynamicRun:
                         "accurate": accurate,
                         "claim_id": refresh_context.get("claim_id"),
                         "commitment_id": refresh_context.get("commitment_id"),
+                        **(
+                            {
+                                "visual_observation_id": visual_observation.observation_id,
+                                "visual_observation_hash": visual_observation.observation_hash,
+                                "visual_controller_usable": False,
+                            }
+                            if visual_observation is not None
+                            else {}
+                        ),
                     },
                 )
                 self.emit(
@@ -1149,6 +1229,19 @@ class DynamicRun:
                             "accurate": payload["accurate"],
                             "claim_id": payload.get("claim_id"),
                             "commitment_id": payload.get("commitment_id"),
+                            **(
+                                {
+                                    "visual_observation_id": payload[
+                                        "visual_observation_id"
+                                    ],
+                                    "visual_observation_hash": payload[
+                                        "visual_observation_hash"
+                                    ],
+                                    "visual_controller_usable": True,
+                                }
+                                if payload.get("visual_observation_id") is not None
+                                else {}
+                            ),
                         },
                     )
                 self.emit(

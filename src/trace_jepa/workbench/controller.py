@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from trace_jepa.contracts import (
     ActionInstance,
@@ -33,6 +33,10 @@ from trace_jepa.workbench.beliefs import (
 )
 from trace_jepa.workbench.models import Position, WorkbenchState
 from trace_jepa.workbench.navigation import NavigationError, plan_route_constrained_action
+
+if TYPE_CHECKING:
+    from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.versioning import ModelRegistry
 
 
 Emit = Callable[[str, dict[str, Any]], None]
@@ -83,16 +87,21 @@ class DynamicMissionController:
         *,
         refresh_scheduler: RefreshPolicy | None = None,
         epsilon_c: float = 1.0,
+        route_world_model: RouteWorldModel | None = None,
+        model_registry: ModelRegistry | None = None,
     ):
         self.runtime = runtime
         self.legacy_autonomous_recon = refresh_scheduler is None
         self.refresh_experiment_mode = refresh_scheduler is not None
         self.refresh_scheduler = refresh_scheduler or NoRefreshPolicy()
         self.epsilon_c = float(epsilon_c)
+        self.route_world_model = route_world_model
+        self.model_registry = model_registry
+        self._route_observation_hashes: dict[str, str] = {}
 
     def _sync_gate_policy(self, state: WorkbenchState) -> None:
         current = self.runtime.policy.config
-        self.runtime.policy = PolicyEngine(
+        base_policy = PolicyEngine(
             PolicyConfig(
                 policy_version="trace-dynamic-v1",
                 min_model_support=current.min_model_support,
@@ -109,6 +118,12 @@ class DynamicMissionController:
                 allow_qualified_reversible_probe=True,
             )
         )
+        if self.model_registry is None:
+            self.runtime.policy = base_policy
+        else:
+            from trace_jepa.worldmodels.versioning import GuardedPolicyEngine
+
+            self.runtime.policy = GuardedPolicyEngine(base_policy, self.model_registry)
 
     def _available_assets(self, state: WorkbenchState, asset_type: str) -> list[str]:
         return [
@@ -134,10 +149,84 @@ class DynamicMissionController:
         route_id: str,
         asset_id: str,
         travel_s: float | None = None,
+        action_type: str = "dispatch_rescue_boat",
     ) -> PlanPrediction:
         route = state.truth.routes[route_id]
         belief = state.controller.route_beliefs[route_id]
         asset = state.controller.known_assets[asset_id]
+        effective_travel_s = float(travel_s if travel_s is not None else route.nominal_travel_s)
+        if self.route_world_model is not None:
+            # Import lazily so the unchanged surrogate path does not acquire an
+            # ML dependency. The request contains controller beliefs, declared
+            # parameters, and static map attributes, but no dynamic truth.
+            from trace_jepa.worldmodels.contracts import (
+                RouteWorldModelRequest,
+                WorldModelInputUnavailable,
+            )
+
+            controller_time = state.controller.simulation_time
+            model_request = RouteWorldModelRequest(
+                plan_id=plan_id,
+                route_id=route_id,
+                asset_id=asset_id,
+                action_type=action_type,
+                belief_status=belief.status,
+                belief_confidence=belief.confidence,
+                observation_age_s=(
+                    state.config.s2.observation_freshness_s * 10.0
+                    if belief.observed_at is None
+                    else max(0.0, controller_time - belief.observed_at)
+                ),
+                observed_depth_m=belief.water_depth,
+                projected_depth_m=project_controller_route_depth(
+                    state, route_id, controller_time + effective_travel_s
+                ),
+                route_closure_depth_m=state.config.s2.route_closure_depth,
+                route_susceptibility=route.susceptibility,
+                travel_time_s=effective_travel_s,
+                water_rise_rate=state.config.s2.water_rise_rate,
+                rain_intensity=state.config.s2.rain_intensity,
+                upstream_inflow=state.config.s2.upstream_inflow,
+                weather_forecast=state.config.s5.sector_weather,
+                sensor_noise=state.config.s1.sensor_noise,
+                packet_loss=state.config.s1.packet_loss,
+                declared_ood_severity=state.config.s1.ood_severity,
+                sensor_quality=state.config.s5.sensor_quality,
+                asset_resource=asset.resource,
+                asset_weather_tolerance=asset.weather_tolerance,
+                visual_observation_id=belief.visual_observation_id,
+                visual_observation_age_s=(
+                    max(0.0, controller_time - belief.visual_observed_at)
+                    if belief.visual_observed_at is not None
+                    else None
+                ),
+            )
+            try:
+                prediction = self.route_world_model.predict(model_request)
+            except WorldModelInputUnavailable:
+                # Missing visual evidence is an expected operational condition,
+                # not permission to fall back silently to the surrogate. Emit a
+                # conservative prediction that the unchanged TRACE gate must hold.
+                return PlanPrediction(
+                    plan_id=plan_id,
+                    success_probability=0.0,
+                    arrival_time_s=effective_travel_s,
+                    hazard_score=1.0,
+                    resource_margin=asset.resource,
+                    model_support=0.0,
+                    out_of_distribution_score=1.0,
+                    uncertainty=1.0,
+                    rollout_horizon=max(1, int(math.ceil(effective_travel_s / 180.0))),
+                    assumptions=(
+                        "model_conditional_prediction",
+                        "missing_controller_visible_visual_observation",
+                        "fail_closed_without_surrogate_fallback",
+                    ),
+                )
+            observation_hash = getattr(self.route_world_model, "last_observation_hash", None)
+            if observation_hash:
+                self._route_observation_hashes[plan_id] = observation_hash
+            return prediction
         age = self._route_age(state, route_id)
         freshness = math.exp(-age / max(1.0, state.config.s2.observation_freshness_s))
 
@@ -174,7 +263,6 @@ class DynamicMissionController:
         )
 
         base_success = {"open": 0.91, "blocked": 0.05, "unknown": 0.70}[belief.status]
-        effective_travel_s = float(travel_s if travel_s is not None else route.nominal_travel_s)
         predicted_depth = project_controller_route_depth(
             state,
             route_id,
@@ -341,6 +429,7 @@ class DynamicMissionController:
                     route_id=route_id,
                     asset_id=asset_id,
                     travel_s=travel_s,
+                    action_type=action.action_type,
                 )
                 cost = asset.operating_cost * prediction.arrival_time_s / 60.0
                 utility = (
@@ -511,6 +600,7 @@ class DynamicMissionController:
                         route_id=route_id,
                         asset_id=boat_id,
                         travel_s=travel_s,
+                        action_type=action.action_type,
                     )
                     cost = boat.operating_cost * prediction.arrival_time_s / 60.0
                     utility = (
@@ -665,20 +755,36 @@ class DynamicMissionController:
     ) -> WorldModelEvidence:
         route_id = plan.metadata.get("route_id")
         observation_age = self._route_age(state, route_id) if route_id else 0.0
+        provenance = (
+            self.route_world_model.provenance
+            if route_id and self.route_world_model is not None
+            else None
+        )
         return WorldModelEvidence(
-            encoder_version="surrogate-encoder-v1",
-            fusion_version="dynamic-state-fusion-v1",
-            predictor_version=self.predictor_version,
-            semantic_probe_versions=(self.probe_version,),
-            training_snapshot="dynamic-surrogate-no-training",
-            observation_window_hash=sha256_value(
-                {
-                    "beliefs": {
-                        key: value.model_dump(mode="json")
-                        for key, value in state.controller.route_beliefs.items()
-                    },
-                    "time": state.truth.simulation_time,
-                }
+            encoder_version=(provenance.encoder_version if provenance else "surrogate-encoder-v1"),
+            fusion_version=(
+                provenance.feature_schema_version if provenance else "dynamic-state-fusion-v1"
+            ),
+            predictor_version=(
+                provenance.predictor_version if provenance else self.predictor_version
+            ),
+            semantic_probe_versions=(
+                provenance.semantic_probe_versions if provenance else (self.probe_version,)
+            ),
+            training_snapshot=(
+                provenance.training_snapshot if provenance else "dynamic-surrogate-no-training"
+            ),
+            observation_window_hash=(
+                self._route_observation_hashes.get(plan.plan_id)
+                or sha256_value(
+                    {
+                        "beliefs": {
+                            key: value.model_dump(mode="json")
+                            for key, value in state.controller.route_beliefs.items()
+                        },
+                        "time": state.controller.simulation_time,
+                    }
+                )
             ),
             fleet_state_hash=sha256_value(
                 {
@@ -705,8 +811,22 @@ class DynamicMissionController:
                 "arrival_time_s": prediction.arrival_time_s,
                 "hazard_score": prediction.hazard_score,
                 "resource_margin": prediction.resource_margin,
+                **(
+                    {
+                        "model_provenance": {
+                            "encoder_checkpoint_sha256": provenance.encoder_checkpoint_sha256,
+                            "predictor_checkpoint_sha256": provenance.predictor_checkpoint_sha256,
+                            "feature_schema_version": provenance.feature_schema_version,
+                            "supported_action_types": list(provenance.supported_action_types),
+                        }
+                    }
+                    if provenance
+                    else {}
+                ),
             },
-            calibration_version="surrogate-calibration-v1",
+            calibration_version=(
+                provenance.calibration_version if provenance else "surrogate-calibration-v1"
+            ),
             assumptions=prediction.assumptions,
             observation_age_s=observation_age,
             decisively_contradicted=bool(
@@ -957,6 +1077,7 @@ class DynamicMissionController:
                 route_id=route_id,
                 asset_id=action.actor_id,
                 travel_s=item.prediction.arrival_time_s,
+                action_type=action.action_type,
             )
             evidence = self._evidence(
                 hypothetical,

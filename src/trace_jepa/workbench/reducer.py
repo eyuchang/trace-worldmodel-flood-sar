@@ -458,6 +458,7 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
         kind = str(payload.get("kind", "route"))
         if kind == "route":
             route_id = str(payload["route_id"])
+            previous_belief = state.controller.route_beliefs.get(route_id)
             status = str(payload["reported_status"])
             confidence = float(payload.get("confidence", 0.8))
             observed_at = float(payload.get("observed_at", state.truth.simulation_time))
@@ -504,6 +505,42 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
                     else None
                 ),
                 report_id=event.event_id,
+                visual_observation_id=(
+                    str(payload["visual_observation_id"])
+                    if payload.get("visual_observation_id") is not None
+                    else (
+                        previous_belief.visual_observation_id
+                        if previous_belief is not None
+                        else None
+                    )
+                ),
+                visual_observation_hash=(
+                    str(payload["visual_observation_hash"])
+                    if payload.get("visual_observation_hash") is not None
+                    else (
+                        previous_belief.visual_observation_hash
+                        if previous_belief is not None
+                        else None
+                    )
+                ),
+                visual_observed_at=(
+                    float(payload.get("visual_observed_at", observed_at))
+                    if payload.get("visual_observation_id") is not None
+                    else (
+                        previous_belief.visual_observed_at
+                        if previous_belief is not None
+                        else None
+                    )
+                ),
+                visual_sensor_version=(
+                    str(payload["visual_sensor_version"])
+                    if payload.get("visual_sensor_version") is not None
+                    else (
+                        previous_belief.visual_sensor_version
+                        if previous_belief is not None
+                        else None
+                    )
+                ),
                 blocked_segment_index=payload.get("blocked_segment_index"),
                 water_depth=representative_depth,
                 depth_observed_at=observed_at,
@@ -515,6 +552,7 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
             )
         elif kind == "route_depth":
             route_id = str(payload["route_id"])
+            previous_belief = state.controller.route_beliefs.get(route_id)
             depth = max(0.0, float(payload["water_depth"]))
             observed_at = float(payload["observed_at"])
             expected_depth = project_controller_route_depth(
@@ -537,6 +575,26 @@ def apply_event(state: WorkbenchState, event: SimulationEvent) -> None:
                     else None
                 ),
                 report_id=event.event_id,
+                visual_observation_id=(
+                    previous_belief.visual_observation_id
+                    if previous_belief is not None
+                    else None
+                ),
+                visual_observation_hash=(
+                    previous_belief.visual_observation_hash
+                    if previous_belief is not None
+                    else None
+                ),
+                visual_observed_at=(
+                    previous_belief.visual_observed_at
+                    if previous_belief is not None
+                    else None
+                ),
+                visual_sensor_version=(
+                    previous_belief.visual_sensor_version
+                    if previous_belief is not None
+                    else None
+                ),
                 blocked_segment_index=(
                     state.controller.route_beliefs[route_id].blocked_segment_index
                     if route_id in state.controller.route_beliefs

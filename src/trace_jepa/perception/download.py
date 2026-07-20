@@ -134,7 +134,9 @@ def download_model(
     try:
         import torch
     except ImportError as exc:
-        raise RuntimeError("PyTorch is required. Install the appropriate build before downloading JEPA.") from exc
+        raise RuntimeError(
+            "PyTorch is required. Install the appropriate build before downloading JEPA."
+        ) from exc
 
     output_dir.mkdir(parents=True, exist_ok=True)
     encoder, predictor, _, checkpoint_path = load_official_vjepa21(
@@ -146,7 +148,7 @@ def download_model(
     )
 
     manifest = {
-        "manifest_version": "vjepa-download-v2",
+        "manifest_version": "vjepa-download-v3",
         "hub_repo": hub_repo,
         "hub_entry": model_name,
         "preprocessor_entry": "vjepa2_preprocessor",
@@ -156,9 +158,10 @@ def download_model(
         "torch_version": torch.__version__,
         "python_version": sys.version,
         "platform": platform.platform(),
-        "torch_hub_dir": str(Path(torch.hub.get_dir()).resolve()),
+        "torch_hub_cache_path_recorded": False,
         "checkpoint": {
-            "path": str(checkpoint_path.resolve()),
+            "file_name": checkpoint_path.name,
+            "local_path_recorded": False,
             "url": OFFICIAL_VJEPA21_CHECKPOINTS[model_name]["url"],
             "size_bytes": checkpoint_path.stat().st_size,
             "sha256": sha256_file(checkpoint_path),
@@ -166,9 +169,9 @@ def download_model(
         },
         "downloaded_at": datetime.now(timezone.utc).isoformat(),
         "role": "frozen_visual_encoder",
-        "warning": (
-            "The returned self-supervised pretraining predictor is not the flood-domain "
-            "action-conditioned predictor. Train the latter on synchronized rescue trajectories."
+        "scope_note": (
+            "The returned self-supervised pretraining predictor is distinct from the "
+            "flood-domain action-conditioned predictor used by this integration."
         ),
     }
     path = output_dir / f"{model_name}.manifest.json"
@@ -182,7 +185,9 @@ def main() -> None:
     parser.add_argument("--crop-size", type=int, default=384)
     parser.add_argument("--output", type=Path, default=Path("models/manifests"))
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("models/external/vjepa2"))
-    parser.add_argument("--hub-repo", default="facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812")
+    parser.add_argument(
+        "--hub-repo", default="facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812"
+    )
     args = parser.parse_args()
     path = download_model(
         args.model,
