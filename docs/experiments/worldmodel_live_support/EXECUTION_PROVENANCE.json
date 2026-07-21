@@ -1,0 +1,58 @@
+{
+  "base_commit": "5dc982b40af169cd224d5d59a5ac06c159492123",
+  "data_access": {
+    "opened_partitions": [
+      "development"
+    ],
+    "rq1_rq5_accessed": false,
+    "test_data_accessed": false
+  },
+  "excluded_unimported_archived_modules": [
+    {
+      "path": "src/trace_jepa/evaluation/prospective_design.py",
+      "sha256": "e74b82cdaabf584762cf497175665bc030c09ac1c260b57b4102c761ca56c37f"
+    },
+    {
+      "path": "src/trace_jepa/evaluation/prospective_metrics.py",
+      "sha256": "f820ea0cf4c290895f1a770c613831408853c6c939719038bba00a6df7463c9d"
+    },
+    {
+      "path": "src/trace_jepa/evaluation/prospective_protocol.py",
+      "sha256": "1ef4b234f43eb89173b7e0b2ba13757a3d6987766e3df0d4a9e914add4de91ab"
+    },
+    {
+      "path": "src/trace_jepa/evaluation/prospective_statistics.py",
+      "sha256": "9a72dbcbb0e25523ee778669ace97daff4fabb5f1c62650755fb614b0c62c4d5"
+    },
+    {
+      "path": "src/trace_jepa/worldmodels/benchmark_v2_dataset.py",
+      "sha256": "8b6c27192fd16a443017991c4d5b766c609b3d8129e73ab5b7ed204c18e4b4a6"
+    }
+  ],
+  "publication_code_inventory": {
+    "algorithm": "SHA-256 of canonical JSON over sorted tracked Python files under src/trace_jepa plus the four live qualification scripts; each entry contains path, byte count, and file SHA-256",
+    "file_count": 97,
+    "sha256": "439e7c2aa1d3dbc55c0d155dfae2c8e31f00f7c849136a187f37409499428386"
+  },
+  "qualification_execution": {
+    "broad_source_tree_sha256": "47296f314ce8dff4ae01c10eaee12336d0d4e988fcf8e7a0b823b25c4d37f08d",
+    "executed_dependency_files_match_publication": true,
+    "smoke_reporter_sha256": "d3da3ded0ccc3a40ab71e76448b2109bcfd2cb49da1a047ff5f0aaf02c01ef5b"
+  },
+  "final_smoke_execution": {
+    "broad_source_tree_sha256": "adb98dd71916d60a5c87c0a5bd1ef9cbe5890fecbf3e1b969cdef1fa4f977cc7",
+    "executed_dependency_files_match_publication": true,
+    "smoke_reporter_sha256": "d6fa1352d2924d157ebba0ee83191cfa49607600d60aac5befef6a503c61abe9"
+  },
+  "source_relationship": {
+    "behavioral_change_between_qualification_and_final_smoke": false,
+    "difference": "The smoke reporter changed only its scope wording and scenario-provenance fields. Qualification and final-smoke model behavior were unchanged.",
+    "publication_exclusions": "Five unimported modules from an unused larger evaluation design were present in the broad archived source inventory and are not part of the public live-qualification implementation."
+  },
+  "preserved_evidence_archive": {
+    "committed_to_git": false,
+    "filename": "trace-live-support-export-v2-sanitized.tar.gz",
+    "sha256": "0f676d2484da55a4f6df2629c76a7ec425b2cbb93aea5854eefaa63c970fe8e6"
+  },
+  "schema_version": "worldmodel-live-support-execution-provenance-v1"
+}

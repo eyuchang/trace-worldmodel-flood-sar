@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "reference_controls": {
+    "simple_visual": {
+      "verified_cache_replay_count": 12,
+      "verified_request_count": 12
+    },
+    "structured": {
+      "verified_cache_replay_count": 12,
+      "verified_request_count": 12
+    }
+  },
+  "report_sha256": "05a37d3ebf253e079e52cc272b847106940cf9aeb2c30d62779d4abd4a0c795b",
+  "test_data_accessed": false,
+  "verification_schema_version": "live-qualification-verification-v1",
+  "verified_cache_replay_count": 60,
+  "verified_request_count": 60
+}

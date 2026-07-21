@@ -1,0 +1,175 @@
+{
+  "authoritative_decisions": [
+    {
+      "decision": "clear",
+      "failed_gates": [],
+      "final_status": "accept",
+      "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|north_channel|group_riverside"
+    },
+    {
+      "decision": "clear",
+      "failed_gates": [],
+      "final_status": "accept",
+      "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside"
+    }
+  ],
+  "authoritative_decisions_match_surrogate_baseline": true,
+  "claim_boundary": "This smoke demonstrates verified observation delivery, learned inference, and provenance-bound, non-licensing TRACE evidence attachment within one wait-enabled development plan cycle. The selected operational decision/action signature matched the surrogate-only baseline. It does not evaluate predictive quality or change TRACE semantics.",
+  "environment": {
+    "cuda_runtime": "12.8",
+    "cudnn": 90701,
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": true,
+    "device": "cuda:1",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35",
+    "python": "3.10.12 (main, Jan 26 2026, 14:55:28) [GCC 11.4.0]",
+    "tf32_cudnn": false,
+    "tf32_matmul": false,
+    "torch": "2.7.0+cu128"
+  },
+  "environment_manifest_sha256": "1f129feb0899b682e4c4f6e9ed62b61f9e466d11761d0481006dab73a6640581",
+  "event_types": [
+    "RUN_CREATED",
+    "OBSERVATION",
+    "PLAN_CYCLE",
+    "PLAN_PROPOSED",
+    "TRACE_WRITTEN",
+    "COMMITMENT_DECISION",
+    "PLAN_PROPOSED",
+    "TRACE_WRITTEN",
+    "COMMITMENT_DECISION",
+    "PLAN_SELECTED",
+    "ACTION_STARTED"
+  ],
+  "learned_output_used_for_trace_gate": false,
+  "model": "dinowm",
+  "model_identity": {
+    "action_schema_version": "flood-actions-dynamic-v1",
+    "bundle_sha256": "0eb6009d1a11da8185f752d80141ac41a9d3cfdb295d699216ac28d0377a50ce",
+    "calibration_artifact_sha256": "630cf1568d520720ad749a3b94762b9d89dcf5b93139aa88192ab037e19c73c6",
+    "calibration_version": "not-applicable-supporting",
+    "dynamics_checkpoint_sha256": "c7b0ec094cb760f324f316d03d2ceafe37f2895ea83ed92a62c9037ac2634493",
+    "dynamics_version": "flood-sar-dinowm-predictor-v1",
+    "encoder_checkpoint_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+    "encoder_version": "dinov2_vits14:7764ea0f912e",
+    "family": "dinowm-flood-sar-support",
+    "feature_schema_version": "dinowm-predicted-future-patch-tokens-v1",
+    "identity_schema_version": "model-artifact-identity-v2",
+    "integration_kind": "upstream-inspired-adaptation",
+    "integration_source_tree_sha256": "adb98dd71916d60a5c87c0a5bd1ef9cbe5890fecbf3e1b969cdef1fa4f977cc7",
+    "loaded_encoder_state_sha256": "ccf5b12198d1e2c02a40e1e9e5a4c851f45ac02d71d4ed0654a8be01966c3e9c",
+    "outcome_head_sha256": "80cbef16b6fb92e3d4098084ad3f4a99e4d9c4a0ae554771736acc2324d24346",
+    "outcome_head_version": "not-applicable-supporting",
+    "preprocessing_version": "dinov2-vits14-112-frame-index-last-v1",
+    "source_commit": "5dc982b40af169cd224d5d59a5ac06c159492123",
+    "source_repository": "https://github.com/eyuchang/trace-jepa-flood-sar",
+    "supported_action_types": [
+      "dispatch_rescue_boat",
+      "evacuate_to_safety"
+    ],
+    "training_snapshot_sha256": "674355d9283a69b8fad6ed2c8cf29fa4a5d394fc716b7b09861727a8e360429a",
+    "upstream_basis_commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+    "upstream_basis_repository": "https://github.com/gaoyuezhou/dino_wm"
+  },
+  "observation_id": "simobs-115d5e3960520833e8efe57e",
+  "observation_sha256": "115d5e3960520833e8efe57e9962c401bea98418032920af4092b48315cf941c",
+  "operational_event_signature": [
+    {
+      "event_type": "COMMITMENT_DECISION",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "trace_status": "accept"
+      }
+    },
+    {
+      "event_type": "COMMITMENT_DECISION",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "trace_status": "accept"
+      }
+    },
+    {
+      "event_type": "PLAN_SELECTED",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour"
+      }
+    },
+    {
+      "event_type": "ACTION_STARTED",
+      "payload": {
+        "action_type": "dispatch_rescue_boat",
+        "asset_id": "rescue_boat_1",
+        "authorization_outside_tolerance": false,
+        "group_id": "group_riverside",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "route_id": "south_detour",
+        "truth_safe_at_execution": true
+      }
+    }
+  ],
+  "operational_events_match_surrogate_baseline": true,
+  "persisted_request_hashes": [
+    "77214f143829b9b50179cd46279ff6f0ca19ff929fa2dc0a905f86768be75e05"
+  ],
+  "report_schema_version": "trace-live-support-evidence-smoke-v1",
+  "required_event_order": [
+    "OBSERVATION",
+    "PLAN_CYCLE",
+    "TRACE_WRITTEN",
+    "PLAN_SELECTED"
+  ],
+  "rq_data_accessed": false,
+  "scenario": {
+    "development_only": true,
+    "filename": "riverside_flood_v1.yaml",
+    "sha256": "0655fdd9f72fcaf6909d15400451801dbca51432d4dc05c87bacec1092a4b0c0"
+  },
+  "study_partition": "development",
+  "supporting_attachments": [
+    {
+      "action_type": "dispatch_rescue_boat",
+      "artifact_sha256": "53c9754a9c108cf6f6c1b2008ab7c75e83f4db5fb838144e69b2e2861ec20547",
+      "backend_duration_ms": 349.9094300004799,
+      "cache_hit": false,
+      "calibration_artifact_sha256": "630cf1568d520720ad749a3b94762b9d89dcf5b93139aa88192ab037e19c73c6",
+      "controller_manifest_sha256": "3e6def029a4e85e9531bd01f9847015f827935ce4f1587fef7a3a5c7f498c7fe",
+      "dynamics_checkpoint_sha256": "c7b0ec094cb760f324f316d03d2ceafe37f2895ea83ed92a62c9037ac2634493",
+      "encoder_checkpoint_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+      "environment_manifest_sha256": "1f129feb0899b682e4c4f6e9ed62b61f9e466d11761d0481006dab73a6640581",
+      "evidence_role": "supporting-non-licensing",
+      "failure_code": null,
+      "frames_sha256": "05e5caaf4841186ecfde745a10ff26220386c86900860e194babec23bbabf6ee",
+      "latent_sha256": "68b5e8a3778fe41049609c5fe41362fff8577a0b804d6cdb1d9bb9116c5e4dd6",
+      "model_bundle_sha256": "0eb6009d1a11da8185f752d80141ac41a9d3cfdb295d699216ac28d0377a50ce",
+      "model_family": "dinowm-flood-sar-support",
+      "model_source_commit": "5dc982b40af169cd224d5d59a5ac06c159492123",
+      "observation_id": "simobs-115d5e3960520833e8efe57e",
+      "observation_sha256": "115d5e3960520833e8efe57e9962c401bea98418032920af4092b48315cf941c",
+      "outcome_head_sha256": "80cbef16b6fb92e3d4098084ad3f4a99e4d9c4a0ae554771736acc2324d24346",
+      "persistence_duration_ms": 25.745941999048227,
+      "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+      "queue_wait_ms": 6.595554001251003,
+      "request_sha256": "77214f143829b9b50179cd46279ff6f0ca19ff929fa2dc0a905f86768be75e05",
+      "route_id": "north_channel",
+      "state": "completed",
+      "status_schema_version": "supporting-inference-status-v1",
+      "total_service_ms": 385.77143200018327,
+      "used_for_trace_gate": false
+    }
+  ],
+  "test_data_accessed": false,
+  "trace_record_chain_verified": true,
+  "upstream_checkout": {
+    "clean": true,
+    "commit": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+    "origin": "https://github.com/facebookresearch/dinov2",
+    "submodule_status": "",
+    "tracked_inventory_sha256": "9a9bf20f5cd5ce3c953d07ae488eb51ce98bac92cae7ccf65c384b5a491e2704",
+    "tree": "2a27257b79b0633b027a21014bc9360e3c1b3f43"
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "authoritative_decisions": [
+    {
+      "decision": "clear",
+      "failed_gates": [],
+      "final_status": "accept",
+      "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|north_channel|group_riverside"
+    },
+    {
+      "decision": "clear",
+      "failed_gates": [],
+      "final_status": "accept",
+      "lineage_key": "predictive|dispatch_rescue_boat|rescue_boat_1|south_detour|group_riverside"
+    }
+  ],
+  "authoritative_decisions_match_surrogate_baseline": true,
+  "claim_boundary": "This smoke demonstrates verified observation delivery, learned inference, and provenance-bound, non-licensing TRACE evidence attachment within one wait-enabled development plan cycle. The selected operational decision/action signature matched the surrogate-only baseline. It does not evaluate predictive quality or change TRACE semantics.",
+  "environment": {
+    "cuda_runtime": "12.8",
+    "cudnn": 90701,
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": true,
+    "device": "cuda:0",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1046-nvidia-x86_64-with-glibc2.35",
+    "python": "3.10.12 (main, Jan 26 2026, 14:55:28) [GCC 11.4.0]",
+    "tf32_cudnn": false,
+    "tf32_matmul": false,
+    "torch": "2.7.0+cu128"
+  },
+  "environment_manifest_sha256": "5e357cb8aaee668233f8526db078859d629ac4fe2e9733d37afa864c18405126",
+  "event_types": [
+    "RUN_CREATED",
+    "OBSERVATION",
+    "PLAN_CYCLE",
+    "PLAN_PROPOSED",
+    "TRACE_WRITTEN",
+    "COMMITMENT_DECISION",
+    "PLAN_PROPOSED",
+    "TRACE_WRITTEN",
+    "COMMITMENT_DECISION",
+    "PLAN_SELECTED",
+    "ACTION_STARTED"
+  ],
+  "learned_output_used_for_trace_gate": false,
+  "model": "vjepa",
+  "model_identity": {
+    "action_schema_version": "flood-actions-dynamic-v1",
+    "bundle_sha256": "7459f1d86ebc652062f229f40a513d19c97e224abe12e6637444d49f394135d7",
+    "calibration_artifact_sha256": "630cf1568d520720ad749a3b94762b9d89dcf5b93139aa88192ab037e19c73c6",
+    "calibration_version": "not-applicable-supporting",
+    "dynamics_checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+    "dynamics_version": "vjepa2.1-official-predictor",
+    "encoder_checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+    "encoder_version": "vjepa2.1-vitb-384",
+    "family": "vjepa2.1-predictive-support",
+    "feature_schema_version": "vjepa2.1-future-spatiotemporal-tokens-v1",
+    "identity_schema_version": "model-artifact-identity-v2",
+    "integration_kind": "official-upstream",
+    "integration_source_tree_sha256": "adb98dd71916d60a5c87c0a5bd1ef9cbe5890fecbf3e1b969cdef1fa4f977cc7",
+    "loaded_encoder_state_sha256": null,
+    "outcome_head_sha256": "80cbef16b6fb92e3d4098084ad3f4a99e4d9c4a0ae554771736acc2324d24346",
+    "outcome_head_version": "not-applicable-supporting",
+    "preprocessing_version": "vjepa2.1-preprocessor-384-v1",
+    "source_commit": "204698b45b3712590f06245fbfba32d3be539812",
+    "source_repository": "https://github.com/facebookresearch/vjepa2",
+    "supported_action_types": [
+      "dispatch_rescue_boat"
+    ],
+    "training_snapshot_sha256": "947117c7248f27948be2299c66be068081b4a6c7674345a5e95ea868e8f61282",
+    "upstream_basis_commit": null,
+    "upstream_basis_repository": null
+  },
+  "observation_id": "simobs-d7c8dbf7dda10f4eb8713786",
+  "observation_sha256": "d7c8dbf7dda10f4eb8713786e16b809ef93560b41719d90a1f8bbacb52a61392",
+  "operational_event_signature": [
+    {
+      "event_type": "COMMITMENT_DECISION",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+        "trace_status": "accept"
+      }
+    },
+    {
+      "event_type": "COMMITMENT_DECISION",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "trace_status": "accept"
+      }
+    },
+    {
+      "event_type": "PLAN_SELECTED",
+      "payload": {
+        "decision": "clear",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour"
+      }
+    },
+    {
+      "event_type": "ACTION_STARTED",
+      "payload": {
+        "action_type": "dispatch_rescue_boat",
+        "asset_id": "rescue_boat_1",
+        "authorization_outside_tolerance": false,
+        "group_id": "group_riverside",
+        "plan_id": "boat:rescue_boat_1:group_riverside:south_detour",
+        "route_id": "south_detour",
+        "truth_safe_at_execution": true
+      }
+    }
+  ],
+  "operational_events_match_surrogate_baseline": true,
+  "persisted_request_hashes": [
+    "ff21d045de0c20f2078b8033de42b52e9e35c7e2ea7e91ad5a93377e075bdedb"
+  ],
+  "report_schema_version": "trace-live-support-evidence-smoke-v1",
+  "required_event_order": [
+    "OBSERVATION",
+    "PLAN_CYCLE",
+    "TRACE_WRITTEN",
+    "PLAN_SELECTED"
+  ],
+  "rq_data_accessed": false,
+  "scenario": {
+    "development_only": true,
+    "filename": "riverside_flood_v1.yaml",
+    "sha256": "0655fdd9f72fcaf6909d15400451801dbca51432d4dc05c87bacec1092a4b0c0"
+  },
+  "study_partition": "development",
+  "supporting_attachments": [
+    {
+      "action_type": "dispatch_rescue_boat",
+      "artifact_sha256": "38f01b9d57f5530f594c787178f4b14828b10c0d374d397084469ee07b66e1ab",
+      "backend_duration_ms": 1041.556620000847,
+      "cache_hit": false,
+      "calibration_artifact_sha256": "630cf1568d520720ad749a3b94762b9d89dcf5b93139aa88192ab037e19c73c6",
+      "controller_manifest_sha256": "d299cc7d3df6a536c0269943ace02bac5e95a9c2b38ed798d10a093d3ac6fe7b",
+      "dynamics_checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+      "encoder_checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+      "environment_manifest_sha256": "5e357cb8aaee668233f8526db078859d629ac4fe2e9733d37afa864c18405126",
+      "evidence_role": "supporting-non-licensing",
+      "failure_code": null,
+      "frames_sha256": "145e36bb21886d9fa0f34aeb905cb8ea654777e9d368d98e912d31c11f8e7689",
+      "latent_sha256": "f9205c254b2160749ba44f513f9dbd264ea0c579de045a3f7ebb806da582ff7a",
+      "model_bundle_sha256": "7459f1d86ebc652062f229f40a513d19c97e224abe12e6637444d49f394135d7",
+      "model_family": "vjepa2.1-predictive-support",
+      "model_source_commit": "204698b45b3712590f06245fbfba32d3be539812",
+      "observation_id": "simobs-d7c8dbf7dda10f4eb8713786",
+      "observation_sha256": "d7c8dbf7dda10f4eb8713786e16b809ef93560b41719d90a1f8bbacb52a61392",
+      "outcome_head_sha256": "80cbef16b6fb92e3d4098084ad3f4a99e4d9c4a0ae554771736acc2324d24346",
+      "persistence_duration_ms": 1269.726663000256,
+      "plan_id": "boat:rescue_boat_1:group_riverside:north_channel",
+      "queue_wait_ms": 6.2547220004489645,
+      "request_sha256": "ff21d045de0c20f2078b8033de42b52e9e35c7e2ea7e91ad5a93377e075bdedb",
+      "route_id": "north_channel",
+      "state": "completed",
+      "status_schema_version": "supporting-inference-status-v1",
+      "total_service_ms": 2322.599684999659,
+      "used_for_trace_gate": false
+    }
+  ],
+  "test_data_accessed": false,
+  "trace_record_chain_verified": true,
+  "upstream_checkout": {
+    "clean": true,
+    "commit": "204698b45b3712590f06245fbfba32d3be539812",
+    "origin": "https://github.com/facebookresearch/vjepa2",
+    "submodule_status": "",
+    "tracked_inventory_sha256": "acb036dd17bff921817480a187d8ccd950e36f4ecbf40aa5d52a8cf0e95e5fa5",
+    "tree": "dd6cfc1e792158510b983d827cb2e84f47fd5706"
+  }
+}

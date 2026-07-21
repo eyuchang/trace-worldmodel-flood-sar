@@ -1,0 +1,30 @@
+{
+  "benchmark_observation_hash": "f335ace57162d8fc8fa001264445e299d048405d9073a72e87b83dd8fc4721c4",
+  "benchmark_observation_id": "bmv2obs-f335ace57162d8fc8fa00126",
+  "checkpoint_sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+  "component": "vjepa2.1",
+  "context_token_count": 13824,
+  "cuda_version": "12.8",
+  "direct_forward_maximum_absolute_error": 0.0,
+  "gpu_name": "NVIDIA H100 80GB HBM3",
+  "masked_placeholder_maximum_absolute_error": 0.0,
+  "passed": true,
+  "prediction_shape": [
+    1,
+    4608,
+    1664
+  ],
+  "target_token_count": 4608,
+  "tolerance": 1e-06,
+  "torch_version": "2.7.0+cu128",
+  "upstream_checkout": {
+    "clean": true,
+    "commit": "204698b45b3712590f06245fbfba32d3be539812",
+    "origin": "https://github.com/facebookresearch/vjepa2",
+    "submodule_status": "",
+    "tracked_inventory_sha256": "acb036dd17bff921817480a187d8ccd950e36f4ecbf40aa5d52a8cf0e95e5fa5",
+    "tree": "dd6cfc1e792158510b983d827cb2e84f47fd5706"
+  },
+  "upstream_commit": "204698b45b3712590f06245fbfba32d3be539812",
+  "upstream_repository": "https://github.com/facebookresearch/vjepa2"
+}

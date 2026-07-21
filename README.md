@@ -637,6 +637,37 @@ and
 [`docs/experiments/DINOWM_CONFIRMATION_RESULTS.md`](docs/experiments/DINOWM_CONFIRMATION_RESULTS.md)
 for the registered method, frozen held-out result, and claim boundary.
 
+### Live supporting-evidence path
+
+The optional live path accepts a newly delivered visual observation, verifies its
+content and controller-visible provenance, runs V-JEPA 2.1 or the Flood-SAR
+DINO-WM adaptation, and appends the resulting artifact to a TRACE record as
+`supporting-non-licensing` evidence. The learned artifact cannot alter TRACE gate
+quantities, plan selection, commitments, or the authoritative surrogate result.
+
+Install the optional model dependencies:
+
+```bash
+python -m pip install -e ".[jepa]"
+```
+
+The executable qualification and independent verification commands are:
+
+```bash
+python scripts/run_live_worldmodel_qualification.py --help
+python scripts/verify_live_worldmodel_qualification.py --help
+python scripts/check_worldmodel_upstream_parity.py --help
+python scripts/run_live_trace_evidence_smoke.py --help
+```
+
+See
+[`docs/WORLDMODEL_LIVE_SUPPORT_PROTOCOL.md`](docs/WORLDMODEL_LIVE_SUPPORT_PROTOCOL.md)
+and
+[`docs/experiments/WORLDMODEL_LIVE_SUPPORT_RESULTS.md`](docs/experiments/WORLDMODEL_LIVE_SUPPORT_RESULTS.md)
+for the frozen development configuration, exact reports, and interpretation
+boundary. Model weights, observations, caches, and raw inference artifacts remain
+outside Git.
+
 ## Research and safety scope
 
 This repository is an educational simulator and research prototype.

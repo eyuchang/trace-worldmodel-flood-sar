@@ -1,0 +1,21 @@
+{
+  "component": "dinowm",
+  "cuda_version": "12.8",
+  "forward_maximum_absolute_error": 0.0,
+  "gpu_name": "NVIDIA H100 80GB HBM3",
+  "passed": true,
+  "state_dict_key_count": 25,
+  "state_dict_keys_identical": true,
+  "tolerance": 1e-06,
+  "torch_version": "2.7.0+cu128",
+  "upstream_checkout": {
+    "clean": true,
+    "commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+    "origin": "https://github.com/gaoyuezhou/dino_wm",
+    "submodule_status": "",
+    "tracked_inventory_sha256": "1b62c5ddc9626bc3751d71f3ccbfa910e43583a792505f3df10efe5e44d5d57f",
+    "tree": "79f5c852d721ae99bfaec95c069acbf6bf87d51e"
+  },
+  "upstream_commit": "0a9492fa12044b852ae9e001cc74604b79c8bb0c",
+  "upstream_repository": "https://github.com/gaoyuezhou/dino_wm"
+}
