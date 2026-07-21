@@ -47,6 +47,7 @@ from trace_jepa.workbench.store import EventStore
 
 if TYPE_CHECKING:
     from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.live_support import LiveSupportingInferenceBridge
     from trace_jepa.worldmodels.simulator_observations import (
         SimulatorVisualObservationStore,
     )
@@ -85,6 +86,9 @@ class DynamicRun:
         refresh_scheduler: RefreshPolicy | None = None,
         epsilon_c: float = 1.0,
         route_world_model: RouteWorldModel | None = None,
+        supporting_world_model: LiveSupportingInferenceBridge | None = None,
+        wait_for_supporting_inference: bool = False,
+        supporting_inference_timeout_s: float = 120.0,
         model_registry: ModelRegistry | None = None,
         visual_observation_store: SimulatorVisualObservationStore | None = None,
         observation_episode_id: str | None = None,
@@ -137,6 +141,9 @@ class DynamicRun:
             refresh_scheduler=refresh_scheduler,
             epsilon_c=epsilon_c,
             route_world_model=route_world_model,
+            supporting_world_model=supporting_world_model,
+            wait_for_supporting_inference=wait_for_supporting_inference,
+            supporting_inference_timeout_s=supporting_inference_timeout_s,
             model_registry=model_registry,
         )
         self.emit(
@@ -224,6 +231,7 @@ class DynamicRun:
             self._refresh_request_context.clear()
             self._rng = random.Random(self.state.config.s1.seed)
             self._plan_requested = True
+            self.controller.reset_supporting_inference()
             self.event_store.clear()
             self.runtime.repository.path.write_text("", encoding="utf-8")
             self.runtime.commitments.path.write_text("", encoding="utf-8")
@@ -526,6 +534,10 @@ class DynamicRun:
 
             self._move_assets(float(dt))
             self._deliver_scheduled()
+            # Completion may append supporting evidence to its originating
+            # record, but it never schedules an additional operational plan
+            # cycle. The next ordinary trigger can observe the attachment.
+            self.controller.poll_supporting_inference(self.state)
 
             if self.controller.refresh_experiment_mode:
                 active_demand = any(

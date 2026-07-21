@@ -17,6 +17,7 @@ from trace_jepa.workbench.models import EventType, EventVisibility, ScenarioLeve
 
 if TYPE_CHECKING:
     from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.live_support import LiveSupportingInferenceBridge
     from trace_jepa.worldmodels.simulator_observations import (
         SimulatorVisualObservationStore,
     )
@@ -58,6 +59,7 @@ def create_app(
     scenario_path: str | Path | None = None,
     artifact_root: str | Path | None = None,
     route_world_model: RouteWorldModel | None = None,
+    supporting_world_model: LiveSupportingInferenceBridge | None = None,
     visual_observation_store: SimulatorVisualObservationStore | None = None,
 ) -> FastAPI:
     repo_root = Path(__file__).resolve().parents[3]
@@ -70,6 +72,7 @@ def create_app(
         scenario_path=scenario,
         artifact_root=artifacts,
         route_world_model=route_world_model,
+        supporting_world_model=supporting_world_model,
         visual_observation_store=visual_observation_store,
     )
     loop = SimulationLoop(run)
@@ -82,6 +85,8 @@ def create_app(
         finally:
             await loop.stop()
             run.export_manifest()
+            if supporting_world_model is not None:
+                supporting_world_model.close()
 
     app = FastAPI(
         title="TRACE-WorldModel Dynamic Flood-SAR Workbench",

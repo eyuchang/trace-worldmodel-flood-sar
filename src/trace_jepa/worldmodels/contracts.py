@@ -1,10 +1,17 @@
 from __future__ import annotations
 
-from typing import Literal, Protocol, runtime_checkable
+import json
+from datetime import datetime
+from typing import Any, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from trace_jepa.contracts import PlanPrediction
+from trace_jepa.util import sha256_value
+
+
+SHA256_PATTERN = r"^[0-9a-f]{64}$"
+SAFE_IDENTIFIER_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
 
 
 class WorldModelInputUnavailable(RuntimeError):
@@ -92,6 +99,270 @@ class WorldModelProvenance(FrozenModel):
     semantic_probe_versions: tuple[str, ...]
     supported_action_types: tuple[str, ...]
     feature_schema_version: str = "route-jepa-fusion-v1"
+
+
+class ModelArtifactIdentity(FrozenModel):
+    """Complete, content-bound identity of one executable model bundle.
+
+    A version label alone is not an artifact identity.  The bundle digest binds
+    the upstream source, preprocessing, every learned checkpoint, calibration,
+    training snapshot, and action/feature schemas used by an inference.
+    """
+
+    identity_schema_version: Literal["model-artifact-identity-v2"] = (
+        "model-artifact-identity-v2"
+    )
+    family: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    integration_kind: Literal[
+        "official-upstream",
+        "upstream-equivalent-port",
+        "upstream-inspired-adaptation",
+        "frozen-representation",
+        "deterministic-control",
+        "transparent-surrogate",
+    ]
+    source_repository: str = Field(min_length=1, max_length=512)
+    source_commit: str = Field(pattern=r"^[0-9a-f]{7,64}$")
+    integration_source_tree_sha256: str | None = Field(
+        default=None, pattern=SHA256_PATTERN
+    )
+    upstream_basis_repository: str | None = Field(
+        default=None, min_length=1, max_length=512
+    )
+    upstream_basis_commit: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{7,64}$"
+    )
+    encoder_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    encoder_checkpoint_sha256: str = Field(pattern=SHA256_PATTERN)
+    loaded_encoder_state_sha256: str | None = Field(
+        default=None, pattern=SHA256_PATTERN
+    )
+    dynamics_version: str | None = Field(default=None, pattern=SAFE_IDENTIFIER_PATTERN)
+    dynamics_checkpoint_sha256: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    outcome_head_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    outcome_head_sha256: str = Field(pattern=SHA256_PATTERN)
+    calibration_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    calibration_artifact_sha256: str = Field(pattern=SHA256_PATTERN)
+    training_snapshot_sha256: str = Field(pattern=SHA256_PATTERN)
+    preprocessing_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    feature_schema_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    action_schema_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    supported_action_types: tuple[str, ...] = Field(min_length=1)
+    bundle_sha256: str = ""
+
+    @field_validator("supported_action_types")
+    @classmethod
+    def validate_actions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if tuple(sorted(set(value))) != value:
+            raise ValueError("supported action types must be unique and sorted")
+        for action in value:
+            if not action or len(action) > 128:
+                raise ValueError("supported action type is empty or too long")
+        return value
+
+    @model_validator(mode="after")
+    def validate_bundle(self) -> "ModelArtifactIdentity":
+        if (self.dynamics_version is None) != (self.dynamics_checkpoint_sha256 is None):
+            raise ValueError("dynamics version and checkpoint hash must be declared together")
+        if (self.upstream_basis_repository is None) != (
+            self.upstream_basis_commit is None
+        ):
+            raise ValueError(
+                "upstream basis repository and commit must be declared together"
+            )
+        expected = sha256_value(self.model_dump(mode="json", exclude={"bundle_sha256"}))
+        if not self.bundle_sha256:
+            object.__setattr__(self, "bundle_sha256", expected)
+        elif self.bundle_sha256 != expected:
+            raise ValueError("model bundle hash does not match its component identities")
+        return self
+
+
+class ObservationProvenance(FrozenModel):
+    """Controller-visible identity of an observation; simulator truth is absent."""
+
+    provenance_schema_version: Literal["observation-provenance-v2"] = (
+        "observation-provenance-v2"
+    )
+    observation_id: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    observation_sha256: str = Field(pattern=SHA256_PATTERN)
+    frames_sha256: str = Field(pattern=SHA256_PATTERN)
+    controller_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
+    sensor_model_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    observed_at: float = Field(ge=0.0)
+    study_partition: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+
+
+class InferenceProvenance(FrozenModel):
+    """Runtime receipt for one exact observation/model/request execution."""
+
+    provenance_schema_version: Literal["inference-provenance-v2"] = (
+        "inference-provenance-v2"
+    )
+    inference_id: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    request_sha256: str = Field(pattern=SHA256_PATTERN)
+    model_bundle_sha256: str = Field(pattern=SHA256_PATTERN)
+    output_sha256: str = Field(pattern=SHA256_PATTERN)
+    requested_at: datetime
+    started_at: datetime
+    completed_at: datetime
+    wall_duration_ms: float = Field(ge=0.0)
+    cache_hit: bool
+    device_type: Literal["cpu", "cuda", "mps"]
+    precision: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    environment_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def validate_timing(self) -> "InferenceProvenance":
+        if not self.requested_at <= self.started_at <= self.completed_at:
+            raise ValueError("inference timestamps must be monotone")
+        return self
+
+
+class RouteWorldModelRequestV2(RouteWorldModelRequest):
+    """Hash-bound live request for future-state inference.
+
+    ``action_parameters`` may contain only JSON values.  It must never contain
+    simulator state or an audit snapshot; ``extra='forbid'`` enforces the typed
+    controller boundary.
+    """
+
+    request_schema_version: Literal["route-world-model-request-v2"] = (
+        "route-world-model-request-v2"
+    )
+    visual_observation_id: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    visual_observation_hash: str = Field(pattern=SHA256_PATTERN)
+    visual_frames_sha256: str = Field(pattern=SHA256_PATTERN)
+    visual_sensor_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    visual_observed_at: float = Field(ge=0.0)
+    expected_model_bundle_sha256: str = Field(pattern=SHA256_PATTERN)
+    prediction_horizons_s: tuple[float, ...] = Field(min_length=1)
+    action_parameters: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("prediction_horizons_s")
+    @classmethod
+    def validate_horizons(cls, value: tuple[float, ...]) -> tuple[float, ...]:
+        if any(item <= 0.0 for item in value):
+            raise ValueError("prediction horizons must be positive")
+        if tuple(sorted(set(value))) != value:
+            raise ValueError("prediction horizons must be unique and increasing")
+        return value
+
+    @field_validator("action_parameters")
+    @classmethod
+    def validate_action_parameters(cls, value: dict[str, Any]) -> dict[str, Any]:
+        forbidden = {"truth", "audit_snapshot", "simulator_state", "latent_truth"}
+        node_count = 0
+
+        def visit(item: Any, depth: int) -> None:
+            nonlocal node_count
+            node_count += 1
+            if node_count > 128 or depth > 4:
+                raise ValueError("action parameters exceed the bounded JSON schema")
+            if isinstance(item, dict):
+                for key, nested in item.items():
+                    if not isinstance(key, str) or not key or len(key) > 128:
+                        raise ValueError("action parameter keys must be bounded strings")
+                    if key.lower() in forbidden:
+                        raise ValueError(
+                            "action parameters contain audit-only simulator state"
+                        )
+                    visit(nested, depth + 1)
+            elif isinstance(item, (list, tuple)):
+                if len(item) > 64:
+                    raise ValueError("action parameter arrays are too large")
+                for nested in item:
+                    visit(nested, depth + 1)
+            elif isinstance(item, str):
+                if len(item) > 512:
+                    raise ValueError("action parameter strings are too large")
+            elif item is not None and not isinstance(item, (bool, int, float)):
+                raise ValueError("action parameters must contain canonical JSON values")
+
+        visit(value, 0)
+        try:
+            encoded = json.dumps(
+                value,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+                allow_nan=False,
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError("action parameters must be canonical JSON values") from exc
+        if len(encoded.encode("utf-8")) > 8192:
+            raise ValueError("action parameters exceed the serialized size limit")
+        return value
+
+
+class SemanticWorldStatePrediction(FrozenModel):
+    """Planner-independent short-horizon state predicted by a world model."""
+
+    state_schema_version: Literal["flood-route-semantic-state-v2"] = (
+        "flood-route-semantic-state-v2"
+    )
+    horizons_s: tuple[float, ...] = Field(min_length=1)
+    water_depth_m: tuple[float, ...] = Field(min_length=1)
+    obstruction_probability: tuple[float, ...] = Field(min_length=1)
+    flow_severity: tuple[float, ...] = Field(min_length=1)
+    visibility: tuple[float, ...] = Field(min_length=1)
+    operational_state: dict[str, float] = Field(default_factory=dict)
+    epistemic_uncertainty: tuple[float, ...] = Field(min_length=1)
+    support: tuple[float, ...] = Field(min_length=1)
+    ood_score: tuple[float, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_state_vectors(self) -> "SemanticWorldStatePrediction":
+        vectors = (
+            self.water_depth_m,
+            self.obstruction_probability,
+            self.flow_severity,
+            self.visibility,
+            self.epistemic_uncertainty,
+            self.support,
+            self.ood_score,
+        )
+        if any(len(vector) != len(self.horizons_s) for vector in vectors):
+            raise ValueError("every semantic-state vector must match the horizon count")
+        if tuple(sorted(set(self.horizons_s))) != self.horizons_s:
+            raise ValueError("semantic-state horizons must be unique and increasing")
+        if any(value < 0.0 for value in self.water_depth_m):
+            raise ValueError("predicted water depth cannot be negative")
+        bounded = (
+            self.obstruction_probability,
+            self.flow_severity,
+            self.visibility,
+            self.epistemic_uncertainty,
+            self.support,
+            self.ood_score,
+        )
+        if any(value < 0.0 or value > 1.0 for vector in bounded for value in vector):
+            raise ValueError("probability, support, visibility, and severity values must be in [0, 1]")
+        return self
+
+
+class RouteWorldModelOutput(FrozenModel):
+    """Atomic result after semantic prediction and external route evaluation."""
+
+    output_schema_version: Literal["route-world-model-output-v2"] = (
+        "route-world-model-output-v2"
+    )
+    semantic_state: SemanticWorldStatePrediction
+    prediction: PlanPrediction
+    planner_version: str = Field(pattern=SAFE_IDENTIFIER_PATTERN)
+    model: ModelArtifactIdentity
+    observation: ObservationProvenance
+    inference: InferenceProvenance
+    prediction_timestamp: float = Field(ge=0.0)
+    valid_until: float = Field(ge=0.0)
+
+    @model_validator(mode="after")
+    def validate_links(self) -> "RouteWorldModelOutput":
+        if self.inference.model_bundle_sha256 != self.model.bundle_sha256:
+            raise ValueError("inference/model bundle link is inconsistent")
+        if self.valid_until < self.prediction_timestamp:
+            raise ValueError("world-model output expires before it is produced")
+        return self
 
 
 @runtime_checkable

@@ -156,6 +156,36 @@ class TraceRuntime:
         self.repository.write(revised)
         return revised
 
+    def append_supporting_evidence(
+        self,
+        record: TraceRecord,
+        evidence: WorldModelEvidence,
+        *,
+        metadata: dict | None = None,
+    ) -> TraceRecord:
+        """Append non-licensing evidence without re-evaluating a commitment.
+
+        This preserves the original status, gates, and consumer decision.  It is
+        intended for provenance/audit attachments that must not alter TRACE's
+        authoritative policy semantics.
+        """
+
+        evidence_ref = self.ledger.put(evidence)
+        revised = record.model_copy(
+            update={
+                "record_version": record.record_version + 1,
+                "evidence_refs": record.evidence_refs + (evidence_ref,),
+                "supersedes_record_id": record.record_id,
+                "supersedes_record_version": record.record_version,
+                "metadata": {
+                    **record.metadata,
+                    "supporting_evidence_attachment": metadata or {},
+                },
+            }
+        )
+        self.repository.write(revised)
+        return revised
+
     def commit(
         self,
         *,

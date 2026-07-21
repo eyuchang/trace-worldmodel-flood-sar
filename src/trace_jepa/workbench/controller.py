@@ -36,6 +36,7 @@ from trace_jepa.workbench.navigation import NavigationError, plan_route_constrai
 
 if TYPE_CHECKING:
     from trace_jepa.worldmodels.contracts import RouteWorldModel
+    from trace_jepa.worldmodels.live_support import LiveSupportingInferenceBridge
     from trace_jepa.worldmodels.versioning import ModelRegistry
 
 
@@ -88,6 +89,9 @@ class DynamicMissionController:
         refresh_scheduler: RefreshPolicy | None = None,
         epsilon_c: float = 1.0,
         route_world_model: RouteWorldModel | None = None,
+        supporting_world_model: LiveSupportingInferenceBridge | None = None,
+        wait_for_supporting_inference: bool = False,
+        supporting_inference_timeout_s: float = 120.0,
         model_registry: ModelRegistry | None = None,
     ):
         self.runtime = runtime
@@ -96,8 +100,17 @@ class DynamicMissionController:
         self.refresh_scheduler = refresh_scheduler or NoRefreshPolicy()
         self.epsilon_c = float(epsilon_c)
         self.route_world_model = route_world_model
+        self.supporting_world_model = supporting_world_model
+        self.wait_for_supporting_inference = bool(wait_for_supporting_inference)
+        if supporting_inference_timeout_s <= 0.0:
+            raise ValueError("supporting inference timeout must be positive")
+        self.supporting_inference_timeout_s = float(supporting_inference_timeout_s)
         self.model_registry = model_registry
         self._route_observation_hashes: dict[str, str] = {}
+        self._supporting_inference_by_plan: dict[str, dict[str, Any]] = {}
+        self._supporting_request_by_plan: dict[str, str] = {}
+        self._supporting_record_by_request: dict[str, tuple[str, int]] = {}
+        self._attached_support_requests: set[str] = set()
 
     def _sync_gate_policy(self, state: WorkbenchState) -> None:
         current = self.runtime.policy.config
@@ -141,6 +154,59 @@ class DynamicMissionController:
             return state.config.s2.observation_freshness_s * 10.0
         return max(0.0, state.truth.simulation_time - belief.observed_at)
 
+    def _route_model_request(
+        self,
+        state: WorkbenchState,
+        *,
+        plan_id: str,
+        route_id: str,
+        asset_id: str,
+        effective_travel_s: float,
+        action_type: str,
+    ):
+        from trace_jepa.worldmodels.contracts import RouteWorldModelRequest
+
+        route = state.truth.routes[route_id]
+        belief = state.controller.route_beliefs[route_id]
+        asset = state.controller.known_assets[asset_id]
+        controller_time = state.controller.simulation_time
+        return RouteWorldModelRequest(
+            plan_id=plan_id,
+            route_id=route_id,
+            asset_id=asset_id,
+            action_type=action_type,
+            belief_status=belief.status,
+            belief_confidence=belief.confidence,
+            observation_age_s=(
+                state.config.s2.observation_freshness_s * 10.0
+                if belief.observed_at is None
+                else max(0.0, controller_time - belief.observed_at)
+            ),
+            observed_depth_m=belief.water_depth,
+            projected_depth_m=project_controller_route_depth(
+                state, route_id, controller_time + effective_travel_s
+            ),
+            route_closure_depth_m=state.config.s2.route_closure_depth,
+            route_susceptibility=route.susceptibility,
+            travel_time_s=effective_travel_s,
+            water_rise_rate=state.config.s2.water_rise_rate,
+            rain_intensity=state.config.s2.rain_intensity,
+            upstream_inflow=state.config.s2.upstream_inflow,
+            weather_forecast=state.config.s5.sector_weather,
+            sensor_noise=state.config.s1.sensor_noise,
+            packet_loss=state.config.s1.packet_loss,
+            declared_ood_severity=state.config.s1.ood_severity,
+            sensor_quality=state.config.s5.sensor_quality,
+            asset_resource=asset.resource,
+            asset_weather_tolerance=asset.weather_tolerance,
+            visual_observation_id=belief.visual_observation_id,
+            visual_observation_age_s=(
+                max(0.0, controller_time - belief.visual_observed_at)
+                if belief.visual_observed_at is not None
+                else None
+            ),
+        )
+
     def _route_prediction(
         self,
         state: WorkbenchState,
@@ -155,53 +221,26 @@ class DynamicMissionController:
         belief = state.controller.route_beliefs[route_id]
         asset = state.controller.known_assets[asset_id]
         effective_travel_s = float(travel_s if travel_s is not None else route.nominal_travel_s)
+        model_request = None
+        if self.route_world_model is not None or self.supporting_world_model is not None:
+            model_request = self._route_model_request(
+                state,
+                plan_id=plan_id,
+                route_id=route_id,
+                asset_id=asset_id,
+                effective_travel_s=effective_travel_s,
+                action_type=action_type,
+            )
         if self.route_world_model is not None:
             # Import lazily so the unchanged surrogate path does not acquire an
             # ML dependency. The request contains controller beliefs, declared
             # parameters, and static map attributes, but no dynamic truth.
             from trace_jepa.worldmodels.contracts import (
-                RouteWorldModelRequest,
                 WorldModelInputUnavailable,
             )
 
-            controller_time = state.controller.simulation_time
-            model_request = RouteWorldModelRequest(
-                plan_id=plan_id,
-                route_id=route_id,
-                asset_id=asset_id,
-                action_type=action_type,
-                belief_status=belief.status,
-                belief_confidence=belief.confidence,
-                observation_age_s=(
-                    state.config.s2.observation_freshness_s * 10.0
-                    if belief.observed_at is None
-                    else max(0.0, controller_time - belief.observed_at)
-                ),
-                observed_depth_m=belief.water_depth,
-                projected_depth_m=project_controller_route_depth(
-                    state, route_id, controller_time + effective_travel_s
-                ),
-                route_closure_depth_m=state.config.s2.route_closure_depth,
-                route_susceptibility=route.susceptibility,
-                travel_time_s=effective_travel_s,
-                water_rise_rate=state.config.s2.water_rise_rate,
-                rain_intensity=state.config.s2.rain_intensity,
-                upstream_inflow=state.config.s2.upstream_inflow,
-                weather_forecast=state.config.s5.sector_weather,
-                sensor_noise=state.config.s1.sensor_noise,
-                packet_loss=state.config.s1.packet_loss,
-                declared_ood_severity=state.config.s1.ood_severity,
-                sensor_quality=state.config.s5.sensor_quality,
-                asset_resource=asset.resource,
-                asset_weather_tolerance=asset.weather_tolerance,
-                visual_observation_id=belief.visual_observation_id,
-                visual_observation_age_s=(
-                    max(0.0, controller_time - belief.visual_observed_at)
-                    if belief.visual_observed_at is not None
-                    else None
-                ),
-            )
             try:
+                assert model_request is not None
                 prediction = self.route_world_model.predict(model_request)
             except WorldModelInputUnavailable:
                 # Missing visual evidence is an expected operational condition,
@@ -279,7 +318,7 @@ class DynamicMissionController:
             0.15 + 0.55 * dynamic_risk + 0.25 * uncertainty + 0.20 * weather_penalty
         )
         resource_margin = asset.resource - 0.12 - 0.08 * dynamic_risk
-        return PlanPrediction(
+        prediction = PlanPrediction(
             plan_id=plan_id,
             success_probability=success,
             arrival_time_s=effective_travel_s,
@@ -295,6 +334,138 @@ class DynamicMissionController:
                 "weather_forecast_is_stable_over_the_action_prefix",
             ),
         )
+        if (
+            self.supporting_world_model is not None
+            and model_request is not None
+            and belief.visual_observation_hash is not None
+            and belief.visual_sensor_version is not None
+            and belief.visual_observed_at is not None
+        ):
+            try:
+                status = self.supporting_world_model.submit(
+                    model_request,
+                    observation_hash=belief.visual_observation_hash,
+                    sensor_version=belief.visual_sensor_version,
+                    observed_at=belief.visual_observed_at,
+                )
+                self._supporting_request_by_plan[plan_id] = status.request_sha256
+                if self.wait_for_supporting_inference:
+                    status = self.supporting_world_model.wait_for_terminal(
+                        status.request_sha256,
+                        timeout_s=self.supporting_inference_timeout_s,
+                    )
+                self._supporting_inference_by_plan[plan_id] = status.model_dump(
+                    mode="json"
+                )
+            except Exception as exc:
+                self._supporting_inference_by_plan[plan_id] = {
+                    "status_schema_version": "supporting-inference-status-v1",
+                    "evidence_role": "supporting-non-licensing",
+                    "state": "failed",
+                    "used_for_trace_gate": False,
+                    "failure_code": type(exc).__name__,
+                    "observation_sha256": belief.visual_observation_hash,
+                    "route_id": route_id,
+                    "action_type": action_type,
+                }
+        return prediction
+
+    def poll_supporting_inference(self, state: WorkbenchState) -> bool:
+        if self.supporting_world_model is None:
+            return False
+        changed = False
+        for status in self.supporting_world_model.poll_updates():
+            if self._supporting_request_by_plan.get(status.plan_id) != (
+                status.request_sha256
+            ):
+                continue
+            self._supporting_inference_by_plan[status.plan_id] = status.model_dump(
+                mode="json"
+            )
+            if status.state in {"completed", "failed"}:
+                changed = True
+            if (
+                status.state == "completed"
+                and status.request_sha256 not in self._attached_support_requests
+                and status.request_sha256 in self._supporting_record_by_request
+            ):
+                originating_record_id, originating_record_version = (
+                    self._supporting_record_by_request[status.request_sha256]
+                )
+                record = self.runtime.repository.get(originating_record_id)
+                identity = self.supporting_world_model.model_identity
+                evidence = WorldModelEvidence(
+                    encoder_version=identity.encoder_version,
+                    fusion_version=identity.feature_schema_version,
+                    predictor_version=(
+                        identity.dynamics_version or identity.outcome_head_version
+                    ),
+                    semantic_probe_versions=(identity.outcome_head_version,),
+                    training_snapshot=identity.training_snapshot_sha256,
+                    observation_window_hash=status.observation_sha256,
+                    fleet_state_hash=sha256_value(
+                        {
+                            "assets": {
+                                key: value.model_dump(mode="json")
+                                for key, value in state.controller.known_assets.items()
+                            },
+                            "groups": {
+                                key: value.model_dump(mode="json")
+                                for key, value in state.controller.known_groups.items()
+                            },
+                        }
+                    ),
+                    candidate_plan_id=status.plan_id,
+                    action_schema_version=identity.action_schema_version,
+                    rollout_horizon=1,
+                    predicted_claims=(
+                        "A learned-model inference artifact completed as supporting, "
+                        "non-licensing evidence.",
+                    ),
+                    uncertainty=1.0,
+                    model_support=0.0,
+                    out_of_distribution_score=1.0,
+                    rollout_consistency=0.0,
+                    reachability_evidence={
+                        "supporting_worldmodel_inference": {
+                            **status.model_dump(mode="json"),
+                            "used_for_trace_gate": False,
+                            "gate_quantities_applicable": False,
+                        }
+                    },
+                    calibration_version=identity.calibration_version,
+                    assumptions=(
+                        "appendix_support_only",
+                        "not_used_for_trace_gate_or_plan_selection",
+                        "sentinel_gate_quantities_are_not_model_estimates",
+                    ),
+                    observation_age_s=max(
+                        0.0,
+                        state.controller.simulation_time
+                        - state.controller.route_beliefs[status.route_id].visual_observed_at,
+                    ),
+                )
+                self.runtime.append_supporting_evidence(
+                    record,
+                    evidence,
+                    metadata={
+                        "request_sha256": status.request_sha256,
+                        "artifact_sha256": status.artifact_sha256,
+                        "used_for_trace_gate": False,
+                        "originating_record_id": originating_record_id,
+                        "originating_record_version": originating_record_version,
+                    },
+                )
+                self._attached_support_requests.add(status.request_sha256)
+        return changed
+
+    def reset_supporting_inference(self) -> None:
+        self._supporting_inference_by_plan.clear()
+        self._supporting_request_by_plan.clear()
+        self._supporting_record_by_request.clear()
+        self._attached_support_requests.clear()
+        if self.supporting_world_model is not None:
+            self.supporting_world_model.reset()
 
     def _verification_prediction(
         self,
@@ -760,6 +931,26 @@ class DynamicMissionController:
             if route_id and self.route_world_model is not None
             else None
         )
+        supporting = self._supporting_inference_by_plan.get(plan.plan_id)
+        expected_support_request = self._supporting_request_by_plan.get(plan.plan_id)
+        if (
+            supporting is not None
+            and supporting.get("request_sha256") != expected_support_request
+        ):
+            supporting = None
+        if supporting is not None and supporting.get("state") not in {
+            "completed",
+            "failed",
+        }:
+            supporting = None
+        if supporting is not None and route_id is not None:
+            current_belief = state.controller.route_beliefs.get(str(route_id))
+            if (
+                current_belief is None
+                or supporting.get("observation_sha256")
+                != current_belief.visual_observation_hash
+            ):
+                supporting = None
         return WorldModelEvidence(
             encoder_version=(provenance.encoder_version if provenance else "surrogate-encoder-v1"),
             fusion_version=(
@@ -811,6 +1002,16 @@ class DynamicMissionController:
                 "arrival_time_s": prediction.arrival_time_s,
                 "hazard_score": prediction.hazard_score,
                 "resource_margin": prediction.resource_margin,
+                **(
+                    {
+                        "supporting_worldmodel_inference": {
+                            **supporting,
+                            "used_for_trace_gate": False,
+                        }
+                    }
+                    if supporting is not None
+                    else {}
+                ),
                 **(
                     {
                         "model_provenance": {
@@ -885,6 +1086,16 @@ class DynamicMissionController:
                 },
             )
             consumed = self.runtime.consume(record, evaluation)
+            supporting_status = self._supporting_inference_by_plan.get(plan.plan_id)
+            current_support_request = self._supporting_request_by_plan.get(plan.plan_id)
+            if (
+                supporting_status is not None
+                and supporting_status.get("request_sha256")
+                == current_support_request
+            ):
+                self._supporting_record_by_request[
+                    str(current_support_request)
+                ] = (consumed.record_id, consumed.record_version)
 
             truth_safe = True
             if action.route_id and action.route_id in state.truth.routes:
