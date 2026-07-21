@@ -91,6 +91,9 @@ artifacts/jepa/*
 artifacts/dinowm/*
 !artifacts/dinowm/.gitkeep
 
+# Preserved local GPU evidence for the limited live-model qualification
+artifacts/worldmodel-live-support-final/
+
 # -------------------------------------------------------------------
 # Downloaded and generated data
 # -------------------------------------------------------------------

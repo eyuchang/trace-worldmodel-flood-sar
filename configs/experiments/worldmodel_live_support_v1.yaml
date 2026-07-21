@@ -1,0 +1,104 @@
+protocol_version: learned-live-support-qualification-v1
+scope: development-only_live-chain_engineering_qualification
+evidence_role: supporting-non-licensing
+used_for_trace_gate: false
+predictive_superiority_evaluated: false
+
+data_boundary:
+  opened_partitions:
+    - development
+  test_data_accessed: false
+  rq_data_accessed: false
+  excluded_evaluations:
+    - held-out
+    - RQ1
+    - RQ2
+    - RQ3
+    - RQ4
+    - RQ5
+    - confirmatory_campaign
+
+qualification:
+  episode_count: 12
+  campaign_seed: 20260760
+  split_seed: 20260761
+  runtime_seed: 20260765
+  warmup_requests_per_model: 2
+  observation_times_s:
+    - 0.0
+    - 300.0
+    - 600.0
+    - 900.0
+  geography_profiles:
+    - urban_plain
+    - river_valley
+    - coastal_delta
+  camera_profiles:
+    - drone_oblique
+    - riverbank_fixed
+    - nadir_wide
+  weather_profiles:
+    - stratiform
+    - convective
+    - upstream_surge
+  ood_profiles:
+    - in_domain
+    - sensor_shift
+    - hydrology_shift
+    - compound
+  learned_observation_arms:
+    - actual
+    - static_visual
+    - shuffled_visual
+  reference_controls:
+    - structured
+    - simple_visual
+  latency_measurement:
+    workload: post-warmup_uncached_batch-one
+    clock: monotonic_wall_clock
+    summaries:
+      - median_ms
+      - p95_ms
+      - p99_ms
+      - maximum_ms
+  cache_replay_required: true
+
+models:
+  vjepa:
+    integration_kind: official-upstream
+    upstream_repository: https://github.com/facebookresearch/vjepa2
+    upstream_commit: 204698b45b3712590f06245fbfba32d3be539812
+    checkpoint_sha256: 848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d
+    action_conditioned: false
+  dinowm:
+    integration_kind: upstream-inspired-adaptation
+    upstream_basis_repository: https://github.com/gaoyuezhou/dino_wm
+    upstream_basis_commit: 0a9492fa12044b852ae9e001cc74604b79c8bb0c
+    dinov2_repository: https://github.com/facebookresearch/dinov2
+    dinov2_commit: 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+    dinov2_checkpoint_sha256: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+    dynamics_checkpoint_sha256: c7b0ec094cb760f324f316d03d2ceafe37f2895ea83ed92a62c9037ac2634493
+    action_conditioned: true
+
+upstream_parity:
+  tolerance: 1.0e-6
+  exact_dinowm_port_role: parity-comparison-only
+
+execution_environment:
+  hardware: 2x_NVIDIA_H100_80GB_HBM3
+  torch: 2.7.0+cu128
+  cuda_runtime: "12.8"
+  dependency_lock: configs/environments/worldmodel_live_h100_v1.txt
+  dependency_lock_sha256: 31f4393ad1e8b277e55ac8241754aac54080b2dc85e29660053ae38a4fcd9825
+  deterministic_algorithms: true
+  cudnn_benchmark: false
+  tf32_matmul: false
+  tf32_cudnn: false
+
+trace_smoke:
+  runtime_seed: 20260766
+  scenario: configs/scenarios/riverside_flood_v1.yaml
+  scenario_sha256: 0655fdd9f72fcaf6909d15400451801dbca51432d4dc05c87bacec1092a4b0c0
+  learned_evidence_role: supporting-non-licensing
+  surrogate_remains_authoritative: true
+  operational_signature_match_required: true
