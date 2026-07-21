@@ -26,6 +26,8 @@ class DINOv2PatchEncoder:
         spec: DINOv2EncoderSpec | None = None,
         model=None,
         repository: str | None = None,
+        local_repo: Path | None = None,
+        device: str = "cpu",
     ):
         try:
             import torch
@@ -36,11 +38,26 @@ class DINOv2PatchEncoder:
         if self.spec.input_size < 28 or self.spec.input_size % 14 != 0:
             raise ValueError("DINOv2 input_size must be a positive multiple of patch size 14")
         if model is None:  # pragma: no cover - exercised by the offline integration command
-            pinned_repository = repository or (
-                f"facebookresearch/dinov2:{self.spec.source_revision}"
-            )
-            model = torch.hub.load(pinned_repository, self.spec.model_name, pretrained=True)
-        self.model = model.eval()
+            if local_repo is not None:
+                if not Path(local_repo).is_dir() or Path(local_repo).is_symlink():
+                    raise ValueError("local DINOv2 repository is absent or unsafe")
+                model = torch.hub.load(
+                    str(local_repo),
+                    self.spec.model_name,
+                    source="local",
+                    pretrained=True,
+                )
+            else:
+                pinned_repository = repository or (
+                    f"facebookresearch/dinov2:{self.spec.source_revision}"
+                )
+                model = torch.hub.load(
+                    pinned_repository,
+                    self.spec.model_name,
+                    pretrained=True,
+                )
+        self.device = device
+        self.model = model.to(device).eval()
         for parameter in self.model.parameters():
             parameter.requires_grad_(False)
 
@@ -62,7 +79,7 @@ class DINOv2PatchEncoder:
         )
         mean = torch.tensor((0.485, 0.456, 0.406), dtype=tensor.dtype)[None, :, None, None]
         std = torch.tensor((0.229, 0.224, 0.225), dtype=tensor.dtype)[None, :, None, None]
-        return (tensor - mean) / std
+        return ((tensor - mean) / std).to(self.device)
 
     def encode_images(self, images: np.ndarray) -> np.ndarray:
         import torch
