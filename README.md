@@ -108,6 +108,7 @@ Learned latent prediction is optional future work behind the same world-model se
 - Development branch: `v2-fleet-map`
 - Primary workbench: D0.5 browser interface
 - Geography: OpenStreetMap-derived road and waterway graphs
+- Experimental evaluation layer: **RQ5 revalidation-guard protocol** (optional; off by default in the teaching gate)
 
 ## Requirements
 
@@ -297,6 +298,44 @@ D0.5 adds:
 - completed-alert cleanup;
 - corrected fleet icon anchoring.
 
+### Experimental — RQ5 revalidation guard
+
+Beyond the D0.5 workbench, the repository includes an experimental-profile extension path for campaign evaluation.
+
+Predictor-version provenance attaches optionally to world-model evidence without changing the teaching baseline schema:
+
+- `predictor_version`
+- `calibration_version`
+- `prediction_timestamp`
+- `claim_family`
+- `adequacy_status`
+
+The TRACE gate can enable a Section 5.5 revalidation guard with two named checks:
+
+- `model_version_current`
+- `calibration_adequate_for_class`
+
+When the guard is enabled, high-consequence commitments cannot CLEAR on a superseded or unqualified predictor version; they HOLD pending revalidation or calibration qualification.
+
+RQ5 is pre-registered before held-out runs under the same freeze discipline as RQ1–RQ4:
+
+```bash
+python scripts/register_rq5_protocol.py
+```
+
+Protocol declaration: [`configs/protocols/rq5_revalidation_guard.yaml`](configs/protocols/rq5_revalidation_guard.yaml).
+
+Guard-enabled policy: [`configs/policies/trace_rq5_guard_v1.yaml`](configs/policies/trace_rq5_guard_v1.yaml).
+
+Declared RQ5 structure:
+
+- scenarios: control; mid-mission predictor-version replacement with an initially unqualified successor;
+- arms: gate with and without the revalidation guard;
+- measures: bad-version CLEAR count, holds pending revalidation, time to restored operation, verification cost, mission completion, rescued people, and store replayability;
+- invariant: under the guard, no high-consequence CLEAR on a superseded or unqualified model version.
+
+Appendix B formal-extension checks (closed-form deadline, censored cost identity, scheduler separation, sub-tick Zeno HOLD) live under `src/trace_jepa/experimental/formal/`.
+
 ## D0.5 rescue lifecycle
 
 ```text
@@ -438,20 +477,24 @@ TRACE is intended to make planning decisions inspectable, revisable, and auditab
 
 ```text
 trace-worldmodel-flood-sar/
-├── configs/                 scenario, model, policy, and strategy settings
+├── configs/
+│   ├── policies/            TRACE gate thresholds (baseline and RQ5 guard)
+│   ├── protocols/           pre-registered campaign protocols (RQ5)
+│   └── experimental/        experimental-profile bootstrap settings
 ├── data/                    geography, manifests, and generated data
 ├── docs/                    mission brief, tutorials, and instructor notes
 ├── labs/                    student laboratory exercises
 ├── models/                  model manifests and optional external weights
-├── scripts/                 setup, geography, and workbench commands
+├── scripts/                 setup, geography, workbench, and protocol registration
 ├── src/trace_jepa/
 │   ├── contracts/           evidence, claims, actions, outcomes
+│   ├── experimental/        RQ5 profile, revalidation guard, formal checks
 │   ├── runtime/             TRACE repository, ledger, and gate
 │   ├── planning/            candidate plans and repair
 │   ├── predictor/           world-model and action prediction interfaces
 │   ├── scenario/            Flood Environment
 │   └── workbench/           D0.1–D0.5 browser workbenches
-├── tests/                   unit, integration, and acceptance tests
+├── tests/                   unit, integration, acceptance, and RQ5 contract tests
 └── third_party/             optional external dependencies
 ```
 
@@ -477,8 +520,12 @@ Begin with:
 - `src/trace_jepa/workbench/geography_builder.py`
 - `src/trace_jepa/controller.py`
 - `src/trace_jepa/runtime/`
+- `src/trace_jepa/experimental/`
 - `src/trace_jepa/planning/`
 - `src/trace_jepa/predictor/`
+- `configs/protocols/rq5_revalidation_guard.yaml`
+- `configs/policies/trace_rq5_guard_v1.yaml`
+- `scripts/register_rq5_protocol.py`
 
 ## Testing
 
@@ -492,6 +539,22 @@ Run installation verification:
 
 ```bash
 trace-jepa-verify
+```
+
+RQ5 contract and formal-regime tests:
+
+```bash
+python -m pytest -q \
+  tests/test_experimental_profile_provenance.py \
+  tests/test_revalidation_guard.py \
+  tests/test_rq5_protocol.py \
+  tests/test_formal_regime.py
+```
+
+Register the RQ5 protocol before any held-out campaign run:
+
+```bash
+python scripts/register_rq5_protocol.py
 ```
 
 The D0.5 workbench should also be tested manually by completing at least one full rescue lifecycle.

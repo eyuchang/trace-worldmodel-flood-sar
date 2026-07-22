@@ -1,0 +1,64 @@
+protocol_id: RQ5
+title: Revalidation-guard stress test
+section_ref: Section 5.5
+paired_seed_required: true
+freeze:
+  requires_registration_before_held_out: true
+  shared_with:
+    - RQ1
+    - RQ2
+    - RQ3
+    - RQ4
+  discipline_note: >
+    Held-out execution is blocked until this protocol is registered under the
+    same freeze discipline as RQ1 to RQ4.
+scenarios:
+  - scenario_id: control
+    description: No predictor change during the mission.
+    predictor_change: false
+  - scenario_id: mid_mission_replacement
+    description: >
+      Predictor version is replaced explicitly mid-mission, recorded as a
+      structural event with old and new model hashes; the replacement version's
+      calibration status is initially unqualified for high-consequence classes.
+    predictor_change: true
+arms:
+  - arm_id: gate_without_guard
+    description: Current gate without the revalidation guard.
+    revalidation_guard_enabled: false
+  - arm_id: gate_with_guard
+    description: Gate with the revalidation guard enabled.
+    revalidation_guard_enabled: true
+measures:
+  - measure_id: high_consequence_clear_on_bad_version
+    description: >
+      Count of high-consequence CLEAR decisions issued on a superseded or
+      unqualified predictor version.
+    unit: count
+  - measure_id: held_or_escalated_pending_revalidation
+    description: Commitments held or escalated pending revalidation.
+    unit: count
+  - measure_id: time_replacement_to_restored_operation
+    description: Time from replacement to restored ordinary operation.
+    unit: seconds
+  - measure_id: additional_verification_cost
+    description: Additional verification cost induced by the guard.
+    unit: cost
+  - measure_id: mission_completion
+    description: Mission completion indicator.
+    unit: boolean
+  - measure_id: rescued_people
+    description: People rescued by mission end.
+    unit: count
+  - measure_id: exact_replayability
+    description: >
+      Exact replayability of every model-version and gate transition from the
+      store.
+    unit: boolean
+invariant:
+  invariant_id: no_clear_on_superseded_or_unqualified
+  statement: >
+    Under the guard, no high-consequence commitment is cleared on a superseded
+    or unqualified model version; the control scenario bounds the guard's
+    overhead when no replacement occurs.
+  applies_when_guard_enabled: true

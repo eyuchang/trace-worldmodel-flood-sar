@@ -158,6 +158,27 @@ class WorldModelEvidence(FrozenModel):
     realized_outcome: dict[str, Any] | None = None
     prediction_residual: dict[str, Any] | None = None
     created_at: datetime = Field(default_factory=utc_now)
+    # RQ5 / Section 5.5 experimental-profile extension path. Absent in the
+    # teaching baseline; when present it carries predictor-version provenance
+    # (prediction timestamp, claim family, adequacy status) for the guard.
+    experimental_profile: Any | None = None
+
+    @field_validator("experimental_profile")
+    @classmethod
+    def _validate_experimental_profile(cls, value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            from trace_jepa.experimental.profile import ExperimentalProfileExtension
+
+            return ExperimentalProfileExtension.model_validate(value)
+        from trace_jepa.experimental.profile import ExperimentalProfileExtension
+
+        if isinstance(value, ExperimentalProfileExtension):
+            return value
+        raise TypeError(
+            "experimental_profile must be ExperimentalProfileExtension or a mapping"
+        )
 
 
 class ConsumerAction(FrozenModel):

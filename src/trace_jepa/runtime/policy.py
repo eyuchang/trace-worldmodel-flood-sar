@@ -13,6 +13,8 @@ from trace_jepa.contracts import (
     TraceStatus,
     WorldModelEvidence,
 )
+from trace_jepa.experimental.profile import AdequacyStatus, ExperimentalProfileExtension
+from trace_jepa.experimental.revalidation import RevalidationGuard
 
 
 class PolicyConfig(BaseModel):
@@ -26,6 +28,13 @@ class PolicyConfig(BaseModel):
     max_observation_age_s: float = Field(ge=0.0)
     require_authority_for: tuple[str, ...] = ()
     allow_qualified_reversible_probe: bool = True
+    # Section 5.5 revalidation guard (off by default for teaching baseline).
+    enable_revalidation_guard: bool = False
+    high_consequence_actions: tuple[str, ...] = (
+        "dispatch_rescue_boat",
+        "deploy_ground_team",
+        "evacuate_to_safety",
+    )
 
     @classmethod
     def from_yaml(cls, path: Path) -> "PolicyConfig":
@@ -33,8 +42,20 @@ class PolicyConfig(BaseModel):
 
 
 class PolicyEngine:
-    def __init__(self, config: PolicyConfig):
+    def __init__(
+        self,
+        config: PolicyConfig,
+        *,
+        revalidation: RevalidationGuard | None = None,
+    ):
         self.config = config
+        self.revalidation = revalidation
+
+    def attach_revalidation(self, guard: RevalidationGuard | None) -> None:
+        self.revalidation = guard
+
+    def is_high_consequence(self, action_name: str) -> bool:
+        return action_name in self.config.high_consequence_actions
 
     def evaluate(
         self,
@@ -77,6 +98,13 @@ class PolicyEngine:
             failed.append("causal_identification")
             missing.append("state-sufficiency or an explicitly model-conditional causal qualification")
 
+        revalidation_failed = self._apply_revalidation_guard(
+            evidence,
+            action_name=action_name,
+            failed=failed,
+            missing=missing,
+        )
+
         authority_required = action_name in self.config.require_authority_for
         if authority_required and not authority_present:
             return EvaluationResult(
@@ -89,6 +117,25 @@ class PolicyEngine:
             )
 
         if failed:
+            # High-consequence actions must not QUALIFY through a revalidation
+            # failure; the RQ5 invariant forbids CLEAR, and pending revalidation
+            # is recorded as HOLD or ESCALATE.
+            if revalidation_failed and self.is_high_consequence(action_name):
+                return EvaluationResult(
+                    status=TraceStatus.DEFER,
+                    decision=CommitmentDecision.HOLD,
+                    failed_gates=tuple(failed),
+                    missing_items=tuple(missing),
+                    repair=(
+                        repair_hint
+                        or "Hold high-consequence commitment pending model-version "
+                        "revalidation or calibration qualification for the claim family."
+                    ),
+                    reason=(
+                        "Revalidation guard blocked clearance on a superseded or "
+                        "unqualified predictor version."
+                    ),
+                )
             if reversible and self.config.allow_qualified_reversible_probe:
                 return EvaluationResult(
                     status=TraceStatus.QUALIFY,
@@ -118,3 +165,57 @@ class PolicyEngine:
             decision=CommitmentDecision.CLEAR,
             reason="All declared technical gates passed for this action class.",
         )
+
+    def _apply_revalidation_guard(
+        self,
+        evidence: WorldModelEvidence,
+        *,
+        action_name: str,
+        failed: list[str],
+        missing: list[str],
+    ) -> bool:
+        if not self.config.enable_revalidation_guard:
+            return False
+        if self.revalidation is None:
+            raise RuntimeError(
+                "enable_revalidation_guard is true but no RevalidationGuard is attached"
+            )
+
+        profile = evidence.experimental_profile
+        if profile is None:
+            # Extension path required for the guard: synthesize a minimal profile
+            # from core provenance fields so baseline evidence remains evaluable.
+            profile = ExperimentalProfileExtension(
+                predictor_version=evidence.predictor_version,
+                calibration_version=evidence.calibration_version,
+                claim_family=action_name,
+                adequacy_status=AdequacyStatus.QUALIFIED,
+                model_hash=None,
+            )
+
+        blocked = False
+        if not self.revalidation.model_version_current(profile):
+            failed.append("model_version_current")
+            missing.append("prediction from the current, non-superseded predictor version")
+            blocked = True
+        if not self.revalidation.calibration_adequate_for_class(profile):
+            failed.append("calibration_adequate_for_class")
+            missing.append(
+                "calibration qualified for the declared claim family / action class"
+            )
+            blocked = True
+        self.revalidation.transition_log.append(
+            {
+                "event_type": "gate_revalidation_check",
+                "action_name": action_name,
+                "predictor_version": profile.predictor_version,
+                "claim_family": profile.claim_family,
+                "adequacy_status": profile.adequacy_status.value,
+                "model_version_current": self.revalidation.model_version_current(profile),
+                "calibration_adequate_for_class": (
+                    self.revalidation.calibration_adequate_for_class(profile)
+                ),
+                "blocked": blocked,
+            }
+        )
+        return blocked

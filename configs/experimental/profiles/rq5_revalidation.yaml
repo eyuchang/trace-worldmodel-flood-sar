@@ -1,0 +1,22 @@
+profile_schema_version: experimental-profile-v1
+policy_version: trace-flood-rq5-guard-v1
+enable_revalidation_guard: true
+min_model_support: 0.60
+max_ood_score: 0.35
+max_uncertainty: 0.30
+max_rollout_horizon: 8
+max_observation_age_s: 120.0
+require_authority_for:
+  - dispatch_rescue_boat
+  - deploy_ground_team
+allow_qualified_reversible_probe: true
+high_consequence_actions:
+  - dispatch_rescue_boat
+  - deploy_ground_team
+  - evacuate_to_safety
+default_claim_family: high_consequence_rescue
+bootstrap_predictor_version: toy-action-prefix-v2
+bootstrap_calibration_version: toy-calibration-v1
+qualified_families:
+  - high_consequence_rescue
+  - route_access
