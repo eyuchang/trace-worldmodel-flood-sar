@@ -1,0 +1,17 @@
+{
+  "derived_record_schema": "delta-government-web-fact-extract-v1",
+  "retrieved_utc": "2026-08-05T16:00:00+00:00",
+  "source_locator": "https://dbw.parks.ca.gov/BoatingFacilities/County/Sacramento",
+  "upstream_sha256": "46e938cc490033b959b6ebe3ce4ecf739d32d48a82fd0ad536d6adfab94a8f",
+  "upstream_snapshot_committed": false,
+  "facts": {
+    "facility_id": "743",
+    "facility_name": "Brannan Island SRA",
+    "facility_type": "Marina/Launch"
+  },
+  "interpretation_limits": [
+    "Factual extract only; not a reproduction of the upstream page.",
+    "The directory record supplies no reviewed launch-point coordinate.",
+    "The park-centroid facility is non-operative for routing."
+  ]
+}

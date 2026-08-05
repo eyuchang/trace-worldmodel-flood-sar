@@ -1,0 +1,4 @@
+# Preserve authoritative upstream source snapshots byte-for-byte. These files
+# contain the providers' original CRLF line endings and are treated as binary
+# provenance inputs rather than maintained project source.
+data/scenario/delta/geography/sources/cdec_*_metadata.html binary

@@ -1,0 +1,21 @@
+{
+  "derived_record_schema": "delta-government-web-fact-extract-v1",
+  "retrieved_utc": "2026-08-05T16:00:00+00:00",
+  "source_locator": "https://www.cityofisleton.com/fire-department",
+  "upstream_sha256": "e343710798daf518b9fd2babed577473ddd1781e1278a61b7578ca2b9de4e631",
+  "upstream_snapshot_committed": false,
+  "facts": {
+    "official_address": "101 2nd Street, Isleton, CA 95641",
+    "apparatus_classes": [
+      "Type 1 Engine",
+      "Type 2 Engine",
+      "Water Tender",
+      "25 Foot Defender Series Safe Boat"
+    ]
+  },
+  "interpretation_limits": [
+    "Factual extract only; not a reproduction of the upstream page.",
+    "The official address does not imply survey-grade coordinate accuracy.",
+    "Only the Type 1 engine and 25-foot boat are used in Small."
+  ]
+}
