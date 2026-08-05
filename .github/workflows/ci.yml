@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install development dependencies
+        run: |
+          python -m pip install -r requirements-delta-ci.lock
+          python -m pip install -e . --no-deps
+      - name: Lint
+        run: >-
+          python -m ruff check
+          scripts/train_action_predictor.py
+          src/trace_jepa/contracts/models.py
+          src/trace_jepa/controller.py
+          src/trace_jepa/predictor
+          src/trace_jepa/scenario/delta
+          tests/test_delta_small_acceptance.py
+          tests/test_delta_small_scientific_integrity.py
+          tests/test_experimental_profile_provenance.py
+          tests/test_revalidation_guard.py
+      - name: Type-check Delta and predictor seams
+        run: >-
+          python -m mypy
+          src/trace_jepa/scenario/delta
+          src/trace_jepa/predictor/mlp.py
+          src/trace_jepa/predictor/protocol.py
+          src/trace_jepa/predictor/toy.py
+          src/trace_jepa/predictor/vjepa_adapter.py
+      - name: Test
+        run: python -m pytest

@@ -162,6 +162,39 @@ Open the workbench on macOS:
 open "http://127.0.0.1:8030/d05"
 ```
 
+## WF-DFLD-01-SMALL Delta simulator
+
+The August WF-DFLD-01 Tasks 1 and 2 deliverable is a separate headless,
+deterministic Small simulator. It uses authoritative offline geography, latent
+truth before lossy reports, the complete TRACE evidence/record/commitment path,
+and one substitutable predictor protocol. Toy is the default teaching fixture;
+MLP and V-JEPA-backed predictors are unqualified unless a separate frozen
+qualification artifact names the exact model, calibration, and action class.
+
+Install the frozen Delta dependencies:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements-delta-ci.lock
+.venv/bin/python -m pip install -e . --no-deps
+```
+
+Run the canonical commands:
+
+```bash
+.venv/bin/trace-jepa-delta-small run --output /tmp/delta-book
+.venv/bin/trace-jepa-delta-small replay \
+  --reference /tmp/delta-book --output /tmp/delta-replay
+.venv/bin/trace-jepa-delta-small validate \
+  --output /tmp/WF_DFLD_01_SMALL_VALIDATION.json
+.venv/bin/trace-jepa-delta-small publish \
+  --reference /tmp/delta-book --output /tmp/delta-figures
+```
+
+The methodology and explicit adverse demand/capacity result are documented in
+[WF-DFLD-01-SMALL frozen methodology](docs/delta/WF_DFLD_01_SMALL.md). Small is
+a synthetic teaching simulator, not a flood forecast or operational product.
+
 Or open this address manually:
 
 ```text
