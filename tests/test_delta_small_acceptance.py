@@ -336,6 +336,35 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
     assert all(len(item.sha256) == 64 for item in manifest.inputs)
 
 
+def test_exact_replay_preserves_recorded_source_commit_across_artifact_commits(
+    tmp_path: Path,
+) -> None:
+    predictor = ToyActionPrefixPredictor()
+    reference = tmp_path / "reference"
+    replay = tmp_path / "replay"
+    source_commit = "a" * 40
+    execute_delta_small(
+        CONFIG_PATH,
+        GEOGRAPHY_PATH,
+        POLICY_PATH,
+        reference,
+        predictor,
+        recorded_git_commit=source_commit,
+    )
+
+    verify_exact_replay(
+        CONFIG_PATH,
+        GEOGRAPHY_PATH,
+        POLICY_PATH,
+        reference,
+        replay,
+        predictor,
+    )
+
+    assert verify_scenario_artifacts(replay).git_commit == source_commit
+    assert (reference / "manifest.json").read_bytes() == (replay / "manifest.json").read_bytes()
+
+
 def test_manifest_verification_fails_loudly_after_artifact_tampering(
     tmp_path: Path,
 ) -> None:

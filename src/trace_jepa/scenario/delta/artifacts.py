@@ -184,6 +184,8 @@ def write_scenario_artifacts(
     geography_path: Path,
     output_root: Path,
     package_root: Path,
+    *,
+    recorded_git_commit: str | None = None,
 ) -> ReplayManifest:
     output_root.mkdir(parents=True, exist_ok=True)
     repository_root = package_root.parents[1]
@@ -426,7 +428,7 @@ def write_scenario_artifacts(
         schema_version="delta-replay-manifest-v2",
         scenario_id=scenario.config.scenario_id,
         generator_version=scenario.config.generator_version,
-        git_commit=_git_commit(repository_root),
+        git_commit=recorded_git_commit or _git_commit(repository_root),
         source_tree_sha256=source_tree_sha256(package_root),
         python_implementation=platform.python_implementation(),
         python_version=f"{sys.version_info.major}.{sys.version_info.minor}",

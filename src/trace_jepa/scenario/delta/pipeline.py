@@ -6,6 +6,7 @@ from trace_jepa.predictor import ActionPrefixPredictor
 from trace_jepa.scenario.delta.artifacts import (
     ArtifactMismatchError,
     ReplayManifest,
+    source_tree_sha256,
     verify_scenario_artifacts,
     write_scenario_artifacts,
 )
@@ -25,6 +26,8 @@ def execute_delta_small(
     policy_path: Path,
     output_root: Path,
     predictor: ActionPrefixPredictor,
+    *,
+    recorded_git_commit: str | None = None,
 ) -> DeltaExecution:
     scenario = generate_delta_small(config_path, geography_path)
     run_result = run_delta_small(scenario, predictor, policy_path)
@@ -37,6 +40,7 @@ def execute_delta_small(
         geography_path,
         output_root,
         package_root,
+        recorded_git_commit=recorded_git_commit,
     )
     verify_scenario_artifacts(output_root)
     return DeltaExecution(manifest, run_result)
@@ -51,12 +55,19 @@ def verify_exact_replay(
     predictor: ActionPrefixPredictor,
 ) -> None:
     reference_manifest = verify_scenario_artifacts(reference_root)
+    package_root = Path(__file__).resolve().parents[2]
+    current_source_tree = source_tree_sha256(package_root)
+    if current_source_tree != reference_manifest.source_tree_sha256:
+        raise ArtifactMismatchError(
+            "current source tree differs from the source bound by the reference manifest"
+        )
     replay = execute_delta_small(
         config_path,
         geography_path,
         policy_path,
         replay_root,
         predictor,
+        recorded_git_commit=reference_manifest.git_commit,
     )
     if reference_manifest != replay.manifest:
         raise ArtifactMismatchError("replay manifest differs from the reference manifest")
