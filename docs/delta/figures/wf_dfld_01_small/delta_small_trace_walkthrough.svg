@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+<title>Ground truth → lossy evidence → beliefs → TRACE decisions</title>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="36.0" y="40.0" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#17202a">Ground truth → lossy evidence → beliefs → TRACE decisions</text>
+<rect x="40" y="220" width="145" height="120" rx="10" fill="#d5f5e3" stroke="#566573"/>
+<text x="52.0" y="255.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Hidden causal truth</text>
+<text x="52.0" y="283.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">32 latent incidents</text>
+<line x1="185" y1="280" x2="220" y2="280" stroke="#566573" stroke-width="2"/>
+<polygon points="220,280 210,274 210,286" fill="#566573"/>
+<rect x="225" y="220" width="145" height="120" rx="10" fill="#d6eaf8" stroke="#566573"/>
+<text x="237.0" y="255.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Lossy evidence</text>
+<text x="237.0" y="283.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">45 visible reports</text>
+<line x1="370" y1="280" x2="405" y2="280" stroke="#566573" stroke-width="2"/>
+<polygon points="405,280 395,274 395,286" fill="#566573"/>
+<rect x="410" y="220" width="145" height="120" rx="10" fill="#fcf3cf" stroke="#566573"/>
+<text x="422.0" y="255.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Controller beliefs</text>
+<text x="422.0" y="283.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">10 visible repairs</text>
+<line x1="555" y1="280" x2="590" y2="280" stroke="#566573" stroke-width="2"/>
+<polygon points="590,280 580,274 580,286" fill="#566573"/>
+<rect x="595" y="220" width="145" height="120" rx="10" fill="#e8daef" stroke="#566573"/>
+<text x="607.0" y="255.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">TRACE governance</text>
+<text x="607.0" y="283.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">90 record versions</text>
+<line x1="740" y1="280" x2="775" y2="280" stroke="#566573" stroke-width="2"/>
+<polygon points="775,280 765,274 765,286" fill="#566573"/>
+<rect x="780" y="220" width="145" height="120" rx="10" fill="#fadbd8" stroke="#566573"/>
+<text x="792.0" y="255.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Durable outcomes</text>
+<text x="792.0" y="283.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">7 allocate · 28 refuse</text>
+<text x="45.0" y="395.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Truth IDs and person IDs never cross the hidden/public boundary.</text>
+<text x="45.0" y="425.0" font-family="Arial, sans-serif" font-size="12" font-weight="400" fill="#17202a">Repairs use shared callback tokens, report revisions, and spatial/temporal similarity.</text>
+<text x="45.0" y="455.0" font-family="Arial, sans-serif" font-size="12" font-weight="400" fill="#17202a">Every allocation cites the exact consumed TRACE record version that authorized it.</text>
+<text x="45.0" y="485.0" font-family="Arial, sans-serif" font-size="12" font-weight="400" fill="#17202a">Toy is a transparent teaching fixture; MLP and V-JEPA remain unqualified by default.</text>
+<text x="36.0" y="622.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">WF-DFLD-01-SMALL · simulation-grade teaching artifact · not for navigation</text>
+</svg>
