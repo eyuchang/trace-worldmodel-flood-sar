@@ -157,3 +157,26 @@ def test_loader_checks_expected_amendment_and_regime() -> None:
             workload_root=WORKLOAD_ROOT,
             expected_regime="R-C",
         )
+
+
+def test_validation_workload_matches_development_schedule_and_partition() -> None:
+    development = load_evaluation_workload(
+        "g2_later_horizon_v2.yaml",
+        workload_root=WORKLOAD_ROOT,
+        expected_partition="development",
+    )
+    validation = load_evaluation_workload(
+        "validation_r_b_v1.yaml",
+        workload_root=WORKLOAD_ROOT,
+        expected_partition="validation",
+    )
+    assert validation.partition == "validation"
+    assert validation.common_gauge_observations == development.common_gauge_observations
+    assert validation.incidents == development.incidents
+
+    with pytest.raises(ValueError, match="partition"):
+        load_evaluation_workload(
+            "validation_r_b_v1.yaml",
+            workload_root=WORKLOAD_ROOT,
+            expected_partition="development",
+        )

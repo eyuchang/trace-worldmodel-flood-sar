@@ -1,0 +1,534 @@
+schema_version: trace-g3-manifest-v1
+status: review_draft_unsigned
+g3:
+  professor_signoff: null
+  signed_at_utc: null
+  freeze_commit: null
+  freeze_tag: exp-freeze-v1
+  test_execution_authorized: false
+  instruction: After professor signoff, commit this exact manifest and source tree,
+    create exp-freeze-v1, and only then enable the separately reviewed test runner.
+protocol:
+  canonical_sha256: c08f03fb35ef8485533fbd45b66cdbcb40b1dec4c3616addeff1a9b122836a7c
+  measurement_amendment: day1-measurement-amendment-2
+  e_values_status: provisional_pending_professor_g3_signoff
+e_decisions:
+  E1_loss_table:
+    swamped_boat: 100.0
+    reroute: 15.0
+    missed_rescue: 200.0
+    false_hold_per_hour: 10.0
+    escalation: 3.0
+  E2_epsilon_c_grid:
+  - 0.25
+  - 0.5
+  - 1.0
+  - 2.0
+  - 4.0
+  - 7.0
+  E3_channels:
+    gauge_poll:
+      cost: 0.2
+      latency_s: 5.0
+    drone_survey:
+      cost: 5.0 + flight_duration_s * 0.0009
+      latency_s: flight_duration_s
+  E4_gamma_c:
+    irreversible: 0.8
+    probe: 0.5
+  E5_budget_rule: type-7 quartiles of all 475 validation-cell total costs
+  E6_tick_s: 1.0
+  E7_regimes:
+    primary: R-B drift plus diffusion
+    stress: R-C separately, with S4 registry shocks
+  E8_mission_horizon_s: 7800.0
+  E9_test_power:
+    estimator: sample SD of per-seed stale-execution fractions among development seeds
+      with at least one execution
+    development_seeds_total: 20
+    development_seeds_with_execution: 14
+    s_pilot: 0.4569367667316877
+    target_half_width: 0.025
+    normal_multiplier: 1.96
+    unbounded_n: 1284
+    cap: 120
+    n_test: 120
+    stopping_rule: run exactly n_test paired seeds; no additions after inspection
+    review_note: The cap binds. Confirm the estimator wording at G3 because the protocol
+      does not define how zero-execution pilot seeds enter s_pilot.
+  E10_forcing_noise_std: 0.35
+  E11_gate_policy:
+    path: configs/policies/trace_exp_v1.yaml
+    sha256: 2c0bbbd6a9f0739ab91c33c79ff520cafa72a2c3589f430d4c9fad2f8114c8db
+    status: provisional
+  E12_channel_menu:
+  - gauge_poll
+  - drone_survey
+grids:
+  adaptive:
+  - adaptive:0.25
+  - adaptive:0.5
+  - adaptive:1
+  - adaptive:2
+  - adaptive:4
+  - adaptive:7
+  fixed_k:
+  - fixed-k:5
+  - fixed-k:15
+  - fixed-k:45
+  - fixed-k:120
+  - fixed-k:300
+  - fixed-k:600
+  no_refresh:
+  - none
+  validity_clock:
+  - clock:0.1
+  - clock:0.25
+  - clock:0.4
+  - clock:0.55
+  - clock:0.75
+  - clock:1.0
+partitions:
+  development:
+    original:
+    - 1
+    - 20
+    amendment_qa:
+    - 21
+    - 40
+    amended_g2:
+    - 41
+    - 60
+  validation:
+  - 101
+  - 125
+  test:
+    seed_start: 1001
+    n_test: 120
+    executed: false
+validation:
+  result_path: validation-evidence/r-b-v1/VALIDATION_SWEEP_RESULT.json
+  result_sha256: e5d6a754e17b24bc2016625c1954012b8c85b08ec97abbd227fae65e41bb88f2
+  result_hash: 3ad8da383d90413b6c2cf1d51b102a410f0ab8f510ad2ed339d1b64fe70ee7ab
+  cell_count: 475
+  budgets:
+    B1: 0.2
+    B2: 0.2
+    B3: 0.4
+    B4: 1.8
+  quantile_method: Hyndman-Fan type 7 (linear interpolation)
+  configuration_summaries:
+  - policy: adaptive:0.25
+    family: adaptive
+    mean_verification_cost: 0.21600000000000003
+    pooled_executed: 5
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 53
+    pooled_coverage: 0.09433962264150944
+    mission_seed_count: 25
+  - policy: adaptive:0.5
+    family: adaptive
+    mean_verification_cost: 0.20800000000000002
+    pooled_executed: 6
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 55
+    pooled_coverage: 0.10909090909090909
+    mission_seed_count: 25
+  - policy: adaptive:1
+    family: adaptive
+    mean_verification_cost: 0.2
+    pooled_executed: 7
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 57
+    pooled_coverage: 0.12280701754385964
+    mission_seed_count: 25
+  - policy: adaptive:2
+    family: adaptive
+    mean_verification_cost: 0.2
+    pooled_executed: 7
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 57
+    pooled_coverage: 0.12280701754385964
+    mission_seed_count: 25
+  - policy: adaptive:4
+    family: adaptive
+    mean_verification_cost: 0.2
+    pooled_executed: 7
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 57
+    pooled_coverage: 0.12280701754385964
+    mission_seed_count: 25
+  - policy: adaptive:7
+    family: adaptive
+    mean_verification_cost: 0.2
+    pooled_executed: 7
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: 0.0
+    pooled_proposed: 57
+    pooled_coverage: 0.12280701754385964
+    mission_seed_count: 25
+  - policy: clock:0.1
+    family: validity_clock
+    mean_verification_cost: 0.344
+    pooled_executed: 22
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.2727272727272727
+    pooled_proposed: 57
+    pooled_coverage: 0.38596491228070173
+    mission_seed_count: 25
+  - policy: clock:0.25
+    family: validity_clock
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: clock:0.4
+    family: validity_clock
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: clock:0.55
+    family: validity_clock
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: clock:0.75
+    family: validity_clock
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: clock:1.0
+    family: validity_clock
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: fixed-k:120
+    family: fixed_k
+    mean_verification_cost: 0.4
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: fixed-k:15
+    family: fixed_k
+    mean_verification_cost: 0.544
+    pooled_executed: 22
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.2727272727272727
+    pooled_proposed: 57
+    pooled_coverage: 0.38596491228070173
+    mission_seed_count: 25
+  - policy: fixed-k:300
+    family: fixed_k
+    mean_verification_cost: 0.4
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: fixed-k:45
+    family: fixed_k
+    mean_verification_cost: 0.4
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: fixed-k:5
+    family: fixed_k
+    mean_verification_cost: 0.9280000000000002
+    pooled_executed: 0
+    pooled_executed_stale: 0
+    pooled_stale_execution_rate: null
+    pooled_proposed: 43
+    pooled_coverage: 0.0
+    mission_seed_count: 25
+  - policy: fixed-k:600
+    family: fixed_k
+    mean_verification_cost: 0.4
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  - policy: none
+    family: no_refresh
+    mean_verification_cost: 0.2
+    pooled_executed: 26
+    pooled_executed_stale: 6
+    pooled_stale_execution_rate: 0.23076923076923078
+    pooled_proposed: 59
+    pooled_coverage: 0.4406779661016949
+    mission_seed_count: 25
+  operating_points:
+    B1:
+      no_refresh:
+        policy: none
+        family: no_refresh
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      fixed_k: null
+      validity_clock:
+        policy: clock:0.25
+        family: validity_clock
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      adaptive:
+        policy: adaptive:1
+        family: adaptive
+        mean_verification_cost: 0.2
+        pooled_executed: 7
+        pooled_executed_stale: 0
+        pooled_stale_execution_rate: 0.0
+        pooled_proposed: 57
+        pooled_coverage: 0.12280701754385964
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+    B2:
+      no_refresh:
+        policy: none
+        family: no_refresh
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      fixed_k: null
+      validity_clock:
+        policy: clock:0.25
+        family: validity_clock
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      adaptive:
+        policy: adaptive:1
+        family: adaptive
+        mean_verification_cost: 0.2
+        pooled_executed: 7
+        pooled_executed_stale: 0
+        pooled_stale_execution_rate: 0.0
+        pooled_proposed: 57
+        pooled_coverage: 0.12280701754385964
+        mission_seed_count: 25
+        budget: 0.2
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+    B3:
+      no_refresh:
+        policy: none
+        family: no_refresh
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.4
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      fixed_k:
+        policy: fixed-k:120
+        family: fixed_k
+        mean_verification_cost: 0.4
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.4
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      validity_clock:
+        policy: clock:0.25
+        family: validity_clock
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 0.4
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      adaptive:
+        policy: adaptive:1
+        family: adaptive
+        mean_verification_cost: 0.2
+        pooled_executed: 7
+        pooled_executed_stale: 0
+        pooled_stale_execution_rate: 0.0
+        pooled_proposed: 57
+        pooled_coverage: 0.12280701754385964
+        mission_seed_count: 25
+        budget: 0.4
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+    B4:
+      no_refresh:
+        policy: none
+        family: no_refresh
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 1.8
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      fixed_k:
+        policy: fixed-k:120
+        family: fixed_k
+        mean_verification_cost: 0.4
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 1.8
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      validity_clock:
+        policy: clock:0.25
+        family: validity_clock
+        mean_verification_cost: 0.2
+        pooled_executed: 26
+        pooled_executed_stale: 6
+        pooled_stale_execution_rate: 0.23076923076923078
+        pooled_proposed: 59
+        pooled_coverage: 0.4406779661016949
+        mission_seed_count: 25
+        budget: 1.8
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+      adaptive:
+        policy: adaptive:1
+        family: adaptive
+        mean_verification_cost: 0.2
+        pooled_executed: 7
+        pooled_executed_stale: 0
+        pooled_stale_execution_rate: 0.0
+        pooled_proposed: 57
+        pooled_coverage: 0.12280701754385964
+        mission_seed_count: 25
+        budget: 1.8
+        selection_rule: 'minimum pooled stale-execution rate subject to mean cost
+          <= budget; ties: lower mean cost, then lexical policy spec'
+  unique_frozen_configurations:
+  - adaptive:1
+  - clock:0.25
+  - fixed-k:120
+  - none
+observables:
+  stale_execution:
+    definition: claim truth is false at ACTION_STARTED
+    implementation: trace_jepa.evaluation.adjudication.adjudicate_execution_truth
+  coverage:
+    definition: executed stable commitment units / proposed stable commitment units
+    raw_revision_count_retained_as: proposal_records
+    implementation: trace_jepa.evaluation.metrics.compute_commitment_unit_metrics
+  verification_cost:
+    definition: common baseline cost plus discretionary refresh cost
+    implementation: trace_jepa.evaluation.runner._verification_cost_metrics
+statistics:
+  resampling_unit: mission seed
+  paired_bootstrap_resamples: 10000
+  simultaneous_band: max-t across B1--B4
+  dominance: no worse at every predeclared budget and strictly better at one or more
+  operating_point_ties: lower cost, then lexical policy specification
+  undefined_staleness: zero-execution configurations are ineligible, not set to zero
+ablation_list:
+- adaptive_full
+- adaptive_minus_predicted
+- adaptive_minus_observed
+- adaptive_minus_structural
+- adaptive_minus_normative
+- routing_cheapest_regardless_of_adequacy
+- routing_cheapest_adequate
+rq3:
+  primary: raw loss and resource components
+  secondary: weighted composite with sensitivity analysis
+  provisional_weights:
+    stale_execution: 100.0
+    reroute: 15.0
+    missed_rescue: 200.0
+    false_hold_per_hour: 10.0
+    escalation: 3.0
+integrity:
+  git_commit_before_freeze: null
+  git_tree_dirty_for_review: true
+  scientific_source_tree_hash: d66b6148d018882d6e32f9e658c579f0622126fd8449ef64bda1b90613b8b0a7
+  validation_environment_hash: 89b4a2e93d4c39b89b6f4b70720c00c1c3870c5386ffcdc0034dee43efa8e1c4
+  validation_gate_policy_sha256: 2c0bbbd6a9f0739ab91c33c79ff520cafa72a2c3589f430d4c9fad2f8114c8db
+  validation_workload_sha256: 6d35ddb2702cb8428781306cf7a7742c3d576017542e4880e8e0e8f8f0077436
+review_required:
+- Confirm E1--E12 provisional values and trace_exp_v1.yaml.
+- Confirm budget/type-7 quantile and deterministic operating-point tie rules.
+- Confirm s_pilot estimator wording; the 120-seed cap binds.
+- Confirm the seven-entry ablation inventory.
+- Sign before any test seed is enabled or executed.
+manifest_hash: 3921a6508543025e4aaaad7e4197d2f6ff3922be48894db59f2c763e8b9b9697

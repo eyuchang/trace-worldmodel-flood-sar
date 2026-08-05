@@ -82,6 +82,7 @@ DAY1_ORIGINAL_DEVELOPMENT_SEEDS = frozenset(range(1, 21))
 # untouched amended G2 pilot. Both remain development-only and are barred from
 # confirmatory inference.
 DAY1_AMENDMENT_DEVELOPMENT_SEEDS = frozenset(range(21, 61))
+VALIDATION_SEEDS = frozenset(range(101, 126))
 WP_E_SOURCE_ARCHIVE_SHA256 = (
     "dfcbdd5f08d65490358f21bda55f2345014c1d0aac45b0ddcd4d8e6470993bc6"
 )
@@ -92,15 +93,17 @@ class FrozenModel(BaseModel):
 
 
 class RunRequest(FrozenModel):
-    """One Day-1 development cell; validation and test partitions are blocked."""
+    """One development or validation cell; test partitions are unrepresentable."""
 
     regime: Literal["R-B"] = "R-B"
+    partition: Literal["development", "validation"] = "development"
     policy: str
-    seed: int = Field(ge=1, le=60)
+    seed: int = Field(ge=1, le=125)
     scenario_path: Path
     shock_registry_root: Path
     protocol_path: Path
     output_root: Path
+    gate_policy_path: Path | None = None
     evaluation_workload_path: Path | None = None
     protocol_amendment_id: str | None = Field(
         default=None, pattern=r"^[a-z0-9][a-z0-9._-]{0,95}$"
@@ -132,11 +135,18 @@ class RunRequest(FrozenModel):
             raise ValueError(
                 "evaluation_workload_path and protocol_amendment_id must be set together"
             )
-        allowed_seeds = (
-            DAY1_AMENDMENT_DEVELOPMENT_SEEDS
-            if self.evaluation_workload_path is not None
-            else DAY1_ORIGINAL_DEVELOPMENT_SEEDS
-        )
+        if self.partition == "validation":
+            if self.evaluation_workload_path is None:
+                raise ValueError("validation requires a registered evaluation workload")
+            if self.gate_policy_path is None:
+                raise ValueError("validation requires an explicit gate policy")
+            allowed_seeds = VALIDATION_SEEDS
+        else:
+            allowed_seeds = (
+                DAY1_AMENDMENT_DEVELOPMENT_SEEDS
+                if self.evaluation_workload_path is not None
+                else DAY1_ORIGINAL_DEVELOPMENT_SEEDS
+            )
         if self.seed not in allowed_seeds:
             raise ValueError(
                 "seed is outside the development partition for this protocol"
@@ -379,6 +389,7 @@ def _source_inventory(repository_root: Path) -> list[dict[str, str]]:
     files.update((repository_root / "configs" / "scenarios").glob("*.yaml"))
     files.update((repository_root / "configs" / "shocks").rglob("*.yaml"))
     files.update((repository_root / "configs" / "workloads").rglob("*.yaml"))
+    files.update((repository_root / "configs" / "experiments").rglob("*.yaml"))
     return [
         {
             "path": path.relative_to(repository_root).as_posix(),
@@ -847,13 +858,13 @@ def _scientific_identity(
     protocol_path: Path,
     source_inventory: list[dict[str, str]],
     environment: dict[str, Any],
+    gate_policy_path: Path,
 ) -> dict[str, Any]:
-    gate_policy_path = repository_root / "configs/policies/trace_v1.yaml"
     gate_policy = PolicyConfig.from_yaml(gate_policy_path)
     git_status = _git_output(repository_root, "status", "--porcelain=v1")
     return {
         "schema_version": RUN_SCHEMA_VERSION,
-        "partition": "development",
+        "partition": request.partition,
         "request": {
             "regime": request.regime,
             "policy": request.policy,
@@ -913,7 +924,11 @@ def _scientific_identity(
             "path": gate_policy_path.relative_to(repository_root).as_posix(),
             "sha256": sha256_file(gate_policy_path),
             "resolved": gate_policy.model_dump(mode="json"),
-            "note": "trace_exp_v1.yaml is provisional and inactive before E11/G3",
+            "status": (
+                "provisional_e11_validation_setting_pending_g3"
+                if request.partition == "validation"
+                else "development_setting"
+            ),
         },
         "patch_provenance": {
             "wp_e_source_archive_sha256": WP_E_SOURCE_ARCHIVE_SHA256,
@@ -1435,6 +1450,12 @@ async def run_one(request: RunRequest) -> Path:
     protocol_path = _confined_file(
         request.protocol_path, repository_root.parent, label="protocol_path"
     )
+    default_gate_policy_path = repository_root / "configs/policies/trace_v1.yaml"
+    gate_policy_path = _confined_file(
+        request.gate_policy_path or default_gate_policy_path,
+        repository_root / "configs" / "policies",
+        label="gate_policy_path",
+    )
     shock_root = request.shock_registry_root.resolve(strict=True)
     try:
         shock_root.relative_to(repository_root.resolve(strict=True))
@@ -1481,6 +1502,7 @@ async def run_one(request: RunRequest) -> Path:
             workload_root=workload_root,
             expected_amendment_id=request.protocol_amendment_id,
             expected_regime=request.regime,
+            expected_partition=request.partition,
         )
         _validate_evaluation_workload(
             evaluation_workload,
@@ -1503,6 +1525,7 @@ async def run_one(request: RunRequest) -> Path:
         protocol_path=protocol_path,
         source_inventory=source_inventory_before,
         environment=environment_before,
+        gate_policy_path=gate_policy_path,
     )
     run_fingerprint = _run_fingerprint(identity_before)
 
@@ -1549,6 +1572,7 @@ async def run_one(request: RunRequest) -> Path:
             artifact_root=staging / "_engine",
             refresh_scheduler=policy,
             epsilon_c=epsilon_c,
+            gate_policy_path=gate_policy_path,
         )
         run.event_store = CachedEventStore(run.event_store.path)
         run.runtime.repository = CachedTraceRepository(run.runtime.repository.path)
@@ -1606,6 +1630,7 @@ async def run_one(request: RunRequest) -> Path:
             protocol_path=protocol_path,
             source_inventory=source_inventory_after,
             environment=environment_after,
+            gate_policy_path=gate_policy_path,
         )
         if identity_after != identity_before:
             raise RuntimeError(

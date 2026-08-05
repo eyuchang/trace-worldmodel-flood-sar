@@ -77,6 +77,7 @@ class DynamicRun:
         artifact_root: str | Path,
         refresh_scheduler: RefreshPolicy | None = None,
         epsilon_c: float = 1.0,
+        gate_policy_path: str | Path | None = None,
     ) -> None:
         self.run_id = run_id or new_id("run")
         self.scenario_path = Path(scenario_path)
@@ -93,11 +94,15 @@ class DynamicRun:
         self._lock = asyncio.Lock()
         self._plan_requested = True
 
-        policy = PolicyEngine(
-            PolicyConfig.from_yaml(
-                Path(__file__).resolve().parents[3] / "configs" / "policies" / "trace_v1.yaml"
-            )
+        resolved_gate_policy_path = (
+            Path(gate_policy_path)
+            if gate_policy_path is not None
+            else Path(__file__).resolve().parents[3]
+            / "configs"
+            / "policies"
+            / "trace_v1.yaml"
         )
+        policy = PolicyEngine(PolicyConfig.from_yaml(resolved_gate_policy_path))
         self.runtime = TraceRuntime(
             repository=TraceRepository(self.artifact_root / "records" / "trace.jsonl"),
             ledger=EvidenceLedger(self.artifact_root / "evidence"),

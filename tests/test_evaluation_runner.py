@@ -55,6 +55,53 @@ def _request(
     )
 
 
+def test_partition_contract_allows_validation_but_never_test_seeds(
+    tmp_path: Path,
+) -> None:
+    validation = RunRequest(
+        regime="R-B",
+        partition="validation",
+        policy="none",
+        seed=101,
+        scenario_path=SCENARIO,
+        shock_registry_root=SHOCK_ROOT,
+        protocol_path=PROTOCOL,
+        output_root=tmp_path / "validation",
+        gate_policy_path=REPOSITORY_ROOT / "configs/policies/trace_exp_v1.yaml",
+        evaluation_workload_path=(
+            REPOSITORY_ROOT / "configs/workloads/validation_r_b_v1.yaml"
+        ),
+        protocol_amendment_id="day1-measurement-amendment-2",
+        duration_s=7800.0,
+    )
+    assert validation.partition == "validation"
+    assert validation.seed == 101
+
+    with pytest.raises(ValidationError, match="less than or equal to 125"):
+        RunRequest(**{**validation.model_dump(), "seed": 1001})
+    with pytest.raises(ValidationError, match="outside the development partition"):
+        RunRequest(
+            **{
+                **_request(tmp_path).model_dump(),
+                "seed": 101,
+            }
+        )
+
+
+def test_explicit_gate_policy_is_recorded_and_used(tmp_path: Path) -> None:
+    request = _request(tmp_path).model_copy(
+        update={
+            "gate_policy_path": REPOSITORY_ROOT
+            / "configs/policies/trace_exp_v1.yaml"
+        }
+    )
+    directory = run_one_sync(request)
+    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    policy = manifest["scientific_identity"]["effective_gate_policy"]
+    assert policy["path"] == "configs/policies/trace_exp_v1.yaml"
+    assert policy["resolved"]["policy_version"] == "trace-exp-v1-provisional"
+
+
 def _amended_request(
     tmp_path: Path,
     *,

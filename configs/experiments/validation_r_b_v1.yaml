@@ -1,0 +1,40 @@
+schema_version: trace-validation-sweep-v1
+partition: validation
+regime: R-B
+seed_start: 101
+seed_end: 125
+forcing_noise_std: 0.35
+duration_s: 7800.0
+tick_s: 1.0
+requested_speed: 50.0
+scenario: configs/scenarios/riverside_flood_dynamic_v2.yaml
+shock_root: configs/shocks
+workload: configs/workloads/validation_r_b_v1.yaml
+protocol_amendment_id: day1-measurement-amendment-2
+gate_policy: configs/policies/trace_exp_v1.yaml
+policies:
+  no_refresh:
+    - none
+  fixed_k:
+    - fixed-k:5
+    - fixed-k:15
+    - fixed-k:45
+    - fixed-k:120
+    - fixed-k:300
+    - fixed-k:600
+  validity_clock:
+    - clock:0.1
+    - clock:0.25
+    - clock:0.4
+    - clock:0.55
+    - clock:0.75
+    - clock:1.0
+  adaptive:
+    - adaptive:0.25
+    - adaptive:0.5
+    - adaptive:1
+    - adaptive:2
+    - adaptive:4
+    - adaptive:7
+expected_configurations: 19
+expected_cells: 475

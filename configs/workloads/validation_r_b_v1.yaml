@@ -1,0 +1,29 @@
+schema_version: trace-evaluation-workload-v1
+workload_id: validation-r-b-v1
+amendment_id: day1-measurement-amendment-2
+partition: validation
+regime: R-B
+design_basis: >-
+  Validation uses the versioned later-horizon development schedule without
+  changing its physical dynamics, incident, common baseline observation, or
+  commitment-unit measurement contract.
+scheduler_version: registered-evaluation-workload-v1
+event_order: shocks-gauge-samples-gauge-deliveries-incidents-tick-v1
+common_gauge_observations:
+  - observation_id: common-south-gauge-6420
+    route_id: south_detour
+    sampled_at: 6420.0
+    delivered_at: 6425.0
+    cost: 0.2
+incidents:
+  - incident_id: later-riverside-6443
+    group_id: group_riverside_late_6443
+    scheduled_at: 6443.0
+    location_label: Riverside Apartments
+    position:
+      x: 88.0
+      y: 66.0
+    people: 4
+    severity: 0.55
+    deadline_s: 7643.0
+    safe_location_id: safe_transfer_dock

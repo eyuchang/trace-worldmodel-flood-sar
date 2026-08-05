@@ -58,7 +58,7 @@ class EvaluationWorkload(FrozenModel):
     )
     workload_id: str = Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,95}$")
     amendment_id: str = Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,95}$")
-    partition: Literal["development"] = "development"
+    partition: Literal["development", "validation"] = "development"
     regime: Literal["R-B"] = "R-B"
     design_basis: str = Field(min_length=1, max_length=512)
     scheduler_version: Literal["registered-evaluation-workload-v1"] = (
@@ -109,6 +109,7 @@ def load_evaluation_workload(
     workload_root: str | Path,
     expected_amendment_id: str | None = None,
     expected_regime: str | None = None,
+    expected_partition: str | None = None,
 ) -> EvaluationWorkload:
     """Load one strict, evaluation-only workload confined to its root."""
 
@@ -141,5 +142,10 @@ def load_evaluation_workload(
     if expected_regime is not None and workload.regime != expected_regime:
         raise ValueError(
             f"workload regime {workload.regime} does not match {expected_regime}"
+        )
+    if expected_partition is not None and workload.partition != expected_partition:
+        raise ValueError(
+            f"workload partition {workload.partition} does not match "
+            f"{expected_partition}"
         )
     return workload

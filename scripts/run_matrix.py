@@ -13,11 +13,14 @@ def _parser() -> argparse.ArgumentParser:
     private_root = repository_root.parent
     parser = argparse.ArgumentParser(
         description=(
-            "Run one atomic Day-1 development cell. This command intentionally "
-            "rejects validation and test seeds until G3."
+            "Run one atomic development or validation cell. Test seeds are "
+            "intentionally unsupported until G3."
         )
     )
     parser.add_argument("--regime", choices=("R-B",), required=True)
+    parser.add_argument(
+        "--partition", choices=("development", "validation"), default="development"
+    )
     parser.add_argument("--policy", required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--speed", type=float, default=50.0)
@@ -39,6 +42,9 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=private_root / "README_EXPERIMENTS.md",
     )
+    parser.add_argument("--gate-policy", type=Path)
+    parser.add_argument("--workload", type=Path)
+    parser.add_argument("--protocol-amendment-id")
     parser.add_argument(
         "--output",
         type=Path,
@@ -56,6 +62,7 @@ def main() -> None:
     arguments = _parser().parse_args()
     request = RunRequest(
         regime=arguments.regime,
+        partition=arguments.partition,
         policy=arguments.policy,
         seed=arguments.seed,
         requested_speed=arguments.speed,
@@ -66,6 +73,9 @@ def main() -> None:
         shock_registry_root=arguments.shock_root,
         protocol_path=arguments.protocol,
         output_root=arguments.output,
+        gate_policy_path=arguments.gate_policy,
+        evaluation_workload_path=arguments.workload,
+        protocol_amendment_id=arguments.protocol_amendment_id,
         resume=not arguments.no_resume,
     )
     directory = run_one_sync(request)
