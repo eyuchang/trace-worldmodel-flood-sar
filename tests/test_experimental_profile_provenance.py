@@ -1,36 +1,57 @@
 """Contract tests for experimental-profile predictor-version provenance."""
 
+import json
 from datetime import datetime, timezone
 
+import numpy as np
+import pytest
 from pydantic import ValidationError
 
-from trace_jepa.contracts import WorldModelEvidence
+from trace_jepa.contracts import (
+    ActionInstance,
+    PlanCandidate,
+    WorldModelEvidence,
+)
 from trace_jepa.experimental import (
     AdequacyStatus,
     ExperimentalProfileExtension,
     build_experimental_profile,
 )
+from trace_jepa.predictor import (
+    ActionPrefixPredictor,
+    CachedVJEPAFeatureProvider,
+    CalibratedVJEPAHead,
+    MLPActionPrefixPredictor,
+    PredictorContext,
+    PredictorObservation,
+    PredictorPriorProfile,
+    PredictorRequest,
+    PredictorRouteObservation,
+    PredictorVisualFeatureRef,
+    ToyActionPrefixPredictor,
+    VJEPABackedActionPrefixPredictor,
+)
 
 
 def _base_evidence(**updates) -> WorldModelEvidence:
-    base = dict(
-        encoder_version="encoder-v1",
-        fusion_version="fusion-v1",
-        predictor_version="predictor-v1",
-        semantic_probe_versions=("probe-v1",),
-        training_snapshot="data-v1",
-        observation_window_hash="obs",
-        fleet_state_hash="state",
-        candidate_plan_id="plan",
-        action_schema_version="actions-v1",
-        rollout_horizon=3,
-        predicted_claims=("route open",),
-        uncertainty=0.1,
-        model_support=0.9,
-        out_of_distribution_score=0.1,
-        rollout_consistency=0.9,
-        calibration_version="cal-v1",
-    )
+    base = {
+        "encoder_version": "encoder-v1",
+        "fusion_version": "fusion-v1",
+        "predictor_version": "predictor-v1",
+        "semantic_probe_versions": ("probe-v1",),
+        "training_snapshot": "data-v1",
+        "observation_window_hash": "obs",
+        "fleet_state_hash": "state",
+        "candidate_plan_id": "plan",
+        "action_schema_version": "actions-v1",
+        "rollout_horizon": 3,
+        "predicted_claims": ("route open",),
+        "uncertainty": 0.1,
+        "model_support": 0.9,
+        "out_of_distribution_score": 0.1,
+        "rollout_consistency": 0.9,
+        "calibration_version": "cal-v1",
+    }
     base.update(updates)
     return WorldModelEvidence(**base)
 
@@ -75,9 +96,7 @@ def test_world_model_evidence_coerces_profile_mapping():
             "adequacy_status": "pending_revalidation",
         }
     )
-    assert evidence.experimental_profile.adequacy_status == (
-        AdequacyStatus.PENDING_REVALIDATION
-    )
+    assert evidence.experimental_profile.adequacy_status == (AdequacyStatus.PENDING_REVALIDATION)
 
 
 def test_baseline_evidence_without_profile_still_validates():
@@ -98,3 +117,141 @@ def test_experimental_profile_rejects_unknown_fields():
     except ValidationError:
         raised = True
     assert raised
+
+
+def test_toy_predictor_satisfies_versioned_predictor_protocol() -> None:
+    predictor = ToyActionPrefixPredictor()
+    assert isinstance(predictor, ActionPrefixPredictor)
+    provenance = predictor.provenance()
+    assert provenance.predictor_version == predictor.predictor_version
+    assert provenance.calibration_version == predictor.calibration_version
+    assert provenance.model_hash == predictor.model_hash
+    assert provenance.calibration_hash == predictor.calibration_hash
+
+
+def test_world_model_evidence_rejects_mismatched_profile_versions() -> None:
+    profile = build_experimental_profile(
+        predictor_version="predictor-v2",
+        calibration_version="cal-v2",
+        claim_family="high_consequence_rescue",
+        adequacy_status=AdequacyStatus.QUALIFIED,
+    )
+    with pytest.raises(ValidationError, match="predictor_version"):
+        _base_evidence(experimental_profile=profile)
+
+
+class DeterministicMLPBackend:
+    def infer(self, request: PredictorRequest) -> list[float]:
+        assert request.plan.plan_id == "protocol-plan"
+        return [0.0, 5.0, -1.0, 0.2, 2.0, -2.0, -1.0]
+
+
+def _protocol_request(*, visual: bool = False) -> PredictorRequest:
+    visual_reference = (
+        PredictorVisualFeatureRef(
+            observation_id="visual-test",
+            observation_sha256="a" * 64,
+            captured_at_s=0,
+        )
+        if visual
+        else None
+    )
+    return PredictorRequest(
+        plan=PlanCandidate(
+            plan_id="protocol-plan",
+            name="Protocol substitution fixture",
+            actions=(
+                ActionInstance(
+                    action_type="dispatch_rescue_boat",
+                    actor_id="boat",
+                    route_id="XNG-04",
+                ),
+            ),
+            utility=1.0,
+            reversible_first_action=False,
+        ),
+        observation=PredictorObservation(
+            routes=[
+                PredictorRouteObservation(
+                    route_id="XNG-04",
+                    report="open",
+                    nominal_travel_s=900.0,
+                )
+            ],
+            context=PredictorContext(
+                prior_profile=PredictorPriorProfile(
+                    profile_id="delta-prior-high-v1",
+                    calibration_version="vjepa-cal-v1",
+                    prior_accuracy_milli=900,
+                ),
+                visual_feature=visual_reference,
+            ),
+        ),
+    )
+
+
+def _write_vjepa_fixture(tmp_path) -> tuple[CachedVJEPAFeatureProvider, CalibratedVJEPAHead]:
+    encoder_hash = "e" * 64
+    np.savez_compressed(
+        tmp_path / "visual-test.npz",
+        feature=np.asarray([0.1, 0.2], dtype=np.float32),
+        observation_sha256=np.asarray("a" * 64),
+        encoder_version=np.asarray("vjepa2.1-test"),
+        encoder_checkpoint_hash=np.asarray(encoder_hash),
+    )
+    action_names = np.asarray(["dispatch_rescue_boat"])
+    structured_dimension = 11 + len(action_names)
+    metadata = {
+        "predictor_version": "vjepa-head-v1",
+        "calibration_version": "vjepa-cal-v1",
+        "calibration_hash": "4" * 64,
+        "training_snapshot": "training-v1",
+        "encoder_version": "vjepa2.1-test",
+        "encoder_checkpoint_hash": encoder_hash,
+        "feature_schema_version": "action-prefix-features-v2",
+        "action_schema_version": "delta-response-actions-v2",
+    }
+    head_path = tmp_path / "vjepa-head.npz"
+    np.savez_compressed(
+        head_path,
+        weights=np.zeros((structured_dimension + 2, 7), dtype=np.float64),
+        bias=np.asarray([1.0, 5.0, -1.0, 0.2, 2.0, -2.0, -1.0]),
+        feature_mean=np.zeros(structured_dimension + 2, dtype=np.float64),
+        feature_std=np.ones(structured_dimension + 2, dtype=np.float64),
+        action_names=action_names,
+        metadata_json=np.asarray(json.dumps(metadata, sort_keys=True)),
+    )
+    return (
+        CachedVJEPAFeatureProvider(
+            tmp_path,
+            encoder_version="vjepa2.1-test",
+            encoder_checkpoint_hash=encoder_hash,
+        ),
+        CalibratedVJEPAHead.load(head_path),
+    )
+
+
+def test_mlp_and_vjepa_adapters_share_the_versioned_protocol(tmp_path) -> None:
+    mlp = MLPActionPrefixPredictor(
+        backend=DeterministicMLPBackend(),
+        predictor_version="mlp-v1",
+        calibration_version="mlp-cal-v1",
+        training_snapshot="training-v1",
+        model_hash="1" * 64,
+        calibration_hash="2" * 64,
+        adequacy_status=AdequacyStatus.UNQUALIFIED,
+    )
+    feature_provider, head = _write_vjepa_fixture(tmp_path)
+    vjepa = VJEPABackedActionPrefixPredictor(
+        feature_provider,
+        head,
+        adequacy_status=AdequacyStatus.PENDING_REVALIDATION,
+    )
+    request = _protocol_request()
+    assert isinstance(mlp, ActionPrefixPredictor)
+    assert isinstance(vjepa, ActionPrefixPredictor)
+    assert mlp.predict(request).plan_id == request.plan.plan_id
+    visual_request = _protocol_request(visual=True)
+    assert vjepa.predict(visual_request).plan_id == request.plan.plan_id
+    assert vjepa.encoder_version != vjepa.predictor_version
+    assert vjepa.provenance().adequacy_status == AdequacyStatus.PENDING_REVALIDATION

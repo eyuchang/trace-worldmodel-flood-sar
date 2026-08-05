@@ -1,30 +1,186 @@
 from __future__ import annotations
 
+import json
+import math
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Protocol, cast
 
-def require_torch():
-    try:
-        import torch
-        from torch import nn
-    except ImportError as exc:  # pragma: no cover - optional dependency
-        raise RuntimeError("Install the 'ml' optional dependencies") from exc
-    return torch, nn
+import numpy as np
+from numpy.typing import NDArray
+
+from trace_jepa.contracts import PlanPrediction
+from trace_jepa.experimental.profile import AdequacyStatus
+from trace_jepa.predictor.protocol import (
+    PredictorProvenance,
+    PredictorRequest,
+    request_feature_vector,
+)
+from trace_jepa.util import sha256_file
 
 
-def build_model(input_dim: int, action_dim: int, output_dim: int = 4):
-    torch, nn = require_torch()
+class CalibratedMLPBackend(Protocol):
+    def infer(self, request: PredictorRequest) -> list[float]: ...
 
-    class ActionPrefixMLP(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.net = nn.Sequential(
-                nn.Linear(input_dim + action_dim, 128),
-                nn.ReLU(),
-                nn.Linear(128, 128),
-                nn.ReLU(),
-                nn.Linear(128, output_dim),
+
+@dataclass(frozen=True)
+class NumpyMLPBackend:
+    """Pickle-free two-layer MLP checkpoint used by the runtime adapter."""
+
+    weight_1: NDArray[np.float64]
+    bias_1: NDArray[np.float64]
+    weight_2: NDArray[np.float64]
+    bias_2: NDArray[np.float64]
+    action_names: tuple[str, ...]
+
+    @classmethod
+    def load(cls, path: Path) -> tuple[NumpyMLPBackend, dict[str, object]]:
+        path = Path(path)
+        if not path.is_file() or path.is_symlink():
+            raise ValueError(f"MLP checkpoint is absent: {path.name}")
+        try:
+            with np.load(path, allow_pickle=False) as payload:
+                required = {
+                    "weight_1",
+                    "bias_1",
+                    "weight_2",
+                    "bias_2",
+                    "action_names",
+                    "metadata_json",
+                }
+                if required - set(payload.files):
+                    raise ValueError("MLP checkpoint does not satisfy the frozen schema")
+                backend = cls(
+                    weight_1=payload["weight_1"].astype(np.float64),
+                    bias_1=payload["bias_1"].astype(np.float64),
+                    weight_2=payload["weight_2"].astype(np.float64),
+                    bias_2=payload["bias_2"].astype(np.float64),
+                    action_names=tuple(str(value) for value in payload["action_names"]),
+                )
+                metadata = json.loads(str(payload["metadata_json"].item()))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("MLP checkpoint is malformed") from exc
+        backend.validate()
+        return backend, metadata
+
+    def validate(self) -> None:
+        if self.weight_1.ndim != 2:
+            raise ValueError("MLP input weights must be a matrix")
+        if self.bias_1.shape != (self.weight_1.shape[1],):
+            raise ValueError("MLP hidden bias does not match hidden width")
+        if self.weight_2.shape != (self.weight_1.shape[1], 7):
+            raise ValueError("MLP output weights must have seven outputs")
+        if self.bias_2.shape != (7,):
+            raise ValueError("MLP output bias must have seven outputs")
+        if not all(
+            np.isfinite(value).all()
+            for value in (self.weight_1, self.bias_1, self.weight_2, self.bias_2)
+        ):
+            raise ValueError("MLP checkpoint contains non-finite values")
+
+    def infer(self, request: PredictorRequest) -> list[float]:
+        features = np.asarray(
+            request_feature_vector(request, action_names=self.action_names),
+            dtype=np.float64,
+        )
+        if features.shape != (self.weight_1.shape[0],):
+            raise ValueError("MLP request feature dimension does not match checkpoint")
+        hidden = np.maximum(0.0, features @ self.weight_1 + self.bias_1)
+        return cast(list[float], (hidden @ self.weight_2 + self.bias_2).tolist())
+
+
+class MLPActionPrefixPredictor:
+    def __init__(
+        self,
+        backend: CalibratedMLPBackend,
+        predictor_version: str,
+        calibration_version: str,
+        training_snapshot: str,
+        model_hash: str,
+        calibration_hash: str,
+        adequacy_status: AdequacyStatus,
+        supported_action_types: tuple[str, ...] = (
+            "dispatch_rescue_boat",
+            "deploy_ground_team",
+            "perform_welfare_check",
+            "inspect_levee",
+        ),
+        feature_schema_version: str = "action-prefix-features-v2",
+        action_schema_version: str = "delta-response-actions-v2",
+    ) -> None:
+        self._backend = backend
+        self.predictor_version = predictor_version
+        self.calibration_version = calibration_version
+        self.training_snapshot = training_snapshot
+        self.model_hash = model_hash
+        self.calibration_hash = calibration_hash
+        self.adequacy_status = adequacy_status
+        self.supported_action_types = supported_action_types
+        self.feature_schema_version = feature_schema_version
+        self.action_schema_version = action_schema_version
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        path: Path,
+        *,
+        adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED,
+    ) -> MLPActionPrefixPredictor:
+        backend, metadata = NumpyMLPBackend.load(path)
+        required = {
+            "predictor_version",
+            "calibration_version",
+            "calibration_hash",
+            "training_snapshot",
+            "feature_schema_version",
+            "action_schema_version",
+        }
+        if required - set(metadata):
+            raise ValueError("MLP checkpoint provenance is incomplete")
+        return cls(
+            backend=backend,
+            predictor_version=str(metadata["predictor_version"]),
+            calibration_version=str(metadata["calibration_version"]),
+            training_snapshot=str(metadata["training_snapshot"]),
+            model_hash=sha256_file(path),
+            calibration_hash=str(metadata["calibration_hash"]),
+            adequacy_status=adequacy_status,
+            supported_action_types=backend.action_names,
+            feature_schema_version=str(metadata["feature_schema_version"]),
+            action_schema_version=str(metadata["action_schema_version"]),
+        )
+
+    def provenance(self) -> PredictorProvenance:
+        return PredictorProvenance(
+            predictor_version=self.predictor_version,
+            calibration_version=self.calibration_version,
+            training_snapshot=self.training_snapshot,
+            model_hash=self.model_hash,
+            calibration_hash=self.calibration_hash,
+            adequacy_status=self.adequacy_status,
+            feature_schema_version=self.feature_schema_version,
+            action_schema_version=self.action_schema_version,
+            supported_action_types=self.supported_action_types,
+        )
+
+    def predict(self, request: PredictorRequest) -> PlanPrediction:
+        if request.plan.first_action.action_type not in self.supported_action_types:
+            raise ValueError(
+                f"unsupported MLP action type: {request.plan.first_action.action_type}"
             )
-
-        def forward(self, state, action):
-            return self.net(torch.cat([state, action], dim=-1))
-
-    return ActionPrefixMLP()
+        values = self._backend.infer(request)
+        if len(values) != 7:
+            raise ValueError("calibrated MLP backend must return exactly seven values")
+        probabilities = [1.0 / (1.0 + math.exp(-value)) for value in values]
+        return PlanPrediction(
+            plan_id=request.plan.plan_id,
+            success_probability=probabilities[0],
+            arrival_time_s=math.exp(min(values[1], 20.0)),
+            hazard_score=probabilities[2],
+            resource_margin=values[3],
+            model_support=probabilities[4],
+            out_of_distribution_score=probabilities[5],
+            uncertainty=probabilities[6],
+            rollout_horizon=6,
+            assumptions=("calibrated_mlp_head",),
+        )

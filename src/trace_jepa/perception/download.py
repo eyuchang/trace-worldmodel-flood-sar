@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import sys
 from datetime import datetime, timezone
@@ -9,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 from trace_jepa.util import sha256_file
-
 
 # These are the checkpoint names linked from the official V-JEPA 2 repository.
 # We construct the architecture with pretrained=False and then load the official
@@ -20,23 +20,37 @@ OFFICIAL_VJEPA21_CHECKPOINTS: dict[str, dict[str, str]] = {
         "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitb_dist_vitG_384.pt",
         "file_name": "vjepa2_1_vitb_dist_vitG_384.pt",
         "encoder_key": "ema_encoder",
-    },
-    "vjepa2_1_vit_large_384": {
-        "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitl_dist_vitG_384.pt",
-        "file_name": "vjepa2_1_vitl_dist_vitG_384.pt",
-        "encoder_key": "ema_encoder",
-    },
-    "vjepa2_1_vit_giant_384": {
-        "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitg_384.pt",
-        "file_name": "vjepa2_1_vitg_384.pt",
-        "encoder_key": "ema_encoder",
-    },
-    "vjepa2_1_vit_gigantic_384": {
-        "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitG_384.pt",
-        "file_name": "vjepa2_1_vitG_384.pt",
-        "encoder_key": "ema_encoder",
+        "sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+        "size_bytes": "1664223428",
     },
 }
+
+
+def _verified_checkpoint(torch: Any, spec: dict[str, str], checkpoint_dir: Path) -> Path:
+    """Download once, verify before deserialization, and reject filesystem indirection."""
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = checkpoint_dir / spec["file_name"]
+    if checkpoint_path.is_symlink():
+        raise RuntimeError("V-JEPA checkpoint must not be a symlink")
+    if not checkpoint_path.is_file():
+        partial = checkpoint_path.with_suffix(checkpoint_path.suffix + ".partial")
+        if partial.exists():
+            if partial.is_symlink() or not partial.is_file():
+                raise RuntimeError("unsafe partial V-JEPA checkpoint path")
+            partial.unlink()
+        torch.hub.download_url_to_file(spec["url"], str(partial), progress=True)
+        if partial.stat().st_size != int(spec["size_bytes"]):
+            partial.unlink()
+            raise RuntimeError("downloaded V-JEPA checkpoint has the wrong byte length")
+        if sha256_file(partial) != spec["sha256"]:
+            partial.unlink()
+            raise RuntimeError("downloaded V-JEPA checkpoint digest mismatch")
+        os.replace(partial, checkpoint_path)
+    if checkpoint_path.stat().st_size != int(spec["size_bytes"]):
+        raise RuntimeError("cached V-JEPA checkpoint has the wrong byte length")
+    if sha256_file(checkpoint_path) != spec["sha256"]:
+        raise RuntimeError("cached V-JEPA checkpoint digest mismatch")
+    return checkpoint_path
 
 
 def clean_backbone_state_dict(state_dict: dict[str, Any]) -> dict[str, Any]:
@@ -95,14 +109,8 @@ def load_official_vjepa21(
     encoder, pretraining_predictor = _split_loaded_model(loaded)
 
     spec = OFFICIAL_VJEPA21_CHECKPOINTS[model_name]
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint = torch.hub.load_state_dict_from_url(
-        spec["url"],
-        model_dir=str(checkpoint_dir),
-        file_name=spec["file_name"],
-        map_location="cpu",
-        progress=True,
-    )
+    checkpoint_path = _verified_checkpoint(torch, spec, checkpoint_dir)
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     if spec["encoder_key"] not in checkpoint:
         raise KeyError(
             f"Official checkpoint did not contain encoder key {spec['encoder_key']!r}; "
@@ -120,7 +128,6 @@ def load_official_vjepa21(
         pretrained=False,
         trust_repo=True,
     )
-    checkpoint_path = checkpoint_dir / spec["file_name"]
     return encoder, pretraining_predictor, processor, checkpoint_path
 
 
@@ -134,7 +141,9 @@ def download_model(
     try:
         import torch
     except ImportError as exc:
-        raise RuntimeError("PyTorch is required. Install the appropriate build before downloading JEPA.") from exc
+        raise RuntimeError(
+            "PyTorch is required. Install the appropriate build before downloading JEPA."
+        ) from exc
 
     output_dir.mkdir(parents=True, exist_ok=True)
     encoder, predictor, _, checkpoint_path = load_official_vjepa21(
@@ -158,7 +167,7 @@ def download_model(
         "platform": platform.platform(),
         "torch_hub_dir": str(Path(torch.hub.get_dir()).resolve()),
         "checkpoint": {
-            "path": str(checkpoint_path.resolve()),
+            "local_path_recorded": False,
             "url": OFFICIAL_VJEPA21_CHECKPOINTS[model_name]["url"],
             "size_bytes": checkpoint_path.stat().st_size,
             "sha256": sha256_file(checkpoint_path),
@@ -182,7 +191,9 @@ def main() -> None:
     parser.add_argument("--crop-size", type=int, default=384)
     parser.add_argument("--output", type=Path, default=Path("models/manifests"))
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("models/external/vjepa2"))
-    parser.add_argument("--hub-repo", default="facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812")
+    parser.add_argument(
+        "--hub-repo", default="facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812"
+    )
     args = parser.parse_args()
     path = download_model(
         args.model,

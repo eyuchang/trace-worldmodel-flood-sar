@@ -91,6 +91,13 @@ class VJEPA2Encoder:
         elif tensor.shape[1] not in (1, 3):
             raise ValueError("cannot infer channel dimension")
         transformed = self.processor(tensor)
+        if isinstance(transformed, (list, tuple)):
+            if len(transformed) != 1:
+                raise ValueError(
+                    "official preprocessor returned multiple clips; "
+                    "single-window encoding requires exactly one"
+                )
+            transformed = transformed[0]
         if transformed.ndim == 4:
             transformed = transformed.unsqueeze(0)
         if transformed.ndim != 5:

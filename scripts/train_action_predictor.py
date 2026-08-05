@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 
 import numpy as np
 
-from trace_jepa.predictor.mlp import build_model, require_torch
+from trace_jepa.predictor.mlp_torch import build_model, require_torch
 from trace_jepa.util import sha256_file
+
+LOGGER = logging.getLogger(__name__)
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Train the starter action-prefix predictor")
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -28,7 +32,7 @@ def main() -> None:
     if args.epochs < 1:
         raise SystemExit("--epochs must be positive")
 
-    torch, _ = require_torch()
+    torch = require_torch().torch
     torch.set_num_threads(max(1, args.threads))
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
@@ -59,7 +63,11 @@ def main() -> None:
     state_std = states[train_idx].std(dim=0, keepdim=True).clamp_min(1e-6)
     normalized_states = (states - state_mean) / state_std
 
-    model = build_model(states.shape[1], actions.shape[1], targets.shape[1])
+    model = build_model(
+        states.shape[1],
+        actions.shape[1],
+        targets.shape[1],
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     loss_fn = torch.nn.MSELoss()
 
@@ -79,11 +87,15 @@ def main() -> None:
             val_mse = loss_fn(val_prediction, targets[val_idx]).item()
         if val_mse < best_val_mse:
             best_val_mse = val_mse
-            best_state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+            best_state = {
+                key: value.detach().cpu().clone() for key, value in model.state_dict().items()
+            }
         if epoch in {0, args.epochs - 1} or (epoch + 1) % 25 == 0:
-            print(
-                f"epoch={epoch + 1:03d} train_mse={loss.item():.6f} "
-                f"validation_mse={val_mse:.6f}"
+            LOGGER.info(
+                "epoch=%03d train_mse=%.6f validation_mse=%.6f",
+                epoch + 1,
+                loss.item(),
+                val_mse,
             )
 
     assert best_state is not None
@@ -97,10 +109,11 @@ def main() -> None:
 
     improvement = baseline_mse - val_mse
     beats_baseline = val_mse < baseline_mse
-    print(
-        f"best_validation_mse={val_mse:.6f} "
-        f"constant_baseline_mse={baseline_mse:.6f} "
-        f"improvement={improvement:.6f}"
+    LOGGER.info(
+        "best_validation_mse=%.6f constant_baseline_mse=%.6f improvement=%.6f",
+        val_mse,
+        baseline_mse,
+        improvement,
     )
 
     if not beats_baseline and not args.allow_underfit:
@@ -125,21 +138,27 @@ def main() -> None:
         "checkpoint": str(args.output),
         "dataset": str(args.dataset),
         "dataset_sha256": sha256_file(args.dataset),
+        "checkpoint_sha256": sha256_file(args.output),
         "epochs": args.epochs,
         "learning_rate": args.learning_rate,
         "seed": args.seed,
-        "validation_rows": int(len(val_index)),
+        "validation_rows": len(val_index),
         "validation_mse": val_mse,
         "constant_baseline_mse": baseline_mse,
         "beats_constant_baseline": beats_baseline,
         "improvement": improvement,
         "action_schema_version": "flood-actions-v1",
+        "feature_contract_version": "action-prefix-features-v1",
+        "predictor_version": "mlp-action-prefix-v1",
+        "calibration_version": "mlp-uncalibrated-v1",
+        "calibration_status": "unqualified_pending_external_calibration",
+        "qualified_for_high_consequence": False,
         "training_snapshot": "synthetic-flood-v2",
     }
     manifest_path = args.output.with_suffix(args.output.suffix + ".json")
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
-    print(f"Wrote checkpoint: {args.output}")
-    print(f"Wrote checkpoint manifest: {manifest_path}")
+    LOGGER.info("wrote checkpoint: %s", args.output)
+    LOGGER.info("wrote checkpoint manifest: %s", manifest_path)
 
 
 if __name__ == "__main__":

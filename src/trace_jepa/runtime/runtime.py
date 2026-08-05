@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Any
+
 from trace_jepa.contracts import (
     ActionInstance,
     Claim,
@@ -38,9 +41,10 @@ class TraceRuntime:
         reversible: bool,
         authority_present: bool,
         repair_hint: str | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
         lineage_key: str | None = None,
         trigger_event_id: str | None = None,
+        created_at: datetime | None = None,
     ) -> tuple[TraceRecord, EvaluationResult]:
         """Assess a claim and preserve semantic lineage across re-evaluations.
 
@@ -79,7 +83,7 @@ class TraceRuntime:
                 "record_version": previous.record_version,
             }
 
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if record_id is not None:
             kwargs["record_id"] = record_id
         if previous is not None:
@@ -90,6 +94,8 @@ class TraceRuntime:
                     "supersedes_record_version": previous.record_version,
                 }
             )
+        if created_at is not None:
+            kwargs["created_at"] = created_at
 
         record = TraceRecord(
             policy_version=self.policy.config.policy_version,
@@ -111,7 +117,14 @@ class TraceRuntime:
         evaluation: EvaluationResult,
         *,
         consumer: str = "mission-controller",
+        consumer_action_id: str | None = None,
+        created_at: datetime | None = None,
     ) -> TraceRecord:
+        action_kwargs: dict[str, Any] = {}
+        if consumer_action_id is not None:
+            action_kwargs["consumer_action_id"] = consumer_action_id
+        if created_at is not None:
+            action_kwargs["created_at"] = created_at
         action = ConsumerAction(
             consumer=consumer,
             decision=evaluation.decision,
@@ -119,6 +132,7 @@ class TraceRuntime:
             record_id=record.record_id,
             record_version=record.record_version,
             reason=evaluation.reason,
+            **action_kwargs,
         )
         consumed = record.model_copy(
             update={
@@ -139,20 +153,22 @@ class TraceRuntime:
         new_status: TraceStatus,
         reason: str,
         repair: str,
+        created_at: datetime | None = None,
     ) -> TraceRecord:
         evidence_ref = self.ledger.put(evidence)
-        revised = record.model_copy(
-            update={
-                "record_version": record.record_version + 1,
-                "evidence_refs": record.evidence_refs + (evidence_ref,),
-                "final_status": new_status,
-                "failed_gates": record.failed_gates + ("realized_contradiction",),
-                "repair": repair,
-                "supersedes_record_id": record.record_id,
-                "supersedes_record_version": record.record_version,
-                "metadata": {**record.metadata, "revision_reason": reason},
-            }
-        )
+        updates: dict[str, Any] = {
+            "record_version": record.record_version + 1,
+            "evidence_refs": record.evidence_refs + (evidence_ref,),
+            "final_status": new_status,
+            "failed_gates": record.failed_gates + ("realized_contradiction",),
+            "repair": repair,
+            "supersedes_record_id": record.record_id,
+            "supersedes_record_version": record.record_version,
+            "metadata": {**record.metadata, "revision_reason": reason},
+        }
+        if created_at is not None:
+            updates["created_at"] = created_at
+        revised = record.model_copy(update=updates)
         self.repository.write(revised)
         return revised
 
@@ -161,12 +177,20 @@ class TraceRuntime:
         *,
         record: TraceRecord,
         action: ActionInstance,
+        commitment_id: str | None = None,
+        created_at: datetime | None = None,
     ) -> Commitment:
+        commitment_kwargs: dict[str, Any] = {}
+        if commitment_id is not None:
+            commitment_kwargs["commitment_id"] = commitment_id
+        if created_at is not None:
+            commitment_kwargs["created_at"] = created_at
         commitment = Commitment(
             action=action,
             authorizing_record_id=record.record_id,
             authorizing_record_version=record.record_version,
             consumer_policy_version=self.policy.config.policy_version,
+            **commitment_kwargs,
         )
         self.commitments.append(commitment, record)
         return commitment

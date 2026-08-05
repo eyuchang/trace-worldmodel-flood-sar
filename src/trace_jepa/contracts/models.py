@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from trace_jepa.util import new_id, utc_now
 
@@ -78,9 +78,7 @@ class ActionInstance(FrozenModel):
     def short_label(self) -> str:
         actor = self.actor_id.replace("_", " ")
         route = self.route_id.replace("_", " ") if self.route_id else None
-        destination = (
-            self.destination.replace("_", " ") if self.destination else None
-        )
+        destination = self.destination.replace("_", " ") if self.destination else None
         if self.action_type == "verify_route" and route:
             return f"{actor} verifies {route}"
         if self.action_type == "dispatch_rescue_boat":
@@ -176,9 +174,22 @@ class WorldModelEvidence(FrozenModel):
 
         if isinstance(value, ExperimentalProfileExtension):
             return value
-        raise TypeError(
-            "experimental_profile must be ExperimentalProfileExtension or a mapping"
-        )
+        raise TypeError("experimental_profile must be ExperimentalProfileExtension or a mapping")
+
+    @model_validator(mode="after")
+    def _validate_profile_version_consistency(self) -> WorldModelEvidence:
+        profile = self.experimental_profile
+        if profile is None:
+            return self
+        if profile.predictor_version != self.predictor_version:
+            raise ValueError(
+                "experimental profile predictor_version must match top-level provenance"
+            )
+        if profile.calibration_version != self.calibration_version:
+            raise ValueError(
+                "experimental profile calibration_version must match top-level provenance"
+            )
+        return self
 
 
 class ConsumerAction(FrozenModel):

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from trace_jepa.contracts import PlanCandidate, PlanPrediction
+import hashlib
+
+from trace_jepa.contracts import PlanPrediction
+from trace_jepa.experimental.profile import AdequacyStatus
+from trace_jepa.predictor.protocol import PredictorProvenance, PredictorRequest
 
 
 class ToyActionPrefixPredictor:
@@ -12,12 +16,42 @@ class ToyActionPrefixPredictor:
     not to opaque plan identifiers.
     """
 
-    version = "toy-action-prefix-v2"
+    predictor_version = "toy-action-prefix-v2"
+    calibration_version = "toy-calibration-v1"
     training_snapshot = "synthetic-flood-v1"
+    model_hash = hashlib.sha256(b"toy-action-prefix-v2-reviewed-source-fixture").hexdigest()
+    calibration_hash = hashlib.sha256(b"toy-calibration-v1-reviewed-teaching-fixture").hexdigest()
+    adequacy_status = AdequacyStatus.QUALIFIED
+    supported_action_types = (
+        "dispatch_rescue_boat",
+        "deploy_ground_team",
+        "perform_welfare_check",
+        "inspect_levee",
+    )
+    feature_schema_version = "action-prefix-features-v2"
+    action_schema_version = "delta-response-actions-v2"
 
-    def predict(self, plan: PlanCandidate, observation: dict) -> PlanPrediction:
+    @property
+    def version(self) -> str:
+        return self.predictor_version
+
+    def provenance(self) -> PredictorProvenance:
+        return PredictorProvenance(
+            predictor_version=self.predictor_version,
+            calibration_version=self.calibration_version,
+            training_snapshot=self.training_snapshot,
+            model_hash=self.model_hash,
+            calibration_hash=self.calibration_hash,
+            adequacy_status=self.adequacy_status,
+            feature_schema_version=self.feature_schema_version,
+            action_schema_version=self.action_schema_version,
+            supported_action_types=self.supported_action_types,
+        )
+
+    def predict(self, request: PredictorRequest) -> PlanPrediction:
+        plan = request.plan
         action = plan.first_action
-        route = observation["routes"].get(action.route_id or "")
+        route = request.observation.route(action.route_id) if action.route_id is not None else None
 
         if action.action_type == "verify_route":
             return PlanPrediction(
@@ -33,11 +67,11 @@ class ToyActionPrefixPredictor:
                 assumptions=("weather_below_drone_limit",),
             )
 
-        if action.action_type != "dispatch_rescue_boat" or route is None:
+        if action.action_type not in self.supported_action_types or route is None:
             raise KeyError(plan.plan_id)
 
-        report = route["report"]
-        nominal_travel_s = float(route["nominal_travel_s"])
+        report = route.report
+        nominal_travel_s = route.nominal_travel_s
 
         if report == "unknown":
             # Teaching case: a high numerical success estimate produced outside
@@ -70,9 +104,12 @@ class ToyActionPrefixPredictor:
             )
 
         if report == "open":
+            prior_adjustment = (
+                request.observation.context.prior_profile.prior_accuracy_milli - 900
+            ) / 5000.0
             return PlanPrediction(
                 plan_id=plan.plan_id,
-                success_probability=0.82,
+                success_probability=max(0.0, min(1.0, 0.82 + prior_adjustment)),
                 arrival_time_s=nominal_travel_s,
                 hazard_score=0.18,
                 resource_margin=0.20,

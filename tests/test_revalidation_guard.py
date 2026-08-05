@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from trace_jepa.contracts import Claim, ClaimLayer, CommitmentDecision, WorldModelEvidence
 from trace_jepa.experimental import (
     AdequacyStatus,
@@ -9,7 +11,6 @@ from trace_jepa.experimental import (
     build_experimental_profile,
 )
 from trace_jepa.runtime.policy import PolicyConfig, PolicyEngine
-
 
 FAMILY = "high_consequence_rescue"
 
@@ -29,25 +30,25 @@ def evidence_with_profile(
         adequacy_status=adequacy_status,
         model_hash=model_hash,
     )
-    base = dict(
-        encoder_version="encoder-v1",
-        fusion_version="fusion-v1",
-        predictor_version=predictor_version,
-        semantic_probe_versions=("probe-v1",),
-        training_snapshot="data-v1",
-        observation_window_hash="obs",
-        fleet_state_hash="state",
-        candidate_plan_id="plan",
-        action_schema_version="actions-v1",
-        rollout_horizon=3,
-        predicted_claims=("route open",),
-        uncertainty=0.1,
-        model_support=0.9,
-        out_of_distribution_score=0.1,
-        rollout_consistency=0.9,
-        calibration_version=calibration_version,
-        experimental_profile=profile,
-    )
+    base = {
+        "encoder_version": "encoder-v1",
+        "fusion_version": "fusion-v1",
+        "predictor_version": predictor_version,
+        "semantic_probe_versions": ("probe-v1",),
+        "training_snapshot": "data-v1",
+        "observation_window_hash": "obs",
+        "fleet_state_hash": "state",
+        "candidate_plan_id": "plan",
+        "action_schema_version": "actions-v1",
+        "rollout_horizon": 3,
+        "predicted_claims": ("route open",),
+        "uncertainty": 0.1,
+        "model_support": 0.9,
+        "out_of_distribution_score": 0.1,
+        "rollout_consistency": 0.9,
+        "calibration_version": calibration_version,
+        "experimental_profile": profile,
+    }
     base.update(updates)
     return WorldModelEvidence(**base)
 
@@ -64,7 +65,7 @@ def guarded_engine() -> tuple[PolicyEngine, RevalidationGuard]:
 
 
 def test_guard_clears_when_version_current_and_calibration_adequate():
-    engine, _guard = guarded_engine()
+    engine, guard = guarded_engine()
     claim = Claim(layer=ClaimLayer.PREDICTIVE, text="South route is open.")
     item = evidence_with_profile(
         predictor_version="predictor-v1",
@@ -82,6 +83,16 @@ def test_guard_clears_when_version_current_and_calibration_adequate():
     assert result.decision == CommitmentDecision.CLEAR
     assert "model_version_current" not in result.failed_gates
     assert "calibration_adequate_for_class" not in result.failed_gates
+    assert guard.transition_log[-1] == {
+        "event_type": "gate_revalidation_check",
+        "action_name": "dispatch_rescue_boat",
+        "predictor_version": "predictor-v1",
+        "claim_family": FAMILY,
+        "adequacy_status": "qualified",
+        "model_version_current": True,
+        "calibration_adequate_for_class": True,
+        "blocked": False,
+    }
 
 
 def test_guard_holds_high_consequence_on_unqualified_successor():
@@ -227,3 +238,36 @@ def test_rq5_invariant_no_clear_on_bad_version_under_guard():
         )
         assert result.decision != CommitmentDecision.CLEAR
         assert result.decision == CommitmentDecision.HOLD
+
+
+@pytest.mark.parametrize(
+    ("predictor_version", "calibration_version", "model_hash", "status"),
+    [
+        ("predictor-unregistered", "cal-v1", "hash-v1", AdequacyStatus.QUALIFIED),
+        ("predictor-v1", "cal-unregistered", "hash-v1", AdequacyStatus.QUALIFIED),
+        ("predictor-v1", "cal-v1", "hash-mismatch", AdequacyStatus.QUALIFIED),
+        ("predictor-v1", "cal-v1", "hash-v1", AdequacyStatus.PENDING_REVALIDATION),
+    ],
+)
+def test_guard_holds_unregistered_mismatched_or_pending_evidence(
+    predictor_version: str,
+    calibration_version: str,
+    model_hash: str,
+    status: AdequacyStatus,
+) -> None:
+    engine, _guard = guarded_engine()
+    claim = Claim(layer=ClaimLayer.PREDICTIVE, text="Versioned route evidence.")
+    item = evidence_with_profile(
+        predictor_version=predictor_version,
+        calibration_version=calibration_version,
+        adequacy_status=status,
+        model_hash=model_hash,
+    )
+    result = engine.evaluate(
+        claim,
+        item,
+        action_name="dispatch_rescue_boat",
+        reversible=False,
+        authority_present=True,
+    )
+    assert result.decision == CommitmentDecision.HOLD

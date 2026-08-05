@@ -1,0 +1,20 @@
+{
+  "checkpoint": {
+    "encoder_key": "ema_encoder",
+    "file_name": "vjepa2_1_vitb_dist_vitG_384.pt",
+    "redistribution": "not_committed_download_from_official_locator",
+    "sha256": "848a77c33cc9e6649ed2119c9bea1e2c569bcdab9539ff3e7c02ccc2959ddf4d",
+    "size_bytes": 1664223428,
+    "url": "https://dl.fbaipublicfiles.com/vjepa2/vjepa2_1_vitb_dist_vitG_384.pt"
+  },
+  "crop_size": 384,
+  "encoder_type": "VisionTransformer",
+  "encoder_version": "facebook-vjepa2.1-vit-b-384@204698b45b37",
+  "hub_entry": "vjepa2_1_vit_base_384",
+  "hub_repo": "facebookresearch/vjepa2",
+  "manifest_version": "trace-vjepa-encoder-pin-v1",
+  "preprocessor_entry": "vjepa2_preprocessor",
+  "role": "frozen_visual_encoder",
+  "source_commit": "204698b45b3712590f06245fbfba32d3be539812",
+  "scope_note": "The released self-supervised pretraining predictor is not a Flood-SAR action predictor. A separate content-addressed flood head and calibration are required and remain unqualified by default."
+}

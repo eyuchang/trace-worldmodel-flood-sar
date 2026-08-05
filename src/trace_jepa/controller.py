@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from trace_jepa.claims import FloodClaimProbe
 from trace_jepa.contracts import (
@@ -16,10 +17,17 @@ from trace_jepa.contracts import (
     TraceStatus,
     WorldModelEvidence,
 )
+from trace_jepa.experimental import build_experimental_profile
 from trace_jepa.fusion import fuse_state
 from trace_jepa.perception import MockVideoEncoder
 from trace_jepa.planning import FloodPlanner
-from trace_jepa.predictor import ToyActionPrefixPredictor
+from trace_jepa.predictor import (
+    ActionPrefixPredictor,
+    PredictorObservation,
+    PredictorRequest,
+    PredictorRouteObservation,
+    ToyActionPrefixPredictor,
+)
 from trace_jepa.runtime import TraceRuntime
 from trace_jepa.scenario import FloodEnvironment
 from trace_jepa.util import sha256_value, write_json
@@ -54,7 +62,7 @@ class MissionController:
         incident_commander: IncidentCommander | None = None,
         encoder: MockVideoEncoder | None = None,
         planner: FloodPlanner | None = None,
-        predictor: ToyActionPrefixPredictor | None = None,
+        predictor: ActionPrefixPredictor | None = None,
         probe: FloodClaimProbe | None = None,
     ) -> None:
         self.environment = environment
@@ -88,7 +96,7 @@ class MissionController:
         return WorldModelEvidence(
             encoder_version="mock-video-v1",
             fusion_version="flood-fusion-v1",
-            predictor_version=self.predictor.version,
+            predictor_version=self.predictor.predictor_version,
             semantic_probe_versions=(self.probe.version,),
             training_snapshot=self.predictor.training_snapshot,
             observation_window_hash=observation_hash,
@@ -110,12 +118,20 @@ class MissionController:
                 "hazard_score": prediction.hazard_score,
                 "resource_margin": prediction.resource_margin,
             },
-            calibration_version="toy-calibration-v1",
+            calibration_version=self.predictor.calibration_version,
             assumptions=prediction.assumptions,
             observation_age_s=10.0,
             decisively_contradicted=contradicted,
             realized_outcome=outcome_payload,
             prediction_residual=residual,
+            experimental_profile=build_experimental_profile(
+                predictor_version=self.predictor.predictor_version,
+                calibration_version=self.predictor.calibration_version,
+                claim_family=plan.first_action.action_type,
+                adequacy_status=self.predictor.adequacy_status,
+                model_hash=self.predictor.model_hash,
+                calibration_hash=self.predictor.calibration_hash,
+            ),
         )
 
     def _assess_observation(
@@ -139,8 +155,20 @@ class MissionController:
         predictions: dict[str, PlanPrediction] = {}
         plans: dict[str, PlanCandidate] = {}
 
+        predictor_observation = PredictorObservation(
+            routes=[
+                PredictorRouteObservation(
+                    route_id=route_id,
+                    report=str(route["report"]),
+                    nominal_travel_s=float(route["nominal_travel_s"]),
+                )
+                for route_id, route in observation["routes"].items()
+            ]
+        )
         for plan in self.planner.propose(observation):
-            prediction = self.predictor.predict(plan, observation)
+            prediction = self.predictor.predict(
+                PredictorRequest(plan=plan, observation=predictor_observation)
+            )
             claim = self.probe.build_claim(plan, prediction)
             evidence = self._make_evidence(
                 plan=plan,
@@ -244,8 +272,7 @@ class MissionController:
             ]["label"]
             emit(
                 "call_received",
-                f"Emergency call reports {active_call.people_count} people at "
-                f"{location_label}.",
+                f"Emergency call reports {active_call.people_count} people at {location_label}.",
                 call_id=active_call.call_id,
                 normalized_location_id=active_call.normalized_location_id,
                 people_count=active_call.people_count,
@@ -261,9 +288,7 @@ class MissionController:
         initial_simulation_ground_truth = self.environment.simulation_ground_truth()
         initial_observation = self.environment.observe()
         mission = initial_observation["mission"]
-        destination_label = initial_observation["locations"][
-            mission["destination_id"]
-        ]["label"]
+        destination_label = initial_observation["locations"][mission["destination_id"]]["label"]
         emit(
             "mission_state",
             f"Mission Controller grounds the incident at {destination_label}; "
@@ -336,9 +361,7 @@ class MissionController:
         ):
             route_id = chosen.first_action.route_id
             dispatch_plan_id = (
-                "north-direct"
-                if route_id == "north_channel"
-                else f"dispatch-{route_id}"
+                "north-direct" if route_id == "north_channel" else f"dispatch-{route_id}"
             )
             failed_record = record_by_plan[dispatch_plan_id]
             failed_plan = plan_by_id[dispatch_plan_id]
@@ -360,9 +383,7 @@ class MissionController:
                 failed_record,
                 realized_evidence,
                 new_status=TraceStatus.REJECT,
-                reason=(
-                    f"{chosen.first_action.actor_id} observed that {route_id} is blocked."
-                ),
+                reason=(f"{chosen.first_action.actor_id} observed that {route_id} is blocked."),
                 repair=(
                     "Preserve the completed verification action and replan only "
                     "the rescue-route branch that depended on the failed claim."
@@ -477,4 +498,3 @@ class MissionController:
             write_json(output / "summary.json", summary)
 
         return summary
-
