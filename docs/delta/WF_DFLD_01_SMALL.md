@@ -18,7 +18,7 @@ crossing network, and casualty modeling—are deliberately absent.
 | Item | Frozen definition |
 |---|---|
 | Scenario | `WF-DFLD-01-SMALL` |
-| Generator | `delta-small-generator-v5` |
+| Generator | `delta-small-generator-v6` (`v5` random namespace retained) |
 | Book seed | `20260803`, descriptive walkthrough only |
 | Time | 2026-01-15 12:00–18:00 PST (20:00–02:00 UTC) |
 | Resolution | five-minute physical ticks; 15-minute demand/capacity grid |
@@ -27,12 +27,15 @@ crossing network, and casualty modeling—are deliberately absent.
 | Gauges | RVB threshold-operative; MRU and FPT observational only |
 | Expected reports | 40 total; hourly expectations `[3, 5, 7, 12, 8, 5]` |
 | Default predictor | transparent Toy teaching fixture |
-| Scope exclusions | breach, cascade, mutual aid, rotation, federation, casualty model, new UI |
+| Resources | local engine/boat plus fixed preauthorized Rio Vista engine/boat at T+5,400 s |
+| Scope exclusions | breach, cascade, mutual-aid negotiation/tiers, rotation, federation, casualty model, new UI |
 
 Expected intensities are process expectations, not forced realization counts.
-The book seed currently realizes 45 calls, 7 allocations, 28 refusals, 10
-controller-visible repairs, a finite peak ratio of 3.0, and explicit periods of
-zero compatible spare capacity. These are descriptive results.
+The amended book seed realizes 45 calls, 13 allocations, 22 refusals, 10
+controller-visible repairs, a peak gross compatible load of 1.5, and a peak
+finite residual operational pressure of 3.0. Eleven windows have positive
+residual demand and zero free compatible capacity. These are descriptive
+results, not confirmatory evidence.
 
 ## Causal architecture
 
@@ -45,7 +48,7 @@ flowchart LR
     T --> O["Lossy observation channel"]
     I["iota: information quality"] --> O
     O --> B["Controller beliefs and revisions"]
-    K["kappa: inventory"] --> R["Local resources"]
+    K["kappa: inventory"] --> R["Local + scheduled automatic-aid resources"]
     M["mu: mobilization friction"] --> R
     D["delta: initial degradation"] --> R
     F["phi: coordination representation"] --> R
@@ -59,9 +62,11 @@ flowchart LR
 ```
 
 Every stochastic stage derives its stream from the root seed, scenario identity,
-generator version, extent, and stage name. Axis values do not reseed draws. This
-common-random-number design permits mechanism comparisons without silently
-changing the underlying random realization.
+frozen random-namespace version, extent, and stage name. Axis values do not
+reseed draws. Generator v6 explicitly retains the v5 random namespace because
+the amendment changes resources and metrics only. This common-random-number
+design permits mechanism comparisons without silently changing the underlying
+random realization.
 
 The required isolation is:
 
@@ -103,19 +108,45 @@ consumer actions, commitments, and outcomes. A commitment is legal only when it
 cites the exact record/version whose final consumer action is `CLEAR`.
 
 Allocation uses generated crossing state and route travel time. Resources have
-versioned capability sets, activation/staging/travel time, service duration,
-availability, and service units. The Type I engine has no `water_rescue`
-capability and is never counted or dispatched as a boat.
+versioned capability sets, activation/transit/staging/travel time, service
+duration, availability, and service units. The Type I engine has no
+`water_rescue` capability and is never counted or dispatched as a boat. Each
+physical resource permits only one concurrent commitment.
 
-Demand/capacity is evaluated on a fixed 15-minute grid:
+At `kappa=0.5`, the frozen profile contains a local Isleton engine and rescue
+boat plus one Rio Vista Type I engine and Zodiac rescue boat staged at T+5,400
+seconds. City materials document Station 55 at 350 Main Street, Type I engines,
+a Zodiac rescue boat, water rescue, and automatic aid to Isleton. The selected
+pair and arrival time are teaching assumptions, not claims about current
+staffing, real response time, or readiness. No request, negotiation, authority
+transfer, mutual-aid tier, or federation event is modeled.
 
-> active unresolved ground-truth service units divided by the maximum units
-> coverable by compatible, mobilized, reachable, uncommitted local resources.
+Resource provenance is frozen in
+`data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json`. Field-level
+sources are the City [operations](https://www.riovistacity.com/fire/page/operations),
+[fire FAQ](https://www.riovistacity.com/fire/page/fire-department-faqs),
+[fire-suppression](https://www.riovistacity.com/fire/page/fire-suppression), and
+[2020 study](https://www.riovistacity.com/media/2931) materials. Because the City
+server returned HTTP 403 to the reproducibility client, the repository commits a
+project-authored factual extract, URL hashes, and the access limitation—not
+copies of the upstream pages. The Station 55 coordinate is a secondary address
+geocode and is not survey-grade.
 
-A resource is assigned to at most one capability/route bucket. Surplus capacity
-and incompatible resources cannot dilute demand. Demand with zero compatible
-capacity is reported separately as explicitly unserviceable; no artificial
-denominator is inserted.
+Two capacity measures are evaluated on a fixed 15-minute grid:
+
+1. **Gross compatible scenario load** is active truth demand divided by the
+   maximum units coverable by all scheduled, mobilized, reachable, compatible
+   resources, whether free or committed. It is computed independently of policy
+   and predictor behavior and is the headline scenario-difficulty metric.
+2. **Residual operational pressure** first removes truth demand covered by an
+   active authorized commitment, then divides remaining demand by free,
+   reachable, compatible capacity. False-report commitments consume capacity
+   but erase no truth demand. This is a controller-dependent diagnostic.
+
+In both measures, a resource is assigned to at most one capability/route bucket.
+Surplus capacity and incompatible resources cannot dilute demand. Zero demand
+has ratio zero. Positive demand with zero compatible capacity is explicitly
+unserviceable and receives no fabricated denominator.
 
 ## Predictor decision
 
@@ -136,34 +167,38 @@ See [PREDICTOR_QUALIFICATION.md](PREDICTOR_QUALIFICATION.md).
 
 ## Statistical protocol and adverse findings
 
-All seed lists are materialized in
-`configs/scenarios/wf_dfld_01_small_acceptance.yaml`. The report is
-`docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION.json`.
+The amended seed list was committed in
+`configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml` before execution. The
+write-once report is
+`docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json`. The prior protocol,
+report, generator v5, and `book_v1` remain immutable adverse audit evidence.
 
-The current untouched `confirmatory-v4-primary` study ran all 100 registered
-seeds:
+The untouched `confirmatory-v5-primary` study ran all 100 registered seeds:
 
 | Measure | Result |
 |---|---:|
-| Observed calls, mean (95% CI) | 40.39 (38.83–41.95) |
-| Hour-four calls, mean | 11.47 |
+| Observed calls, mean (95% CI) | 38.55 (37.00–40.10) |
+| Hour-four calls, mean (95% CI) | 11.18 (10.24–12.12) |
 | Configured 12/hour within hour-four 95% CI | yes |
-| Peak finite demand/capacity, median (bootstrap 95% CI) | 3.0 (3.0–3.0) |
-| Allocation / refusal / repair means | 8.54 / 19.67 / 12.18 |
-| Explicitly unserviceable window mean | 15.02 |
+| Peak gross load, median (bootstrap 95% CI) | 1.5 (1.333–1.5) |
+| Peak gross load, mean and range | 1.536; 1.0–2.0 |
+| Peak finite residual pressure, median (bootstrap 95% CI) | 2.25 (2.0–3.0) |
+| Allocation / refusal / repair means | 13.69 / 13.70 / 11.16 |
+| Gross / residual unserviceable window means | 0.0 / 7.71 |
 | TRACE chains verified | 100/100 |
+| v5/v6 protected layers byte-identical | all fields, 100/100 seeds |
 
-The registered 1.4–1.6 median ratio gate therefore failed. This is retained as
-an adverse result. The earlier 1.5 result used a pre-audit denominator that could
-count surplus or partially incompatible resource units. Restoring that behavior,
-or forcing five-minute incident durations that disappear between evaluation
-points, would make the number look better while weakening the method; neither is
-accepted. Dr. Chang should review whether the scientific definition or the
-target regime—not the implementation—should change.
+All frozen v2 numeric and TRACE-chain gates passed. The bootstrap interval is
+reported in full; the preregistered gate applies to the median point estimate,
+not to containment of its entire interval. These are generator-process results,
+not operational-effectiveness evidence.
 
-The report retains earlier studies and amendments, including the v1 ratio
-failure, the v2 hourly-intensity failure, and the v3 pre-spatial-QA study. These
-are generator-process results, not operational effectiveness evidence.
+Generator v5 remains a valid adverse finding: the local-only inventory and old
+hybrid accounting produced a book ratio of 3.0 and a confirmatory-v4 median of
+3.0. The v2 amendment does not rewrite those files. It resolves the mismatch
+between the prose scope and the `kappa=0.5` local-plus-county capacity table, and
+separates intrinsic scenario load from controller-dependent spare-capacity
+pressure. See `WF_DFLD_01_SMALL_V2_AMENDMENT.md`.
 
 ## Reproduction
 
@@ -182,7 +217,7 @@ Run, replay, validate, and publish:
 .venv/bin/trace-jepa-delta-small replay \
   --reference /tmp/delta-book --output /tmp/delta-replay
 .venv/bin/trace-jepa-delta-small validate \
-  --output /tmp/WF_DFLD_01_SMALL_VALIDATION.json
+  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V2.json
 .venv/bin/trace-jepa-delta-small publish \
   --reference /tmp/delta-book --output /tmp/delta-figures
 ```
@@ -191,6 +226,13 @@ Runtime and CI make no network requests. Rebuilding the source geography bundle
 requires the separately verified DWR DEM archive/raster; ordinary run, replay,
 validation, and publication use the committed offline catalog only.
 
+The committed canonical bundles are
+`data/scenario/delta/reference/wf_dfld_01_small_book_v1` and
+`data/scenario/delta/reference/wf_dfld_01_small_book_v2`. Reproducing v1 exactly
+uses the source commit recorded in its manifest. A new `validate` output is an
+independent replication of the frozen seed study; the committed v2 report is the
+original write-once confirmatory execution.
+
 ## Threats to validity
 
 - Hydrology is reduced-order teaching physics, not a calibrated forecast.
@@ -198,7 +240,8 @@ validation, and publication use the committed offline catalog only.
   incident operations.
 - The cohort is synthetic and nonrepresentative.
 - Report and resource parameters are process-calibrated, not field-estimated.
-- The resource table omits mutual aid, shift turnover, and cascading outages.
+- The automatic-aid arrival is fixed and omits staffing uncertainty, requests,
+  negotiation, shift turnover, and cascading outages.
 - Reconciliation metrics depend on synthetic hidden lineage and do not prove
   identity resolution on real calls.
 - The Toy run establishes execution-path coverage, not decision quality.

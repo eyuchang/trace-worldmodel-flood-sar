@@ -186,12 +186,12 @@ Run the canonical commands:
 .venv/bin/trace-jepa-delta-small replay \
   --reference /tmp/delta-book --output /tmp/delta-replay
 .venv/bin/trace-jepa-delta-small validate \
-  --output /tmp/WF_DFLD_01_SMALL_VALIDATION.json
+  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V2.json
 .venv/bin/trace-jepa-delta-small publish \
   --reference /tmp/delta-book --output /tmp/delta-figures
 ```
 
-The methodology and explicit adverse demand/capacity result are documented in
+The methodology, preserved v5 adverse result, and balanced v2 amendment are documented in
 [WF-DFLD-01-SMALL frozen methodology](docs/delta/WF_DFLD_01_SMALL.md). Small is
 a synthetic teaching simulator, not a flood forecast or operational product.
 

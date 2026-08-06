@@ -476,3 +476,36 @@ def test_automatic_aid_source_extract_is_explicit_about_provenance_limits() -> N
     assert all(len(item["url_sha256"]) == 64 for item in source["sources"])
     assert all(item["upstream_content_sha256"] is None for item in source["sources"])
     assert "HTTP 403" in source["retrieval_note"]
+
+
+def test_v2_reference_preserves_v5_causal_artifacts_and_verifies() -> None:
+    reference_root = REPOSITORY_ROOT / "data/scenario/delta/reference"
+    book_v1 = reference_root / "wf_dfld_01_small_book_v1"
+    book_v2 = reference_root / "wf_dfld_01_small_book_v2"
+    assert verify_scenario_artifacts(book_v1).generator_version == "delta-small-generator-v5"
+    assert verify_scenario_artifacts(book_v2).generator_version == "delta-small-generator-v6"
+    protected_files = {
+        "geography.json",
+        "meteorology.json",
+        "hydrology.json",
+        "crossing_states.json",
+        "ground_truth.json",
+        "calls.json",
+        "call_lineage.json",
+        "predictor_prior.json",
+    }
+    for file_name in protected_files:
+        assert (book_v1 / file_name).read_bytes() == (book_v2 / file_name).read_bytes()
+
+
+def test_committed_v2_publication_bundle_regenerates_exactly(tmp_path: Path) -> None:
+    from trace_jepa.scenario.delta.publication import publish_reference_bundle
+
+    reference = REPOSITORY_ROOT / "data/scenario/delta/reference/wf_dfld_01_small_book_v2"
+    committed = REPOSITORY_ROOT / "docs/delta/figures/wf_dfld_01_small_v2"
+    regenerated = tmp_path / "publication"
+    manifest = publish_reference_bundle(reference, regenerated)
+    assert manifest == json.loads((committed / "publication_manifest.json").read_text("utf-8"))
+    for artifact in manifest["artifacts"]:
+        file_name = artifact["file_name"]
+        assert (regenerated / file_name).read_bytes() == (committed / file_name).read_bytes()

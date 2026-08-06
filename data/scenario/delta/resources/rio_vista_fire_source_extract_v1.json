@@ -1,7 +1,8 @@
 {
   "record_id": "rio-vista-fire-source-extract-v1",
   "schema_version": "delta-resource-source-extract-v1",
-  "retrieved_utc": "2026-08-06T00:00:00Z",
+  "retrieval_date_utc": "2026-08-06",
+  "provenance_record_finalized_utc": "2026-08-06T02:41:14Z",
   "publisher": "City of Rio Vista, California",
   "license_and_redistribution": "Project-authored factual extract from official public City materials; upstream pages are not redistributed and no copyright license is asserted.",
   "retrieval_note": "Official pages were reviewed through indexed page text because the City server returned HTTP 403 to the reproducibility client on 2026-08-06. URLs and field-level sources are retained for independent review.",
