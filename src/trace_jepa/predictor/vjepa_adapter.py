@@ -28,7 +28,7 @@ class PredictorInputUnavailable(RuntimeError):
 
 def _npy_bytes(value: NDArray[Any]) -> bytes:
     stream = BytesIO()
-    np.lib.format.write_array(stream, value, allow_pickle=False)  # type: ignore[no-untyped-call]
+    np.save(stream, value, allow_pickle=False)
     return stream.getvalue()
 
 

@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import cast
+from typing import Any, Protocol, cast
 
 import numpy as np
 import rasterio
+from numpy.typing import NDArray
 from pyproj import Transformer
 from rasterio.mask import mask
 from shapely import transform
@@ -30,6 +31,13 @@ from trace_jepa.scenario.delta.geography_models import (
     SourceRecord,
     Waterway,
 )
+
+
+class _CompressibleRasterBand(Protocol):
+    """Typed surface guaranteed by rasterio.mask when ``filled=False``."""
+
+    def compressed(self) -> NDArray[Any]: ...
+
 
 SIMPLIFICATION_TOLERANCE_M = 10.0
 ACRES_PER_SQUARE_METER = 1.0 / 4046.8564224
@@ -171,7 +179,7 @@ def _elevation_summary(
     geometry_utm = transform(geometry_wgs84, to_utm.transform, interleaved=False)
     with rasterio.open(raster_path) as dataset:
         values, _ = mask(dataset, [geometry_utm.__geo_interface__], crop=True, filled=False)
-    compressed = np.ma.asarray(values[0]).compressed()  # type: ignore[no-untyped-call]
+    compressed = cast(_CompressibleRasterBand, values[0]).compressed()
     if compressed.size == 0:
         raise ValueError("DWR DEM has no valid cells within island geometry")
     return ElevationSummary(
