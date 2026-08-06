@@ -440,3 +440,39 @@ def test_v5_configuration_and_book_bundle_remain_immutable_audit_evidence() -> N
     assert sha256_file(book_v1 / "manifest.json") == (
         "ad69d57fde24db6c7c49080c71398bdbec59f7f164e42470c62e94c1e6581e19"
     )
+
+
+def test_confirmatory_v5_report_is_complete_and_reports_all_frozen_gates() -> None:
+    report_path = REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
+    report = json.loads(report_path.read_text("utf-8"))
+    protocol = load_acceptance_config(ACCEPTANCE_PATH)
+    assert report["protocol_sha256"] == sha256_file(ACCEPTANCE_PATH)
+    studies = {item["study_id"]: item for item in report["studies"]}
+    assert set(studies) == {"development-v6", "confirmatory-v5-primary"}
+    primary = studies["confirmatory-v5-primary"]
+    assert primary["seed_count"] == 100
+    assert protocol.balanced_confirmatory_ensemble is not None
+    assert primary["seeds"] == protocol.balanced_confirmatory_ensemble.seeds
+    assert primary["call_count"]["estimate"] == pytest.approx(40.0, abs=2.5)
+    peak_interval = primary["call_count"]["hourly_mean_95"][3]
+    assert peak_interval["lower_95"] <= 12.0 <= peak_interval["upper_95"]
+    assert 1.4 <= primary["peak_gross_load_ratio"]["estimate"] <= 1.6
+    assert primary["operations"]["all_trace_chains_verified"] is True
+    assert (
+        primary["resource_only_amendment_invariance"]["all_seeds_and_fields_byte_identical"] is True
+    )
+    assert (
+        primary["registered_gate_evaluation"]["all_registered_numeric_and_chain_gates_met"] is True
+    )
+    assert all(report["book_walkthrough"]["registered_gate_evaluation"].values())
+
+
+def test_automatic_aid_source_extract_is_explicit_about_provenance_limits() -> None:
+    path = REPOSITORY_ROOT / "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json"
+    source = json.loads(path.read_text("utf-8"))
+    assert source["facts"]["street_address"] == "350 Main Street, Rio Vista, CA 94571"
+    assert source["facts"]["location"]["precision"] == ("secondary-address-geocode-not-surveyed")
+    assert source["scenario_assumptions_not_source_facts"]["automatic_aid_arrival_s"] == 5_400
+    assert all(len(item["url_sha256"]) == 64 for item in source["sources"])
+    assert all(item["upstream_content_sha256"] is None for item in source["sources"])
+    assert "HTTP 403" in source["retrieval_note"]
