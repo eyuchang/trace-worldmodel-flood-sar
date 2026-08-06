@@ -62,7 +62,7 @@ def _svg_document(title: str, body: list[str]) -> bytes:
     return ("\n".join(payload) + "\n").encode("utf-8")
 
 
-def _topology_figure(geography: Any, resources: Any) -> bytes:
+def _topology_figure(geography: Any, resources: Any, resource_provenance: Any) -> bytes:
     islands = list(geography["islands"])
     waterways = list(geography["waterways"])
     coordinates: list[tuple[float, float]] = []
@@ -72,6 +72,13 @@ def _topology_figure(geography: Any, resources: Any) -> bytes:
                 (point["easting_mm"] / 1000.0, point["northing_mm"] / 1000.0)
                 for point in polygon["points"]
             )
+    automatic_aid_location = resource_provenance["facts"]["location"]
+    coordinates.append(
+        (
+            automatic_aid_location["easting_mm_epsg_26910"] / 1000.0,
+            automatic_aid_location["northing_mm_epsg_26910"] / 1000.0,
+        )
+    )
     minimum_east = min(point[0] for point in coordinates)
     maximum_east = max(point[0] for point in coordinates)
     minimum_north = min(point[1] for point in coordinates)
@@ -120,6 +127,16 @@ def _topology_figure(geography: Any, resources: Any) -> bytes:
         )
         suffix = "" if operative else " (approx.; non-operative)"
         body.append(_text(x + 9, y + 4, facility["name"] + suffix, size=10))
+    aid_x, aid_y = project(
+        automatic_aid_location["easting_mm_epsg_26910"],
+        automatic_aid_location["northing_mm_epsg_26910"],
+    )
+    body.append(
+        f'<polygon points="{aid_x:.1f},{aid_y - 7:.1f} {aid_x + 7:.1f},{aid_y:.1f} '
+        f'{aid_x:.1f},{aid_y + 7:.1f} {aid_x - 7:.1f},{aid_y:.1f}" '
+        f'fill="{COLORS["hazard"]}"/>'
+    )
+    body.append(_text(aid_x + 10, aid_y + 4, "Rio Vista Station 55 (secondary geocode)", size=10))
     body.append(
         '<rect x="680" y="62" width="245" height="500" rx="8" fill="#f7f9f9" stroke="#ccd1d1"/>'
     )
@@ -140,10 +157,17 @@ def _topology_figure(geography: Any, resources: Any) -> bytes:
             )
         )
         y += 55
-    body.append(_text(700, y + 8, "Local resource inventory", size=16, weight=700))
+    body.append(_text(700, y + 8, "Frozen resource schedule", size=16, weight=700))
     y += 38
     for unit in resources["units"]:
-        body.append(_text(700, y, f"{unit['resource_id']}: {unit['resource_class']}", size=10))
+        body.append(
+            _text(
+                700,
+                y,
+                f"{unit['resource_id']}: {unit['resource_class']} @T+{unit['available_from_s']}s",
+                size=9,
+            )
+        )
         y += 20
     body.append(_text(700, y + 22, "CRS: EPSG:26910 for metric operations", size=10))
     body.append(_text(700, y + 39, "Source geometries retained in WGS84", size=10))
@@ -154,6 +178,7 @@ def _timeline_figure(
     meteorology: Any,
     hydrology: Any,
     calls: Any,
+    resources: Any,
 ) -> bytes:
     body = [
         _text(55, 78, "Rain (milli-in/hr)", size=12, weight=700),
@@ -207,6 +232,17 @@ def _timeline_figure(
         body.append(
             f'<line x1="{px:.1f}" y1="500" x2="{px:.1f}" y2="{py:.1f}" stroke="{color}" stroke-width="2"/>'
         )
+    automatic_aid_arrival = min(
+        unit["available_from_s"]
+        for unit in resources["units"]
+        if unit["availability_mode"] == "preauthorized-automatic-aid-fixed-staging"
+    )
+    aid_x = x(automatic_aid_arrival)
+    body.append(
+        f'<line x1="{aid_x:.1f}" y1="90" x2="{aid_x:.1f}" y2="570" '
+        f'stroke="{COLORS["hazard"]}" stroke-width="2" stroke-dasharray="6 4"/>'
+    )
+    body.append(_text(aid_x + 5, 105, "automatic aid staged", size=10, weight=700))
     for hour in range(7):
         px = x(hour * 3600)
         body.append(f'<line x1="{px:.1f}" y1="90" x2="{px:.1f}" y2="570" stroke="#e5e7e9"/>')
@@ -214,15 +250,15 @@ def _timeline_figure(
     return _svg_document("Hazard, RVB stage, and observed-call timeline", body)
 
 
-def _demand_figure(windows: Any) -> bytes:
+def _gross_load_figure(windows: Any) -> bytes:
     body = [
         _text(64, 82, "Normalized service units", size=12, weight=700),
-        _text(600, 82, "Red bands = zero spare compatible capacity", size=9),
+        _text(560, 82, "Headline metric: policy- and predictor-independent", size=9),
     ]
     maximum = max(
         max(
-            int(item["uncovered_demand_service_units"]),
-            int(item["compatible_uncommitted_capacity_units"]),
+            int(item["active_demand_service_units"]),
+            int(item["gross_compatible_capacity_units"]),
         )
         for item in windows
     )
@@ -234,21 +270,20 @@ def _demand_figure(windows: Any) -> bytes:
         return 540 - float(units) / max(maximum, 1) * 410
 
     for item in windows:
-        if item["explicitly_unserviceable"]:
+        if item["gross_unserviceable"]:
             px = x(item["window_start_s"])
             body.append(
                 f'<rect x="{px:.1f}" y="110" width="34.2" height="430" fill="#f5b7b1" fill-opacity="0.45"/>'
             )
     demand_points = [
-        (x(item["window_start_s"]), y(item["uncovered_demand_service_units"])) for item in windows
+        (x(item["window_start_s"]), y(item["active_demand_service_units"])) for item in windows
     ]
     capacity_points = [
-        (x(item["window_start_s"]), y(item["compatible_uncommitted_capacity_units"]))
-        for item in windows
+        (x(item["window_start_s"]), y(item["gross_compatible_capacity_units"])) for item in windows
     ]
     for points, color, label, label_y in (
-        (demand_points, COLORS["demand"], "uncovered demand", 105),
-        (capacity_points, COLORS["capacity"], "compatible uncommitted capacity", 125),
+        (demand_points, COLORS["demand"], "active truth demand", 105),
+        (capacity_points, COLORS["capacity"], "gross compatible capacity", 125),
     ):
         body.append(
             '<polyline points="'
@@ -262,7 +297,65 @@ def _demand_figure(windows: Any) -> bytes:
     for hour in range(7):
         px = x(hour * 3600)
         body.append(_text(px - 8, 575, f"+{hour}h", size=10))
-    return _svg_document("Active uncovered demand and compatible local capacity", body)
+    return _svg_document("Gross compatible scenario load (peak ratio 1.5)", body)
+
+
+def _residual_pressure_figure(windows: Any) -> bytes:
+    body = [
+        _text(64, 82, "Normalized service units", size=12, weight=700),
+        _text(535, 82, "Diagnostic only: depends on TRACE commitments", size=9),
+    ]
+    maximum = max(
+        max(
+            int(item["residual_unassigned_demand_units"]),
+            int(item["free_compatible_capacity_units"]),
+        )
+        for item in windows
+    )
+
+    def x(seconds: float) -> float:
+        return 80 + float(seconds) / 21_600 * 820
+
+    def y(units: float) -> float:
+        return 540 - float(units) / max(maximum, 1) * 410
+
+    for item in windows:
+        if item["residual_unserviceable"]:
+            px = x(item["window_start_s"])
+            body.append(
+                f'<rect x="{px:.1f}" y="110" width="34.2" height="430" '
+                'fill="#f5b7b1" fill-opacity="0.45"/>'
+            )
+    series = (
+        (
+            "residual_unassigned_demand_units",
+            COLORS["demand"],
+            "residual unassigned demand",
+            105,
+        ),
+        (
+            "free_compatible_capacity_units",
+            COLORS["capacity"],
+            "free compatible capacity",
+            125,
+        ),
+    )
+    for key, color, label, label_y in series:
+        points = [(x(item["window_start_s"]), y(item[key])) for item in windows]
+        body.append(
+            '<polyline points="'
+            + " ".join(f"{px:.1f},{py:.1f}" for px, py in points)
+            + f'" fill="none" stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(
+            f'<line x1="80" y1="{label_y}" x2="105" y2="{label_y}" '
+            f'stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(_text(112, label_y + 4, label, size=10))
+    for hour in range(7):
+        px = x(hour * 3600)
+        body.append(_text(px - 8, 575, f"+{hour}h", size=10))
+    return _svg_document("Residual operational pressure and unserviceable windows", body)
 
 
 def _flow_figure(summary: Any, trace_records: Any) -> bytes:
@@ -338,6 +431,7 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     output_root.mkdir(parents=True, exist_ok=True)
     geography = _load_json(reference_root / "geography.json")
     resources = _load_json(reference_root / "resources.json")
+    resource_provenance = _load_json(reference_root / "resource_provenance.json")
     meteorology = _load_json(reference_root / "meteorology.json")
     hydrology = _load_json(reference_root / "hydrology.json")
     calls = _load_json(reference_root / "calls.json")
@@ -346,9 +440,10 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     validation = _load_json(reference_root / "validation_summary.json")
     trace_records = _load_json(reference_root / "trace_records.json")
     figures = {
-        "delta_small_topology.svg": _topology_figure(geography, resources),
-        "delta_small_timeline.svg": _timeline_figure(meteorology, hydrology, calls),
-        "delta_small_demand_capacity.svg": _demand_figure(windows),
+        "delta_small_topology.svg": _topology_figure(geography, resources, resource_provenance),
+        "delta_small_timeline.svg": _timeline_figure(meteorology, hydrology, calls, resources),
+        "delta_small_gross_load.svg": _gross_load_figure(windows),
+        "delta_small_residual_pressure.svg": _residual_pressure_figure(windows),
         "delta_small_trace_walkthrough.svg": _flow_figure(summary, trace_records),
     }
     descriptors: list[dict[str, object]] = []
@@ -362,7 +457,7 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
         )
     result_table = canonical_json_bytes(
         {
-            "schema_version": "delta-small-publication-result-table-v2",
+            "schema_version": "delta-small-publication-result-table-v3",
             "book_walkthrough": summary,
             "registered_validation": validation,
         }
@@ -376,7 +471,7 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
         }
     )
     manifest: dict[str, object] = {
-        "schema_version": "delta-small-publication-bundle-v1",
+        "schema_version": "delta-small-publication-bundle-v2",
         "reference_manifest_sha256": sha256_file(reference_root / "manifest.json"),
         "metadata_policy": "deterministic-svg-no-timestamps-no-notebook",
         "artifacts": descriptors,

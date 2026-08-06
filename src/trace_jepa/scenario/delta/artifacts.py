@@ -149,7 +149,7 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
         for hour in range(6)
     ]
     return {
-        "schema_version": "delta-small-machine-result-summary-v1",
+        "schema_version": "delta-small-machine-result-summary-v2",
         "scenario_id": scenario.config.scenario_id,
         "seed": scenario.config.seed,
         "seed_role": "descriptive_walkthrough_not_confirmatory",
@@ -165,8 +165,12 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
         "visible_evidence_repairs": run_result.repaired,
         "commitments": len(run_result.commitments),
         "trace_chain_verified": run_result.trace_chain_verified,
-        "peak_finite_demand_capacity_ratio_milli": (run_result.peak_demand_capacity_ratio_milli),
-        "explicitly_unserviceable_windows": run_result.unserviceable_windows,
+        "peak_gross_compatible_load_ratio_milli": run_result.peak_gross_load_ratio_milli,
+        "gross_unserviceable_windows": run_result.gross_unserviceable_windows,
+        "peak_finite_residual_operational_pressure_ratio_milli": (
+            run_result.peak_finite_residual_pressure_ratio_milli
+        ),
+        "residual_unserviceable_windows": run_result.residual_unserviceable_windows,
         "claims_limit": [
             "reduced_order_teaching_hydrology",
             "synthetic_nonrepresentative_cohort",
@@ -191,24 +195,42 @@ def write_scenario_artifacts(
     repository_root = package_root.parents[1]
     physical_parameters = physical_parameter_table()
     population_parameters = population_parameter_table()
-    validation_path = repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION.json"
-    validation_report = json.loads(validation_path.read_text("utf-8"))
-    validation_summary = {
-        "schema_version": "delta-small-validation-summary-v1",
-        "source_report_sha256": sha256_file(validation_path),
-        "studies": [
-            {
-                "study_id": study["study_id"],
-                "seed_count": study["seed_count"],
-                "call_count": study["call_count"],
-                "peak_demand_capacity_ratio": study["peak_demand_capacity_ratio"],
-                "observation_channel": study["observation_channel"],
-                "operations": study["operations"],
-                "registered_gate_evaluation": study["registered_gate_evaluation"],
-            }
-            for study in validation_report["studies"]
-        ],
-    }
+    acceptance_path = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
+    validation_path = repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
+    if validation_path.is_file():
+        validation_report = json.loads(validation_path.read_text("utf-8"))
+        validation_summary: dict[str, object] = {
+            "schema_version": "delta-small-validation-summary-v2",
+            "status": "confirmatory-v5-executed",
+            "source_report_sha256": sha256_file(validation_path),
+            "book_walkthrough": validation_report["book_walkthrough"],
+            "studies": [
+                {
+                    "study_id": study["study_id"],
+                    "seed_count": study["seed_count"],
+                    "call_count": study["call_count"],
+                    "peak_gross_load_ratio": study["peak_gross_load_ratio"],
+                    "peak_finite_residual_pressure_ratio": study[
+                        "peak_finite_residual_pressure_ratio"
+                    ],
+                    "observation_channel": study["observation_channel"],
+                    "operations": study["operations"],
+                    "registered_gate_evaluation": study["registered_gate_evaluation"],
+                }
+                for study in validation_report["studies"]
+            ],
+        }
+    else:
+        validation_summary = {
+            "schema_version": "delta-small-validation-summary-v2",
+            "status": "confirmatory-v5-preregistered-not-yet-executed",
+            "acceptance_protocol_sha256": sha256_file(acceptance_path),
+            "studies": [],
+        }
+    resource_source = (
+        repository_root / "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json"
+    )
+    resource_provenance = json.loads(resource_source.read_text("utf-8"))
     artifacts = [
         _write_artifact(
             output_root,
@@ -285,6 +307,13 @@ def write_scenario_artifacts(
             "resources",
             "resources.json",
             scenario.resources.model_dump(mode="json"),
+            False,
+        ),
+        _write_artifact(
+            output_root,
+            "resource_provenance",
+            "resource_provenance.json",
+            resource_provenance,
             False,
         ),
         _write_artifact(
@@ -411,11 +440,24 @@ def write_scenario_artifacts(
             sha256=sha256_file(dependency_lock),
         ),
         ProvenanceInput(
-            name="registered_validation_report",
-            identifier=validation_path.name,
-            sha256=sha256_file(validation_path),
+            name="registered_acceptance_protocol",
+            identifier=acceptance_path.name,
+            sha256=sha256_file(acceptance_path),
+        ),
+        ProvenanceInput(
+            name="automatic_aid_source_extract",
+            identifier=resource_source.name,
+            sha256=sha256_file(resource_source),
         ),
     ]
+    if validation_path.is_file():
+        inputs.append(
+            ProvenanceInput(
+                name="registered_validation_report",
+                identifier=validation_path.name,
+                sha256=sha256_file(validation_path),
+            )
+        )
     if predictor_provenance.encoder_checkpoint_hash is not None:
         inputs.append(
             ProvenanceInput(
@@ -425,7 +467,7 @@ def write_scenario_artifacts(
             )
         )
     manifest = ReplayManifest(
-        schema_version="delta-replay-manifest-v2",
+        schema_version="delta-replay-manifest-v3",
         scenario_id=scenario.config.scenario_id,
         generator_version=scenario.config.generator_version,
         git_commit=recorded_git_commit or _git_commit(repository_root),

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from trace_jepa.contracts import (
     ActionInstance,
@@ -78,10 +78,32 @@ class DeltaDecisionEvent(DeltaModel):
 
 class DemandWindow(DeltaModel):
     window_start_s: int = Field(ge=0)
-    uncovered_demand_service_units: int = Field(ge=0)
-    compatible_uncommitted_capacity_units: int = Field(ge=0)
-    ratio_milli: int | None = Field(default=None, ge=0)
-    explicitly_unserviceable: bool
+    active_demand_service_units: int = Field(ge=0)
+    gross_compatible_capacity_units: int = Field(ge=0)
+    gross_load_ratio_milli: int | None = Field(default=None, ge=0)
+    gross_unserviceable: bool
+    commitment_covered_demand_units: int = Field(ge=0)
+    residual_unassigned_demand_units: int = Field(ge=0)
+    free_compatible_capacity_units: int = Field(ge=0)
+    residual_pressure_ratio_milli: int | None = Field(default=None, ge=0)
+    residual_unserviceable: bool
+
+    @model_validator(mode="after")
+    def validate_capacity_accounting(self) -> DemandWindow:
+        if (
+            self.commitment_covered_demand_units + self.residual_unassigned_demand_units
+            != self.active_demand_service_units
+        ):
+            raise ValueError("covered plus residual demand must equal active demand")
+        if self.gross_unserviceable != (
+            self.active_demand_service_units > 0 and self.gross_compatible_capacity_units == 0
+        ):
+            raise ValueError("gross unserviceable status disagrees with demand and capacity")
+        if self.residual_unserviceable != (
+            self.residual_unassigned_demand_units > 0 and self.free_compatible_capacity_units == 0
+        ):
+            raise ValueError("residual unserviceable status disagrees with demand and capacity")
+        return self
 
 
 class DeltaResourceOutcome(DeltaModel):
@@ -105,11 +127,23 @@ class DeltaRunResult(DeltaModel):
     commitments: list[Commitment]
     outcomes: list[DeltaResourceOutcome]
     trace_chain_verified: bool
-    peak_demand_capacity_ratio_milli: int = Field(ge=0)
-    unserviceable_windows: int = Field(ge=0)
+    peak_gross_load_ratio_milli: int = Field(ge=0)
+    gross_unserviceable_windows: int = Field(ge=0)
+    peak_finite_residual_pressure_ratio_milli: int = Field(ge=0)
+    residual_unserviceable_windows: int = Field(ge=0)
     allocated: int = Field(ge=0)
     refused: int = Field(ge=0)
     repaired: int = Field(ge=0)
+
+    @property
+    def peak_demand_capacity_ratio_milli(self) -> int:
+        """Deprecated source-compatibility alias; v2 means gross scenario load."""
+        return self.peak_gross_load_ratio_milli
+
+    @property
+    def unserviceable_windows(self) -> int:
+        """Deprecated source-compatibility alias for residual pressure."""
+        return self.residual_unserviceable_windows
 
 
 def _nearest_tick(scenario: GeneratedScenario, simulation_time_s: int) -> int:
@@ -324,29 +358,31 @@ def _prediction_evidence(
     )
 
 
-def _demand_windows(
+def evaluate_capacity_windows(
     scenario: GeneratedScenario,
     decisions: list[DeltaDecisionEvent],
 ) -> list[DemandWindow]:
-    legacy_semantics = scenario.config.generator_version in {
-        "delta-small-generator-v2",
-        "delta-small-generator-v3",
-    }
+    """Evaluate intrinsic load and post-controller residual pressure.
+
+    The gross metric is a property of truth plus the registered resource
+    schedule. It deliberately ignores commitments. The residual metric is an
+    offline evaluation: it uses hidden lineage only after TRACE execution to
+    determine which truth demand an authorized commitment covered. No truth
+    identifier is emitted in the aggregate window artifact.
+    """
     window_s = scenario.config.demand_capacity.window_s
     lineage_by_call = {
         item.call_id: item.truth_incident_id
         for item in scenario.observations.lineage
         if item.truth_incident_id is not None
     }
-    resolved_incidents = {
-        lineage_by_call[event.call_id]: (
-            event.simulation_time_s if legacy_semantics else event.service_complete_s
-        )
+    allocation_events = [
+        event
         for event in decisions
         if event.event_type == "allocation"
         and event.call_id in lineage_by_call
         and event.service_complete_s is not None
-    }
+    ]
     busy_intervals = [
         (event.resource_id, event.simulation_time_s, event.service_complete_s)
         for event in decisions
@@ -354,64 +390,57 @@ def _demand_windows(
     ]
     windows: list[DemandWindow] = []
     for start in range(0, scenario.config.timeline.duration_s, window_s):
-        resolved_at_time = {
-            incident_id
-            for incident_id, completion_time_s in resolved_incidents.items()
-            if completion_time_s is not None and completion_time_s <= start
-        }
         active = [
             incident
             for incident in scenario.truth.incidents
             if incident.onset_s <= start < incident.onset_s + incident.service_duration_s
-            and incident.incident_id not in resolved_at_time
         ]
-        uncovered_demand = sum(incident.service_units for incident in active)
-        if legacy_semantics:
-            requirements = {incident.required_capability for incident in active}
-            required_routes = {
-                (
-                    "XNG-03"
-                    if next(
-                        item
-                        for item in scenario.truth.structures
-                        if item.structure_id == incident.structure_id
-                    ).island_id
-                    == "ISL-02"
-                    else "XNG-04"
-                )
-                for incident in active
-            }
-            capacity = sum(
-                unit.service_units
-                for unit in scenario.resources.units
-                if unit.is_available
-                and unit.available_from_s <= start
-                and not any(
-                    resource_id == unit.resource_id and interval_start <= start < int(interval_end)
-                    for resource_id, interval_start, interval_end in busy_intervals
-                    if interval_end is not None
-                )
-                and bool(requirements.intersection(unit.capabilities))
-                and any(
-                    _routed_travel_s(scenario, unit, start, route_id) is not None
-                    for route_id in required_routes
-                )
-            )
-        else:
-            capacity = _maximum_coverable_service_units(
-                scenario,
-                active,
-                start,
-                busy_intervals,
-            )
-        explicitly_unserviceable = uncovered_demand > 0 and capacity == 0
+        active_demand = sum(incident.service_units for incident in active)
+        gross_capacity = _maximum_coverable_service_units(scenario, active, start, ())
+
+        covered_ids = {
+            lineage_by_call[event.call_id]
+            for event in allocation_events
+            if event.service_complete_s is not None
+            and event.simulation_time_s <= start < event.service_complete_s
+        }
+        residual_incidents = [
+            incident for incident in active if incident.incident_id not in covered_ids
+        ]
+        commitment_covered = active_demand - sum(
+            incident.service_units for incident in residual_incidents
+        )
+        residual_demand = active_demand - commitment_covered
+        free_capacity = _maximum_coverable_service_units(
+            scenario,
+            residual_incidents,
+            start,
+            busy_intervals,
+        )
         windows.append(
             DemandWindow(
                 window_start_s=start,
-                uncovered_demand_service_units=uncovered_demand,
-                compatible_uncommitted_capacity_units=capacity,
-                ratio_milli=(round(1000 * uncovered_demand / capacity) if capacity else None),
-                explicitly_unserviceable=explicitly_unserviceable,
+                active_demand_service_units=active_demand,
+                gross_compatible_capacity_units=gross_capacity,
+                gross_load_ratio_milli=(
+                    0
+                    if active_demand == 0
+                    else round(1000 * active_demand / gross_capacity)
+                    if gross_capacity
+                    else None
+                ),
+                gross_unserviceable=active_demand > 0 and gross_capacity == 0,
+                commitment_covered_demand_units=commitment_covered,
+                residual_unassigned_demand_units=residual_demand,
+                free_compatible_capacity_units=free_capacity,
+                residual_pressure_ratio_milli=(
+                    0
+                    if residual_demand == 0
+                    else round(1000 * residual_demand / free_capacity)
+                    if free_capacity
+                    else None
+                ),
+                residual_unserviceable=residual_demand > 0 and free_capacity == 0,
             )
         )
     return windows
@@ -661,10 +690,17 @@ def run_delta_small(
         commitments = commitment_log.all()
         chain_verified = repository.verify_chain()
 
-    windows = _demand_windows(scenario, decisions)
-    finite_ratios = [item.ratio_milli for item in windows if item.ratio_milli is not None]
+    windows = evaluate_capacity_windows(scenario, decisions)
+    gross_ratios = [
+        item.gross_load_ratio_milli for item in windows if item.gross_load_ratio_milli is not None
+    ]
+    residual_ratios = [
+        item.residual_pressure_ratio_milli
+        for item in windows
+        if item.residual_pressure_ratio_milli is not None
+    ]
     return DeltaRunResult(
-        schema_version="delta-small-run-result-v2",
+        schema_version="delta-small-run-result-v3",
         scenario_id=scenario.config.scenario_id,
         predictor_version=provenance.predictor_version,
         calibration_version=provenance.calibration_version,
@@ -675,8 +711,10 @@ def run_delta_small(
         commitments=commitments,
         outcomes=outcomes,
         trace_chain_verified=chain_verified,
-        peak_demand_capacity_ratio_milli=max(finite_ratios, default=0),
-        unserviceable_windows=sum(item.explicitly_unserviceable for item in windows),
+        peak_gross_load_ratio_milli=max(gross_ratios, default=0),
+        gross_unserviceable_windows=sum(item.gross_unserviceable for item in windows),
+        peak_finite_residual_pressure_ratio_milli=max(residual_ratios, default=0),
+        residual_unserviceable_windows=sum(item.residual_unserviceable for item in windows),
         allocated=sum(event.event_type == "allocation" for event in decisions),
         refused=sum(event.event_type == "refusal" for event in decisions),
         repaired=sum(event.event_type == "repair" for event in decisions),

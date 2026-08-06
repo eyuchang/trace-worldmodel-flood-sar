@@ -75,6 +75,8 @@ class DemandCapacityConfig(DeltaModel):
     tolerance: float = Field(gt=0.0)
     demand_unit: str
     capacity_unit: str
+    headline_metric: str = "legacy-hybrid-uncovered-demand-over-free-capacity"
+    secondary_metric: str = "not-defined"
 
 
 class ExpectedConfig(DeltaModel):
@@ -88,6 +90,8 @@ class DeltaScenarioConfig(DeltaModel):
     schema_version: str
     scenario_id: str
     generator_version: str
+    randomness_namespace_version: str | None = None
+    resource_profile_id: str = "kappa-0.5-local-v1"
     seed: int = Field(ge=0)
     timeline: TimelineConfig
     axes: AxisConfig
@@ -117,6 +121,15 @@ class DeltaScenarioConfig(DeltaModel):
             raise ValueError("breaches are outside the Small scope")
         if self.expected.mutual_aid_tiers != 0 or self.expected.crew_rotation:
             raise ValueError("mutual aid and crew rotation are outside the Small scope")
+        if self.generator_version == "delta-small-generator-v6":
+            if self.schema_version != "trace-delta-scenario-v2":
+                raise ValueError("generator v6 requires trace-delta-scenario-v2")
+            if self.randomness_namespace_version != "delta-small-generator-v5":
+                raise ValueError("generator v6 must preserve the frozen v5 random namespace")
+            if self.resource_profile_id != "kappa-0.5-local-plus-automatic-aid-v1":
+                raise ValueError("generator v6 requires the registered automatic-aid profile")
+            if self.demand_capacity.schema_version != "delta-demand-capacity-v2":
+                raise ValueError("generator v6 requires delta-demand-capacity-v2")
         return self
 
 
@@ -296,18 +309,24 @@ class ResourceUnit(DeltaModel):
     route_id: str
     passenger_capacity: int = Field(ge=0)
     activation_time_s: int = Field(ge=0)
+    transit_time_s: int = Field(default=0, ge=0)
     staging_time_s: int = Field(ge=0)
     nominal_travel_time_s: int = Field(gt=0)
     available_from_s: int = Field(ge=0)
     service_duration_s: int = Field(gt=0)
     service_units: int = Field(gt=0)
     is_available: bool
+    availability_mode: str = "local-from-scenario-start"
+    origin_base_id: str | None = None
+    source_record_ids: tuple[str, ...] = ()
 
 
 class ResourceArtifact(DeltaModel):
     schema_version: str
     capability_schema_version: str
     coordination_domain: str
+    resource_profile_id: str = "kappa-0.5-local-v1"
+    service_unit_definition: str = "normalized-analytical-capability-load-unit"
     units: list[ResourceUnit]
 
 

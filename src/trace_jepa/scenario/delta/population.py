@@ -48,7 +48,7 @@ LOCATION_METHODS = ("cell-sector", "landmark", "address-intersection", "gps-shar
 
 def population_parameter_table() -> dict[str, object]:
     return {
-        "schema_version": "delta-truth-observation-resource-parameters-v4",
+        "schema_version": "delta-truth-observation-resource-parameters-v5",
         "call_type_weights": CALL_TYPE_WEIGHTS,
         "incident_requirements": INCIDENT_REQUIREMENTS,
         "location_methods": LOCATION_METHODS,
@@ -72,6 +72,16 @@ def population_parameter_table() -> dict[str, object]:
             "truth_generation_uses_target_call_profile": False,
         },
         "cohort_claim_limit": "synthetic-teaching-cohort-not-demographically-representative",
+        "resource_profiles": {
+            "kappa-0.5-local-plus-automatic-aid-v1": {
+                "local_inventory": ["one-type-i-engine", "one-rescue-boat"],
+                "automatic_aid_inventory": ["one-type-i-engine", "one-zodiac-rescue-boat"],
+                "automatic_aid_arrival_s_at_mu_1": 5_400,
+                "availability_semantics": "preauthorized-fixed-teaching-schedule",
+                "service_unit_definition": "normalized-analytical-capability-load-unit",
+                "physical_resource_concurrency": 1,
+            }
+        },
     }
 
 
@@ -471,6 +481,7 @@ def generate_observations(
     if config.generator_version in {
         "delta-small-generator-v4",
         "delta-small-generator-v5",
+        "delta-small-generator-v6",
     }:
         hourly_probabilities = _hourly_channel_probabilities(
             config,
@@ -650,7 +661,24 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
     # apparatus classes: one Type I engine and one 25-foot rescue boat.
     boat_count = max(1, round(2 * config.axes.kappa))
     engine_count = max(1, round(2 * config.axes.kappa))
-    definitions: list[tuple[str, str, tuple[str, ...], str, int, int, int, int, int, int]] = []
+    definitions: list[
+        tuple[
+            str,
+            str,
+            tuple[str, ...],
+            str,
+            int,
+            int,
+            int,
+            int,
+            int,
+            int,
+            int,
+            str,
+            str | None,
+            tuple[str, ...],
+        ]
+    ] = []
     for index in range(boat_count):
         definitions.append(
             (
@@ -660,10 +688,14 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
                 "XNG-04",
                 6,
                 index * 240,
+                0,
                 180,
                 900,
                 2_700,
                 2,
+                "local-from-scenario-start",
+                "FAC-FIRE-01",
+                ("isleton-fire-department-2026-08-05",),
             )
         )
     for index in range(engine_count):
@@ -680,13 +712,61 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
                 "XNG-04",
                 0,
                 180 + index * 180,
+                0,
                 120,
                 720,
                 2_700,
                 2,
+                "local-from-scenario-start",
+                "FAC-FIRE-01",
+                ("isleton-fire-department-2026-08-05",),
             )
         )
-    degradation_thresholds = (0.56, 0.48, 0.40, 0.32, 0.24, 0.16, 0.08)
+    if config.generator_version == "delta-small-generator-v6":
+        automatic_aid_count = max(0, round(2 * config.axes.kappa))
+        for index in range(automatic_aid_count):
+            definitions.append(
+                (
+                    f"RES-RV-BOAT-55-{index + 1:02d}",
+                    "zodiac_rescue_boat",
+                    ("water_rescue", "missing_person_search"),
+                    "XNG-04",
+                    6,
+                    2_700 + index * 240,
+                    2_100,
+                    600,
+                    900,
+                    2_700,
+                    2,
+                    "preauthorized-automatic-aid-fixed-staging",
+                    "FAC-RIO-VISTA-55",
+                    ("rio-vista-fire-source-extract-v1",),
+                )
+            )
+        for index in range(automatic_aid_count):
+            definitions.append(
+                (
+                    f"RES-RV-ENGINE-55-{index + 1:02d}",
+                    "type_i_engine",
+                    (
+                        "medical_first_response",
+                        "road_rescue",
+                        "welfare_check",
+                        "levee_inspection",
+                    ),
+                    "XNG-04",
+                    0,
+                    2_700 + index * 180,
+                    1_200,
+                    1_500,
+                    720,
+                    2_700,
+                    2,
+                    "preauthorized-automatic-aid-fixed-staging",
+                    "FAC-RIO-VISTA-55",
+                    ("rio-vista-fire-source-extract-v1",),
+                )
+            )
     units = [
         ResourceUnit(
             resource_id=resource_id,
@@ -696,12 +776,16 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
             route_id=route_id,
             passenger_capacity=passenger_capacity,
             activation_time_s=round(activation_s * config.axes.mu),
+            transit_time_s=round(transit_s * config.axes.mu),
             staging_time_s=round(staging_s * config.axes.mu),
             nominal_travel_time_s=round(travel_s * config.axes.mu),
-            available_from_s=round((activation_s + staging_s) * config.axes.mu),
+            available_from_s=round((activation_s + transit_s + staging_s) * config.axes.mu),
             service_duration_s=service_duration_s,
             service_units=service_units,
-            is_available=config.axes.delta < degradation_thresholds[index],
+            is_available=config.axes.delta < max(0.08, 0.56 - 0.08 * index),
+            availability_mode=availability_mode,
+            origin_base_id=origin_base_id,
+            source_record_ids=source_record_ids,
         )
         for index, (
             resource_id,
@@ -710,15 +794,24 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
             route_id,
             passenger_capacity,
             activation_s,
+            transit_s,
             staging_s,
             travel_s,
             service_duration_s,
             service_units,
+            availability_mode,
+            origin_base_id,
+            source_record_ids,
         ) in enumerate(definitions)
     ]
     return ResourceArtifact(
-        schema_version="delta-resources-v2",
+        schema_version=(
+            "delta-resources-v3"
+            if config.generator_version == "delta-small-generator-v6"
+            else "delta-resources-v2"
+        ),
         capability_schema_version="delta-incident-resource-capabilities-v1",
         coordination_domain=f"delta-small-logical-authorities-{config.axes.phi}",
+        resource_profile_id=config.resource_profile_id,
         units=units,
     )

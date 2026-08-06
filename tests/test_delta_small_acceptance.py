@@ -28,7 +28,8 @@ from trace_jepa.scenario.delta.population import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
-ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_acceptance.yaml"
+ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
+HISTORICAL_ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_acceptance.yaml"
 GEOGRAPHY_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/delta_small_geography_v2.yaml"
 GEOGRAPHY_MANIFEST_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/build_manifest_v2.json"
 POLICY_PATH = REPOSITORY_ROOT / "configs/policies/trace_delta_small_v1.yaml"
@@ -71,31 +72,25 @@ def test_small_contract_and_generation_order_are_frozen() -> None:
 
 def test_acceptance_protocol_is_preregistered_before_recalibration() -> None:
     protocol = load_acceptance_config(ACCEPTANCE_PATH)
+    historical = load_acceptance_config(HISTORICAL_ACCEPTANCE_PATH)
     assert protocol.book_seed == 20260803
     assert protocol.development_ensemble.first_seed == protocol.book_seed
     assert protocol.development_ensemble.seed_count == 100
-    assert len(protocol.confirmatory_ensemble.seeds) == 100
-    assert len(protocol.amended_confirmatory_ensemble.seeds) == 100
-    assert len(protocol.final_confirmatory_ensemble.seeds) == 100
-    assert len(protocol.spatial_confirmatory_ensemble.seeds) == 100
-    assert set(protocol.confirmatory_ensemble.seeds).isdisjoint(
-        protocol.amended_confirmatory_ensemble.seeds
-    )
-    assert set(protocol.final_confirmatory_ensemble.seeds).isdisjoint(
-        protocol.confirmatory_ensemble.seeds
-    )
-    assert set(protocol.final_confirmatory_ensemble.seeds).isdisjoint(
-        protocol.amended_confirmatory_ensemble.seeds
-    )
-    assert set(protocol.spatial_confirmatory_ensemble.seeds).isdisjoint(
-        protocol.confirmatory_ensemble.seeds
-    )
-    assert set(protocol.spatial_confirmatory_ensemble.seeds).isdisjoint(
-        protocol.amended_confirmatory_ensemble.seeds
-    )
-    assert set(protocol.spatial_confirmatory_ensemble.seeds).isdisjoint(
-        protocol.final_confirmatory_ensemble.seeds
-    )
+    assert protocol.schema_version == "delta-small-acceptance-v6"
+    assert protocol.balanced_confirmatory_ensemble is not None
+    assert len(protocol.balanced_confirmatory_ensemble.seeds) == 100
+    historical_seeds = {
+        seed
+        for ensemble in (
+            historical.confirmatory_ensemble,
+            historical.amended_confirmatory_ensemble,
+            historical.final_confirmatory_ensemble,
+            historical.spatial_confirmatory_ensemble,
+        )
+        if ensemble is not None
+        for seed in ensemble.seeds
+    }
+    assert set(protocol.balanced_confirmatory_ensemble.seeds).isdisjoint(historical_seeds)
     assert protocol.call_process.expected_total_mean == 40.0
     assert protocol.call_process.configured_peak_intensity_per_hour == 12.0
     assert protocol.demand_capacity.target_peak_ratio == 1.5
@@ -287,11 +282,11 @@ def test_small_run_exercises_allocation_refusal_and_repair(tmp_path: Path) -> No
     assert execution.run_result.allocated > 0
     assert execution.run_result.refused > 0
     assert execution.run_result.repaired > 0
-    ratio = execution.run_result.peak_demand_capacity_ratio_milli / 1000
-    # The book seed remains descriptive. Exact compatibility matching exposed
-    # that its prior 1.5 result relied on surplus/incompatible capacity; retain
-    # the corrected result instead of tuning this inspected seed.
-    assert ratio == 3.0
+    assert execution.run_result.peak_gross_load_ratio_milli / 1000 == 1.5
+    assert execution.run_result.peak_finite_residual_pressure_ratio_milli / 1000 == 3.0
+    assert execution.run_result.allocated == 13
+    assert execution.run_result.refused == 22
+    assert execution.run_result.repaired == 10
 
 
 def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
@@ -319,7 +314,7 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
         descriptor.name for descriptor in manifest.artifacts if descriptor.contains_hidden_truth
     }
     assert hidden == {"ground_truth", "call_lineage"}
-    assert {item.name for item in manifest.inputs} == {
+    expected_inputs = {
         "scenario_configuration",
         "geography_catalog",
         "geography_build_manifest",
@@ -331,8 +326,12 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
         "predictor_calibration",
         "environment_contract",
         "dependency_lock",
-        "registered_validation_report",
+        "registered_acceptance_protocol",
+        "automatic_aid_source_extract",
     }
+    if (REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json").exists():
+        expected_inputs.add("registered_validation_report")
+    assert {item.name for item in manifest.inputs} == expected_inputs
     assert all(len(item.sha256) == 64 for item in manifest.inputs)
 
 
@@ -429,4 +428,15 @@ def test_all_registered_seed_studies_are_materialized_with_adverse_result_retain
     assert primary["operations"]["all_trace_chains_verified"] is True
     assert (
         primary["registered_gate_evaluation"]["median_peak_ratio_within_registered_band"] is False
+    )
+
+
+def test_v5_configuration_and_book_bundle_remain_immutable_audit_evidence() -> None:
+    archived_config = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_v1.yaml"
+    book_v1 = REPOSITORY_ROOT / "data/scenario/delta/reference/wf_dfld_01_small_book_v1"
+    assert sha256_file(archived_config) == (
+        "a97cb37c0547183828019ca5bc56662af9d3cc73db5eebc906f8e3f11975939b"
+    )
+    assert sha256_file(book_v1 / "manifest.json") == (
+        "ad69d57fde24db6c7c49080c71398bdbec59f7f164e42470c62e94c1e6581e19"
     )

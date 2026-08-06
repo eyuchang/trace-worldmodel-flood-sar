@@ -48,8 +48,10 @@ class _StudyRow(TypedDict):
     latent_incidents: int
     observed_calls: int
     hourly_calls: list[int]
-    peak_ratio: float
-    unserviceable_windows: int
+    peak_gross_load_ratio: float
+    peak_finite_residual_pressure_ratio: float
+    gross_unserviceable_windows: int
+    residual_unserviceable_windows: int
     allocations: int
     refusals: int
     repairs: int
@@ -195,6 +197,16 @@ def _study(
     total_repairs_scored = 0
     total_location_error = 0.0
     total_location_error_count = 0
+    protected_fields = (
+        "geography",
+        "weather",
+        "gauges",
+        "crossing_states",
+        "truth",
+        "observations",
+        "prior_profile",
+    )
+    amendment_invariance = {field: True for field in protected_fields}
     for seed in seeds:
         study_config = config.model_copy(
             update={
@@ -205,6 +217,37 @@ def _study(
         scenario = generate_delta_small_from_models(
             study_config, geography, config_path.resolve(strict=True)
         )
+        if generator_version == "delta-small-generator-v6":
+            historical_config = study_config.model_copy(
+                update={
+                    "schema_version": "trace-delta-scenario-v1",
+                    "generator_version": "delta-small-generator-v5",
+                    "randomness_namespace_version": None,
+                    "resource_profile_id": "kappa-0.5-local-v1",
+                }
+            )
+            historical = generate_delta_small_from_models(
+                historical_config,
+                geography,
+                config_path.resolve(strict=True),
+            )
+            for field in protected_fields:
+                current_value = getattr(scenario, field)
+                historical_value = getattr(historical, field)
+                current_payload = (
+                    current_value.model_dump(mode="json")
+                    if hasattr(current_value, "model_dump")
+                    else [item.model_dump(mode="json") for item in current_value]
+                )
+                historical_payload = (
+                    historical_value.model_dump(mode="json")
+                    if hasattr(historical_value, "model_dump")
+                    else [item.model_dump(mode="json") for item in historical_value]
+                )
+                amendment_invariance[field] = amendment_invariance[field] and (
+                    canonical_json_bytes(current_payload)
+                    == canonical_json_bytes(historical_payload)
+                )
         if legacy_duration_table:
             scenario = _legacy_v1_scenario(scenario)
         result = run_delta_small(scenario, predictor, policy_path)
@@ -235,8 +278,12 @@ def _study(
                 "latent_incidents": incidents,
                 "observed_calls": calls,
                 "hourly_calls": hourly_calls,
-                "peak_ratio": result.peak_demand_capacity_ratio_milli / 1000.0,
-                "unserviceable_windows": result.unserviceable_windows,
+                "peak_gross_load_ratio": result.peak_gross_load_ratio_milli / 1000.0,
+                "peak_finite_residual_pressure_ratio": (
+                    result.peak_finite_residual_pressure_ratio_milli / 1000.0
+                ),
+                "gross_unserviceable_windows": result.gross_unserviceable_windows,
+                "residual_unserviceable_windows": result.residual_unserviceable_windows,
                 "allocations": result.allocated,
                 "refusals": result.refused,
                 "repairs": result.repaired,
@@ -244,7 +291,8 @@ def _study(
             }
         )
     call_counts = [float(row["observed_calls"]) for row in rows]
-    ratios = [row["peak_ratio"] for row in rows]
+    gross_ratios = [row["peak_gross_load_ratio"] for row in rows]
+    residual_ratios = [row["peak_finite_residual_pressure_ratio"] for row in rows]
     hourly_means = [
         statistics.fmean(float(row["hourly_calls"][hour]) for row in rows) for hour in range(6)
     ]
@@ -271,11 +319,17 @@ def _study(
             "hourly_means": hourly_means,
             "hourly_mean_95": hourly_intervals,
         },
-        "peak_demand_capacity_ratio": {
-            **_median_ci(ratios),
-            "mean": statistics.fmean(ratios),
-            "minimum": min(ratios),
-            "maximum": max(ratios),
+        "peak_gross_load_ratio": {
+            **_median_ci(gross_ratios),
+            "mean": statistics.fmean(gross_ratios),
+            "minimum": min(gross_ratios),
+            "maximum": max(gross_ratios),
+        },
+        "peak_finite_residual_pressure_ratio": {
+            **_median_ci(residual_ratios),
+            "mean": statistics.fmean(residual_ratios),
+            "minimum": min(residual_ratios),
+            "maximum": max(residual_ratios),
         },
         "observation_channel": {
             "relationship_fractions": relationship_intervals,
@@ -294,10 +348,18 @@ def _study(
             "allocation_mean": statistics.fmean(float(row["allocations"]) for row in rows),
             "refusal_mean": statistics.fmean(float(row["refusals"]) for row in rows),
             "repair_mean": statistics.fmean(float(row["repairs"]) for row in rows),
-            "unserviceable_window_mean": statistics.fmean(
-                float(row["unserviceable_windows"]) for row in rows
+            "gross_unserviceable_window_mean": statistics.fmean(
+                float(row["gross_unserviceable_windows"]) for row in rows
+            ),
+            "residual_unserviceable_window_mean": statistics.fmean(
+                float(row["residual_unserviceable_windows"]) for row in rows
             ),
             "all_trace_chains_verified": all(bool(row["trace_chain_verified"]) for row in rows),
+        },
+        "resource_only_amendment_invariance": {
+            "all_seeds_and_fields_byte_identical": all(amendment_invariance.values()),
+            "protected_fields": amendment_invariance,
+            "comparison": "generator-v6-versus-generator-v5-at-identical-seed",
         },
         "per_seed": rows,
     }
@@ -311,82 +373,63 @@ def run_registered_validation(
     output_path: Path,
 ) -> dict[str, object]:
     protocol = load_acceptance_config(acceptance_path)
+    if protocol.schema_version != "delta-small-acceptance-v6":
+        raise ValueError(
+            "historical acceptance protocols are immutable evidence; only acceptance v6 "
+            "may be executed by the current validator"
+        )
+    if output_path.exists():
+        raise FileExistsError(
+            f"registered validation output already exists and will not be overwritten: {output_path}"
+        )
+    confirmatory = protocol.balanced_confirmatory_ensemble
+    if confirmatory is None:  # Defensive; the acceptance model also enforces this.
+        raise ValueError("acceptance v6 is missing confirmatory-v5")
     development_seeds = list(
         range(
             protocol.development_ensemble.first_seed,
             protocol.development_ensemble.first_seed + protocol.development_ensemble.seed_count,
         )
     )
-    report: dict[str, object] = {
-        "schema_version": "delta-small-statistical-validation-v2",
-        "protocol_sha256": sha256_file(acceptance_path),
-        "scenario_configuration_sha256": sha256_file(config_path),
-        "geography_sha256": sha256_file(geography_path),
-        "policy_sha256": sha256_file(policy_path),
-        "book_seed_role": protocol.book_seed_role,
-        "claims_limit": [
-            "generator-process-validation-not-field-effectiveness",
-            "confidence-intervals-describe-synthetic-seed-variation",
-            "confirmatory-v1-adverse-result-retained",
-            "confirmatory-v2-preaudit-result-retained",
-            "numeric-gates-reported-even-when-failed",
-        ],
-        "studies": [
-            _study(
-                study_id="development-v5",
-                seeds=development_seeds,
-                config_path=config_path,
-                geography_path=geography_path,
-                policy_path=policy_path,
-                generator_version="delta-small-generator-v5",
-                legacy_duration_table=False,
-            ),
-            _study(
-                study_id="confirmatory-v1-adverse",
-                seeds=protocol.confirmatory_ensemble.seeds,
-                config_path=config_path,
-                geography_path=geography_path,
-                policy_path=policy_path,
-                generator_version="delta-small-generator-v2",
-                legacy_duration_table=True,
-            ),
-            _study(
-                study_id="confirmatory-v2-preaudit",
-                seeds=protocol.amended_confirmatory_ensemble.seeds,
-                config_path=config_path,
-                geography_path=geography_path,
-                policy_path=policy_path,
-                generator_version="delta-small-generator-v3",
-                legacy_duration_table=False,
-            ),
-            _study(
-                study_id="confirmatory-v3-spatial-preaudit",
-                seeds=protocol.final_confirmatory_ensemble.seeds,
-                config_path=config_path,
-                geography_path=geography_path,
-                policy_path=policy_path,
-                generator_version="delta-small-generator-v4",
-                legacy_duration_table=False,
-            ),
-            _study(
-                study_id="confirmatory-v4-primary",
-                seeds=protocol.spatial_confirmatory_ensemble.seeds,
-                config_path=config_path,
-                geography_path=geography_path,
-                policy_path=policy_path,
-                generator_version="delta-small-generator-v5",
-                legacy_duration_table=False,
-            ),
-        ],
-    }
-    studies = report["studies"]
-    assert isinstance(studies, list)
+    config = load_scenario_config(config_path)
+    geography = load_geography_catalog(geography_path)
+    book_scenario = generate_delta_small_from_models(
+        config,
+        geography,
+        config_path.resolve(strict=True),
+    )
+    book_result = run_delta_small(book_scenario, ToyActionPrefixPredictor(), policy_path)
+    allocation_denominator = book_result.allocated + book_result.refused
+    allocation_share = (
+        book_result.allocated / allocation_denominator if allocation_denominator else 0.0
+    )
+    studies: list[dict[str, object]] = [
+        _study(
+            study_id="development-v6",
+            seeds=development_seeds,
+            config_path=config_path,
+            geography_path=geography_path,
+            policy_path=policy_path,
+            generator_version="delta-small-generator-v6",
+            legacy_duration_table=False,
+        ),
+        _study(
+            study_id="confirmatory-v5-primary",
+            seeds=confirmatory.seeds,
+            config_path=config_path,
+            geography_path=geography_path,
+            policy_path=policy_path,
+            generator_version="delta-small-generator-v6",
+            legacy_duration_table=False,
+        ),
+    ]
     for study in studies:
-        assert isinstance(study, dict)
         call_count = study["call_count"]
-        ratio = study["peak_demand_capacity_ratio"]
+        ratio = study["peak_gross_load_ratio"]
+        operations = study["operations"]
         assert isinstance(call_count, dict)
         assert isinstance(ratio, dict)
+        assert isinstance(operations, dict)
         hourly_intervals = call_count["hourly_mean_95"]
         assert isinstance(hourly_intervals, list)
         peak_hour_interval = hourly_intervals[3]
@@ -405,14 +448,78 @@ def run_registered_validation(
             <= float(ratio["estimate"])
             <= protocol.demand_capacity.confirmatory_median_maximum
         )
+        chain_gate = bool(operations["all_trace_chains_verified"])
         study["registered_gate_evaluation"] = {
             "total_call_mean_within_absolute_tolerance": total_call_gate,
             "configured_peak_intensity_within_hour_4_mean_95_ci": peak_intensity_gate,
-            "median_peak_ratio_within_registered_band": ratio_gate,
-            "all_registered_numeric_gates_met": (
-                total_call_gate and peak_intensity_gate and ratio_gate
+            "median_peak_gross_load_within_registered_band": ratio_gate,
+            "all_trace_chains_verified": chain_gate,
+            "all_registered_numeric_and_chain_gates_met": (
+                total_call_gate and peak_intensity_gate and ratio_gate and chain_gate
             ),
         }
+
+    book_ratio = book_result.peak_gross_load_ratio_milli / 1000.0
+    book_gates = {
+        "gross_load_within_registered_band": (
+            protocol.demand_capacity.book_seed_minimum
+            <= book_ratio
+            <= protocol.demand_capacity.book_seed_maximum
+        ),
+        "allocation_share_within_registered_band": (
+            protocol.demand_capacity.book_allocation_share_minimum
+            <= allocation_share
+            <= protocol.demand_capacity.book_allocation_share_maximum
+        ),
+        "has_allocation_refusal_and_visible_evidence_repair": (
+            book_result.allocated > 0 and book_result.refused > 0 and book_result.repaired > 0
+        ),
+        "trace_chain_verified": book_result.trace_chain_verified,
+    }
+    report: dict[str, object] = {
+        "schema_version": "delta-small-statistical-validation-v3",
+        "execution_policy": "write-once-no-overwrite-confirmatory-v5",
+        "protocol_sha256": sha256_file(acceptance_path),
+        "scenario_configuration_sha256": sha256_file(config_path),
+        "geography_sha256": sha256_file(geography_path),
+        "policy_sha256": sha256_file(policy_path),
+        "book_seed_role": protocol.book_seed_role,
+        "book_walkthrough": {
+            "seed": protocol.book_seed,
+            "observed_calls": len(book_scenario.observations.calls),
+            "latent_incidents": len(book_scenario.truth.incidents),
+            "peak_gross_load_ratio": book_ratio,
+            "peak_finite_residual_pressure_ratio": (
+                book_result.peak_finite_residual_pressure_ratio_milli / 1000.0
+            ),
+            "gross_unserviceable_windows": book_result.gross_unserviceable_windows,
+            "residual_unserviceable_windows": book_result.residual_unserviceable_windows,
+            "allocations": book_result.allocated,
+            "refusals": book_result.refused,
+            "visible_evidence_repairs": book_result.repaired,
+            "allocation_share_among_allocation_refusal": allocation_share,
+            "registered_gate_evaluation": book_gates,
+        },
+        "preserved_adverse_evidence": {
+            "generator_version": "delta-small-generator-v5",
+            "source_commit": "f6d755982fcc727b98f1a6b73e98f1e4a970b0f6",
+            "book_v1_manifest_sha256": (
+                "ad69d57fde24db6c7c49080c71398bdbec59f7f164e42470c62e94c1e6581e19"
+            ),
+            "validation_v1_sha256": (
+                "d51e17364c254032a8118a9de633425c82f9689c7a523582a5706e40238b817b"
+            ),
+            "book_peak_hybrid_ratio": 3.0,
+        },
+        "claims_limit": [
+            "generator-process-validation-not-field-effectiveness",
+            "confidence-intervals-describe-synthetic-seed-variation",
+            "automatic-aid-schedule-is-a-frozen-teaching-assumption",
+            "gross-load-is-not-operational-readiness",
+            "numeric-gates-reported-even-when-failed",
+        ],
+        "studies": studies,
+    }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(canonical_json_bytes(report))
     return report

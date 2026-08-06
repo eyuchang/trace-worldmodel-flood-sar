@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import socket
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -26,7 +27,7 @@ from trace_jepa.scenario.delta.artifacts import canonical_json_bytes
 from trace_jepa.scenario.delta.generator import generate_delta_small
 from trace_jepa.scenario.delta.loading import load_geography_catalog
 from trace_jepa.scenario.delta.publication import publish_reference_bundle
-from trace_jepa.scenario.delta.runner import run_delta_small
+from trace_jepa.scenario.delta.runner import evaluate_capacity_windows, run_delta_small
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
@@ -145,6 +146,98 @@ def test_engine_is_never_counted_or_dispatched_for_water_rescue() -> None:
     )
 
 
+def test_automatic_aid_schedule_is_fixed_preauthorized_and_not_mutual_aid() -> None:
+    scenario = generate_delta_small(CONFIG, GEOGRAPHY)
+    automatic_aid = [
+        unit
+        for unit in scenario.resources.units
+        if unit.availability_mode == "preauthorized-automatic-aid-fixed-staging"
+    ]
+    assert scenario.resources.schema_version == "delta-resources-v3"
+    assert scenario.resources.resource_profile_id == ("kappa-0.5-local-plus-automatic-aid-v1")
+    assert len(automatic_aid) == 2
+    assert {unit.resource_class for unit in automatic_aid} == {
+        "type_i_engine",
+        "zodiac_rescue_boat",
+    }
+    assert {unit.available_from_s for unit in automatic_aid} == {5_400}
+    assert all(unit.origin_base_id == "FAC-RIO-VISTA-55" for unit in automatic_aid)
+    assert all(unit.base_id == "FAC-FIRE-01" for unit in automatic_aid)
+
+    result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
+    assert {event.event_type for event in result.decisions} <= {
+        "allocation",
+        "refusal",
+        "repair",
+    }
+    serialized = canonical_json_bytes(result.model_dump(mode="json")).lower()
+    for forbidden in (b"mutual-aid-request", b"authority-transfer", b"negotiation", b"federation"):
+        assert forbidden not in serialized
+
+
+def test_each_physical_resource_has_at_most_one_concurrent_commitment() -> None:
+    result = run_delta_small(
+        generate_delta_small(CONFIG, GEOGRAPHY),
+        ToyActionPrefixPredictor(),
+        POLICY,
+    )
+    intervals_by_resource: dict[str, list[tuple[int, int]]] = {}
+    for event in result.decisions:
+        if event.event_type != "allocation" or event.service_complete_s is None:
+            continue
+        intervals_by_resource.setdefault(event.resource_id, []).append(
+            (event.simulation_time_s, event.service_complete_s)
+        )
+    for intervals in intervals_by_resource.values():
+        ordered = sorted(intervals)
+        assert all(left[1] <= right[0] for left, right in pairwise(ordered))
+
+
+def test_gross_load_is_policy_independent_and_residual_accounting_is_explicit() -> None:
+    scenario = generate_delta_small(CONFIG, GEOGRAPHY)
+    toy_result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
+    held_result = run_delta_small(scenario, _mlp(), POLICY)
+    assert [item.gross_load_ratio_milli for item in toy_result.demand_windows] == [
+        item.gross_load_ratio_milli for item in held_result.demand_windows
+    ]
+    assert toy_result.peak_gross_load_ratio_milli == 1_500
+    assert held_result.peak_gross_load_ratio_milli == 1_500
+    assert toy_result.allocated > 0
+    assert held_result.allocated == 0
+    assert any(item.commitment_covered_demand_units > 0 for item in toy_result.demand_windows)
+    for item in toy_result.demand_windows:
+        assert (
+            item.commitment_covered_demand_units + item.residual_unassigned_demand_units
+            == item.active_demand_service_units
+        )
+        if item.active_demand_service_units == 0:
+            assert item.gross_load_ratio_milli == 0
+            assert item.residual_pressure_ratio_milli == 0
+        if item.residual_unserviceable:
+            assert item.residual_unassigned_demand_units > 0
+            assert item.free_compatible_capacity_units == 0
+            assert item.residual_pressure_ratio_milli is None
+
+
+def test_false_report_commitment_consumes_capacity_without_covering_truth() -> None:
+    scenario = generate_delta_small(CONFIG, GEOGRAPHY)
+    result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
+    false_call_id = next(
+        item.call_id
+        for item in scenario.observations.lineage
+        if item.relationship == "false_report"
+    )
+    allocation = next(event for event in result.decisions if event.event_type == "allocation")
+    synthetic_false_commitment = allocation.model_copy(update={"call_id": false_call_id})
+    baseline = evaluate_capacity_windows(scenario, [])
+    with_false_commitment = evaluate_capacity_windows(scenario, [synthetic_false_commitment])
+    assert all(item.commitment_covered_demand_units == 0 for item in with_false_commitment)
+    assert any(
+        amended.free_compatible_capacity_units < uncommitted.free_compatible_capacity_units
+        for amended, uncommitted in zip(with_false_commitment, baseline, strict=True)
+    )
+
+
 def test_fixed_axis_predictor_substitution_changes_only_model_provenance() -> None:
     scenario = generate_delta_small(CONFIG, GEOGRAPHY)
     toy_result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
@@ -189,6 +282,11 @@ def test_fixed_axis_predictor_substitution_changes_only_model_provenance() -> No
     assert mlp_result.allocated == 0
     assert vjepa_result.allocated == 0
     assert toy_result.allocated > 0
+    assert (
+        [item.gross_load_ratio_milli for item in toy_result.demand_windows]
+        == [item.gross_load_ratio_milli for item in mlp_result.demand_windows]
+        == [item.gross_load_ratio_milli for item in vjepa_result.demand_windows]
+    )
     expected_prior = scenario.prior_profile.profile_id
     assert all(
         f"prior_profile={expected_prior}" in item.experimental_profile.notes

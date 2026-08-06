@@ -1,8 +1,6 @@
-schema_version: trace-delta-scenario-v2
+schema_version: trace-delta-scenario-v1
 scenario_id: WF-DFLD-01-SMALL
-generator_version: delta-small-generator-v6
-randomness_namespace_version: delta-small-generator-v5
-resource_profile_id: kappa-0.5-local-plus-automatic-aid-v1
+generator_version: delta-small-generator-v5
 seed: 20260803
 timeline:
   epoch_utc: "2026-01-15T20:00:00Z"
@@ -53,14 +51,12 @@ call_process:
     - C-WEL
     - C-MIS
 demand_capacity:
-  schema_version: delta-demand-capacity-v2
+  schema_version: delta-demand-capacity-v1
   window_s: 900
   target_ratio: 1.5
   tolerance: 0.1
   demand_unit: normalized_concurrent_service_units
-  capacity_unit: scheduled_mobilized_reachable_compatible_service_units
-  headline_metric: gross-compatible-scenario-load-v2
-  secondary_metric: residual-operational-pressure-v2
+  capacity_unit: immediately_available_local_service_units
 expected:
   breaches: 0
   mutual_aid_tiers: 0

@@ -1,0 +1,140 @@
+schema_version: delta-small-acceptance-v6
+registered_utc: "2026-08-06T00:00:00Z"
+book_seed: 20260803
+book_seed_role: descriptive_walkthrough_not_confirmatory
+development_ensemble:
+  first_seed: 20260803
+  seed_count: 100
+balanced_confirmatory_registered_utc: "2026-08-06T00:00:00Z"
+balanced_confirmatory_ensemble:
+  derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v5|index"
+  protocol_role: untouched_holdout_after_v6_resource_and_metric_freeze
+  seeds:
+    - 1018323910
+    - 144166991
+    - 817832790
+    - 1138768809
+    - 753019199
+    - 993470323
+    - 526556573
+    - 606290699
+    - 1846334171
+    - 240617501
+    - 1874657140
+    - 1261213544
+    - 1869970450
+    - 1276198323
+    - 209957061
+    - 1863530444
+    - 132857062
+    - 867738159
+    - 316149497
+    - 598679914
+    - 799848834
+    - 1325663046
+    - 1260772348
+    - 516477587
+    - 1447890100
+    - 2026500443
+    - 703339027
+    - 573742043
+    - 2045866301
+    - 2085976119
+    - 1329002221
+    - 1007873603
+    - 1919233489
+    - 2073500977
+    - 1462383123
+    - 1897542360
+    - 1640417110
+    - 740900937
+    - 585628652
+    - 366019708
+    - 1098090347
+    - 1061411340
+    - 762884433
+    - 1497606106
+    - 778988418
+    - 1602991008
+    - 1038453736
+    - 1425511393
+    - 2094130571
+    - 690181784
+    - 784263267
+    - 1836672948
+    - 726564526
+    - 2075879061
+    - 226947188
+    - 1345160209
+    - 1924464798
+    - 2122638902
+    - 575018166
+    - 271328623
+    - 669759833
+    - 1855450231
+    - 471220810
+    - 341324559
+    - 1602424217
+    - 1378975395
+    - 792386881
+    - 2124240896
+    - 1421826516
+    - 1144154990
+    - 1339283448
+    - 1865213270
+    - 2119050671
+    - 591056924
+    - 368457705
+    - 1886747773
+    - 859751434
+    - 21625000
+    - 372407484
+    - 1369954929
+    - 937831348
+    - 1792346461
+    - 2139106886
+    - 1545841275
+    - 1261478435
+    - 83173681
+    - 1270946264
+    - 496251052
+    - 327090732
+    - 515599199
+    - 602979069
+    - 1892447695
+    - 1589588524
+    - 1767832473
+    - 106124210
+    - 1289763891
+    - 600640304
+    - 998358949
+    - 1734302512
+    - 2019540870
+protocol_amendment: >-
+  Resource-only v6 amendment adds fixed preauthorized Rio Vista automatic-aid
+  staging at T+5400 and separates gross scenario load from residual operational
+  pressure. Generator v5, book_v1, and confirmatory-v1 through v4 remain adverse
+  audit evidence and are never recomputed as v6 results.
+call_process:
+  expected_total_mean: 40.0
+  total_mean_absolute_tolerance: 2.5
+  configured_peak_intensity_per_hour: 12.0
+observation_channel:
+  small_information_quality: 0.9
+  expected_duplicate_fraction: 0.075
+  expected_callback_failure_fraction: 0.10
+  expected_false_levee_fraction: 0.117
+  expected_multi_channel_fraction: 0.045
+  expected_nonreporting_fraction: 0.04
+  expected_revision_fraction: 0.13
+  fraction_absolute_tolerance: 0.04
+demand_capacity:
+  target_peak_ratio: 1.5
+  book_seed_minimum: 1.35
+  book_seed_maximum: 1.65
+  confirmatory_median_minimum: 1.4
+  confirmatory_median_maximum: 1.6
+  book_allocation_share_minimum: 0.25
+  book_allocation_share_maximum: 0.75
+performance:
+  maximum_generate_run_replay_s: 55.0

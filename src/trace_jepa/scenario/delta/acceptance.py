@@ -24,7 +24,7 @@ class AcceptanceConfirmatoryEnsemble(DeltaModel):
         if not self.derivation.startswith(prefix) or not self.derivation.endswith("|index"):
             raise ValueError("unknown confirmatory seed derivation")
         version = self.derivation.removeprefix(prefix).removesuffix("|index")
-        if version not in {"v1", "v2", "v3", "v4"}:
+        if version not in {"v1", "v2", "v3", "v4", "v5"}:
             raise ValueError("unsupported confirmatory protocol version")
         expected = [
             int.from_bytes(
@@ -64,6 +64,8 @@ class AcceptanceDemandCapacity(DeltaModel):
     book_seed_maximum: float = Field(gt=0.0)
     confirmatory_median_minimum: float = Field(gt=0.0)
     confirmatory_median_maximum: float = Field(gt=0.0)
+    book_allocation_share_minimum: float = Field(default=0.25, ge=0.0, le=1.0)
+    book_allocation_share_maximum: float = Field(default=0.75, ge=0.0, le=1.0)
 
 
 class AcceptancePerformance(DeltaModel):
@@ -76,14 +78,38 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
     book_seed: int = Field(ge=0)
     book_seed_role: str
     development_ensemble: AcceptanceEnsemble
-    confirmatory_ensemble: AcceptanceConfirmatoryEnsemble
-    amended_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble
-    final_confirmatory_registered_utc: datetime
-    final_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble
-    spatial_confirmatory_registered_utc: datetime
-    spatial_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble
+    confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    amended_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    final_confirmatory_registered_utc: datetime | None = None
+    final_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    spatial_confirmatory_registered_utc: datetime | None = None
+    spatial_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    balanced_confirmatory_registered_utc: datetime | None = None
+    balanced_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
     protocol_amendment: str
     call_process: AcceptanceCallProcess
     observation_channel: AcceptanceObservationChannel
     demand_capacity: AcceptanceDemandCapacity
     performance: AcceptancePerformance
+
+    @model_validator(mode="after")
+    def validate_protocol_generation(self) -> DeltaSmallAcceptanceConfig:
+        if self.schema_version == "delta-small-acceptance-v6":
+            if self.balanced_confirmatory_registered_utc is None:
+                raise ValueError("acceptance v6 requires a registration timestamp")
+            if self.balanced_confirmatory_ensemble is None:
+                raise ValueError("acceptance v6 requires confirmatory-v5 seeds")
+            if "confirmatory-v5" not in self.balanced_confirmatory_ensemble.derivation:
+                raise ValueError("acceptance v6 must use the untouched confirmatory-v5 ensemble")
+        elif self.schema_version == "delta-small-acceptance-v5":
+            historical = (
+                self.confirmatory_ensemble,
+                self.amended_confirmatory_ensemble,
+                self.final_confirmatory_ensemble,
+                self.spatial_confirmatory_ensemble,
+            )
+            if any(item is None for item in historical):
+                raise ValueError("acceptance v5 requires all four historical ensembles")
+        else:
+            raise ValueError("unsupported Delta Small acceptance schema")
+        return self

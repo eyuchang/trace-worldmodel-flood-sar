@@ -21,7 +21,7 @@ def _defaults() -> dict[str, Path]:
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v2.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance.yaml",
+        "acceptance": (repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"),
     }
 
 
@@ -78,12 +78,14 @@ def main() -> None:
             predictor,
         )
         LOGGER.info(
-            "completed %s: allocated=%d refused=%d repaired=%d ratio=%.3f artifacts=%d",
+            "completed %s: allocated=%d refused=%d repaired=%d "
+            "gross_load=%.3f residual_pressure_finite_peak=%.3f artifacts=%d",
             execution.run_result.scenario_id,
             execution.run_result.allocated,
             execution.run_result.refused,
             execution.run_result.repaired,
-            execution.run_result.peak_demand_capacity_ratio_milli / 1000.0,
+            execution.run_result.peak_gross_load_ratio_milli / 1000.0,
+            execution.run_result.peak_finite_residual_pressure_ratio_milli / 1000.0,
             len(execution.manifest.artifacts),
         )
     elif arguments.command == "replay":
@@ -100,7 +102,7 @@ def main() -> None:
         output_path = (
             arguments.output
             if arguments.output.suffix == ".json"
-            else arguments.output / "WF_DFLD_01_SMALL_VALIDATION.json"
+            else arguments.output / "WF_DFLD_01_SMALL_VALIDATION_V2.json"
         )
         report = run_registered_validation(
             arguments.config,
@@ -110,11 +112,11 @@ def main() -> None:
             output_path,
         )
         studies = cast(list[dict[str, Any]], report["studies"])
-        primary = next(study for study in studies if study["study_id"] == "confirmatory-v4-primary")
+        primary = next(study for study in studies if study["study_id"] == "confirmatory-v5-primary")
         LOGGER.info(
             "validation completed: seeds=%d primary_median_ratio=%.3f output=%s",
             sum(study["seed_count"] for study in studies),
-            primary["peak_demand_capacity_ratio"]["estimate"],
+            primary["peak_gross_load_ratio"]["estimate"],
             output_path,
         )
     elif arguments.command == "publish":

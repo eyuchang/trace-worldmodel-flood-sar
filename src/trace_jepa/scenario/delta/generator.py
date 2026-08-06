@@ -53,10 +53,14 @@ def generate_delta_small_from_models(
     weather = generate_weather(config)
     gauges = generate_gauges(config, geography, weather)
     crossing_states = generate_crossing_states(config, geography, weather, gauges)
+    # v6 is a resource/metric protocol amendment. It deliberately reuses the
+    # v5 random namespace so the physical state, cohort, truth, and calls are
+    # counterfactually identical for every fixed seed.
+    randomness_namespace = config.randomness_namespace_version or config.generator_version
     seed_namespace_hash = _projection_hash(
         {
             "scenario_id": config.scenario_id,
-            "generator_version": config.generator_version,
+            "generator_version": randomness_namespace,
             "extent": config.extent.model_dump(mode="json"),
         }
     )
