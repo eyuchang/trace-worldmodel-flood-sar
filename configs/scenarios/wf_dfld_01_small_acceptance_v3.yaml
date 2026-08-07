@@ -1,0 +1,194 @@
+schema_version: delta-small-acceptance-v7
+registered_utc: "2026-08-06T00:00:00Z"
+book_seed: 20260803
+book_seed_role: descriptive_walkthrough_not_confirmatory
+development_ensemble:
+  first_seed: 20260803
+  seed_count: 100
+v7_confirmatory_registered_utc: "2026-08-06T00:00:00Z"
+v7_confirmatory_ensemble:
+  derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v6|index"
+  protocol_role: untouched_holdout_after_v7_mechanics_environment_metrics_and_gates_freeze
+  seeds:
+    - 610419135
+    - 1553948431
+    - 1191027615
+    - 1378129047
+    - 799089246
+    - 985848009
+    - 1432613674
+    - 1222221389
+    - 814293155
+    - 1389686321
+    - 786728676
+    - 5208876
+    - 1445968422
+    - 232085592
+    - 781205566
+    - 1201445300
+    - 1043499510
+    - 814290801
+    - 857147009
+    - 491451903
+    - 364739397
+    - 125228932
+    - 2119614669
+    - 1416892386
+    - 1748153172
+    - 67279034
+    - 1278879241
+    - 429372256
+    - 255414366
+    - 1979396308
+    - 1219485643
+    - 624807829
+    - 369224754
+    - 1115689512
+    - 316236987
+    - 100959569
+    - 979155722
+    - 789723961
+    - 35037640
+    - 1578568075
+    - 513587965
+    - 443442052
+    - 985228834
+    - 280795700
+    - 2034237525
+    - 534025971
+    - 1927489329
+    - 1816842255
+    - 372257581
+    - 958657812
+    - 1864729544
+    - 199030873
+    - 1259117331
+    - 925179826
+    - 1074090874
+    - 1640227604
+    - 2081302910
+    - 66816502
+    - 1814765725
+    - 1948863603
+    - 769952879
+    - 1551511657
+    - 779278094
+    - 1911329750
+    - 1419453611
+    - 400461974
+    - 2107413919
+    - 607782676
+    - 801900775
+    - 647311277
+    - 1484057310
+    - 1942214901
+    - 1256162040
+    - 1585155083
+    - 584672249
+    - 16980713
+    - 68991315
+    - 1237801401
+    - 193380453
+    - 1527927964
+    - 570210962
+    - 1463426418
+    - 1833502013
+    - 92052150
+    - 342788439
+    - 789193403
+    - 1608149900
+    - 1854925910
+    - 457238850
+    - 824269090
+    - 1414992788
+    - 1589541030
+    - 920305113
+    - 1035301172
+    - 746735889
+    - 1016157947
+    - 2063568496
+    - 1618984569
+    - 13165634
+    - 968668193
+registration_erratum: >-
+  The 00:00:00Z value is an inherited administrative placeholder and is not an
+  accurate wall-clock registration time. The Git commit timestamp of the commit
+  first publishing this complete file is authoritative; no confirmatory-v6 seed
+  may be executed before that commit is pushed.
+frozen_input_sha256:
+  scenario_configuration: 9b22a5562197b5b4ebc3b24ccd9c789cee2eb64a3344171dd8ad2b24e06712f2
+  process_calibration: 51e16f7dd07f1c56462288571106c279a0d25ca78b81bc48a2d79fd53008e1a0
+  truth_implementation: 346af281726fef010e2e96b54956eaac16f1efa525885757ba8b58748721ff0b
+  observation_implementation: 3ea77e005e9d323a61a25655991187f19600fefe62dd6b52bec2ffb34d332830
+  coordination_implementation: 88bf8982849506b7a18776e563eaaa27382217a95b5405506c6856f90c44b8a6
+  runtime_and_capacity_implementation: e3b3df87ab7554083360db3931372cdaf71c34f2fd1cacc48797a50c7b2e1c2f
+  reconciliation_implementation: a2a7cca4a7eb056e06123c4cd7487e1caaa550248bcc39b15293de11065d260f
+  geography_catalog: 6121aea138d7a9295a8d33ac83175ec98cd81f2d9f2aa46bf148b576dd13fddf
+  geography_build_manifest: 8b1ba5e566ae5c79329c89aa710e1cd4c5ea5933731dd44c4d718b0162348db1
+  environment_contract: 1e7efb666ed5e4a84b3a757f442fafc93ae38d05d6261563e565ff84344be734
+  dependency_lock: 96b8c575ac944220dd55131a44c61be0803fdfbf4fc27220aae2f7d4d9151b0c
+  trace_policy: 968c04a0df8d60c64ddec036fded53d1d3f332c756c3dde6b18a641b30fb6e20
+protocol_amendment: >-
+  V7 replaces call-rate-driven truth with keyed structure-level hazards, adds a
+  keyed lossy observation channel and evidence-sharing coordination, makes strict
+  one-resource/one-incident concurrency primary, and replaces conditional repair
+  accuracy with complete cluster evaluation. Historical v5/v6 evidence is not
+  recomputed or relabeled.
+call_process:
+  expected_total_mean: 40.0
+  total_mean_absolute_tolerance: 2.5
+  configured_peak_intensity_per_hour: 12.0
+observation_channel:
+  small_information_quality: 0.9
+  expected_duplicate_fraction: 0.070
+  expected_callback_failure_fraction: 0.101
+  expected_false_levee_fraction: 0.124
+  expected_multi_channel_fraction: 0.044
+  expected_nonreporting_fraction: 0.107
+  expected_revision_fraction: 0.120
+  fraction_absolute_tolerance: 0.04
+  expected_point_estimates:
+    callback_failure: 0.101
+    conflicting_report: 0.060
+    dropped_call: 0.043
+    duplicate: 0.070
+    false_report: 0.124
+    location_cell_sector: 0.181
+    location_gps_or_address_intersection: 0.551
+    location_landmark: 0.269
+    multi_channel: 0.044
+    nonreporting: 0.107
+    revision: 0.120
+  point_absolute_tolerances:
+    callback_failure: 0.04
+    conflicting_report: 0.04
+    dropped_call: 0.03
+    duplicate: 0.04
+    false_report: 0.04
+    location_cell_sector: 0.04
+    location_gps_or_address_intersection: 0.04
+    location_landmark: 0.04
+    multi_channel: 0.03
+    nonreporting: 0.04
+    revision: 0.04
+demand_capacity:
+  target_peak_ratio: null
+  book_seed_minimum: null
+  book_seed_maximum: null
+  confirmatory_median_minimum: null
+  confirmatory_median_maximum: null
+  book_allocation_share_minimum: 0.25
+  book_allocation_share_maximum: 0.75
+  primary_metric: strict_concurrent_load_ratio
+  strict_numerical_gate: null
+  historical_sensitivity_metric: registered_normalized_coverable_load_index
+inference:
+  schema_version: delta-seed-cluster-inference-v1
+  seed_cluster_unit: one_complete_seed_run
+  bootstrap_resamples: 10000
+  bootstrap_seed_derivation: "sha256(protocol_hash|metric_name|cluster-bootstrap-v1)"
+  mean_and_fraction_interval: deterministic_cluster_percentile_bootstrap
+  median_interval: exact_binomial_order_statistic
+  call_pooling_as_independent_observations: false
+performance:
+  maximum_generate_run_replay_s: 55.0

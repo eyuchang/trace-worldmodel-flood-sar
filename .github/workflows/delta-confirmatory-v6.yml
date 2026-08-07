@@ -1,0 +1,62 @@
+name: Delta confirmatory-v6 (manual, once-only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Exact pushed preregistration commit SHA
+        required: true
+        type: string
+      confirmation:
+        description: Type EXECUTE-CONFIRMATORY-V6-ONCE
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delta-confirmatory-v6
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: inputs.confirmation == 'EXECUTE-CONFIRMATORY-V6-ONCE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_commit }}
+      - name: Verify exact remote preregistration commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_commit }}"
+          test ! -e docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V3.json
+          test ! -e data/scenario/delta/reference/wf_dfld_01_small_book_v3
+      - name: Execute once in the digest-pinned canonical environment
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --volume "${RUNNER_TEMP}:/output" \
+            --workdir /workspace \
+            python@sha256:fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04 \
+            sh -c '
+              python -m pip install --require-hashes -r requirements-delta-python311.lock &&
+              python -m pip install -e . --no-deps &&
+              python scripts/verify_delta_reference_environment.py \
+                --contract data/scenario/delta/environment/python311_linux_amd64_v1.json \
+                --lock requirements-delta-python311.lock \
+                --require-match &&
+              trace-jepa-delta-small validate \
+                --acceptance configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml \
+                --output /output/WF_DFLD_01_SMALL_VALIDATION_V3.json
+            '
+      - name: Upload write-once report
+        uses: actions/upload-artifact@v4
+        with:
+          name: delta-confirmatory-v6-${{ inputs.source_commit }}
+          path: ${{ runner.temp }}/WF_DFLD_01_SMALL_VALIDATION_V3.json
+          if-no-files-found: error
+          retention-days: 90

@@ -36,7 +36,10 @@ jobs:
           src/trace_jepa/predictor
           src/trace_jepa/scenario/delta
           tests/test_delta_small_acceptance.py
+          tests/test_delta_documentation_consistency.py
           tests/test_delta_small_scientific_integrity.py
+          tests/test_delta_v7_load_and_reconciliation.py
+          tests/test_delta_v7_validation_protocol.py
           tests/test_experimental_profile_provenance.py
           tests/test_revalidation_guard.py
       - name: Type-check Delta and predictor seams
@@ -49,3 +52,11 @@ jobs:
           src/trace_jepa/predictor/vjepa_adapter.py
       - name: Test
         run: python -m pytest
+      - name: Verify committed Delta book v3 when published
+        shell: bash
+        run: |
+          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v3 ]]; then
+            trace-jepa-delta-small replay \
+              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v3 \
+              --output "${RUNNER_TEMP}/delta-book-v3-replay"
+          fi

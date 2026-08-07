@@ -373,11 +373,38 @@ def run_registered_validation(
     output_path: Path,
 ) -> dict[str, object]:
     protocol = load_acceptance_config(acceptance_path)
+    if protocol.schema_version == "delta-small-acceptance-v7":
+        from trace_jepa.scenario.delta.validation_v7 import run_v7_registered_validation
+
+        return run_v7_registered_validation(
+            protocol=protocol,
+            config_path=config_path,
+            geography_path=geography_path,
+            policy_path=policy_path,
+            acceptance_path=acceptance_path,
+            output_path=output_path,
+        )
     if protocol.schema_version != "delta-small-acceptance-v6":
         raise ValueError(
             "historical acceptance protocols are immutable evidence; only acceptance v6 "
             "may be executed by the current validator"
         )
+    if any(
+        value is None
+        for value in (
+            protocol.demand_capacity.book_seed_minimum,
+            protocol.demand_capacity.book_seed_maximum,
+            protocol.demand_capacity.confirmatory_median_minimum,
+            protocol.demand_capacity.confirmatory_median_maximum,
+        )
+    ):
+        raise ValueError("acceptance v6 is missing its historical ratio gates")
+    book_ratio_minimum = protocol.demand_capacity.book_seed_minimum
+    book_ratio_maximum = protocol.demand_capacity.book_seed_maximum
+    confirmatory_ratio_minimum = protocol.demand_capacity.confirmatory_median_minimum
+    confirmatory_ratio_maximum = protocol.demand_capacity.confirmatory_median_maximum
+    assert book_ratio_minimum is not None and book_ratio_maximum is not None
+    assert confirmatory_ratio_minimum is not None and confirmatory_ratio_maximum is not None
     if output_path.exists():
         raise FileExistsError(
             f"registered validation output already exists and will not be overwritten: {output_path}"
@@ -444,9 +471,7 @@ def run_registered_validation(
             <= float(peak_hour_interval["upper_95"])
         )
         ratio_gate = (
-            protocol.demand_capacity.confirmatory_median_minimum
-            <= float(ratio["estimate"])
-            <= protocol.demand_capacity.confirmatory_median_maximum
+            confirmatory_ratio_minimum <= float(ratio["estimate"]) <= confirmatory_ratio_maximum
         )
         chain_gate = bool(operations["all_trace_chains_verified"])
         study["registered_gate_evaluation"] = {
@@ -462,9 +487,7 @@ def run_registered_validation(
     book_ratio = book_result.peak_gross_load_ratio_milli / 1000.0
     book_gates = {
         "gross_load_within_registered_band": (
-            protocol.demand_capacity.book_seed_minimum
-            <= book_ratio
-            <= protocol.demand_capacity.book_seed_maximum
+            book_ratio_minimum <= book_ratio <= book_ratio_maximum
         ),
         "allocation_share_within_registered_band": (
             protocol.demand_capacity.book_allocation_share_minimum
