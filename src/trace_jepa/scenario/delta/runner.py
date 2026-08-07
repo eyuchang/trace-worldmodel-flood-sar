@@ -40,6 +40,10 @@ from trace_jepa.runtime import (
     TraceRuntime,
 )
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_bytes
+from trace_jepa.scenario.delta.evaluation import (
+    ReconciliationEvaluation,
+    evaluate_reconciliation,
+)
 from trace_jepa.scenario.delta.models import (
     CallRecord,
     CrossingState,
@@ -78,32 +82,80 @@ class DeltaDecisionEvent(DeltaModel):
 
 class DemandWindow(DeltaModel):
     window_start_s: int = Field(ge=0)
-    active_demand_service_units: int = Field(ge=0)
-    gross_compatible_capacity_units: int = Field(ge=0)
-    gross_load_ratio_milli: int | None = Field(default=None, ge=0)
-    gross_unserviceable: bool
+    active_demand_units: int = Field(ge=0)
+    strict_matched_capacity_units: int = Field(ge=0)
+    strict_concurrent_load_ratio_milli: int | None = Field(default=None, ge=0)
+    strict_unserviceable: bool
+    uncapped_compatible_service_unit_capacity_units: int = Field(ge=0)
+    uncapped_compatible_load_ratio_milli: int | None = Field(default=None, ge=0)
+    historical_capped_coverable_capacity_units: int = Field(ge=0)
+    registered_normalized_coverable_load_index_milli: int | None = Field(default=None, ge=0)
     commitment_covered_demand_units: int = Field(ge=0)
-    residual_unassigned_demand_units: int = Field(ge=0)
-    free_compatible_capacity_units: int = Field(ge=0)
-    residual_pressure_ratio_milli: int | None = Field(default=None, ge=0)
-    residual_unserviceable: bool
+    residual_demand_units: int = Field(ge=0)
+    free_strict_compatible_capacity_units: int = Field(ge=0)
+    residual_strict_pressure_ratio_milli: int | None = Field(default=None, ge=0)
+    residual_strict_unserviceable: bool
 
     @model_validator(mode="after")
     def validate_capacity_accounting(self) -> DemandWindow:
         if (
-            self.commitment_covered_demand_units + self.residual_unassigned_demand_units
-            != self.active_demand_service_units
+            self.commitment_covered_demand_units + self.residual_demand_units
+            != self.active_demand_units
         ):
             raise ValueError("covered plus residual demand must equal active demand")
-        if self.gross_unserviceable != (
-            self.active_demand_service_units > 0 and self.gross_compatible_capacity_units == 0
+        if self.strict_unserviceable != (
+            self.active_demand_units > 0 and self.strict_matched_capacity_units == 0
         ):
-            raise ValueError("gross unserviceable status disagrees with demand and capacity")
-        if self.residual_unserviceable != (
-            self.residual_unassigned_demand_units > 0 and self.free_compatible_capacity_units == 0
+            raise ValueError("strict unserviceable status disagrees with demand and capacity")
+        if self.residual_strict_unserviceable != (
+            self.residual_demand_units > 0 and self.free_strict_compatible_capacity_units == 0
         ):
             raise ValueError("residual unserviceable status disagrees with demand and capacity")
+        if self.active_demand_units == 0 and any(
+            ratio != 0
+            for ratio in (
+                self.strict_concurrent_load_ratio_milli,
+                self.uncapped_compatible_load_ratio_milli,
+                self.registered_normalized_coverable_load_index_milli,
+            )
+        ):
+            raise ValueError("all intrinsic load measures must be zero when demand is zero")
         return self
+
+    # Read-only aliases keep downstream v6 readers source-compatible. They are
+    # intentionally absent from serialized v7 artifacts, where the precise metric
+    # names above are mandatory.
+    @property
+    def active_demand_service_units(self) -> int:
+        return self.active_demand_units
+
+    @property
+    def gross_compatible_capacity_units(self) -> int:
+        return self.historical_capped_coverable_capacity_units
+
+    @property
+    def gross_load_ratio_milli(self) -> int | None:
+        return self.registered_normalized_coverable_load_index_milli
+
+    @property
+    def gross_unserviceable(self) -> bool:
+        return self.active_demand_units > 0 and self.historical_capped_coverable_capacity_units == 0
+
+    @property
+    def residual_unassigned_demand_units(self) -> int:
+        return self.residual_demand_units
+
+    @property
+    def free_compatible_capacity_units(self) -> int:
+        return self.free_strict_compatible_capacity_units
+
+    @property
+    def residual_pressure_ratio_milli(self) -> int | None:
+        return self.residual_strict_pressure_ratio_milli
+
+    @property
+    def residual_unserviceable(self) -> bool:
+        return self.residual_strict_unserviceable
 
 
 class DeltaResourceOutcome(DeltaModel):
@@ -126,24 +178,49 @@ class DeltaRunResult(DeltaModel):
     evidence: list[WorldModelEvidence]
     commitments: list[Commitment]
     outcomes: list[DeltaResourceOutcome]
+    reconciliation_evaluation: ReconciliationEvaluation
     trace_chain_verified: bool
-    peak_gross_load_ratio_milli: int = Field(ge=0)
-    gross_unserviceable_windows: int = Field(ge=0)
-    peak_finite_residual_pressure_ratio_milli: int = Field(ge=0)
-    residual_unserviceable_windows: int = Field(ge=0)
+    peak_strict_concurrent_load_ratio_milli: int = Field(ge=0)
+    strict_unserviceable_windows: int = Field(ge=0)
+    peak_uncapped_compatible_load_ratio_milli: int = Field(ge=0)
+    uncapped_unserviceable_windows: int = Field(ge=0)
+    peak_registered_normalized_coverable_load_index_milli: int = Field(ge=0)
+    historical_capped_unserviceable_windows: int = Field(ge=0)
+    peak_finite_residual_strict_pressure_ratio_milli: int = Field(ge=0)
+    residual_strict_unserviceable_windows: int = Field(ge=0)
     allocated: int = Field(ge=0)
     refused: int = Field(ge=0)
     repaired: int = Field(ge=0)
 
     @property
     def peak_demand_capacity_ratio_milli(self) -> int:
-        """Deprecated source-compatibility alias; v2 means gross scenario load."""
-        return self.peak_gross_load_ratio_milli
+        """Deprecated alias for the primary v7 strict-concurrency measure."""
+        return self.peak_strict_concurrent_load_ratio_milli
+
+    @property
+    def peak_gross_load_ratio_milli(self) -> int:
+        """Deprecated v6 alias for the registered historical normalized index."""
+        return self.peak_registered_normalized_coverable_load_index_milli
+
+    @property
+    def gross_unserviceable_windows(self) -> int:
+        """Deprecated v6 alias for historical capped-capacity zero windows."""
+        return self.historical_capped_unserviceable_windows
+
+    @property
+    def peak_finite_residual_pressure_ratio_milli(self) -> int:
+        """Deprecated v6 alias for strict residual operational pressure."""
+        return self.peak_finite_residual_strict_pressure_ratio_milli
+
+    @property
+    def residual_unserviceable_windows(self) -> int:
+        """Deprecated v6 alias for strict residual unserviceable windows."""
+        return self.residual_strict_unserviceable_windows
 
     @property
     def unserviceable_windows(self) -> int:
         """Deprecated source-compatibility alias for residual pressure."""
-        return self.residual_unserviceable_windows
+        return self.residual_strict_unserviceable_windows
 
 
 def _nearest_tick(scenario: GeneratedScenario, simulation_time_s: int) -> int:
@@ -368,13 +445,14 @@ def evaluate_capacity_windows(
     scenario: GeneratedScenario,
     decisions: list[DeltaDecisionEvent],
 ) -> list[DemandWindow]:
-    """Evaluate intrinsic load and post-controller residual pressure.
+    """Evaluate registered intrinsic-load definitions and strict residual pressure.
 
-    The gross metric is a property of truth plus the registered resource
-    schedule. It deliberately ignores commitments. The residual metric is an
-    offline evaluation: it uses hidden lineage only after TRACE execution to
-    determine which truth demand an authorized commitment covered. No truth
-    identifier is emitted in the aggregate window artifact.
+    All intrinsic metrics are properties of ground truth plus the registered
+    resource schedule and therefore ignore controller commitments. Strict
+    concurrency is primary. The uncapped service-unit and historical capped
+    index definitions are sensitivity measures. Residual pressure is an offline
+    evaluation that uses hidden lineage only after TRACE execution; no truth
+    identifier is emitted in the aggregate result.
     """
     window_s = scenario.config.demand_capacity.window_s
     lineage_by_call = {
@@ -402,14 +480,19 @@ def evaluate_capacity_windows(
             if incident.onset_s <= start < incident.onset_s + incident.service_duration_s
         ]
         active_demand = sum(incident.service_units for incident in active)
-        gross_capacity = _maximum_coverable_service_units(scenario, active, start, ())
+        strict_capacity = _strict_matched_capacity_units(scenario, active, start, ())
+        uncapped_capacity = _uncapped_compatible_service_unit_capacity(scenario, active, start, ())
+        historical_capacity = _historical_capped_coverable_capacity_units(
+            scenario, active, start, ()
+        )
 
-        covered_ids = {
-            lineage_by_call[event.call_id]
-            for event in allocation_events
-            if event.service_complete_s is not None
-            and event.simulation_time_s <= start < event.service_complete_s
-        }
+        covered_ids = _truth_incidents_covered_by_commitments(
+            scenario,
+            active,
+            start,
+            allocation_events,
+            lineage_by_call,
+        )
         residual_incidents = [
             incident for incident in active if incident.incident_id not in covered_ids
         ]
@@ -417,7 +500,7 @@ def evaluate_capacity_windows(
             incident.service_units for incident in residual_incidents
         )
         residual_demand = active_demand - commitment_covered
-        free_capacity = _maximum_coverable_service_units(
+        free_strict_capacity = _strict_matched_capacity_units(
             scenario,
             residual_incidents,
             start,
@@ -426,39 +509,143 @@ def evaluate_capacity_windows(
         windows.append(
             DemandWindow(
                 window_start_s=start,
-                active_demand_service_units=active_demand,
-                gross_compatible_capacity_units=gross_capacity,
-                gross_load_ratio_milli=(
-                    0
-                    if active_demand == 0
-                    else round(1000 * active_demand / gross_capacity)
-                    if gross_capacity
-                    else None
+                active_demand_units=active_demand,
+                strict_matched_capacity_units=strict_capacity,
+                strict_concurrent_load_ratio_milli=_ratio_milli(active_demand, strict_capacity),
+                strict_unserviceable=active_demand > 0 and strict_capacity == 0,
+                uncapped_compatible_service_unit_capacity_units=uncapped_capacity,
+                uncapped_compatible_load_ratio_milli=_ratio_milli(active_demand, uncapped_capacity),
+                historical_capped_coverable_capacity_units=historical_capacity,
+                registered_normalized_coverable_load_index_milli=_ratio_milli(
+                    active_demand, historical_capacity
                 ),
-                gross_unserviceable=active_demand > 0 and gross_capacity == 0,
                 commitment_covered_demand_units=commitment_covered,
-                residual_unassigned_demand_units=residual_demand,
-                free_compatible_capacity_units=free_capacity,
-                residual_pressure_ratio_milli=(
-                    0
-                    if residual_demand == 0
-                    else round(1000 * residual_demand / free_capacity)
-                    if free_capacity
-                    else None
+                residual_demand_units=residual_demand,
+                free_strict_compatible_capacity_units=free_strict_capacity,
+                residual_strict_pressure_ratio_milli=_ratio_milli(
+                    residual_demand, free_strict_capacity
                 ),
-                residual_unserviceable=residual_demand > 0 and free_capacity == 0,
+                residual_strict_unserviceable=(residual_demand > 0 and free_strict_capacity == 0),
             )
         )
     return windows
 
 
-def _maximum_coverable_service_units(
+def _ratio_milli(demand: int, capacity: int) -> int | None:
+    if demand == 0:
+        return 0
+    if capacity == 0:
+        return None
+    return round(1000 * demand / capacity)
+
+
+def _incident_route(scenario: GeneratedScenario, incident: IncidentTruth) -> str:
+    structure = next(
+        item for item in scenario.truth.structures if item.structure_id == incident.structure_id
+    )
+    return "XNG-03" if structure.island_id == "ISL-02" else "XNG-04"
+
+
+def _unit_is_eligible(
     scenario: GeneratedScenario,
-    active: list[IncidentTruth],
+    unit: ResourceUnit,
+    simulation_time_s: int,
+    route_id: str,
+    busy_intervals: Sequence[tuple[str, int, int | None]],
+) -> bool:
+    committed = any(
+        resource_id == unit.resource_id and interval_start <= simulation_time_s < int(interval_end)
+        for resource_id, interval_start, interval_end in busy_intervals
+        if interval_end is not None
+    )
+    return (
+        unit.is_available
+        and unit.available_from_s <= simulation_time_s
+        and not committed
+        and _routed_travel_s(scenario, unit, simulation_time_s, route_id) is not None
+    )
+
+
+def _strict_matched_capacity_units(
+    scenario: GeneratedScenario,
+    active: Sequence[IncidentTruth],
     simulation_time_s: int,
     busy_intervals: Sequence[tuple[str, int, int | None]],
 ) -> int:
-    """Return a deterministic maximum compatibility match without double counting.
+    """Maximize incident units covered under one-resource/one-incident concurrency."""
+    incidents = sorted(active, key=lambda item: item.incident_id)
+    if not incidents:
+        return 0
+    routes = [_incident_route(scenario, incident) for incident in incidents]
+    states: set[int] = {0}
+    for unit in sorted(scenario.resources.units, key=lambda item: item.resource_id):
+        compatible = [
+            index
+            for index, incident in enumerate(incidents)
+            if incident.required_capability in unit.capabilities
+            and unit.service_units >= incident.service_units
+            and _unit_is_eligible(
+                scenario,
+                unit,
+                simulation_time_s,
+                routes[index],
+                busy_intervals,
+            )
+        ]
+        next_states = set(states)
+        for state in states:
+            for index in compatible:
+                bit = 1 << index
+                if state & bit == 0:
+                    next_states.add(state | bit)
+        states = next_states
+    return max(
+        (
+            sum(
+                incident.service_units
+                for index, incident in enumerate(incidents)
+                if state & (1 << index)
+            )
+            for state in states
+        ),
+        default=0,
+    )
+
+
+def _uncapped_compatible_service_unit_capacity(
+    scenario: GeneratedScenario,
+    active: Sequence[IncidentTruth],
+    simulation_time_s: int,
+    busy_intervals: Sequence[tuple[str, int, int | None]],
+) -> int:
+    """Sum eligible resource service units once when any active incident is compatible."""
+    if not active:
+        return 0
+    routes = {incident.incident_id: _incident_route(scenario, incident) for incident in active}
+    return sum(
+        unit.service_units
+        for unit in sorted(scenario.resources.units, key=lambda item: item.resource_id)
+        if any(
+            incident.required_capability in unit.capabilities
+            and _unit_is_eligible(
+                scenario,
+                unit,
+                simulation_time_s,
+                routes[incident.incident_id],
+                busy_intervals,
+            )
+            for incident in active
+        )
+    )
+
+
+def _historical_capped_coverable_capacity_units(
+    scenario: GeneratedScenario,
+    active: Sequence[IncidentTruth],
+    simulation_time_s: int,
+    busy_intervals: Sequence[tuple[str, int, int | None]],
+) -> int:
+    """Reproduce the v6 registered normalized coverable-load denominator.
 
     Each resource can be assigned to at most one capability/route demand bucket.
     Capacity is capped at the service units it can actually cover in those active
@@ -466,10 +653,7 @@ def _maximum_coverable_service_units(
     """
     demand_by_key: dict[tuple[str, str], int] = defaultdict(int)
     for incident in active:
-        structure = next(
-            item for item in scenario.truth.structures if item.structure_id == incident.structure_id
-        )
-        route_id = "XNG-03" if structure.island_id == "ISL-02" else "XNG-04"
+        route_id = _incident_route(scenario, incident)
         demand_by_key[(incident.required_capability, route_id)] += incident.service_units
     keys = sorted(demand_by_key)
     if not keys:
@@ -477,19 +661,11 @@ def _maximum_coverable_service_units(
 
     states: set[tuple[int, ...]] = {(0,) * len(keys)}
     for unit in sorted(scenario.resources.units, key=lambda item: item.resource_id):
-        committed = any(
-            resource_id == unit.resource_id
-            and interval_start <= simulation_time_s < int(interval_end)
-            for resource_id, interval_start, interval_end in busy_intervals
-            if interval_end is not None
-        )
-        if not unit.is_available or unit.available_from_s > simulation_time_s or committed:
-            continue
         compatible_indexes = [
             index
             for index, (capability, route_id) in enumerate(keys)
             if capability in unit.capabilities
-            and _routed_travel_s(scenario, unit, simulation_time_s, route_id) is not None
+            and _unit_is_eligible(scenario, unit, simulation_time_s, route_id, busy_intervals)
         ]
         next_states = set(states)
         for state in states:
@@ -502,6 +678,40 @@ def _maximum_coverable_service_units(
                 next_states.add(tuple(updated))
         states = next_states
     return max((sum(state) for state in states), default=0)
+
+
+def _truth_incidents_covered_by_commitments(
+    scenario: GeneratedScenario,
+    active: Sequence[IncidentTruth],
+    simulation_time_s: int,
+    allocation_events: Sequence[DeltaDecisionEvent],
+    lineage_by_call: dict[str, str],
+) -> set[str]:
+    """Score authorized commitments against truth without credit for incompatibility."""
+    active_by_id = {incident.incident_id: incident for incident in active}
+    unit_by_id = {unit.resource_id: unit for unit in scenario.resources.units}
+    covered: set[str] = set()
+    for event in allocation_events:
+        if (
+            event.service_complete_s is None
+            or not event.simulation_time_s <= simulation_time_s < event.service_complete_s
+        ):
+            continue
+        incident_id = lineage_by_call.get(event.call_id)
+        incident = active_by_id.get(incident_id or "")
+        unit = unit_by_id.get(event.resource_id)
+        if incident is None or unit is None:
+            continue
+        route_id = _incident_route(scenario, incident)
+        if (
+            incident.required_capability in unit.capabilities
+            and unit.service_units >= incident.service_units
+            and unit.is_available
+            and unit.available_from_s <= event.simulation_time_s
+            and _routed_travel_s(scenario, unit, event.simulation_time_s, route_id) is not None
+        ):
+            covered.add(incident.incident_id)
+    return covered
 
 
 @contextmanager
@@ -715,16 +925,29 @@ def run_delta_small(
         chain_verified = repository.verify_chain()
 
     windows = evaluate_capacity_windows(scenario, decisions)
-    gross_ratios = [
-        item.gross_load_ratio_milli for item in windows if item.gross_load_ratio_milli is not None
-    ]
-    residual_ratios = [
-        item.residual_pressure_ratio_milli
+    strict_ratios = [
+        item.strict_concurrent_load_ratio_milli
         for item in windows
-        if item.residual_pressure_ratio_milli is not None
+        if item.strict_concurrent_load_ratio_milli is not None
     ]
+    uncapped_ratios = [
+        item.uncapped_compatible_load_ratio_milli
+        for item in windows
+        if item.uncapped_compatible_load_ratio_milli is not None
+    ]
+    historical_ratios = [
+        item.registered_normalized_coverable_load_index_milli
+        for item in windows
+        if item.registered_normalized_coverable_load_index_milli is not None
+    ]
+    residual_strict_ratios = [
+        item.residual_strict_pressure_ratio_milli
+        for item in windows
+        if item.residual_strict_pressure_ratio_milli is not None
+    ]
+    reconciliation = evaluate_reconciliation(scenario, decisions)
     return DeltaRunResult(
-        schema_version="delta-small-run-result-v3",
+        schema_version="delta-small-run-result-v4",
         scenario_id=scenario.config.scenario_id,
         predictor_version=provenance.predictor_version,
         calibration_version=provenance.calibration_version,
@@ -734,11 +957,25 @@ def run_delta_small(
         evidence=evidence_items,
         commitments=commitments,
         outcomes=outcomes,
+        reconciliation_evaluation=reconciliation,
         trace_chain_verified=chain_verified,
-        peak_gross_load_ratio_milli=max(gross_ratios, default=0),
-        gross_unserviceable_windows=sum(item.gross_unserviceable for item in windows),
-        peak_finite_residual_pressure_ratio_milli=max(residual_ratios, default=0),
-        residual_unserviceable_windows=sum(item.residual_unserviceable for item in windows),
+        peak_strict_concurrent_load_ratio_milli=max(strict_ratios, default=0),
+        strict_unserviceable_windows=sum(item.strict_unserviceable for item in windows),
+        peak_uncapped_compatible_load_ratio_milli=max(uncapped_ratios, default=0),
+        uncapped_unserviceable_windows=sum(
+            item.active_demand_units > 0
+            and item.uncapped_compatible_service_unit_capacity_units == 0
+            for item in windows
+        ),
+        peak_registered_normalized_coverable_load_index_milli=max(historical_ratios, default=0),
+        historical_capped_unserviceable_windows=sum(
+            item.active_demand_units > 0 and item.historical_capped_coverable_capacity_units == 0
+            for item in windows
+        ),
+        peak_finite_residual_strict_pressure_ratio_milli=max(residual_strict_ratios, default=0),
+        residual_strict_unserviceable_windows=sum(
+            item.residual_strict_unserviceable for item in windows
+        ),
         allocated=sum(event.event_type == "allocation" for event in decisions),
         refused=sum(event.event_type == "refusal" for event in decisions),
         repaired=sum(event.event_type == "repair" for event in decisions),

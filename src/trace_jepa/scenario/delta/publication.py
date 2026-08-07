@@ -358,6 +358,162 @@ def _residual_pressure_figure(windows: Any) -> bytes:
     return _svg_document("Residual operational pressure and unserviceable windows", body)
 
 
+def _v7_load_figure(windows: Any) -> bytes:
+    body = [
+        _text(64, 82, "Service units", size=12, weight=700),
+        _text(515, 82, "Primary: one resource can cover at most one incident", size=9),
+    ]
+    maximum = max(
+        max(int(item["active_demand_units"]), int(item["strict_matched_capacity_units"]))
+        for item in windows
+    )
+
+    def x(seconds: float) -> float:
+        return 80 + float(seconds) / 21_600 * 820
+
+    def y(units: float) -> float:
+        return 540 - float(units) / max(maximum, 1) * 410
+
+    for item in windows:
+        if item["strict_unserviceable"]:
+            px = x(item["window_start_s"])
+            body.append(
+                f'<rect x="{px:.1f}" y="110" width="34.2" height="430" '
+                'fill="#f5b7b1" fill-opacity="0.45"/>'
+            )
+    for key, color, label, label_y in (
+        ("active_demand_units", COLORS["demand"], "active truth demand", 105),
+        (
+            "strict_matched_capacity_units",
+            COLORS["capacity"],
+            "strict matched capacity",
+            125,
+        ),
+    ):
+        points = [(x(item["window_start_s"]), y(item[key])) for item in windows]
+        body.append(
+            '<polyline points="'
+            + " ".join(f"{px:.1f},{py:.1f}" for px, py in points)
+            + f'" fill="none" stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(
+            f'<line x1="80" y1="{label_y}" x2="105" y2="{label_y}" '
+            f'stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(_text(112, label_y + 4, label, size=10))
+    for hour in range(7):
+        px = x(hour * 3600)
+        body.append(_text(px - 8, 575, f"+{hour}h", size=10))
+    return _svg_document("Strict concurrent incident load", body)
+
+
+def _v7_residual_pressure_figure(windows: Any) -> bytes:
+    body = [
+        _text(64, 82, "Service units", size=12, weight=700),
+        _text(535, 82, "Diagnostic only: depends on TRACE commitments", size=9),
+    ]
+    maximum = max(
+        max(
+            int(item["residual_demand_units"]),
+            int(item["free_strict_compatible_capacity_units"]),
+        )
+        for item in windows
+    )
+
+    def x(seconds: float) -> float:
+        return 80 + float(seconds) / 21_600 * 820
+
+    def y(units: float) -> float:
+        return 540 - float(units) / max(maximum, 1) * 410
+
+    for item in windows:
+        if item["residual_strict_unserviceable"]:
+            px = x(item["window_start_s"])
+            body.append(
+                f'<rect x="{px:.1f}" y="110" width="34.2" height="430" '
+                'fill="#f5b7b1" fill-opacity="0.45"/>'
+            )
+    for key, color, label, label_y in (
+        ("residual_demand_units", COLORS["demand"], "residual truth demand", 105),
+        (
+            "free_strict_compatible_capacity_units",
+            COLORS["capacity"],
+            "free strict compatible capacity",
+            125,
+        ),
+    ):
+        points = [(x(item["window_start_s"]), y(item[key])) for item in windows]
+        body.append(
+            '<polyline points="'
+            + " ".join(f"{px:.1f},{py:.1f}" for px, py in points)
+            + f'" fill="none" stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(
+            f'<line x1="80" y1="{label_y}" x2="105" y2="{label_y}" '
+            f'stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(_text(112, label_y + 4, label, size=10))
+    for hour in range(7):
+        px = x(hour * 3600)
+        body.append(_text(px - 8, 575, f"+{hour}h", size=10))
+    return _svg_document("Strict residual operational pressure", body)
+
+
+def _v7_metric_sensitivity_figure(windows: Any) -> bytes:
+    body = [
+        _text(64, 82, "Load ratio", size=12, weight=700),
+        _text(590, 82, "Definitions are reported, not interchangeable", size=9),
+    ]
+    series = (
+        ("strict_concurrent_load_ratio_milli", COLORS["demand"], "strict concurrency", 105),
+        (
+            "uncapped_compatible_load_ratio_milli",
+            COLORS["capacity"],
+            "uncapped compatible units",
+            125,
+        ),
+        (
+            "registered_normalized_coverable_load_index_milli",
+            COLORS["accent"],
+            "historical normalized index",
+            145,
+        ),
+    )
+    finite = [
+        int(item[key])
+        for item in windows
+        for key, _color, _label, _label_y in series
+        if item[key] is not None
+    ]
+    maximum = max(finite, default=1000)
+
+    def x(seconds: float) -> float:
+        return 80 + float(seconds) / 21_600 * 820
+
+    def y(ratio_milli: float) -> float:
+        return 540 - float(ratio_milli) / max(maximum, 1) * 370
+
+    for key, color, label, label_y in series:
+        points = [
+            (x(item["window_start_s"]), y(item[key])) for item in windows if item[key] is not None
+        ]
+        if points:
+            body.append(
+                '<polyline points="'
+                + " ".join(f"{px:.1f},{py:.1f}" for px, py in points)
+                + f'" fill="none" stroke="{color}" stroke-width="3"/>'
+            )
+        body.append(
+            f'<line x1="80" y1="{label_y}" x2="105" y2="{label_y}" '
+            f'stroke="{color}" stroke-width="3"/>'
+        )
+        body.append(_text(112, label_y + 4, label, size=10))
+    for hour in range(7):
+        px = x(hour * 3600)
+        body.append(_text(px - 8, 575, f"+{hour}h", size=10))
+    return _svg_document("Load-definition sensitivity analysis", body)
+
+
 def _flow_figure(summary: Any, trace_records: Any) -> bytes:
     body: list[str] = []
     nodes = [
@@ -439,13 +595,27 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     summary = _load_json(reference_root / "result_summary.json")
     validation = _load_json(reference_root / "validation_summary.json")
     trace_records = _load_json(reference_root / "trace_records.json")
+    is_v7 = bool(windows and "strict_concurrent_load_ratio_milli" in windows[0])
     figures = {
         "delta_small_topology.svg": _topology_figure(geography, resources, resource_provenance),
         "delta_small_timeline.svg": _timeline_figure(meteorology, hydrology, calls, resources),
-        "delta_small_gross_load.svg": _gross_load_figure(windows),
-        "delta_small_residual_pressure.svg": _residual_pressure_figure(windows),
         "delta_small_trace_walkthrough.svg": _flow_figure(summary, trace_records),
     }
+    if is_v7:
+        figures.update(
+            {
+                "delta_small_strict_load.svg": _v7_load_figure(windows),
+                "delta_small_strict_residual_pressure.svg": _v7_residual_pressure_figure(windows),
+                "delta_small_metric_sensitivity.svg": _v7_metric_sensitivity_figure(windows),
+            }
+        )
+    else:
+        figures.update(
+            {
+                "delta_small_gross_load.svg": _gross_load_figure(windows),
+                "delta_small_residual_pressure.svg": _residual_pressure_figure(windows),
+            }
+        )
     descriptors: list[dict[str, object]] = []
     for file_name, payload in sorted(figures.items()):
         destination = output_root / file_name
@@ -457,7 +627,11 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
         )
     result_table = canonical_json_bytes(
         {
-            "schema_version": "delta-small-publication-result-table-v3",
+            "schema_version": (
+                "delta-small-publication-result-table-v4"
+                if is_v7
+                else "delta-small-publication-result-table-v3"
+            ),
             "book_walkthrough": summary,
             "registered_validation": validation,
         }
@@ -471,7 +645,9 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
         }
     )
     manifest: dict[str, object] = {
-        "schema_version": "delta-small-publication-bundle-v2",
+        "schema_version": (
+            "delta-small-publication-bundle-v3" if is_v7 else "delta-small-publication-bundle-v2"
+        ),
         "reference_manifest_sha256": sha256_file(reference_root / "manifest.json"),
         "metadata_policy": "deterministic-svg-no-timestamps-no-notebook",
         "artifacts": descriptors,

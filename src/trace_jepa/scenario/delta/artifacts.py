@@ -166,7 +166,11 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
         for hour in range(6)
     ]
     return {
-        "schema_version": "delta-small-machine-result-summary-v2",
+        "schema_version": (
+            "delta-small-machine-result-summary-v3"
+            if scenario.config.generator_version == "delta-small-generator-v7"
+            else "delta-small-machine-result-summary-v2"
+        ),
         "scenario_id": scenario.config.scenario_id,
         "seed": scenario.config.seed,
         "seed_role": "descriptive_walkthrough_not_confirmatory",
@@ -182,12 +186,25 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
         "visible_evidence_repairs": run_result.repaired,
         "commitments": len(run_result.commitments),
         "trace_chain_verified": run_result.trace_chain_verified,
-        "peak_gross_compatible_load_ratio_milli": run_result.peak_gross_load_ratio_milli,
-        "gross_unserviceable_windows": run_result.gross_unserviceable_windows,
-        "peak_finite_residual_operational_pressure_ratio_milli": (
-            run_result.peak_finite_residual_pressure_ratio_milli
+        "peak_strict_concurrent_load_ratio_milli": (
+            run_result.peak_strict_concurrent_load_ratio_milli
         ),
-        "residual_unserviceable_windows": run_result.residual_unserviceable_windows,
+        "strict_unserviceable_windows": run_result.strict_unserviceable_windows,
+        "peak_uncapped_compatible_load_ratio_milli": (
+            run_result.peak_uncapped_compatible_load_ratio_milli
+        ),
+        "uncapped_unserviceable_windows": run_result.uncapped_unserviceable_windows,
+        "peak_registered_normalized_coverable_load_index_milli": (
+            run_result.peak_registered_normalized_coverable_load_index_milli
+        ),
+        "historical_capped_unserviceable_windows": (
+            run_result.historical_capped_unserviceable_windows
+        ),
+        "peak_finite_residual_strict_pressure_ratio_milli": (
+            run_result.peak_finite_residual_strict_pressure_ratio_milli
+        ),
+        "residual_strict_unserviceable_windows": (run_result.residual_strict_unserviceable_windows),
+        "reconciliation": run_result.reconciliation_evaluation.model_dump(mode="json"),
         "claims_limit": [
             "reduced_order_teaching_hydrology",
             "synthetic_nonrepresentative_cohort",
@@ -380,6 +397,13 @@ def write_scenario_artifacts(
             "demand_capacity",
             "demand_capacity.json",
             [item.model_dump(mode="json") for item in run_result.demand_windows],
+            False,
+        ),
+        _write_artifact(
+            output_root,
+            "reconciliation_evaluation",
+            "reconciliation_evaluation.json",
+            run_result.reconciliation_evaluation.model_dump(mode="json"),
             False,
         ),
         _write_artifact(
