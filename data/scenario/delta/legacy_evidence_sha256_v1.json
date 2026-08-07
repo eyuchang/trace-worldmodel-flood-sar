@@ -1,0 +1,16 @@
+{
+  "baseline_commit": "c89a598c7dce03aa19e143cf4dafcd267e9dd3e5",
+  "entries": {
+    "configs/scenarios/wf_dfld_01_small_acceptance.yaml": "ad7f5d99ddd77a7dce4e0cff4faf432185b659ec55a92b90fb6046392f8c1c04",
+    "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml": "eb3a8aefc56b8d30cfc2853f1b5bb0536b962b937f003dbcf9e8f089c8937d7c",
+    "configs/scenarios/wf_dfld_01_small_v1.yaml": "a97cb37c0547183828019ca5bc56662af9d3cc73db5eebc906f8e3f11975939b",
+    "configs/scenarios/wf_dfld_01_small_v2.yaml": "81a986f1f27a883c1bee5ab06dfc55621af1b32dce386c14ca10f3e73a364ae6",
+    "data/scenario/delta/reference/wf_dfld_01_small_book_v1": "bfd75d4bf4fabf5052d7711bf4016df22236b9903407ce3ec86e4384afba85a0",
+    "data/scenario/delta/reference/wf_dfld_01_small_book_v2": "0f5bc374eeb439cd424efce4ff1ca0c8a2a23ad8c2103a6224af7d63b45bda95",
+    "docs/delta/figures/wf_dfld_01_small": "0e5162c05a8b2938b310dcfb788021f58edcd1237a4f606148d95285e3e0c24d",
+    "docs/delta/figures/wf_dfld_01_small_v2": "9f897e6a7c870460d926e050085c4b34fc61434423b05c70c5c320d0567da36a",
+    "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION.json": "d51e17364c254032a8118a9de633425c82f9689c7a523582a5706e40238b817b",
+    "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json": "2754b9d92c2df4e0c20026a388e092ec1039b315d38617c76ac8b3be8d44a24c"
+  },
+  "schema_version": "delta-legacy-evidence-integrity-v1"
+}
