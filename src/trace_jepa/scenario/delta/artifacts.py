@@ -41,10 +41,10 @@ class ReplayManifest(DeltaModel):
     schema_version: str
     scenario_id: str
     generator_version: str
-    git_commit: str
+    git_commit: str | None = None
     source_tree_sha256: str
-    python_implementation: str
-    python_version: str
+    python_implementation: str | None = None
+    python_version: str | None = None
     generation_order: list[str]
     stage_seeds: list[StageSeedRecord]
     inputs: list[ProvenanceInput]
@@ -109,6 +109,11 @@ def _git_commit(repository_root: Path) -> str:
                 if name == reference:
                     return commit
     return "unavailable"
+
+
+def current_git_commit(repository_root: Path) -> str:
+    """Return commit identity for a non-scientific execution receipt."""
+    return _git_commit(repository_root)
 
 
 def _safe_artifact_path(output_root: Path, file_name: str) -> Path:
@@ -224,18 +229,42 @@ def write_scenario_artifacts(
     package_root: Path,
     *,
     recorded_git_commit: str | None = None,
+    validation_report_path: Path | None = None,
 ) -> ReplayManifest:
     _validate_output_root(output_root, create=True)
     repository_root = package_root.parents[1]
     physical_parameters = physical_parameter_table()
     population_parameters = population_parameter_table(scenario.config.generator_version)
-    acceptance_path = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
-    validation_path = repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
-    if validation_path.is_file():
+    is_v7 = scenario.config.generator_version == "delta-small-generator-v7"
+    acceptance_path = (
+        repository_root
+        / "configs/scenarios"
+        / (
+            "wf_dfld_01_small_acceptance_v3.yaml"
+            if is_v7
+            else "wf_dfld_01_small_acceptance_v2.yaml"
+        )
+    )
+    if is_v7 and not acceptance_path.is_file():
+        # The implementation freeze intentionally precedes the seed-list
+        # preregistration commit. Keep that interim state explicitly runnable.
+        acceptance_path = repository_root / "docs/delta/WF_DFLD_01_SMALL_V7_PROTOCOL.md"
+    validation_path = validation_report_path
+    if validation_path is None and not is_v7:
+        legacy_validation = (
+            repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
+        )
+        validation_path = legacy_validation if legacy_validation.is_file() else None
+    if validation_path is not None:
+        validation_path = validation_path.resolve(strict=True)
         validation_report = json.loads(validation_path.read_text("utf-8"))
         validation_summary: dict[str, object] = {
-            "schema_version": "delta-small-validation-summary-v2",
-            "status": "confirmatory-v5-executed",
+            "schema_version": (
+                "delta-small-validation-summary-v3"
+                if is_v7
+                else "delta-small-validation-summary-v2"
+            ),
+            "status": ("confirmatory-v6-executed" if is_v7 else "confirmatory-v5-executed"),
             "source_report_sha256": sha256_file(validation_path),
             "book_walkthrough": validation_report["book_walkthrough"],
             "studies": [
@@ -243,10 +272,30 @@ def write_scenario_artifacts(
                     "study_id": study["study_id"],
                     "seed_count": study["seed_count"],
                     "call_count": study["call_count"],
-                    "peak_gross_load_ratio": study["peak_gross_load_ratio"],
-                    "peak_finite_residual_pressure_ratio": study[
-                        "peak_finite_residual_pressure_ratio"
-                    ],
+                    **(
+                        {
+                            "peak_strict_concurrent_load_ratio": study[
+                                "peak_strict_concurrent_load_ratio"
+                            ],
+                            "peak_uncapped_compatible_load_ratio": study[
+                                "peak_uncapped_compatible_load_ratio"
+                            ],
+                            "peak_registered_normalized_coverable_load_index": study[
+                                "peak_registered_normalized_coverable_load_index"
+                            ],
+                            "peak_finite_residual_strict_pressure_ratio": study[
+                                "peak_finite_residual_strict_pressure_ratio"
+                            ],
+                            "reconciliation": study["reconciliation"],
+                        }
+                        if is_v7
+                        else {
+                            "peak_gross_load_ratio": study["peak_gross_load_ratio"],
+                            "peak_finite_residual_pressure_ratio": study[
+                                "peak_finite_residual_pressure_ratio"
+                            ],
+                        }
+                    ),
                     "observation_channel": study["observation_channel"],
                     "operations": study["operations"],
                     "registered_gate_evaluation": study["registered_gate_evaluation"],
@@ -256,8 +305,16 @@ def write_scenario_artifacts(
         }
     else:
         validation_summary = {
-            "schema_version": "delta-small-validation-summary-v2",
-            "status": "confirmatory-v5-preregistered-not-yet-executed",
+            "schema_version": (
+                "delta-small-validation-summary-v3"
+                if is_v7
+                else "delta-small-validation-summary-v2"
+            ),
+            "status": (
+                "confirmatory-v6-preregistered-not-yet-executed"
+                if is_v7
+                else "confirmatory-v5-preregistered-not-yet-executed"
+            ),
             "acceptance_protocol_sha256": sha256_file(acceptance_path),
             "studies": [],
         }
@@ -440,7 +497,6 @@ def write_scenario_artifacts(
         if scenario.config.generator_version == "delta-small-generator-v7"
         else "build_manifest_v2.json"
     )
-    is_v7 = scenario.config.generator_version == "delta-small-generator-v7"
     environment_contract = (
         repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
         if is_v7
@@ -518,7 +574,7 @@ def write_scenario_artifacts(
             sha256=sha256_file(resource_source),
         ),
     ]
-    if validation_path.is_file():
+    if validation_path is not None:
         inputs.append(
             ProvenanceInput(
                 name="registered_validation_report",
@@ -546,13 +602,13 @@ def write_scenario_artifacts(
             )
         )
     manifest = ReplayManifest(
-        schema_version="delta-replay-manifest-v3",
+        schema_version="delta-replay-manifest-v4" if is_v7 else "delta-replay-manifest-v3",
         scenario_id=scenario.config.scenario_id,
         generator_version=scenario.config.generator_version,
-        git_commit=recorded_git_commit or _git_commit(repository_root),
+        git_commit=(recorded_git_commit or _git_commit(repository_root)) if not is_v7 else None,
         source_tree_sha256=source_tree_sha256(package_root),
-        python_implementation=platform.python_implementation(),
-        python_version=f"{sys.version_info.major}.{sys.version_info.minor}",
+        python_implementation=None if is_v7 else platform.python_implementation(),
+        python_version=(None if is_v7 else f"{sys.version_info.major}.{sys.version_info.minor}"),
         generation_order=scenario.generation_order,
         stage_seeds=[
             StageSeedRecord(stage_name=name, seed_sha256=seed_hash)
@@ -562,7 +618,7 @@ def write_scenario_artifacts(
         artifacts=artifacts,
     )
     _safe_artifact_path(output_root, "manifest.json").write_bytes(
-        canonical_json_bytes(manifest.model_dump(mode="json"))
+        canonical_json_bytes(manifest.model_dump(mode="json", exclude_none=is_v7))
     )
     return manifest
 

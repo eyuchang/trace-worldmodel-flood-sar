@@ -323,9 +323,13 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
         "automatic_aid_source_extract",
         "v7_process_calibration",
     }
-    if (REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json").exists():
-        expected_inputs.add("registered_validation_report")
     assert {item.name for item in manifest.inputs} == expected_inputs
+    manifest_payload = json.loads((reference / "manifest.json").read_text("utf-8"))
+    assert "git_commit" not in manifest_payload
+    assert "python_implementation" not in manifest_payload
+    assert "python_version" not in manifest_payload
+    assert execution.execution_receipt is not None
+    assert (reference / "execution_receipt.json").is_file()
     assert all(len(item.sha256) == 64 for item in manifest.inputs)
 
 
@@ -354,7 +358,9 @@ def test_exact_replay_preserves_recorded_source_commit_across_artifact_commits(
         predictor,
     )
 
-    assert verify_scenario_artifacts(replay).git_commit == source_commit
+    assert verify_scenario_artifacts(replay).git_commit is None
+    receipt = json.loads((replay / "execution_receipt.json").read_text("utf-8"))
+    assert receipt["source_commit"] == source_commit
     assert (reference / "manifest.json").read_bytes() == (replay / "manifest.json").read_bytes()
 
 
