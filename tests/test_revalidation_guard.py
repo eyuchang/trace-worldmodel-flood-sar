@@ -271,3 +271,23 @@ def test_guard_holds_unregistered_mismatched_or_pending_evidence(
         authority_present=True,
     )
     assert result.decision == CommitmentDecision.HOLD
+
+
+def test_guard_fails_closed_when_qualification_profile_is_missing() -> None:
+    engine, guard = guarded_engine()
+    item = evidence_with_profile(
+        predictor_version="predictor-v1",
+        calibration_version="cal-v1",
+        adequacy_status=AdequacyStatus.QUALIFIED,
+        model_hash="hash-v1",
+    ).model_copy(update={"experimental_profile": None})
+    result = engine.evaluate(
+        Claim(layer=ClaimLayer.PREDICTIVE, text="Unbound predictor evidence."),
+        item,
+        action_name="dispatch_rescue_boat",
+        reversible=False,
+        authority_present=True,
+    )
+    assert result.decision == CommitmentDecision.HOLD
+    assert "experimental_profile_present" in result.failed_gates
+    assert guard.transition_log[-1]["adequacy_status"] == "missing"

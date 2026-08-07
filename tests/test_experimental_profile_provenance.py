@@ -22,15 +22,22 @@ from trace_jepa.predictor import (
     CachedVJEPAFeatureProvider,
     CalibratedVJEPAHead,
     MLPActionPrefixPredictor,
+    MLPCalibrationArtifact,
     PredictorContext,
     PredictorObservation,
     PredictorPriorProfile,
     PredictorRequest,
     PredictorRouteObservation,
     PredictorVisualFeatureRef,
+    QualificationArtifact,
     ToyActionPrefixPredictor,
+    VerifiedQualification,
     VJEPABackedActionPrefixPredictor,
+    load_qualification_artifact,
+    write_deterministic_feature_cache,
+    write_deterministic_npz,
 )
+from trace_jepa.util import sha256_file
 
 
 def _base_evidence(**updates) -> WorldModelEvidence:
@@ -127,6 +134,189 @@ def test_toy_predictor_satisfies_versioned_predictor_protocol() -> None:
     assert provenance.calibration_version == predictor.calibration_version
     assert provenance.model_hash == predictor.model_hash
     assert provenance.calibration_hash == predictor.calibration_hash
+    assert provenance.qualification_artifact_sha256 is not None
+    assert provenance.qualified_action_types == predictor.supported_action_types
+
+
+def _write_qualification(
+    tmp_path,
+    *,
+    predictor_version: str,
+    model_hash: str,
+    calibration_version: str,
+    calibration_hash: str,
+    feature_schema_version: str = "action-prefix-features-v2",
+    action_schema_version: str = "delta-response-actions-v2",
+    encoder_version: str | None = None,
+    encoder_checkpoint_hash: str | None = None,
+) -> VerifiedQualification:
+    payload = QualificationArtifact(
+        schema_version="predictor-qualification-v1",
+        qualification_id="test-qualification-v1",
+        qualification_scope="experimental",
+        predictor_version=predictor_version,
+        model_hash=model_hash,
+        calibration_version=calibration_version,
+        calibration_hash=calibration_hash,
+        encoder_version=encoder_version,
+        encoder_checkpoint_hash=encoder_checkpoint_hash,
+        feature_schema_version=feature_schema_version,
+        action_schema_version=action_schema_version,
+        qualified_action_types=("dispatch_rescue_boat",),
+        adequacy_status=AdequacyStatus.QUALIFIED,
+        evaluation_protocol_sha256="5" * 64,
+        evaluation_report_sha256="6" * 64,
+        issuer_name="test issuer",
+        issuer_role="test-only qualification fixture",
+        issued_at_utc=datetime(2026, 8, 6, tzinfo=timezone.utc),
+        claim_limit="test fixture only",
+    )
+    path = tmp_path / "qualification.json"
+    path.write_text(payload.model_dump_json(), encoding="utf-8")
+    return load_qualification_artifact(path)
+
+
+def test_learned_predictor_cannot_self_assert_qualified_status(tmp_path) -> None:
+    with pytest.raises(ValueError, match="verified artifact"):
+        MLPActionPrefixPredictor(
+            backend=DeterministicMLPBackend(),
+            predictor_version="mlp-v1",
+            calibration_version="mlp-cal-v1",
+            training_snapshot="training-v1",
+            model_hash="1" * 64,
+            calibration_hash="2" * 64,
+            adequacy_status=AdequacyStatus.QUALIFIED,
+        )
+
+    qualification = _write_qualification(
+        tmp_path,
+        predictor_version="mlp-v1",
+        model_hash="1" * 64,
+        calibration_version="mlp-cal-v1",
+        calibration_hash="2" * 64,
+    )
+    predictor = MLPActionPrefixPredictor(
+        backend=DeterministicMLPBackend(),
+        predictor_version="mlp-v1",
+        calibration_version="mlp-cal-v1",
+        training_snapshot="training-v1",
+        model_hash="1" * 64,
+        calibration_hash="2" * 64,
+        qualification=qualification,
+    )
+    assert predictor.provenance().adequacy_status == AdequacyStatus.QUALIFIED
+    assert predictor.provenance().qualified_action_types == ("dispatch_rescue_boat",)
+
+
+def test_qualification_artifact_rejects_any_bound_field_mismatch(tmp_path) -> None:
+    qualification = _write_qualification(
+        tmp_path,
+        predictor_version="mlp-v1",
+        model_hash="9" * 64,
+        calibration_version="mlp-cal-v1",
+        calibration_hash="2" * 64,
+    )
+    with pytest.raises(ValueError, match="model_hash mismatch"):
+        MLPActionPrefixPredictor(
+            backend=DeterministicMLPBackend(),
+            predictor_version="mlp-v1",
+            calibration_version="mlp-cal-v1",
+            training_snapshot="training-v1",
+            model_hash="1" * 64,
+            calibration_hash="2" * 64,
+            qualification=qualification,
+        )
+
+
+def test_mlp_loader_binds_separate_model_and_calibration_artifacts(tmp_path) -> None:
+    action_names = np.asarray(["dispatch_rescue_boat"])
+    metadata = {
+        "predictor_version": "mlp-safe-v1",
+        "training_snapshot": "synthetic-test-v1",
+        "feature_schema_version": "action-prefix-features-v2",
+        "action_schema_version": "delta-response-actions-v2",
+    }
+    checkpoint = tmp_path / "mlp.npz"
+    write_deterministic_npz(
+        checkpoint,
+        {
+            "weight_1": np.zeros((12, 2), dtype=np.float64),
+            "bias_1": np.zeros(2, dtype=np.float64),
+            "weight_2": np.zeros((2, 7), dtype=np.float64),
+            "bias_2": np.asarray([-1e6, 5.0, 0.0, 0.0, 1e6, 0.0, 0.0]),
+            "action_names": action_names,
+            "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
+        },
+    )
+    calibration = MLPCalibrationArtifact(
+        schema_version="mlp-calibration-v1",
+        predictor_version="mlp-safe-v1",
+        calibration_version="mlp-safe-cal-v1",
+        feature_schema_version="action-prefix-features-v2",
+        action_schema_version="delta-response-actions-v2",
+        output_link_version="delta-plan-prediction-links-v1",
+    )
+    calibration_path = tmp_path / "mlp-calibration.json"
+    calibration_path.write_text(calibration.model_dump_json(), encoding="utf-8")
+
+    predictor = MLPActionPrefixPredictor.from_checkpoint(
+        checkpoint,
+        calibration_path=calibration_path,
+    )
+    provenance = predictor.provenance()
+    assert provenance.model_hash == sha256_file(checkpoint)
+    assert provenance.calibration_hash == sha256_file(calibration_path)
+    assert provenance.adequacy_status == AdequacyStatus.UNQUALIFIED
+    prediction = predictor.predict(_protocol_request())
+    assert prediction.success_probability == 0.0
+    assert prediction.model_support == 1.0
+
+    malformed = tmp_path / "mlp-extra-array.npz"
+    write_deterministic_npz(
+        malformed,
+        {
+            "weight_1": np.zeros((12, 2), dtype=np.float64),
+            "bias_1": np.zeros(2, dtype=np.float64),
+            "weight_2": np.zeros((2, 7), dtype=np.float64),
+            "bias_2": np.zeros(7, dtype=np.float64),
+            "action_names": action_names,
+            "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
+            "unexpected": np.asarray([1]),
+        },
+    )
+    with pytest.raises(ValueError, match="frozen schema"):
+        MLPActionPrefixPredictor.from_checkpoint(
+            malformed,
+            calibration_path=calibration_path,
+        )
+
+
+def test_vjepa_qualification_requires_exact_frozen_head_and_encoder(tmp_path) -> None:
+    provider, head = _write_vjepa_fixture(tmp_path)
+    with pytest.raises(ValueError, match="verified artifact"):
+        VJEPABackedActionPrefixPredictor(
+            provider,
+            head,
+            adequacy_status=AdequacyStatus.QUALIFIED,
+        )
+    qualification = _write_qualification(
+        tmp_path,
+        predictor_version=str(head.metadata["predictor_version"]),
+        model_hash=head.checkpoint_hash,
+        calibration_version=str(head.metadata["calibration_version"]),
+        calibration_hash=str(head.metadata["calibration_hash"]),
+        feature_schema_version=str(head.metadata["feature_schema_version"]),
+        action_schema_version=str(head.metadata["action_schema_version"]),
+        encoder_version=provider.encoder_version,
+        encoder_checkpoint_hash=provider.encoder_checkpoint_hash,
+    )
+    predictor = VJEPABackedActionPrefixPredictor(
+        provider,
+        head,
+        qualification=qualification,
+    )
+    assert predictor.provenance().adequacy_status == AdequacyStatus.QUALIFIED
+    assert predictor.provenance().qualified_action_types == ("dispatch_rescue_boat",)
 
 
 def test_world_model_evidence_rejects_mismatched_profile_versions() -> None:
@@ -146,11 +336,19 @@ class DeterministicMLPBackend:
         return [0.0, 5.0, -1.0, 0.2, 2.0, -2.0, -1.0]
 
 
-def _protocol_request(*, visual: bool = False) -> PredictorRequest:
+def _protocol_request(
+    *,
+    visual: bool = False,
+    feature_cache_sha256: str = "f" * 64,
+) -> PredictorRequest:
     visual_reference = (
         PredictorVisualFeatureRef(
             observation_id="visual-test",
             observation_sha256="a" * 64,
+            feature_cache_sha256=feature_cache_sha256,
+            feature_schema_version="vjepa-frozen-feature-v1",
+            encoder_version="vjepa2.1-test",
+            encoder_checkpoint_hash="e" * 64,
             captured_at_s=0,
         )
         if visual
@@ -192,12 +390,12 @@ def _protocol_request(*, visual: bool = False) -> PredictorRequest:
 
 def _write_vjepa_fixture(tmp_path) -> tuple[CachedVJEPAFeatureProvider, CalibratedVJEPAHead]:
     encoder_hash = "e" * 64
-    np.savez_compressed(
+    write_deterministic_feature_cache(
         tmp_path / "visual-test.npz",
         feature=np.asarray([0.1, 0.2], dtype=np.float32),
-        observation_sha256=np.asarray("a" * 64),
-        encoder_version=np.asarray("vjepa2.1-test"),
-        encoder_checkpoint_hash=np.asarray(encoder_hash),
+        observation_sha256="a" * 64,
+        encoder_version="vjepa2.1-test",
+        encoder_checkpoint_hash=encoder_hash,
     )
     action_names = np.asarray(["dispatch_rescue_boat"])
     structured_dimension = 11 + len(action_names)
@@ -251,7 +449,10 @@ def test_mlp_and_vjepa_adapters_share_the_versioned_protocol(tmp_path) -> None:
     assert isinstance(mlp, ActionPrefixPredictor)
     assert isinstance(vjepa, ActionPrefixPredictor)
     assert mlp.predict(request).plan_id == request.plan.plan_id
-    visual_request = _protocol_request(visual=True)
+    visual_request = _protocol_request(
+        visual=True,
+        feature_cache_sha256=sha256_file(tmp_path / "visual-test.npz"),
+    )
     assert vjepa.predict(visual_request).plan_id == request.plan.plan_id
     assert vjepa.encoder_version != vjepa.predictor_version
     assert vjepa.provenance().adequacy_status == AdequacyStatus.PENDING_REVALIDATION

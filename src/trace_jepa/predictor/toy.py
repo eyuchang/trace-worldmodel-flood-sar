@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 
 from trace_jepa.contracts import PlanPrediction
 from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import PredictorProvenance, PredictorRequest
+from trace_jepa.predictor.qualification import (
+    load_qualification_artifact,
+    verify_qualification_binding,
+)
 
 
 class ToyActionPrefixPredictor:
@@ -21,7 +26,6 @@ class ToyActionPrefixPredictor:
     training_snapshot = "synthetic-flood-v1"
     model_hash = hashlib.sha256(b"toy-action-prefix-v2-reviewed-source-fixture").hexdigest()
     calibration_hash = hashlib.sha256(b"toy-calibration-v1-reviewed-teaching-fixture").hexdigest()
-    adequacy_status = AdequacyStatus.QUALIFIED
     supported_action_types = (
         "dispatch_rescue_boat",
         "deploy_ground_team",
@@ -30,6 +34,24 @@ class ToyActionPrefixPredictor:
     )
     feature_schema_version = "action-prefix-features-v2"
     action_schema_version = "delta-response-actions-v2"
+
+    def __init__(self, qualification_path: Path | None = None) -> None:
+        path = qualification_path or Path(__file__).with_name("toy_qualification_v1.json")
+        qualification = load_qualification_artifact(path)
+        self.qualified_action_types = verify_qualification_binding(
+            qualification,
+            predictor_version=self.predictor_version,
+            model_hash=self.model_hash,
+            calibration_version=self.calibration_version,
+            calibration_hash=self.calibration_hash,
+            encoder_version=None,
+            encoder_checkpoint_hash=None,
+            feature_schema_version=self.feature_schema_version,
+            action_schema_version=self.action_schema_version,
+            supported_action_types=self.supported_action_types,
+        )
+        self.adequacy_status = AdequacyStatus.QUALIFIED
+        self.qualification_artifact_sha256 = qualification.artifact_sha256
 
     @property
     def version(self) -> str:
@@ -43,9 +65,11 @@ class ToyActionPrefixPredictor:
             model_hash=self.model_hash,
             calibration_hash=self.calibration_hash,
             adequacy_status=self.adequacy_status,
+            qualification_artifact_sha256=self.qualification_artifact_sha256,
             feature_schema_version=self.feature_schema_version,
             action_schema_version=self.action_schema_version,
             supported_action_types=self.supported_action_types,
+            qualified_action_types=self.qualified_action_types,
         )
 
     def predict(self, request: PredictorRequest) -> PlanPrediction:

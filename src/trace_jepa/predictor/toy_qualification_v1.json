@@ -1,0 +1,26 @@
+{
+  "action_schema_version": "delta-response-actions-v2",
+  "adequacy_status": "qualified",
+  "calibration_hash": "44a0e361c8cdfbfeaae42bacfc033d03e11a95efe25630504ab4ebe60b403816",
+  "calibration_version": "toy-calibration-v1",
+  "claim_limit": "Transparent deterministic teaching fixture; qualification asserts inspectability and test coverage, not empirical predictive effectiveness.",
+  "encoder_checkpoint_hash": null,
+  "encoder_version": null,
+  "evaluation_protocol_sha256": "eb3a8aefc56b8d30cfc2853f1b5bb0536b962b937f003dbcf9e8f089c8937d7c",
+  "evaluation_report_sha256": "2754b9d92c2df4e0c20026a388e092ec1039b315d38617c76ac8b3be8d44a24c",
+  "feature_schema_version": "action-prefix-features-v2",
+  "issued_at_utc": "2026-08-06T00:00:00Z",
+  "issuer_name": "TRACE teaching project",
+  "issuer_role": "reviewed source-fixture maintainer",
+  "model_hash": "c590a3621cb24a2c0f7cf6b084b6192feeeb5df8c1ea70d10d5e160294d2eb56",
+  "predictor_version": "toy-action-prefix-v2",
+  "qualification_id": "toy-action-prefix-v2-teaching-qualification-v1",
+  "qualification_scope": "teaching_fixture",
+  "qualified_action_types": [
+    "dispatch_rescue_boat",
+    "deploy_ground_team",
+    "perform_welfare_check",
+    "inspect_levee"
+  ],
+  "schema_version": "predictor-qualification-v1"
+}

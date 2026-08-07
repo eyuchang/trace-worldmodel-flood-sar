@@ -4,7 +4,7 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Literal, Protocol, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,15 +12,32 @@ from numpy.typing import NDArray
 from trace_jepa.contracts import PlanPrediction
 from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import (
+    PredictorModel,
     PredictorProvenance,
     PredictorRequest,
     request_feature_vector,
+)
+from trace_jepa.predictor.qualification import (
+    VerifiedQualification,
+    load_qualification_artifact,
+    verify_qualification_binding,
 )
 from trace_jepa.util import sha256_file
 
 
 class CalibratedMLPBackend(Protocol):
     def infer(self, request: PredictorRequest) -> list[float]: ...
+
+
+class MLPCalibrationArtifact(PredictorModel):
+    """Separate, content-addressed transformation contract for MLP outputs."""
+
+    schema_version: Literal["mlp-calibration-v1"]
+    predictor_version: str
+    calibration_version: str
+    feature_schema_version: str
+    action_schema_version: str
+    output_link_version: Literal["delta-plan-prediction-links-v1"]
 
 
 @dataclass(frozen=True)
@@ -48,7 +65,7 @@ class NumpyMLPBackend:
                     "action_names",
                     "metadata_json",
                 }
-                if required - set(payload.files):
+                if set(payload.files) != required:
                     raise ValueError("MLP checkpoint does not satisfy the frozen schema")
                 backend = cls(
                     weight_1=payload["weight_1"].astype(np.float64),
@@ -98,7 +115,7 @@ class MLPActionPrefixPredictor:
         training_snapshot: str,
         model_hash: str,
         calibration_hash: str,
-        adequacy_status: AdequacyStatus,
+        adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED,
         supported_action_types: tuple[str, ...] = (
             "dispatch_rescue_boat",
             "deploy_ground_team",
@@ -107,6 +124,7 @@ class MLPActionPrefixPredictor:
         ),
         feature_schema_version: str = "action-prefix-features-v2",
         action_schema_version: str = "delta-response-actions-v2",
+        qualification: VerifiedQualification | None = None,
     ) -> None:
         self._backend = backend
         self.predictor_version = predictor_version
@@ -114,40 +132,78 @@ class MLPActionPrefixPredictor:
         self.training_snapshot = training_snapshot
         self.model_hash = model_hash
         self.calibration_hash = calibration_hash
-        self.adequacy_status = adequacy_status
         self.supported_action_types = supported_action_types
         self.feature_schema_version = feature_schema_version
         self.action_schema_version = action_schema_version
+        if adequacy_status == AdequacyStatus.QUALIFIED and qualification is None:
+            raise ValueError("learned MLP qualification requires a verified artifact")
+        if qualification is None:
+            self.adequacy_status = adequacy_status
+            self.qualified_action_types: tuple[str, ...] = ()
+            self.qualification_artifact_sha256: str | None = None
+        else:
+            self.qualified_action_types = verify_qualification_binding(
+                qualification,
+                predictor_version=self.predictor_version,
+                model_hash=self.model_hash,
+                calibration_version=self.calibration_version,
+                calibration_hash=self.calibration_hash,
+                encoder_version=None,
+                encoder_checkpoint_hash=None,
+                feature_schema_version=self.feature_schema_version,
+                action_schema_version=self.action_schema_version,
+                supported_action_types=self.supported_action_types,
+            )
+            self.adequacy_status = AdequacyStatus.QUALIFIED
+            self.qualification_artifact_sha256 = qualification.artifact_sha256
 
     @classmethod
     def from_checkpoint(
         cls,
         path: Path,
         *,
-        adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED,
+        calibration_path: Path,
+        qualification_path: Path | None = None,
     ) -> MLPActionPrefixPredictor:
         backend, metadata = NumpyMLPBackend.load(path)
         required = {
             "predictor_version",
-            "calibration_version",
-            "calibration_hash",
             "training_snapshot",
             "feature_schema_version",
             "action_schema_version",
         }
-        if required - set(metadata):
+        if set(metadata) != required:
             raise ValueError("MLP checkpoint provenance is incomplete")
+        calibration_path = Path(calibration_path)
+        if not calibration_path.is_file() or calibration_path.is_symlink():
+            raise ValueError("MLP calibration artifact is absent or unsafe")
+        calibration = MLPCalibrationArtifact.model_validate_json(
+            calibration_path.read_text(encoding="utf-8")
+        )
+        for field_name in (
+            "predictor_version",
+            "feature_schema_version",
+            "action_schema_version",
+        ):
+            if getattr(calibration, field_name) != str(metadata[field_name]):
+                raise ValueError(f"MLP calibration {field_name} mismatch")
+        qualification = (
+            load_qualification_artifact(qualification_path)
+            if qualification_path is not None
+            else None
+        )
         return cls(
             backend=backend,
             predictor_version=str(metadata["predictor_version"]),
-            calibration_version=str(metadata["calibration_version"]),
+            calibration_version=calibration.calibration_version,
             training_snapshot=str(metadata["training_snapshot"]),
             model_hash=sha256_file(path),
-            calibration_hash=str(metadata["calibration_hash"]),
-            adequacy_status=adequacy_status,
+            calibration_hash=sha256_file(calibration_path),
+            adequacy_status=AdequacyStatus.UNQUALIFIED,
             supported_action_types=backend.action_names,
             feature_schema_version=str(metadata["feature_schema_version"]),
             action_schema_version=str(metadata["action_schema_version"]),
+            qualification=qualification,
         )
 
     def provenance(self) -> PredictorProvenance:
@@ -158,9 +214,11 @@ class MLPActionPrefixPredictor:
             model_hash=self.model_hash,
             calibration_hash=self.calibration_hash,
             adequacy_status=self.adequacy_status,
+            qualification_artifact_sha256=self.qualification_artifact_sha256,
             feature_schema_version=self.feature_schema_version,
             action_schema_version=self.action_schema_version,
             supported_action_types=self.supported_action_types,
+            qualified_action_types=self.qualified_action_types,
         )
 
     def predict(self, request: PredictorRequest) -> PlanPrediction:
@@ -171,7 +229,7 @@ class MLPActionPrefixPredictor:
         values = self._backend.infer(request)
         if len(values) != 7:
             raise ValueError("calibrated MLP backend must return exactly seven values")
-        probabilities = [1.0 / (1.0 + math.exp(-value)) for value in values]
+        probabilities = [_stable_sigmoid(value) for value in values]
         return PlanPrediction(
             plan_id=request.plan.plan_id,
             success_probability=probabilities[0],
@@ -184,3 +242,12 @@ class MLPActionPrefixPredictor:
             rollout_horizon=6,
             assumptions=("calibrated_mlp_head",),
         )
+
+
+def _stable_sigmoid(value: float) -> float:
+    if not math.isfinite(value):
+        raise ValueError("MLP output contains a non-finite value")
+    if value >= 0.0:
+        return 1.0 / (1.0 + math.exp(-value))
+    exponent = math.exp(value)
+    return exponent / (1.0 + exponent)

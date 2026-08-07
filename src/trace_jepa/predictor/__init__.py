@@ -1,4 +1,4 @@
-from .mlp import MLPActionPrefixPredictor, NumpyMLPBackend
+from .mlp import MLPActionPrefixPredictor, MLPCalibrationArtifact, NumpyMLPBackend
 from .protocol import (
     ActionPrefixPredictor,
     PredictorContext,
@@ -8,6 +8,12 @@ from .protocol import (
     PredictorRequest,
     PredictorRouteObservation,
     PredictorVisualFeatureRef,
+)
+from .qualification import (
+    QualificationArtifact,
+    VerifiedQualification,
+    load_qualification_artifact,
+    verify_qualification_binding,
 )
 from .toy import ToyActionPrefixPredictor
 from .vjepa_adapter import (
@@ -24,6 +30,7 @@ __all__ = [
     "CachedVJEPAFeatureProvider",
     "CalibratedVJEPAHead",
     "MLPActionPrefixPredictor",
+    "MLPCalibrationArtifact",
     "NumpyMLPBackend",
     "PredictorContext",
     "PredictorInputUnavailable",
@@ -33,8 +40,12 @@ __all__ = [
     "PredictorRequest",
     "PredictorRouteObservation",
     "PredictorVisualFeatureRef",
+    "QualificationArtifact",
     "ToyActionPrefixPredictor",
     "VJEPABackedActionPrefixPredictor",
+    "VerifiedQualification",
+    "load_qualification_artifact",
+    "verify_qualification_binding",
     "write_deterministic_feature_cache",
     "write_deterministic_npz",
 ]

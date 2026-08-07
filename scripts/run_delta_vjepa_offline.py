@@ -4,12 +4,12 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
 from trace_jepa.contracts import ActionInstance, PlanCandidate
 from trace_jepa.experimental.profile import AdequacyStatus
+from trace_jepa.perception.download import load_encoder_pin
 from trace_jepa.perception.vjepa import VJEPA2Encoder
 from trace_jepa.predictor import (
     CachedVJEPAFeatureProvider,
@@ -60,18 +60,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _verified_manifest(path: Path) -> dict[str, Any]:
-    if not path.is_file() or path.is_symlink():
-        raise ValueError("pinned V-JEPA manifest must be a safe regular file")
-    payload = json.loads(path.read_text("utf-8"))
-    if payload.get("manifest_version") != "trace-vjepa-encoder-pin-v1":
-        raise ValueError("unexpected V-JEPA manifest version")
-    checkpoint = payload.get("checkpoint")
-    if not isinstance(checkpoint, dict):
-        raise TypeError("V-JEPA manifest checkpoint block is malformed")
-    return payload
-
-
 def main() -> None:
     arguments = build_parser().parse_args()
     if not SAFE_IDENTIFIER.fullmatch(arguments.observation_id):
@@ -81,7 +69,7 @@ def main() -> None:
     frames = np.load(arguments.frames, allow_pickle=False)
     if frames.ndim != 4 or not np.isfinite(frames).all():
         raise ValueError("frames must be a finite four-dimensional array")
-    manifest = _verified_manifest(arguments.manifest)
+    manifest = load_encoder_pin(arguments.manifest)
     checkpoint_metadata = manifest["checkpoint"]
     checkpoint_path = arguments.checkpoint_dir / str(checkpoint_metadata["file_name"])
     encoder = VJEPA2Encoder(checkpoint_dir=arguments.checkpoint_dir)
@@ -160,6 +148,10 @@ def main() -> None:
                     visual_feature=PredictorVisualFeatureRef(
                         observation_id=arguments.observation_id,
                         observation_sha256=observation_sha256,
+                        feature_cache_sha256=sha256_file(cache_path),
+                        feature_schema_version="vjepa-frozen-feature-v1",
+                        encoder_version=str(manifest["encoder_version"]),
+                        encoder_checkpoint_hash=str(checkpoint_metadata["sha256"]),
                         captured_at_s=0,
                     ),
                 ),

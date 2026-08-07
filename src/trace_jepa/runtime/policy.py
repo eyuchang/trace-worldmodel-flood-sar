@@ -13,7 +13,6 @@ from trace_jepa.contracts import (
     TraceStatus,
     WorldModelEvidence,
 )
-from trace_jepa.experimental.profile import AdequacyStatus, ExperimentalProfileExtension
 from trace_jepa.experimental.revalidation import RevalidationGuard
 
 
@@ -37,7 +36,7 @@ class PolicyConfig(BaseModel):
     )
 
     @classmethod
-    def from_yaml(cls, path: Path) -> "PolicyConfig":
+    def from_yaml(cls, path: Path) -> PolicyConfig:
         return cls.model_validate(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
 
@@ -183,15 +182,21 @@ class PolicyEngine:
 
         profile = evidence.experimental_profile
         if profile is None:
-            # Extension path required for the guard: synthesize a minimal profile
-            # from core provenance fields so baseline evidence remains evaluable.
-            profile = ExperimentalProfileExtension(
-                predictor_version=evidence.predictor_version,
-                calibration_version=evidence.calibration_version,
-                claim_family=action_name,
-                adequacy_status=AdequacyStatus.QUALIFIED,
-                model_hash=None,
+            failed.append("experimental_profile_present")
+            missing.append("verified predictor qualification provenance")
+            self.revalidation.transition_log.append(
+                {
+                    "event_type": "gate_revalidation_check",
+                    "action_name": action_name,
+                    "predictor_version": evidence.predictor_version,
+                    "claim_family": action_name,
+                    "adequacy_status": "missing",
+                    "model_version_current": False,
+                    "calibration_adequate_for_class": False,
+                    "blocked": True,
+                }
             )
+            return True
 
         blocked = False
         if not self.revalidation.model_version_current(profile):

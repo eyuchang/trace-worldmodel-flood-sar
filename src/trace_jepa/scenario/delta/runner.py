@@ -518,7 +518,9 @@ def run_delta_small(
 ) -> DeltaRunResult:
     provenance = predictor.provenance()
     qualified_families = (
-        provenance.supported_action_types if provenance.adequacy_status.value == "qualified" else ()
+        provenance.qualified_action_types
+        if provenance.adequacy_status.value == "qualified"
+        else ()
     )
     guard = RevalidationGuard.bootstrap(
         predictor_version=provenance.predictor_version,

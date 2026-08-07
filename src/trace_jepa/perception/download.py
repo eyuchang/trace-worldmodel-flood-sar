@@ -26,6 +26,40 @@ OFFICIAL_VJEPA21_CHECKPOINTS: dict[str, dict[str, str]] = {
 }
 
 
+def load_encoder_pin(path: Path) -> dict[str, Any]:
+    """Load the immutable encoder pin shared by downloader and offline inference."""
+    path = Path(path)
+    if not path.is_file() or path.is_symlink():
+        raise ValueError("V-JEPA encoder pin must be a safe regular file")
+    pin = json.loads(path.read_text(encoding="utf-8"))
+    if pin.get("manifest_version") != "trace-vjepa-encoder-pin-v1":
+        raise ValueError("unexpected V-JEPA encoder-pin schema")
+    required = {
+        "checkpoint",
+        "crop_size",
+        "encoder_version",
+        "hub_entry",
+        "hub_repo",
+        "source_commit",
+    }
+    if required - set(pin):
+        raise ValueError("V-JEPA encoder pin metadata is incomplete")
+    checkpoint = pin.get("checkpoint")
+    if not isinstance(checkpoint, dict):
+        raise TypeError("V-JEPA encoder pin has no checkpoint block")
+    required_checkpoint = {"file_name", "sha256", "size_bytes", "url", "encoder_key"}
+    if required_checkpoint - set(checkpoint):
+        raise ValueError("V-JEPA encoder pin checkpoint metadata is incomplete")
+    model_name = str(pin["hub_entry"])
+    if model_name not in OFFICIAL_VJEPA21_CHECKPOINTS:
+        raise ValueError("V-JEPA encoder pin names an unsupported model")
+    official = OFFICIAL_VJEPA21_CHECKPOINTS[model_name]
+    for field_name in required_checkpoint:
+        if str(checkpoint[field_name]) != str(official[field_name]):
+            raise ValueError(f"V-JEPA encoder pin {field_name} disagrees with source registry")
+    return pin
+
+
 def _verified_checkpoint(torch: Any, spec: dict[str, str], checkpoint_dir: Path) -> Path:
     """Download once, verify before deserialization, and reject filesystem indirection."""
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -132,12 +166,23 @@ def load_official_vjepa21(
 
 
 def download_model(
-    model_name: str,
-    output_dir: Path,
-    crop_size: int = 384,
+    pin_manifest: Path,
+    receipt_path: Path,
     checkpoint_dir: Path = Path("models/external/vjepa2"),
-    hub_repo: str = "facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812",
 ) -> Path:
+    pin_manifest = Path(pin_manifest)
+    receipt_path = Path(receipt_path)
+    if receipt_path.resolve() == pin_manifest.resolve():
+        raise ValueError("download receipt must not overwrite the immutable encoder pin")
+    if receipt_path.is_symlink() or (receipt_path.exists() and not receipt_path.is_file()):
+        raise ValueError("V-JEPA download receipt path is unsafe")
+    pin = load_encoder_pin(pin_manifest)
+    checkpoint = pin["checkpoint"]
+    assert isinstance(checkpoint, dict)
+    model_name = str(pin["hub_entry"])
+    source_commit = str(pin["source_commit"])
+    hub_repo = f"{pin['hub_repo']}:{source_commit}"
+    crop_size = int(pin["crop_size"])
     try:
         import torch
     except ImportError as exc:
@@ -145,7 +190,6 @@ def download_model(
             "PyTorch is required. Install the appropriate build before downloading JEPA."
         ) from exc
 
-    output_dir.mkdir(parents=True, exist_ok=True)
     encoder, predictor, _, checkpoint_path = load_official_vjepa21(
         model_name=model_name,
         crop_size=crop_size,
@@ -154,12 +198,10 @@ def download_model(
         device="cpu",
     )
 
-    manifest = {
-        "manifest_version": "vjepa-download-v2",
-        "hub_repo": hub_repo,
-        "hub_entry": model_name,
-        "preprocessor_entry": "vjepa2_preprocessor",
-        "crop_size": crop_size,
+    receipt = {
+        "schema_version": "trace-vjepa-download-receipt-v1",
+        "encoder_pin_sha256": sha256_file(pin_manifest),
+        "encoder_version": pin["encoder_version"],
         "encoder_type": type(encoder).__name__,
         "pretraining_predictor_type": type(predictor).__name__ if predictor is not None else None,
         "torch_version": torch.__version__,
@@ -167,11 +209,10 @@ def download_model(
         "platform": platform.platform(),
         "torch_hub_dir": str(Path(torch.hub.get_dir()).resolve()),
         "checkpoint": {
+            "file_name": checkpoint_path.name,
             "local_path_recorded": False,
-            "url": OFFICIAL_VJEPA21_CHECKPOINTS[model_name]["url"],
             "size_bytes": checkpoint_path.stat().st_size,
             "sha256": sha256_file(checkpoint_path),
-            "encoder_key": OFFICIAL_VJEPA21_CHECKPOINTS[model_name]["encoder_key"],
         },
         "downloaded_at": datetime.now(timezone.utc).isoformat(),
         "role": "frozen_visual_encoder",
@@ -180,29 +221,35 @@ def download_model(
             "action-conditioned predictor. Train the latter on synchronized rescue trajectories."
         ),
     }
-    path = output_dir / f"{model_name}.manifest.json"
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
-    return path
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = receipt_path.with_suffix(receipt_path.suffix + ".partial")
+    if temporary.is_symlink() or (temporary.exists() and not temporary.is_file()):
+        raise ValueError("V-JEPA download receipt temporary path is unsafe")
+    temporary.write_text(json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8")
+    os.replace(temporary, receipt_path)
+    return receipt_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download and record an official V-JEPA 2.1 model")
-    parser.add_argument("--model", default="vjepa2_1_vit_base_384")
-    parser.add_argument("--crop-size", type=int, default=384)
-    parser.add_argument("--output", type=Path, default=Path("models/manifests"))
-    parser.add_argument("--checkpoint-dir", type=Path, default=Path("models/external/vjepa2"))
     parser.add_argument(
-        "--hub-repo", default="facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812"
+        "--pin-manifest",
+        type=Path,
+        default=Path("models/manifests/vjepa2_1_vit_base_384.manifest.json"),
     )
+    parser.add_argument(
+        "--receipt",
+        type=Path,
+        default=Path("models/receipts/vjepa2_1_vit_base_384.download.json"),
+    )
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("models/external/vjepa2"))
     args = parser.parse_args()
     path = download_model(
-        args.model,
-        args.output,
-        args.crop_size,
+        args.pin_manifest,
+        args.receipt,
         args.checkpoint_dir,
-        args.hub_repo,
     )
-    print(f"Wrote model manifest: {path}")
+    print(f"Wrote download receipt: {path}")
 
 
 if __name__ == "__main__":

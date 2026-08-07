@@ -26,6 +26,10 @@ class PredictorVisualFeatureRef(PredictorModel):
 
     observation_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
     observation_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    feature_cache_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    feature_schema_version: str
+    encoder_version: str
+    encoder_checkpoint_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     captured_at_s: int = Field(ge=0)
 
 
@@ -73,6 +77,10 @@ class PredictorProvenance(PredictorModel):
     model_hash: str
     calibration_hash: str
     adequacy_status: AdequacyStatus
+    qualification_artifact_sha256: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
     encoder_version: str | None = None
     encoder_checkpoint_hash: str | None = None
     feature_schema_version: str = "action-prefix-features-v2"
@@ -83,6 +91,7 @@ class PredictorProvenance(PredictorModel):
         "perform_welfare_check",
         "inspect_levee",
     )
+    qualified_action_types: tuple[str, ...] = ()
 
 
 def request_feature_vector(

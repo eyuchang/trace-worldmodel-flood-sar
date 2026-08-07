@@ -111,3 +111,4 @@ ignore_missing_imports = true
 
 [tool.setuptools.package-data]
 "trace_jepa.workbench" = ["static/*", "d04_static/*", "d05_static/*"]
+"trace_jepa.predictor" = ["*_qualification_*.json"]

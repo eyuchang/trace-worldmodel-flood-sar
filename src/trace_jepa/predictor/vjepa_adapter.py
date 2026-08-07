@@ -19,6 +19,10 @@ from trace_jepa.predictor.protocol import (
     PredictorRequest,
     request_feature_vector,
 )
+from trace_jepa.predictor.qualification import (
+    VerifiedQualification,
+    verify_qualification_binding,
+)
 from trace_jepa.util import sha256_file
 
 
@@ -65,6 +69,7 @@ def write_deterministic_feature_cache(
     observation_sha256: str,
     encoder_version: str,
     encoder_checkpoint_hash: str,
+    feature_schema_version: str = "vjepa-frozen-feature-v1",
 ) -> None:
     """Write a byte-stable, pickle-free V-JEPA feature-cache record."""
     write_deterministic_npz(
@@ -73,6 +78,7 @@ def write_deterministic_feature_cache(
             "encoder_checkpoint_hash": np.asarray(encoder_checkpoint_hash),
             "encoder_version": np.asarray(encoder_version),
             "feature": np.asarray(feature, dtype=np.float32),
+            "feature_schema_version": np.asarray(feature_schema_version),
             "observation_sha256": np.asarray(observation_sha256),
         },
     )
@@ -84,6 +90,7 @@ class VJEPAFeatureObservation:
     observation_sha256: str
     encoder_version: str
     encoder_checkpoint_hash: str
+    feature_schema_version: str
 
     def __post_init__(self) -> None:
         vector = np.asarray(self.vector, dtype=np.float32)
@@ -103,10 +110,14 @@ class CachedVJEPAFeatureProvider:
         *,
         encoder_version: str,
         encoder_checkpoint_hash: str,
+        feature_schema_version: str = "vjepa-frozen-feature-v1",
+        maximum_age_s: int = 300,
     ) -> None:
         self.cache_dir = Path(cache_dir)
         self.encoder_version = encoder_version
         self.encoder_checkpoint_hash = encoder_checkpoint_hash
+        self.feature_schema_version = feature_schema_version
+        self.maximum_age_s = maximum_age_s
 
     def features(self, request: PredictorRequest) -> VJEPAFeatureObservation:
         reference = request.observation.context.visual_feature
@@ -114,11 +125,24 @@ class CachedVJEPAFeatureProvider:
             raise PredictorInputUnavailable("prediction has no visual feature reference")
         if not self._safe_identifier.fullmatch(reference.observation_id):
             raise PredictorInputUnavailable("visual observation identifier is unsafe")
+        if reference.captured_at_s > request.observation.context.simulation_time_s:
+            raise PredictorInputUnavailable("visual feature timestamp is in the future")
+        age_s = request.observation.context.simulation_time_s - reference.captured_at_s
+        if age_s > self.maximum_age_s:
+            raise PredictorInputUnavailable("visual feature is stale")
+        if reference.encoder_version != self.encoder_version:
+            raise PredictorInputUnavailable("visual encoder version mismatch")
+        if reference.encoder_checkpoint_hash != self.encoder_checkpoint_hash:
+            raise PredictorInputUnavailable("visual encoder checkpoint mismatch")
+        if reference.feature_schema_version != self.feature_schema_version:
+            raise PredictorInputUnavailable("visual feature schema mismatch")
         path = self.cache_dir / f"{reference.observation_id}.npz"
         if not path.is_file() or path.is_symlink():
             raise PredictorInputUnavailable(
                 f"cached V-JEPA feature is absent: {reference.observation_id}"
             )
+        if sha256_file(path) != reference.feature_cache_sha256:
+            raise PredictorInputUnavailable("visual feature-cache digest mismatch")
         try:
             with np.load(path, allow_pickle=False) as payload:
                 required = {
@@ -126,8 +150,9 @@ class CachedVJEPAFeatureProvider:
                     "observation_sha256",
                     "encoder_version",
                     "encoder_checkpoint_hash",
+                    "feature_schema_version",
                 }
-                if required - set(payload.files):
+                if set(payload.files) != required:
                     raise PredictorInputUnavailable(
                         "cached V-JEPA feature does not satisfy the frozen schema"
                     )
@@ -135,6 +160,7 @@ class CachedVJEPAFeatureProvider:
                 observation_sha256 = str(payload["observation_sha256"].item())
                 encoder_version = str(payload["encoder_version"].item())
                 encoder_checkpoint_hash = str(payload["encoder_checkpoint_hash"].item())
+                feature_schema_version = str(payload["feature_schema_version"].item())
         except (OSError, ValueError) as exc:
             raise PredictorInputUnavailable("cached V-JEPA feature is malformed") from exc
         if observation_sha256 != reference.observation_sha256:
@@ -143,11 +169,14 @@ class CachedVJEPAFeatureProvider:
             raise PredictorInputUnavailable("visual encoder version mismatch")
         if encoder_checkpoint_hash != self.encoder_checkpoint_hash:
             raise PredictorInputUnavailable("visual encoder checkpoint mismatch")
+        if feature_schema_version != self.feature_schema_version:
+            raise PredictorInputUnavailable("visual feature schema mismatch")
         return VJEPAFeatureObservation(
             vector=feature,
             observation_sha256=observation_sha256,
             encoder_version=encoder_version,
             encoder_checkpoint_hash=encoder_checkpoint_hash,
+            feature_schema_version=feature_schema_version,
         )
 
 
@@ -251,6 +280,7 @@ class VJEPABackedActionPrefixPredictor:
         flood_head: CalibratedVJEPAHead,
         *,
         adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED,
+        qualification: VerifiedQualification | None = None,
     ) -> None:
         self._feature_provider = feature_provider
         self._flood_head = flood_head
@@ -265,11 +295,33 @@ class VJEPABackedActionPrefixPredictor:
         self.feature_schema_version = str(metadata["feature_schema_version"])
         self.action_schema_version = str(metadata["action_schema_version"])
         self.supported_action_types = flood_head.action_names
-        self.adequacy_status = adequacy_status
         if feature_provider.encoder_version != self.encoder_version:
             raise ValueError("feature provider encoder version disagrees with flood head")
         if feature_provider.encoder_checkpoint_hash != self.encoder_checkpoint_hash:
             raise ValueError("feature provider encoder hash disagrees with flood head")
+        if feature_provider.feature_schema_version != "vjepa-frozen-feature-v1":
+            raise ValueError("feature provider cache schema is unsupported")
+        if adequacy_status == AdequacyStatus.QUALIFIED and qualification is None:
+            raise ValueError("learned V-JEPA qualification requires a verified artifact")
+        if qualification is None:
+            self.adequacy_status = adequacy_status
+            self.qualified_action_types: tuple[str, ...] = ()
+            self.qualification_artifact_sha256: str | None = None
+        else:
+            self.qualified_action_types = verify_qualification_binding(
+                qualification,
+                predictor_version=self.predictor_version,
+                model_hash=self.model_hash,
+                calibration_version=self.calibration_version,
+                calibration_hash=self.calibration_hash,
+                encoder_version=self.encoder_version,
+                encoder_checkpoint_hash=self.encoder_checkpoint_hash,
+                feature_schema_version=self.feature_schema_version,
+                action_schema_version=self.action_schema_version,
+                supported_action_types=self.supported_action_types,
+            )
+            self.adequacy_status = AdequacyStatus.QUALIFIED
+            self.qualification_artifact_sha256 = qualification.artifact_sha256
 
     def provenance(self) -> PredictorProvenance:
         return PredictorProvenance(
@@ -279,11 +331,13 @@ class VJEPABackedActionPrefixPredictor:
             model_hash=self.model_hash,
             calibration_hash=self.calibration_hash,
             adequacy_status=self.adequacy_status,
+            qualification_artifact_sha256=self.qualification_artifact_sha256,
             encoder_version=self.encoder_version,
             encoder_checkpoint_hash=self.encoder_checkpoint_hash,
             feature_schema_version=self.feature_schema_version,
             action_schema_version=self.action_schema_version,
             supported_action_types=self.supported_action_types,
+            qualified_action_types=self.qualified_action_types,
         )
 
     def predict(self, request: PredictorRequest) -> PlanPrediction:
@@ -292,7 +346,7 @@ class VJEPABackedActionPrefixPredictor:
             raise ValueError(f"unsupported V-JEPA action type: {action_type}")
         features = self._feature_provider.features(request)
         values = self._flood_head.infer(request, features.vector)
-        probabilities = [1.0 / (1.0 + math.exp(-float(value))) for value in values]
+        probabilities = [_stable_sigmoid(float(value)) for value in values]
         return PlanPrediction(
             plan_id=request.plan.plan_id,
             success_probability=probabilities[0],
@@ -309,3 +363,12 @@ class VJEPABackedActionPrefixPredictor:
                 "controller_visible_inputs_only",
             ),
         )
+
+
+def _stable_sigmoid(value: float) -> float:
+    if not math.isfinite(value):
+        raise ValueError("V-JEPA head output contains a non-finite value")
+    if value >= 0.0:
+        return 1.0 / (1.0 + math.exp(-value))
+    exponent = math.exp(value)
+    return exponent / (1.0 + exponent)

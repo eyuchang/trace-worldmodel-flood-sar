@@ -62,6 +62,7 @@ def main() -> None:
         "claims_limit": "loader-and-governance-tests-only",
         "encoder_version": ENCODER_VERSION,
         "encoder_checkpoint_hash": ENCODER_HASH,
+        "feature_schema_version": "vjepa-frozen-feature-v1",
         "observation_sha256": OBSERVATION_HASH,
         "artifacts": {
             feature_path.name: sha256_file(feature_path),

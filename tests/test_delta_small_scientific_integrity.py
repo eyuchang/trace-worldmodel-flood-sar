@@ -28,6 +28,7 @@ from trace_jepa.scenario.delta.generator import generate_delta_small
 from trace_jepa.scenario.delta.loading import load_geography_catalog
 from trace_jepa.scenario.delta.publication import publish_reference_bundle
 from trace_jepa.scenario.delta.runner import evaluate_capacity_windows, run_delta_small
+from trace_jepa.util import sha256_file
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
@@ -243,12 +244,20 @@ def test_fixed_axis_predictor_substitution_changes_only_model_provenance() -> No
     toy_result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
     mlp_result = run_delta_small(scenario, _mlp(), POLICY)
     vjepa = _vjepa()
+    manifest = json.loads((FIXTURES / "manifest.json").read_text("utf-8"))
     visual_reference = PredictorVisualFeatureRef(
         observation_id="vjepa_ci_feature",
         observation_sha256="c" * 64,
+        feature_cache_sha256=manifest["artifacts"]["vjepa_ci_feature.npz"],
+        feature_schema_version=manifest["feature_schema_version"],
+        encoder_version=manifest["encoder_version"],
+        encoder_checkpoint_hash=manifest["encoder_checkpoint_hash"],
         captured_at_s=0,
     )
-    visual_features = {call.call_id: visual_reference for call in scenario.observations.calls}
+    visual_features = {
+        call.call_id: visual_reference.model_copy(update={"captured_at_s": call.received_s})
+        for call in scenario.observations.calls
+    }
     vjepa_result = run_delta_small(
         scenario,
         vjepa,
@@ -301,6 +310,10 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
         PredictorVisualFeatureRef(
             observation_id="../escape",
             observation_sha256="a" * 64,
+            feature_cache_sha256="b" * 64,
+            feature_schema_version="vjepa-frozen-feature-v1",
+            encoder_version="test-encoder",
+            encoder_checkpoint_hash="b" * 64,
             captured_at_s=0,
         )
 
@@ -310,7 +323,11 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
     unsafe_reference = PredictorVisualFeatureRef(
         observation_id="missing-safe-id",
         observation_sha256="a" * 64,
-        captured_at_s=0,
+        feature_cache_sha256="c" * 64,
+        feature_schema_version="vjepa-frozen-feature-v1",
+        encoder_version=predictor.encoder_version,
+        encoder_checkpoint_hash=predictor.encoder_checkpoint_hash,
+        captured_at_s=call.received_s,
     )
     with pytest.raises(PredictorInputUnavailable, match="absent"):
         run_delta_small(
@@ -367,6 +384,10 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
                     "visual_feature": {
                         "observation_id": "linked",
                         "observation_sha256": "a" * 64,
+                        "feature_cache_sha256": sha256_file(target),
+                        "feature_schema_version": "vjepa-frozen-feature-v1",
+                        "encoder_version": "test-encoder",
+                        "encoder_checkpoint_hash": "b" * 64,
                         "captured_at_s": 0,
                     }
                 },
@@ -377,11 +398,16 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
         provider.features(request)
 
     def request_for(observation_id: str, digest: str) -> PredictorRequest:
+        cache_path = tmp_path / f"{observation_id}.npz"
         context = request.observation.context.model_copy(
             update={
                 "visual_feature": PredictorVisualFeatureRef(
                     observation_id=observation_id,
                     observation_sha256=digest,
+                    feature_cache_sha256=sha256_file(cache_path),
+                    feature_schema_version="vjepa-frozen-feature-v1",
+                    encoder_version="test-encoder",
+                    encoder_checkpoint_hash="b" * 64,
                     captured_at_s=0,
                 )
             }
@@ -399,6 +425,39 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
     )
     with pytest.raises(PredictorInputUnavailable, match="digest mismatch"):
         provider.features(request_for("digest", "e" * 64))
+
+    cache_mismatch = request_for("digest", "d" * 64)
+    bad_cache_reference = cache_mismatch.observation.context.visual_feature.model_copy(
+        update={"feature_cache_sha256": "0" * 64}
+    )
+    cache_mismatch = cache_mismatch.model_copy(
+        update={
+            "observation": cache_mismatch.observation.model_copy(
+                update={
+                    "context": cache_mismatch.observation.context.model_copy(
+                        update={"visual_feature": bad_cache_reference}
+                    )
+                }
+            )
+        }
+    )
+    with pytest.raises(PredictorInputUnavailable, match="feature-cache digest mismatch"):
+        provider.features(cache_mismatch)
+
+    stale = request_for("digest", "d" * 64)
+    stale = stale.model_copy(
+        update={
+            "observation": stale.observation.model_copy(
+                update={
+                    "context": stale.observation.context.model_copy(
+                        update={"simulation_time_s": 301}
+                    )
+                }
+            )
+        }
+    )
+    with pytest.raises(PredictorInputUnavailable, match="stale"):
+        provider.features(stale)
 
     write_deterministic_feature_cache(
         tmp_path / "nonfinite.npz",
