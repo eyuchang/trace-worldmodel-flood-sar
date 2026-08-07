@@ -1,0 +1,24 @@
+{
+  "schema_version": "delta-reference-environment-contract-v1",
+  "contract_id": "wf-dfld-01-small-python311-linux-amd64-v1",
+  "scope": "WF-DFLD-01-SMALL canonical generation, execution, replay, validation, and publication",
+  "package_python_support": ">=3.10",
+  "exact_python_version": "3.11.14",
+  "platform_system": "Linux",
+  "platform_machine": "x86_64",
+  "oci_image": "docker.io/library/python",
+  "oci_tag_for_discovery_only": "3.11.14-slim",
+  "oci_index_sha256": "c8271b1f627d0068857dce5b53e14a9558603b527e46f1f901722f935b786a39",
+  "oci_platform_manifest_sha256": "fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04",
+  "oci_platform": "linux/amd64",
+  "dependency_lock_file": "requirements-delta-python311.lock",
+  "dependency_lock_sha256": "96b8c575ac944220dd55131a44c61be0803fdfbf4fc27220aae2f7d4d9151b0c",
+  "dependency_input_file": "requirements-delta-python311.in",
+  "dependency_input_sha256": "c23e7070a6ad4cbff21b20df4a1d2a90efe845cc35af7011dc4cea663d2c10f4",
+  "installation": "python -m pip install --require-hashes -r requirements-delta-python311.lock",
+  "claims": [
+    "This digest-pinned Linux/amd64 image is the exact Delta reference environment.",
+    "General package support remains Python >=3.10 and is a separate compatibility claim.",
+    "The D0.5 teaching workbench may be run outside this environment but is not the canonical Delta reference execution."
+  ]
+}

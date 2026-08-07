@@ -188,7 +188,7 @@ def _elevation_summary(
         minimum_mm=round(float(np.min(compressed)) * 1000),
         median_mm=round(float(np.median(compressed)) * 1000),
         maximum_mm=round(float(np.max(compressed)) * 1000),
-        source_id="dwr-bay-delta-dem-v4.3-delta-10m",
+        source_id="dwr-bay-delta-dem-v4.3-delta-10m-raster",
     )
 
 
@@ -311,7 +311,7 @@ def build_geography_catalog(
     if not isinstance(dwr_description, str) or "flood" not in dwr_description.lower():
         raise ValueError("DWR LMA metadata does not describe flood management boundaries")
     return GeographyCatalog(
-        schema_version="delta-small-geography-v2",
+        schema_version="delta-small-geography-v3",
         coordinate_reference="EPSG:4326+EPSG:26910-fixed-point-v1",
         coordinate_warning=(
             "Government GIS anchors are simulation-grade and preserve source boundary "

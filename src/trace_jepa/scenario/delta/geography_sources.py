@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GeographySourceDefinition(BaseModel):
@@ -8,8 +10,11 @@ class GeographySourceDefinition(BaseModel):
 
     source_id: str
     title: str
-    locator: str
+    landing_page_locator: str
+    retrieval_locator: str | None
     file_name: str
+    snapshot_format: Literal["json", "geojson", "html"]
+    expected_media_types: tuple[str, ...] = Field(min_length=1)
     source_tier: str
     status: str
     use: str
@@ -91,8 +96,14 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="sacramento-county-drainage-districts-2026-08-05",
         title="Sacramento County drainage districts for Andrus and Brannan",
-        locator=SACRAMENTO_DISTRICTS_URL,
+        landing_page_locator=(
+            "https://mapservices.gis.saccounty.net/ArcGIS/rest/services/"
+            "SERVICE_DISTRICTS/MapServer/7"
+        ),
+        retrieval_locator=SACRAMENTO_DISTRICTS_URL,
         file_name="sacramento_county_drainage_districts.geojson",
+        snapshot_format="geojson",
+        expected_media_types=("application/geo+json", "application/json", "text/plain"),
         source_tier="authoritative-local-government-gis",
         status="authoritative-operational-boundary-with-mapping-limitations",
         use="unioned island operational footprints and reclamation district identities",
@@ -103,8 +114,14 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="dwr-local-maintenance-areas-2026-08-05",
         title="DWR Local Maintenance Areas for flood protection",
-        locator=DWR_LMA_URL,
+        landing_page_locator=(
+            "https://gis.water.ca.gov/arcgis/rest/services/Boundaries/"
+            "i03_Local_Maintenance_Areas_Flood_Protection/MapServer/0"
+        ),
+        retrieval_locator=DWR_LMA_URL,
         file_name="dwr_local_maintenance_areas_metadata.json",
+        snapshot_format="json",
+        expected_media_types=("application/json", "text/plain"),
         source_tier="authoritative-state-government-gis",
         status="authoritative-crosscheck-variable-boundary-accuracy",
         use="crosscheck governance and combined Brannan-Andrus maintenance area",
@@ -115,8 +132,13 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="census-tiger-isleton-2025",
         title="2025 TIGERweb Incorporated Places: Isleton",
-        locator=CENSUS_ISLETON_URL,
+        landing_page_locator=(
+            "https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+        ),
+        retrieval_locator=CENSUS_ISLETON_URL,
         file_name="census_tiger_isleton.geojson",
+        snapshot_format="geojson",
+        expected_media_types=("application/geo+json", "application/json", "text/plain"),
         source_tier="authoritative-federal-administrative-boundary",
         status="authoritative-administrative-boundary",
         use="Isleton city boundary, GEOID, and centroid",
@@ -127,8 +149,13 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="caltrans-state-highway-bridges-2024",
         title="Caltrans State Highway Bridges inventory",
-        locator=CALTRANS_BRIDGES_URL,
+        landing_page_locator=(
+            "https://gis.data.ca.gov/datasets/ea685fd702f840a7a751b12373d6249c_0/about"
+        ),
+        retrieval_locator=CALTRANS_BRIDGES_URL,
         file_name="caltrans_state_highway_bridges.geojson",
+        snapshot_format="geojson",
+        expected_media_types=("application/geo+json", "application/json", "text/plain"),
         source_tier="authoritative-state-infrastructure-inventory",
         status="inventory-extract-2024-03-12",
         use="XNG-03 and XNG-04 locations, route, and movable bridge design",
@@ -139,8 +166,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="usgs-nhd-flowlines-2026-08-05",
         title="USGS National Hydrography Dataset flowlines",
-        locator=USGS_HYDROGRAPHY_URL,
+        landing_page_locator="https://www.usgs.gov/national-hydrography/access-national-hydrography-products",
+        retrieval_locator=USGS_HYDROGRAPHY_URL,
         file_name="usgs_nhd_flowlines.geojson",
+        snapshot_format="geojson",
+        expected_media_types=("application/geo+json", "application/json", "text/plain"),
         source_tier="authoritative-federal-hydrography",
         status="public-domain-live-service-snapshot",
         use="Sacramento River, Three Mile Slough, and Georgiana Slough geometry",
@@ -151,8 +181,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="california-state-parks-brannan-2026-08-05",
         title="California State Parks Brannan Island unit boundary",
-        locator=STATE_PARKS_BRANNAN_URL,
+        landing_page_locator="https://www.parks.ca.gov/",
+        retrieval_locator=STATE_PARKS_BRANNAN_URL,
         file_name="state_parks_brannan.geojson",
+        snapshot_format="geojson",
+        expected_media_types=("application/geo+json", "application/json", "text/plain"),
         source_tier="authoritative-state-recreation-gis",
         status="general-reference-boundary-not-property-survey",
         use="Brannan Island State Recreation Area facility anchor",
@@ -163,8 +196,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="isleton-fire-department-2026-08-05",
         title="City of Isleton Fire Department",
-        locator=ISLETON_FIRE_URL,
+        landing_page_locator=ISLETON_FIRE_URL,
+        retrieval_locator=None,
         file_name="isleton_fire_department_record.json",
+        snapshot_format="json",
+        expected_media_types=("application/json",),
         source_tier="authoritative-local-agency-record",
         status="official-current-web-record",
         use="local fire station address and apparatus inventory",
@@ -175,8 +211,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="osm-isleton-fire-geocode-2026-08-05",
         title="OpenStreetMap Nominatim geocode for 101 2nd Street",
-        locator=ISLETON_FIRE_GEOCODE_URL,
+        landing_page_locator="https://nominatim.openstreetmap.org/ui/search.html",
+        retrieval_locator=ISLETON_FIRE_GEOCODE_URL,
         file_name="osm_isleton_fire_geocode.json",
+        snapshot_format="json",
+        expected_media_types=("application/json",),
         source_tier="community-sourced-secondary-geocode",
         status="secondary-location-anchor",
         use="approximate coordinate for the official fire station address",
@@ -187,8 +226,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="california-dbw-sacramento-facilities-2026-08-05",
         title="California Division of Boating and Waterways facilities",
-        locator=DBW_FACILITIES_URL,
+        landing_page_locator=DBW_FACILITIES_URL,
+        retrieval_locator=None,
         file_name="dbw_sacramento_boating_facilities_record.json",
+        snapshot_format="json",
+        expected_media_types=("application/json",),
         source_tier="authoritative-state-facility-directory",
         status="official-current-web-record",
         use="confirm Brannan Island SRA marina and launch capability",
@@ -199,8 +241,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="cdec-rvb-metadata-2026-08-05",
         title="CDEC metadata: Sacramento River at Rio Vista Bridge",
-        locator=CDEC_RVB_URL,
+        landing_page_locator=CDEC_RVB_URL,
+        retrieval_locator=None,
         file_name="cdec_rvb_metadata.html",
+        snapshot_format="html",
+        expected_media_types=("text/html",),
         source_tier="authoritative-operational-metadata",
         status="official-current-web-record",
         use="RVB station identity, location, datum, and stage definitions",
@@ -211,8 +256,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="cdec-mru-metadata-2026-08-05",
         title="CDEC metadata: Middle River at Undine Road",
-        locator=CDEC_MRU_URL,
+        landing_page_locator=CDEC_MRU_URL,
+        retrieval_locator=None,
         file_name="cdec_mru_metadata.html",
+        snapshot_format="html",
+        expected_media_types=("text/html",),
         source_tier="authoritative-operational-metadata",
         status="official-current-web-record",
         use="MRU station identity and location; no operational thresholds",
@@ -223,8 +271,11 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="cdec-fpt-metadata-2026-08-05",
         title="CDEC metadata: Sacramento River at Freeport",
-        locator=CDEC_FPT_URL,
+        landing_page_locator=CDEC_FPT_URL,
+        retrieval_locator=None,
         file_name="cdec_fpt_metadata.html",
+        snapshot_format="html",
+        expected_media_types=("text/html",),
         source_tier="authoritative-operational-metadata",
         status="official-current-web-record",
         use="FPT station identity and location; no operational thresholds",
@@ -235,8 +286,15 @@ GEOGRAPHY_SOURCE_DEFINITIONS = [
     GeographySourceDefinition(
         source_id="dwr-bay-delta-dem-v4.3-metadata",
         title="DWR Bay-Delta DEM for Modeling version 4.3",
-        locator=DWR_DEM_METADATA_URL,
+        landing_page_locator=(
+            "https://data.cnra.ca.gov/dataset/"
+            "san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-"
+            "version-4-3"
+        ),
+        retrieval_locator=DWR_DEM_METADATA_URL,
         file_name="dwr_bay_delta_dem_v4_3_metadata.json",
+        snapshot_format="json",
+        expected_media_types=("application/json", "text/plain"),
         source_tier="authoritative-state-elevation-product",
         status="version-4.3-completed-2025-03",
         use="DEM version, datum, provenance, and Delta 10 m resource identity",

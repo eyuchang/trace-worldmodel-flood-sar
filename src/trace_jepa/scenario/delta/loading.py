@@ -16,6 +16,8 @@ class DeltaConfigurationError(ValueError):
 
 
 def _load_yaml_mapping(path: Path, label: str) -> object:
+    if path.is_symlink():
+        raise DeltaConfigurationError(f"{label} must not be a symlink: {path}")
     resolved = path.resolve(strict=True)
     if not resolved.is_file():
         raise DeltaConfigurationError(f"{label} must be a regular file: {resolved}")
@@ -29,10 +31,9 @@ def _load_yaml_mapping(path: Path, label: str) -> object:
 
 
 def load_scenario_config(path: Path) -> DeltaScenarioConfig:
+    payload = _load_yaml_mapping(path, "scenario configuration")
     try:
-        return DeltaScenarioConfig.model_validate(
-            _load_yaml_mapping(path, "scenario configuration")
-        )
+        return DeltaScenarioConfig.model_validate(payload)
     except ValueError as exc:
         raise DeltaConfigurationError(
             f"scenario configuration violates the frozen Small contract: {path}"
@@ -40,10 +41,9 @@ def load_scenario_config(path: Path) -> DeltaScenarioConfig:
 
 
 def load_acceptance_config(path: Path) -> DeltaSmallAcceptanceConfig:
+    payload = _load_yaml_mapping(path, "acceptance configuration")
     try:
-        return DeltaSmallAcceptanceConfig.model_validate(
-            _load_yaml_mapping(path, "acceptance configuration")
-        )
+        return DeltaSmallAcceptanceConfig.model_validate(payload)
     except ValueError as exc:
         raise DeltaConfigurationError(
             f"acceptance configuration violates its schema: {path}"
@@ -51,7 +51,8 @@ def load_acceptance_config(path: Path) -> DeltaSmallAcceptanceConfig:
 
 
 def load_geography_catalog(path: Path) -> GeographyCatalog:
+    payload = _load_yaml_mapping(path, "geography catalog")
     try:
-        return GeographyCatalog.model_validate(_load_yaml_mapping(path, "geography catalog"))
+        return GeographyCatalog.model_validate(payload)
     except ValueError as exc:
         raise DeltaConfigurationError(f"geography catalog violates its schema: {path}") from exc

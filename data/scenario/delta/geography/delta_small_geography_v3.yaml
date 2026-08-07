@@ -1,0 +1,2842 @@
+schema_version: delta-small-geography-v3
+coordinate_reference: EPSG:4326+EPSG:26910-fixed-point-v1
+coordinate_warning: Government GIS anchors are simulation-grade and preserve source
+  boundary limitations; they are not cadastral, survey, emergency-navigation, or hydraulic-model
+  geometries.
+build_manifest_sha256: 8b1ba5e566ae5c79329c89aa710e1cd4c5ea5933731dd44c4d718b0162348db1
+sources:
+- source_id: california-dbw-sacramento-facilities-2026-08-05
+  title: California Division of Boating and Waterways facilities
+  locator: https://dbw.parks.ca.gov/BoatingFacilities/County/Sacramento
+  landing_page_locator: https://dbw.parks.ca.gov/BoatingFacilities/County/Sacramento
+  retrieval_locator: null
+  media_type: application/json
+  snapshot_format: json
+  snapshot_file_name: sources/dbw_sacramento_boating_facilities_record.json
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-facility-directory
+  status: official-current-web-record
+  use: confirm Brannan Island SRA marina and launch capability
+  license_name: Project-authored factual extract from a public agency directory
+  license_locator: https://www.parks.ca.gov/
+  redistribution_status: project-authored-factual-extract-upstream-page-not-committed
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: dfe72b93136f98d3d83ef95e0392a79277460bb986ed37b04c425314fd9eebc3
+  byte_length: 694
+- source_id: california-state-parks-brannan-2026-08-05
+  title: California State Parks Brannan Island unit boundary
+  locator: https://www.parks.ca.gov/
+  landing_page_locator: https://www.parks.ca.gov/
+  retrieval_locator: https://services2.arcgis.com/AhxrK3F6WM8ECvDi/arcgis/rest/services/ParkBoundaries/FeatureServer/0/query?where=UNITNAME%20LIKE%20%27%25Brannan%25%27&outFields=FID,UNITNAME,GISID,SUBTYPE,UNITNBR,GlobalID&returnGeometry=true&outSR=4326&f=geojson
+  media_type: application/geo+json
+  snapshot_format: geojson
+  snapshot_file_name: sources/state_parks_brannan.geojson
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-recreation-gis
+  status: general-reference-boundary-not-property-survey
+  use: Brannan Island State Recreation Area facility anchor
+  license_name: California State Parks public GIS data
+  license_locator: https://www.parks.ca.gov/
+  redistribution_status: clipped-government-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: c2a6bac15aadccfe2a2844f05aaee3f397d5fc40cfd6d60ffa056910d797e67d
+  byte_length: 192803
+- source_id: caltrans-state-highway-bridges-2024
+  title: Caltrans State Highway Bridges inventory
+  locator: https://gis.data.ca.gov/datasets/ea685fd702f840a7a751b12373d6249c_0/about
+  landing_page_locator: https://gis.data.ca.gov/datasets/ea685fd702f840a7a751b12373d6249c_0/about
+  retrieval_locator: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/FeatureServer/0/query?where=OBJECTID%20IN%20(2255,2286)&outFields=OBJECTID,DIST,CO,PM,BRIDGE,CITY,LAT,LON,NAME,LOC,YRBLT,FAC,DESIGN_MAIN,MATERIAL_MAIN,INTERSEC,RTE,DATA_EXTRACTED&returnGeometry=true&outSR=4326&f=geojson
+  media_type: application/geo+json
+  snapshot_format: geojson
+  snapshot_file_name: sources/caltrans_state_highway_bridges.geojson
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-infrastructure-inventory
+  status: inventory-extract-2024-03-12
+  use: XNG-03 and XNG-04 locations, route, and movable bridge design
+  license_name: No restrictions on public use
+  license_locator: https://gis.data.ca.gov/datasets/ea685fd702f840a7a751b12373d6249c_0/about
+  redistribution_status: redistributable-no-public-use-restrictions
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: f53d56b95080268ebfcf5df5ecdecac3badc71b6f17e5b3dcb5c51055defef03
+  byte_length: 1028
+- source_id: cdec-fpt-metadata-2026-08-05
+  title: 'CDEC metadata: Sacramento River at Freeport'
+  locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=FPT
+  landing_page_locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=FPT
+  retrieval_locator: null
+  media_type: text/html
+  snapshot_format: html
+  snapshot_file_name: sources/cdec_fpt_metadata.html
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-operational-metadata
+  status: official-current-web-record
+  use: FPT station identity and location; no operational thresholds
+  license_name: California public data
+  license_locator: https://cdec.water.ca.gov/
+  redistribution_status: government-metadata-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 82a5fc9a605980fb0306af94aae285bd4d45d85a62ef5ecd27461714666c2514
+  byte_length: 82889
+- source_id: cdec-mru-metadata-2026-08-05
+  title: 'CDEC metadata: Middle River at Undine Road'
+  locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=MRU
+  landing_page_locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=MRU
+  retrieval_locator: null
+  media_type: text/html
+  snapshot_format: html
+  snapshot_file_name: sources/cdec_mru_metadata.html
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-operational-metadata
+  status: official-current-web-record
+  use: MRU station identity and location; no operational thresholds
+  license_name: California public data
+  license_locator: https://cdec.water.ca.gov/
+  redistribution_status: government-metadata-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 42df1151a5afa15234d6bb5074ca9a7c19b921d3c1e3d5f49825c87198ad7b59
+  byte_length: 78708
+- source_id: cdec-rvb-metadata-2026-08-05
+  title: 'CDEC metadata: Sacramento River at Rio Vista Bridge'
+  locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=RVB
+  landing_page_locator: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=RVB
+  retrieval_locator: null
+  media_type: text/html
+  snapshot_format: html
+  snapshot_file_name: sources/cdec_rvb_metadata.html
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-operational-metadata
+  status: official-current-web-record
+  use: RVB station identity, location, datum, and stage definitions
+  license_name: California public data
+  license_locator: https://cdec.water.ca.gov/
+  redistribution_status: government-metadata-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 2e05bbf48236dfb9f43a603ae61c510e558d5dc75e6784de53185548cf95f178
+  byte_length: 92300
+- source_id: census-tiger-isleton-2025
+  title: '2025 TIGERweb Incorporated Places: Isleton'
+  locator: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+  landing_page_locator: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+  retrieval_locator: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query?where=STATE%3D%2706%27%20AND%20BASENAME%3D%27Isleton%27&outFields=OBJECTID,GEOID,STATE,PLACE,BASENAME,NAME,AREALAND,AREAWATER,CENTLAT,CENTLON,INTPTLAT,INTPTLON&returnGeometry=true&outSR=4326&f=geojson
+  media_type: application/geo+json
+  snapshot_format: geojson
+  snapshot_file_name: sources/census_tiger_isleton.geojson
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-federal-administrative-boundary
+  status: authoritative-administrative-boundary
+  use: Isleton city boundary, GEOID, and centroid
+  license_name: United States public domain
+  license_locator: https://www.census.gov/data/developers/about/terms-of-service.html
+  redistribution_status: redistributable-united-states-public-domain
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: cf51fa0eef46e4d63ecf6127ca79122f57b03b2afec006f944936fef5003daf4
+  byte_length: 4470
+- source_id: dwr-bay-delta-dem-v4.3-delta-10m-archive
+  title: DWR Bay-Delta DEM v4.3 Delta 10 m raster archive
+  locator: https://data.cnra.ca.gov/dataset/f902e012-7d8d-429c-8a1a-2bf5b4312532/resource/d10040a8-4880-4f0e-90e7-86f57556bd9d/download/dem_delta_10m_20250312.zip
+  landing_page_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  retrieval_locator: https://data.cnra.ca.gov/dataset/f902e012-7d8d-429c-8a1a-2bf5b4312532/resource/d10040a8-4880-4f0e-90e7-86f57556bd9d/download/dem_delta_10m_20250312.zip
+  media_type: application/zip
+  snapshot_format: zip
+  snapshot_file_name: upstream:dem_delta_10m_20250312.zip
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-elevation-product
+  status: version-4.3-delta-10m-archive
+  use: authoritative container for the extracted elevation raster
+  license_name: Public access with required source citation
+  license_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  redistribution_status: upstream-binary-not-committed-derived-summary-only
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 6cdda568e4d5ecd7d42d3c425a1e108fe487417eb8ca6b13319e967df3c7d06a
+  byte_length: 69839544
+- source_id: dwr-bay-delta-dem-v4.3-delta-10m-raster
+  title: DWR Bay-Delta DEM v4.3 extracted Delta 10 m GeoTIFF
+  locator: https://data.cnra.ca.gov/dataset/f902e012-7d8d-429c-8a1a-2bf5b4312532/resource/d10040a8-4880-4f0e-90e7-86f57556bd9d/download/dem_delta_10m_20250312.zip
+  landing_page_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  retrieval_locator: https://data.cnra.ca.gov/dataset/f902e012-7d8d-429c-8a1a-2bf5b4312532/resource/d10040a8-4880-4f0e-90e7-86f57556bd9d/download/dem_delta_10m_20250312.zip
+  media_type: image/tiff
+  snapshot_format: geotiff
+  snapshot_file_name: upstream:dem_delta_10m_20250312.tif
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-elevation-product
+  status: verified-extracted-archive-member
+  use: clipped island elevation summaries
+  license_name: Public access with required source citation
+  license_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  redistribution_status: upstream-binary-not-committed-derived-summary-only
+  archive_member: dem_delta_10m_20250312.tif
+  archive_member_sha256: 472d144e728cc990112827af816c11ae41f986343beecf7921aeb253d8fbc408
+  archive_member_verification: streamed-sha256-equals-extracted-raster
+  extraction_command: unzip -p dem_delta_10m_20250312.zip dem_delta_10m_20250312.tif
+  sha256: 472d144e728cc990112827af816c11ae41f986343beecf7921aeb253d8fbc408
+  byte_length: 504815460
+- source_id: dwr-bay-delta-dem-v4.3-metadata
+  title: DWR Bay-Delta DEM for Modeling version 4.3
+  locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  landing_page_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  retrieval_locator: https://data.cnra.ca.gov/api/3/action/package_show?id=san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  media_type: application/json
+  snapshot_format: json
+  snapshot_file_name: sources/dwr_bay_delta_dem_v4_3_metadata.json
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-elevation-product
+  status: version-4.3-completed-2025-03
+  use: DEM version, datum, provenance, and Delta 10 m resource identity
+  license_name: License not specified; public access with required citation
+  license_locator: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+  redistribution_status: metadata-snapshot-only-upstream-binary-not-committed
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 6ad1d5c11c786f1f37ad23a125e919915792664a484a34f77a8bc1766ba1fa32
+  byte_length: 27574
+- source_id: dwr-local-maintenance-areas-2026-08-05
+  title: DWR Local Maintenance Areas for flood protection
+  locator: https://gis.water.ca.gov/arcgis/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/MapServer/0
+  landing_page_locator: https://gis.water.ca.gov/arcgis/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/MapServer/0
+  retrieval_locator: https://gis.water.ca.gov/arcgis/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/MapServer/0?f=pjson
+  media_type: application/json
+  snapshot_format: json
+  snapshot_file_name: sources/dwr_local_maintenance_areas_metadata.json
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-state-government-gis
+  status: authoritative-crosscheck-variable-boundary-accuracy
+  use: crosscheck governance and combined Brannan-Andrus maintenance area
+  license_name: California public data
+  license_locator: https://gis.water.ca.gov/
+  redistribution_status: government-metadata-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 71a9e412e419d30225e138578fbdbf7e603ae12c51d2b15c2c577993ca7c01d9
+  byte_length: 8809
+- source_id: isleton-fire-department-2026-08-05
+  title: City of Isleton Fire Department
+  locator: https://www.cityofisleton.com/fire-department
+  landing_page_locator: https://www.cityofisleton.com/fire-department
+  retrieval_locator: null
+  media_type: application/json
+  snapshot_format: json
+  snapshot_file_name: sources/isleton_fire_department_record.json
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-local-agency-record
+  status: official-current-web-record
+  use: local fire station address and apparatus inventory
+  license_name: Project-authored factual extract from a public agency record
+  license_locator: https://www.cityofisleton.com/
+  redistribution_status: project-authored-factual-extract-upstream-page-not-committed
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 9e3813803da4a5eb1ad65080912b722dcf17049d2db0349a5f1690b5b5125047
+  byte_length: 784
+- source_id: osm-isleton-fire-geocode-2026-08-05
+  title: OpenStreetMap Nominatim geocode for 101 2nd Street
+  locator: https://nominatim.openstreetmap.org/ui/search.html
+  landing_page_locator: https://nominatim.openstreetmap.org/ui/search.html
+  retrieval_locator: https://nominatim.openstreetmap.org/search?q=101%202nd%20Street%2C%20Isleton%2C%20CA%2095641&format=jsonv2
+  media_type: application/json
+  snapshot_format: json
+  snapshot_file_name: sources/osm_isleton_fire_geocode.json
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: community-sourced-secondary-geocode
+  status: secondary-location-anchor
+  use: approximate coordinate for the official fire station address
+  license_name: Open Data Commons Open Database License 1.0
+  license_locator: https://www.openstreetmap.org/copyright
+  redistribution_status: redistributable-with-odbl-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 4432d623c78b35f20002a7b05245bd7b6665f11b8246ed22a33d97d4ee029b21
+  byte_length: 465
+- source_id: sacramento-county-drainage-districts-2026-08-05
+  title: Sacramento County drainage districts for Andrus and Brannan
+  locator: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7
+  landing_page_locator: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7
+  retrieval_locator: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7/query?where=DISTRICT%20IN%20(%27Andrus%20Island%20407%27,%27Lower%20Andrus%20Island%20317%27,%27Upper%20Andrus%20Island%20556%27,%27Brannan%20Island%202067%27)&outFields=*&returnGeometry=true&outSR=4326&f=geojson
+  media_type: application/geo+json
+  snapshot_format: geojson
+  snapshot_file_name: sources/sacramento_county_drainage_districts.geojson
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-local-government-gis
+  status: authoritative-operational-boundary-with-mapping-limitations
+  use: unioned island operational footprints and reclamation district identities
+  license_name: Sacramento County public GIS data
+  license_locator: https://data.saccounty.gov/pages/terms
+  redistribution_status: clipped-government-snapshot-with-source-attribution
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710
+  byte_length: 103592
+- source_id: usgs-nhd-flowlines-2026-08-05
+  title: USGS National Hydrography Dataset flowlines
+  locator: https://www.usgs.gov/national-hydrography/access-national-hydrography-products
+  landing_page_locator: https://www.usgs.gov/national-hydrography/access-national-hydrography-products
+  retrieval_locator: https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/6/query?where=GNIS_NAME%20IN%20(%27Sacramento%20River%27,%27Three%20Mile%20Slough%27,%27Threemile%20Slough%27,%27Georgiana%20Slough%27)&geometry=-121.75%2C38.05%2C-121.45%2C38.25&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID,PERMANENT_IDENTIFIER,GNIS_NAME,FTYPE,FCODE,REACHCODE,RESOLUTION&returnGeometry=true&outSR=4326&f=geojson
+  media_type: application/geo+json
+  snapshot_format: geojson
+  snapshot_file_name: sources/usgs_nhd_flowlines.geojson
+  retrieved_utc: '2026-08-05T16:00:00Z'
+  source_tier: authoritative-federal-hydrography
+  status: public-domain-live-service-snapshot
+  use: Sacramento River, Three Mile Slough, and Georgiana Slough geometry
+  license_name: United States public domain
+  license_locator: https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits
+  redistribution_status: redistributable-united-states-public-domain
+  archive_member: null
+  archive_member_sha256: null
+  archive_member_verification: null
+  extraction_command: null
+  sha256: 520ba4660ee81d85241cb3b371d9c4bdff06aed578a1fae8111ff7c5dd172488
+  byte_length: 26929
+islands:
+- island_id: ISL-01
+  name: Andrus Island
+  scenario_acres: 7600
+  source_area_acres: 7327
+  interior_elevation_millifeet_msl: -5000
+  centroid:
+    longitude_e7: -1215826757
+    latitude_e7: 381642987
+    easting_mm: 624162176
+    northing_mm: 4224993599
+  geometry:
+    polygons:
+    - points:
+      - longitude_e7: -1215848831
+        latitude_e7: 381236194
+        easting_mm: 624037658
+        northing_mm: 4220476751
+      - longitude_e7: -1215862846
+        latitude_e7: 381207481
+        easting_mm: 623919663
+        northing_mm: 4220156271
+      - longitude_e7: -1215866946
+        latitude_e7: 381195089
+        easting_mm: 623885823
+        northing_mm: 4220018222
+      - longitude_e7: -1215868957
+        latitude_e7: 381179758
+        easting_mm: 623870779
+        northing_mm: 4219847837
+      - longitude_e7: -1215866807
+        latitude_e7: 381156278
+        easting_mm: 623893597
+        northing_mm: 4219587587
+      - longitude_e7: -1215858039
+        latitude_e7: 381134687
+        easting_mm: 623974112
+        northing_mm: 4219349181
+      - longitude_e7: -1215846310
+        latitude_e7: 381120487
+        easting_mm: 624079341
+        northing_mm: 4219193175
+      - longitude_e7: -1215823240
+        latitude_e7: 381103384
+        easting_mm: 624284492
+        northing_mm: 4219006492
+      - longitude_e7: -1215806950
+        latitude_e7: 381095585
+        easting_mm: 624428635
+        northing_mm: 4218922126
+      - longitude_e7: -1215731390
+        latitude_e7: 381067419
+        easting_mm: 625095895
+        northing_mm: 4218619751
+      - longitude_e7: -1215718149
+        latitude_e7: 381060863
+        easting_mm: 625213111
+        northing_mm: 4218548786
+      - longitude_e7: -1215705988
+        latitude_e7: 381051522
+        easting_mm: 625321334
+        northing_mm: 4218446775
+      - longitude_e7: -1215691377
+        latitude_e7: 381035646
+        easting_mm: 625452150
+        northing_mm: 4218272590
+      - longitude_e7: -1215680206
+        latitude_e7: 381012221
+        easting_mm: 625554106
+        northing_mm: 4218014176
+      - longitude_e7: -1215677132
+        latitude_e7: 381000501
+        easting_mm: 625583067
+        northing_mm: 4217884535
+      - longitude_e7: -1215676628
+        latitude_e7: 380990327
+        easting_mm: 625589230
+        northing_mm: 4217771713
+      - longitude_e7: -1215677732
+        latitude_e7: 380983538
+        easting_mm: 625580711
+        northing_mm: 4217696232
+      - longitude_e7: -1215681063
+        latitude_e7: 380978831
+        easting_mm: 625552307
+        northing_mm: 4217643552
+      - longitude_e7: -1215692155
+        latitude_e7: 380977693
+        easting_mm: 625455244
+        northing_mm: 4217629423
+      - longitude_e7: -1215699288
+        latitude_e7: 380980222
+        easting_mm: 625392262
+        northing_mm: 4217656526
+      - longitude_e7: -1215708416
+        latitude_e7: 380985816
+        easting_mm: 625311262
+        northing_mm: 4217717363
+      - longitude_e7: -1215717050
+        latitude_e7: 380994715
+        easting_mm: 625234037
+        northing_mm: 4217814943
+      - longitude_e7: -1215732511
+        latitude_e7: 381004462
+        easting_mm: 625096805
+        northing_mm: 4217921009
+      - longitude_e7: -1215751807
+        latitude_e7: 381012309
+        easting_mm: 624926275
+        northing_mm: 4218005492
+      - longitude_e7: -1215776698
+        latitude_e7: 381018926
+        easting_mm: 624706895
+        northing_mm: 4218075565
+      - longitude_e7: -1215818459
+        latitude_e7: 381026962
+        easting_mm: 624339368
+        northing_mm: 4218159134
+      - longitude_e7: -1215862519
+        latitude_e7: 381032520
+        easting_mm: 623952099
+        northing_mm: 4218214916
+      - longitude_e7: -1215915986
+        latitude_e7: 381035178
+        easting_mm: 623482854
+        northing_mm: 4218237284
+      - longitude_e7: -1215927493
+        latitude_e7: 381044694
+        easting_mm: 623380363
+        northing_mm: 4218341340
+      - longitude_e7: -1215941426
+        latitude_e7: 381053235
+        easting_mm: 623256763
+        northing_mm: 4218434258
+      - longitude_e7: -1215970383
+        latitude_e7: 381065653
+        easting_mm: 623000791
+        northing_mm: 4218568218
+      - longitude_e7: -1215984428
+        latitude_e7: 381074498
+        easting_mm: 622876163
+        northing_mm: 4218664498
+      - longitude_e7: -1216037194
+        latitude_e7: 381090108
+        easting_mm: 622410936
+        northing_mm: 4218830744
+      - longitude_e7: -1216058553
+        latitude_e7: 381089824
+        easting_mm: 622223715
+        northing_mm: 4218824776
+      - longitude_e7: -1216127364
+        latitude_e7: 381080136
+        easting_mm: 621622039
+        northing_mm: 4218708239
+      - longitude_e7: -1216129277
+        latitude_e7: 381081948
+        easting_mm: 621604964
+        northing_mm: 4218728095
+      - longitude_e7: -1216142325
+        latitude_e7: 381125200
+        easting_mm: 621483397
+        northing_mm: 4219206315
+      - longitude_e7: -1216142925
+        latitude_e7: 381135714
+        easting_mm: 621476397
+        northing_mm: 4219322896
+      - longitude_e7: -1216151335
+        latitude_e7: 381145502
+        easting_mm: 621401049
+        northing_mm: 4219430415
+      - longitude_e7: -1216193898
+        latitude_e7: 381166595
+        easting_mm: 621024435
+        northing_mm: 4219658908
+      - longitude_e7: -1216211553
+        latitude_e7: 381172622
+        easting_mm: 620868663
+        northing_mm: 4219723475
+      - longitude_e7: -1216218629
+        latitude_e7: 381173932
+        easting_mm: 620806420
+        northing_mm: 4219737094
+      - longitude_e7: -1216254742
+        latitude_e7: 381174140
+        easting_mm: 620489808
+        northing_mm: 4219734702
+      - longitude_e7: -1216280927
+        latitude_e7: 381178973
+        easting_mm: 620259471
+        northing_mm: 4219784942
+      - longitude_e7: -1216277254
+        latitude_e7: 381183464
+        easting_mm: 620290929
+        northing_mm: 4219835251
+      - longitude_e7: -1216260595
+        latitude_e7: 381195423
+        easting_mm: 620434998
+        northing_mm: 4219970112
+      - longitude_e7: -1216254120
+        latitude_e7: 381207354
+        easting_mm: 620489797
+        northing_mm: 4220103334
+      - longitude_e7: -1216246669
+        latitude_e7: 381243091
+        easting_mm: 620549236
+        northing_mm: 4220500847
+      - longitude_e7: -1216248182
+        latitude_e7: 381252984
+        easting_mm: 620534352
+        northing_mm: 4220610430
+      - longitude_e7: -1216253959
+        latitude_e7: 381265037
+        easting_mm: 620481735
+        northing_mm: 4220743418
+      - longitude_e7: -1216252928
+        latitude_e7: 381282710
+        easting_mm: 620487864
+        northing_mm: 4220939656
+      - longitude_e7: -1216246151
+        latitude_e7: 381302221
+        easting_mm: 620544049
+        northing_mm: 4221157037
+      - longitude_e7: -1216235469
+        latitude_e7: 381317364
+        easting_mm: 620635181
+        northing_mm: 4221326454
+      - longitude_e7: -1216223377
+        latitude_e7: 381359405
+        easting_mm: 620734243
+        northing_mm: 4221794520
+      - longitude_e7: -1216224434
+        latitude_e7: 381366637
+        easting_mm: 620723787
+        northing_mm: 4221874630
+      - longitude_e7: -1216237484
+        latitude_e7: 381387387
+        easting_mm: 620606000
+        northing_mm: 4222103179
+      - longitude_e7: -1216238342
+        latitude_e7: 381396077
+        easting_mm: 620597046
+        northing_mm: 4222199494
+      - longitude_e7: -1216236212
+        latitude_e7: 381411069
+        easting_mm: 620613243
+        northing_mm: 4222366129
+      - longitude_e7: -1216243464
+        latitude_e7: 381427194
+        easting_mm: 620547040
+        northing_mm: 4222544110
+      - longitude_e7: -1216243352
+        latitude_e7: 381431865
+        easting_mm: 620547247
+        northing_mm: 4222595956
+      - longitude_e7: -1216240518
+        latitude_e7: 381435257
+        easting_mm: 620571525
+        northing_mm: 4222633964
+      - longitude_e7: -1216231625
+        latitude_e7: 381440520
+        easting_mm: 620648595
+        northing_mm: 4222693527
+      - longitude_e7: -1216206700
+        latitude_e7: 381449397
+        easting_mm: 620865545
+        northing_mm: 4222795268
+      - longitude_e7: -1216198904
+        latitude_e7: 381450953
+        easting_mm: 620933611
+        northing_mm: 4222813556
+      - longitude_e7: -1216183311
+        latitude_e7: 381450696
+        easting_mm: 621070294
+        northing_mm: 4222812733
+      - longitude_e7: -1216173850
+        latitude_e7: 381454615
+        easting_mm: 621152551
+        northing_mm: 4222857457
+      - longitude_e7: -1216163156
+        latitude_e7: 381467986
+        easting_mm: 621244046
+        northing_mm: 4223007223
+      - longitude_e7: -1216160422
+        latitude_e7: 381485197
+        easting_mm: 621265160
+        northing_mm: 4223198557
+      - longitude_e7: -1216156110
+        latitude_e7: 381494913
+        easting_mm: 621301331
+        northing_mm: 4223306936
+      - longitude_e7: -1216147235
+        latitude_e7: 381502871
+        easting_mm: 621377777
+        northing_mm: 4223396394
+      - longitude_e7: -1216144813
+        latitude_e7: 381507105
+        easting_mm: 621398298
+        northing_mm: 4223443695
+      - longitude_e7: -1216146966
+        latitude_e7: 381514107
+        easting_mm: 621378271
+        northing_mm: 4223521113
+      - longitude_e7: -1216164769
+        latitude_e7: 381527295
+        easting_mm: 621220095
+        northing_mm: 4223665123
+      - longitude_e7: -1216165546
+        latitude_e7: 381531530
+        easting_mm: 621212585
+        northing_mm: 4223712010
+      - longitude_e7: -1216162800
+        latitude_e7: 381541080
+        easting_mm: 621235064
+        northing_mm: 4223818338
+      - longitude_e7: -1216168380
+        latitude_e7: 381551172
+        easting_mm: 621184506
+        northing_mm: 4223929597
+      - longitude_e7: -1216180425
+        latitude_e7: 381558499
+        easting_mm: 621077757
+        northing_mm: 4224009325
+      - longitude_e7: -1216183363
+        latitude_e7: 381565154
+        easting_mm: 621050916
+        northing_mm: 4224082784
+      - longitude_e7: -1216196519
+        latitude_e7: 381568472
+        easting_mm: 620935101
+        northing_mm: 4224117884
+      - longitude_e7: -1216167443
+        latitude_e7: 381628716
+        easting_mm: 621179878
+        northing_mm: 4224790169
+      - longitude_e7: -1216132821
+        latitude_e7: 381625612
+        easting_mm: 621483713
+        northing_mm: 4224760256
+      - longitude_e7: -1216117763
+        latitude_e7: 381626008
+        easting_mm: 621615565
+        northing_mm: 4224766622
+      - longitude_e7: -1216044038
+        latitude_e7: 381635114
+        easting_mm: 622259942
+        northing_mm: 4224877361
+      - longitude_e7: -1215965320
+        latitude_e7: 381669203
+        easting_mm: 622943851
+        northing_mm: 4225266040
+      - longitude_e7: -1215953800
+        latitude_e7: 381680283
+        easting_mm: 623042912
+        northing_mm: 4225390508
+      - longitude_e7: -1215950805
+        latitude_e7: 381681369
+        easting_mm: 623068968
+        northing_mm: 4225402955
+      - longitude_e7: -1215944013
+        latitude_e7: 381689696
+        easting_mm: 623127067
+        northing_mm: 4225496258
+      - longitude_e7: -1215888685
+        latitude_e7: 381774039
+        easting_mm: 623597496
+        northing_mm: 4226439521
+      - longitude_e7: -1215848847
+        latitude_e7: 381825310
+        easting_mm: 623937756
+        northing_mm: 4227013760
+      - longitude_e7: -1215839019
+        latitude_e7: 381836787
+        easting_mm: 624021890
+        northing_mm: 4227142430
+      - longitude_e7: -1215816931
+        latitude_e7: 381857140
+        easting_mm: 624211889
+        northing_mm: 4227371235
+      - longitude_e7: -1215772406
+        latitude_e7: 381883526
+        easting_mm: 624597353
+        northing_mm: 4227670000
+      - longitude_e7: -1215683841
+        latitude_e7: 381916543
+        easting_mm: 625367332
+        northing_mm: 4228048323
+      - longitude_e7: -1215677632
+        latitude_e7: 381910969
+        easting_mm: 625422665
+        northing_mm: 4227987313
+      - longitude_e7: -1215683325
+        latitude_e7: 381916680
+        easting_mm: 625371834
+        northing_mm: 4228049905
+      - longitude_e7: -1215637064
+        latitude_e7: 381930539
+        easting_mm: 625774580
+        northing_mm: 4228209970
+      - longitude_e7: -1215609660
+        latitude_e7: 381948311
+        easting_mm: 626011502
+        northing_mm: 4228410894
+      - longitude_e7: -1215596839
+        latitude_e7: 381962290
+        easting_mm: 626121360
+        northing_mm: 4228567757
+      - longitude_e7: -1215573115
+        latitude_e7: 382003580
+        easting_mm: 626321973
+        northing_mm: 4229029156
+      - longitude_e7: -1215568362
+        latitude_e7: 382032376
+        easting_mm: 626358621
+        northing_mm: 4229349341
+      - longitude_e7: -1215568977
+        latitude_e7: 382155382
+        easting_mm: 626331961
+        northing_mm: 4230714182
+      - longitude_e7: -1215564016
+        latitude_e7: 382189415
+        easting_mm: 626369507
+        northing_mm: 4231092509
+      - longitude_e7: -1215555568
+        latitude_e7: 382224324
+        easting_mm: 626437419
+        northing_mm: 4231481027
+      - longitude_e7: -1215551812
+        latitude_e7: 382279900
+        easting_mm: 626460674
+        northing_mm: 4232098239
+      - longitude_e7: -1215555020
+        latitude_e7: 382298746
+        easting_mm: 626429335
+        northing_mm: 4232306923
+      - longitude_e7: -1215577713
+        latitude_e7: 382336692
+        easting_mm: 626224144
+        northing_mm: 4232724890
+      - longitude_e7: -1215580727
+        latitude_e7: 382352874
+        easting_mm: 626194960
+        northing_mm: 4232904049
+      - longitude_e7: -1215578284
+        latitude_e7: 382369420
+        easting_mm: 626213487
+        northing_mm: 4233087981
+      - longitude_e7: -1215566011
+        latitude_e7: 382381631
+        easting_mm: 626318784
+        northing_mm: 4233225159
+      - longitude_e7: -1215551692
+        latitude_e7: 382392163
+        easting_mm: 626442281
+        northing_mm: 4233343978
+      - longitude_e7: -1215528700
+        latitude_e7: 382405588
+        easting_mm: 626641170
+        northing_mm: 4233496091
+      - longitude_e7: -1215520031
+        latitude_e7: 382408417
+        easting_mm: 626716551
+        northing_mm: 4233528670
+      - longitude_e7: -1215507635
+        latitude_e7: 382409880
+        easting_mm: 626824777
+        northing_mm: 4233546608
+      - longitude_e7: -1215486132
+        latitude_e7: 382408693
+        easting_mm: 627013168
+        northing_mm: 4233536382
+      - longitude_e7: -1215450437
+        latitude_e7: 382402529
+        easting_mm: 627326634
+        northing_mm: 4233472890
+      - longitude_e7: -1215405371
+        latitude_e7: 382394046
+        easting_mm: 627722520
+        northing_mm: 4233384969
+      - longitude_e7: -1215347886
+        latitude_e7: 382380290
+        easting_mm: 628228038
+        northing_mm: 4233240274
+      - longitude_e7: -1215303674
+        latitude_e7: 382374413
+        easting_mm: 628616013
+        northing_mm: 4233181194
+      - longitude_e7: -1215230850
+        latitude_e7: 382386234
+        easting_mm: 629251274
+        northing_mm: 4233322507
+      - longitude_e7: -1215183200
+        latitude_e7: 382390995
+        easting_mm: 629667462
+        northing_mm: 4233382004
+      - longitude_e7: -1215181227
+        latitude_e7: 382388458
+        easting_mm: 629685177
+        northing_mm: 4233354132
+      - longitude_e7: -1215180789
+        latitude_e7: 382359970
+        easting_mm: 629694077
+        northing_mm: 4233038077
+      - longitude_e7: -1215245845
+        latitude_e7: 382296055
+        easting_mm: 629135997
+        northing_mm: 4232319745
+      - longitude_e7: -1215266384
+        latitude_e7: 382282805
+        easting_mm: 628958560
+        northing_mm: 4232169851
+      - longitude_e7: -1215273774
+        latitude_e7: 382268048
+        easting_mm: 628896479
+        northing_mm: 4232005078
+      - longitude_e7: -1215278127
+        latitude_e7: 382267654
+        easting_mm: 628858438
+        northing_mm: 4232000099
+      - longitude_e7: -1215304160
+        latitude_e7: 382278988
+        easting_mm: 628628568
+        northing_mm: 4232122243
+      - longitude_e7: -1215311572
+        latitude_e7: 382279386
+        easting_mm: 628563620
+        northing_mm: 4232125624
+      - longitude_e7: -1215319715
+        latitude_e7: 382277177
+        easting_mm: 628492735
+        northing_mm: 4232099990
+      - longitude_e7: -1215329886
+        latitude_e7: 382270779
+        easting_mm: 628404828
+        northing_mm: 4232027584
+      - longitude_e7: -1215337868
+        latitude_e7: 382261163
+        easting_mm: 628336652
+        northing_mm: 4231919773
+      - longitude_e7: -1215352692
+        latitude_e7: 382248414
+        easting_mm: 628209127
+        northing_mm: 4231776242
+      - longitude_e7: -1215387137
+        latitude_e7: 382240126
+        easting_mm: 627909070
+        northing_mm: 4231679509
+      - longitude_e7: -1215432575
+        latitude_e7: 382235212
+        easting_mm: 627512179
+        northing_mm: 4231618714
+      - longitude_e7: -1215440131
+        latitude_e7: 382232032
+        easting_mm: 627446590
+        northing_mm: 4231582394
+      - longitude_e7: -1215443740
+        latitude_e7: 382228386
+        easting_mm: 627415636
+        northing_mm: 4231541431
+      - longitude_e7: -1215446314
+        latitude_e7: 382217687
+        easting_mm: 627394969
+        northing_mm: 4231422358
+      - longitude_e7: -1215439169
+        latitude_e7: 382194600
+        easting_mm: 627461546
+        northing_mm: 4231167158
+      - longitude_e7: -1215436622
+        latitude_e7: 382173680
+        easting_mm: 627487493
+        northing_mm: 4230935369
+      - longitude_e7: -1215424972
+        latitude_e7: 382161246
+        easting_mm: 627591653
+        northing_mm: 4230799005
+      - longitude_e7: -1215397205
+        latitude_e7: 382146572
+        easting_mm: 627837307
+        northing_mm: 4230640003
+      - longitude_e7: -1215388684
+        latitude_e7: 382140243
+        easting_mm: 627913014
+        northing_mm: 4230570950
+      - longitude_e7: -1215369304
+        latitude_e7: 382117927
+        easting_mm: 628086600
+        northing_mm: 4230326000
+      - longitude_e7: -1215369931
+        latitude_e7: 382115002
+        easting_mm: 628081615
+        northing_mm: 4230293452
+      - longitude_e7: -1215373217
+        latitude_e7: 382112873
+        easting_mm: 628053226
+        northing_mm: 4230269378
+      - longitude_e7: -1215401403
+        latitude_e7: 382102483
+        easting_mm: 627808265
+        northing_mm: 4230150190
+      - longitude_e7: -1215413781
+        latitude_e7: 382088027
+        easting_mm: 627702424
+        northing_mm: 4229988074
+      - longitude_e7: -1215416771
+        latitude_e7: 382077550
+        easting_mm: 627678074
+        northing_mm: 4229871400
+      - longitude_e7: -1215417687
+        latitude_e7: 382064957
+        easting_mm: 627672257
+        northing_mm: 4229731535
+      - longitude_e7: -1215408094
+        latitude_e7: 382027780
+        easting_mm: 627762748
+        northing_mm: 4229320332
+      - longitude_e7: -1215410502
+        latitude_e7: 382021179
+        easting_mm: 627742813
+        northing_mm: 4229246750
+      - longitude_e7: -1215446295
+        latitude_e7: 382007011
+        easting_mm: 627431873
+        northing_mm: 4229084605
+      - longitude_e7: -1215453515
+        latitude_e7: 382001861
+        easting_mm: 627369549
+        northing_mm: 4229026466
+      - longitude_e7: -1215479835
+        latitude_e7: 381961172
+        easting_mm: 627146154
+        northing_mm: 4228571350
+      - longitude_e7: -1215506915
+        latitude_e7: 381946613
+        easting_mm: 626911540
+        northing_mm: 4228406076
+      - longitude_e7: -1215530456
+        latitude_e7: 381928473
+        easting_mm: 626708539
+        northing_mm: 4228201570
+      - longitude_e7: -1215574536
+        latitude_e7: 381903484
+        easting_mm: 626326828
+        northing_mm: 4227918257
+      - longitude_e7: -1215612246
+        latitude_e7: 381868715
+        easting_mm: 626002566
+        northing_mm: 4227527311
+      - longitude_e7: -1215655130
+        latitude_e7: 381854708
+        easting_mm: 625629394
+        northing_mm: 4227366065
+      - longitude_e7: -1215694538
+        latitude_e7: 381832331
+        easting_mm: 625288080
+        northing_mm: 4227112428
+      - longitude_e7: -1215712458
+        latitude_e7: 381823942
+        easting_mm: 625132564
+        northing_mm: 4227016920
+      - longitude_e7: -1215720734
+        latitude_e7: 381822346
+        easting_mm: 625060349
+        northing_mm: 4226998093
+      - longitude_e7: -1215754979
+        latitude_e7: 381822312
+        easting_mm: 624760421
+        northing_mm: 4226993098
+      - longitude_e7: -1215766473
+        latitude_e7: 381820442
+        easting_mm: 624660070
+        northing_mm: 4226970796
+      - longitude_e7: -1215776503
+        latitude_e7: 381817100
+        easting_mm: 624572788
+        northing_mm: 4226932364
+      - longitude_e7: -1215786175
+        latitude_e7: 381809109
+        easting_mm: 624489431
+        northing_mm: 4226842391
+      - longitude_e7: -1215810979
+        latitude_e7: 381758036
+        easting_mm: 624280862
+        northing_mm: 4226272338
+      - longitude_e7: -1215811602
+        latitude_e7: 381748259
+        easting_mm: 624277063
+        northing_mm: 4226163773
+      - longitude_e7: -1215806524
+        latitude_e7: 381725877
+        easting_mm: 624325345
+        northing_mm: 4225916091
+      - longitude_e7: -1215809355
+        latitude_e7: 381710299
+        easting_mm: 624303192
+        northing_mm: 4225742850
+      - longitude_e7: -1215815005
+        latitude_e7: 381696804
+        easting_mm: 624255996
+        northing_mm: 4225592355
+      - longitude_e7: -1215832072
+        latitude_e7: 381670552
+        easting_mm: 624110932
+        northing_mm: 4225298759
+      - longitude_e7: -1215841623
+        latitude_e7: 381640089
+        easting_mm: 624032424
+        northing_mm: 4224959451
+      - longitude_e7: -1215851725
+        latitude_e7: 381623911
+        easting_mm: 623946666
+        northing_mm: 4224778586
+      - longitude_e7: -1215868059
+        latitude_e7: 381586911
+        easting_mm: 623809821
+        northing_mm: 4224365841
+      - longitude_e7: -1215872924
+        latitude_e7: 381579510
+        easting_mm: 623768447
+        northing_mm: 4224283064
+      - longitude_e7: -1215875741
+        latitude_e7: 381577946
+        easting_mm: 623744035
+        northing_mm: 4224265343
+      - longitude_e7: -1215899549
+        latitude_e7: 381579623
+        easting_mm: 623535155
+        northing_mm: 4224280767
+      - longitude_e7: -1215915141
+        latitude_e7: 381576871
+        easting_mm: 623399006
+        northing_mm: 4224248162
+      - longitude_e7: -1215921992
+        latitude_e7: 381570567
+        easting_mm: 623340046
+        northing_mm: 4224177299
+      - longitude_e7: -1215927058
+        latitude_e7: 381559520
+        easting_mm: 623297518
+        northing_mm: 4224054035
+      - longitude_e7: -1215928259
+        latitude_e7: 381551318
+        easting_mm: 623288375
+        northing_mm: 4223962873
+      - longitude_e7: -1215926456
+        latitude_e7: 381541945
+        easting_mm: 623305753
+        northing_mm: 4223859098
+      - longitude_e7: -1215921273
+        latitude_e7: 381530259
+        easting_mm: 623353136
+        northing_mm: 4223730125
+      - longitude_e7: -1215915271
+        latitude_e7: 381522221
+        easting_mm: 623407081
+        northing_mm: 4223641731
+      - longitude_e7: -1215915560
+        latitude_e7: 381518636
+        easting_mm: 623405157
+        northing_mm: 4223601904
+      - longitude_e7: -1215885159
+        latitude_e7: 381502801
+        easting_mm: 623674205
+        northing_mm: 4223430245
+      - longitude_e7: -1215875625
+        latitude_e7: 381493777
+        easting_mm: 623759271
+        northing_mm: 4223331391
+      - longitude_e7: -1215873698
+        latitude_e7: 381483747
+        easting_mm: 623777853
+        northing_mm: 4223220350
+      - longitude_e7: -1215879699
+        latitude_e7: 381472431
+        easting_mm: 623727187
+        northing_mm: 4223093982
+      - longitude_e7: -1215887091
+        latitude_e7: 381468933
+        easting_mm: 623663001
+        northing_mm: 4223054188
+      - longitude_e7: -1215895764
+        latitude_e7: 381472350
+        easting_mm: 623586419
+        northing_mm: 4223090937
+      - longitude_e7: -1215910848
+        latitude_e7: 381496730
+        easting_mm: 623450136
+        northing_mm: 4223359458
+      - longitude_e7: -1215924657
+        latitude_e7: 381513687
+        easting_mm: 623326278
+        northing_mm: 4223545781
+      - longitude_e7: -1215949860
+        latitude_e7: 381518787
+        easting_mm: 623104581
+        northing_mm: 4223599030
+      - longitude_e7: -1215968279
+        latitude_e7: 381516367
+        easting_mm: 622943597
+        northing_mm: 4223569731
+      - longitude_e7: -1215980567
+        latitude_e7: 381509134
+        easting_mm: 622837140
+        northing_mm: 4223487844
+      - longitude_e7: -1216010687
+        latitude_e7: 381469522
+        easting_mm: 622579854
+        northing_mm: 4223044314
+      - longitude_e7: -1216060598
+        latitude_e7: 381475900
+        easting_mm: 622141428
+        northing_mm: 4223108493
+      - longitude_e7: -1215848831
+        latitude_e7: 381236194
+        easting_mm: 624037658
+        northing_mm: 4220476751
+  geometry_status: operational-drainage-district-footprint
+  elevation_summary:
+    vertical_datum: NAVD88
+    valid_cell_count: 294233
+    minimum_mm: -6090
+    median_mm: -2170
+    maximum_mm: 7510
+    source_id: dwr-bay-delta-dem-v4.3-delta-10m-raster
+  source_id: sacramento-county-drainage-districts-2026-08-05
+- island_id: ISL-02
+  name: Brannan Island
+  scenario_acres: 8600
+  source_area_acres: 7510
+  interior_elevation_millifeet_msl: -8000
+  centroid:
+    longitude_e7: -1216529604
+    latitude_e7: 381434051
+    easting_mm: 618038409
+    northing_mm: 4222583393
+  geometry:
+    polygons:
+    - points:
+      - longitude_e7: -1216446117
+        latitude_e7: 381719669
+        easting_mm: 618723688
+        northing_mm: 4225763345
+      - longitude_e7: -1216482349
+        latitude_e7: 381718250
+        easting_mm: 618406536
+        northing_mm: 4225742961
+      - longitude_e7: -1216505640
+        latitude_e7: 381720555
+        easting_mm: 618202144
+        northing_mm: 4225765571
+      - longitude_e7: -1216554099
+        latitude_e7: 381734967
+        easting_mm: 617775335
+        northing_mm: 4225919318
+      - longitude_e7: -1216582736
+        latitude_e7: 381746511
+        easting_mm: 617522634
+        northing_mm: 4226043782
+      - longitude_e7: -1216593356
+        latitude_e7: 381746525
+        easting_mm: 617429599
+        northing_mm: 4226042587
+      - longitude_e7: -1216612872
+        latitude_e7: 381742900
+        easting_mm: 617259238
+        northing_mm: 4225999892
+      - longitude_e7: -1216636614
+        latitude_e7: 381734599
+        easting_mm: 617052596
+        northing_mm: 4225904783
+      - longitude_e7: -1216658219
+        latitude_e7: 381724526
+        easting_mm: 616864951
+        northing_mm: 4225790282
+      - longitude_e7: -1216676648
+        latitude_e7: 381710778
+        easting_mm: 616705712
+        northing_mm: 4225635414
+      - longitude_e7: -1216690918
+        latitude_e7: 381695285
+        easting_mm: 616583180
+        northing_mm: 4225461696
+      - longitude_e7: -1216716209
+        latitude_e7: 381636418
+        easting_mm: 616370987
+        northing_mm: 4224805315
+      - longitude_e7: -1216733488
+        latitude_e7: 381610903
+        easting_mm: 616223660
+        northing_mm: 4224520032
+      - longitude_e7: -1216756125
+        latitude_e7: 381586206
+        easting_mm: 616029254
+        northing_mm: 4224243157
+      - longitude_e7: -1216772072
+        latitude_e7: 381580338
+        easting_mm: 615890464
+        northing_mm: 4224176043
+      - longitude_e7: -1216789606
+        latitude_e7: 381567221
+        easting_mm: 615738916
+        northing_mm: 4224028306
+      - longitude_e7: -1216798506
+        latitude_e7: 381557241
+        easting_mm: 615662517
+        northing_mm: 4223916457
+      - longitude_e7: -1216812985
+        latitude_e7: 381531582
+        easting_mm: 615539698
+        northing_mm: 4223629931
+      - longitude_e7: -1216819655
+        latitude_e7: 381514455
+        easting_mm: 615483958
+        northing_mm: 4223439057
+      - longitude_e7: -1216827745
+        latitude_e7: 381468598
+        easting_mm: 615420304
+        northing_mm: 4222929218
+      - longitude_e7: -1216835951
+        latitude_e7: 381435138
+        easting_mm: 615353664
+        northing_mm: 4222556914
+      - longitude_e7: -1216838588
+        latitude_e7: 381427512
+        easting_mm: 615331759
+        northing_mm: 4222471966
+      - longitude_e7: -1216853023
+        latitude_e7: 381403257
+        easting_mm: 615209078
+        northing_mm: 4222201036
+      - longitude_e7: -1216861724
+        latitude_e7: 381380452
+        easting_mm: 615136411
+        northing_mm: 4221946911
+      - longitude_e7: -1216859328
+        latitude_e7: 381333126
+        easting_mm: 615164846
+        northing_mm: 4221422071
+      - longitude_e7: -1216867949
+        latitude_e7: 381302366
+        easting_mm: 615094115
+        northing_mm: 4221079683
+      - longitude_e7: -1216919022
+        latitude_e7: 381207584
+        easting_mm: 614661301
+        northing_mm: 4220021641
+      - longitude_e7: -1216941249
+        latitude_e7: 381173327
+        easting_mm: 614471811
+        northing_mm: 4219638781
+      - longitude_e7: -1216969632
+        latitude_e7: 381137943
+        easting_mm: 614228511
+        northing_mm: 4219242651
+      - longitude_e7: -1216998695
+        latitude_e7: 381112282
+        easting_mm: 613977710
+        northing_mm: 4218954344
+      - longitude_e7: -1217002335
+        latitude_e7: 381107430
+        easting_mm: 613946556
+        northing_mm: 4218900060
+      - longitude_e7: -1217002355
+        latitude_e7: 381102569
+        easting_mm: 613947133
+        northing_mm: 4218846115
+      - longitude_e7: -1217005279
+        latitude_e7: 381095713
+        easting_mm: 613922562
+        northing_mm: 4218769686
+      - longitude_e7: -1217009271
+        latitude_e7: 381093150
+        easting_mm: 613887963
+        northing_mm: 4218740753
+      - longitude_e7: -1217007161
+        latitude_e7: 381078560
+        easting_mm: 613908734
+        northing_mm: 4218579123
+      - longitude_e7: -1217003551
+        latitude_e7: 381076263
+        easting_mm: 613940738
+        northing_mm: 4218554077
+      - longitude_e7: -1217002850
+        latitude_e7: 381070828
+        easting_mm: 613947730
+        northing_mm: 4218493854
+      - longitude_e7: -1216988407
+        latitude_e7: 381062783
+        easting_mm: 614075610
+        northing_mm: 4218406363
+      - longitude_e7: -1216975758
+        latitude_e7: 381058460
+        easting_mm: 614187181
+        northing_mm: 4218359953
+      - longitude_e7: -1216960921
+        latitude_e7: 381058135
+        easting_mm: 614317317
+        northing_mm: 4218358172
+      - longitude_e7: -1216952747
+        latitude_e7: 381068219
+        easting_mm: 614387413
+        northing_mm: 4218471071
+      - longitude_e7: -1216935385
+        latitude_e7: 381105538
+        easting_mm: 614533805
+        northing_mm: 4218887304
+      - longitude_e7: -1216920103
+        latitude_e7: 381124371
+        easting_mm: 614664839
+        northing_mm: 4219098163
+      - longitude_e7: -1216915022
+        latitude_e7: 381127503
+        easting_mm: 614708891
+        northing_mm: 4219133544
+      - longitude_e7: -1216913922
+        latitude_e7: 381130932
+        easting_mm: 614718003
+        northing_mm: 4219171725
+      - longitude_e7: -1216905568
+        latitude_e7: 381137772
+        easting_mm: 614790172
+        northing_mm: 4219248663
+      - longitude_e7: -1216877260
+        latitude_e7: 381155140
+        easting_mm: 615035612
+        northing_mm: 4219444879
+      - longitude_e7: -1216840300
+        latitude_e7: 381164190
+        easting_mm: 615358195
+        northing_mm: 4219549887
+      - longitude_e7: -1216837381
+        latitude_e7: 381169615
+        easting_mm: 615382936
+        northing_mm: 4219610450
+      - longitude_e7: -1216840601
+        latitude_e7: 381178203
+        easting_mm: 615353358
+        northing_mm: 4219705342
+      - longitude_e7: -1216840523
+        latitude_e7: 381195933
+        easting_mm: 615351252
+        northing_mm: 4219902082
+      - longitude_e7: -1216835748
+        latitude_e7: 381225754
+        easting_mm: 615388413
+        northing_mm: 4220233583
+      - longitude_e7: -1216825908
+        latitude_e7: 381234947
+        easting_mm: 615473220
+        northing_mm: 4220336807
+      - longitude_e7: -1216807244
+        latitude_e7: 381238721
+        easting_mm: 615636221
+        northing_mm: 4220381007
+      - longitude_e7: -1216723705
+        latitude_e7: 381246477
+        easting_mm: 616367255
+        northing_mm: 4220477513
+      - longitude_e7: -1216712985
+        latitude_e7: 381244873
+        easting_mm: 616461469
+        northing_mm: 4220461063
+      - longitude_e7: -1216694457
+        latitude_e7: 381238688
+        easting_mm: 616624861
+        northing_mm: 4220394763
+      - longitude_e7: -1216656834
+        latitude_e7: 381241440
+        easting_mm: 616954212
+        northing_mm: 4220430030
+      - longitude_e7: -1216650645
+        latitude_e7: 381238847
+        easting_mm: 617008871
+        northing_mm: 4220402046
+      - longitude_e7: -1216615845
+        latitude_e7: 381204315
+        easting_mm: 617319440
+        northing_mm: 4220023265
+      - longitude_e7: -1216600994
+        latitude_e7: 381205719
+        easting_mm: 617449399
+        northing_mm: 4220040725
+      - longitude_e7: -1216594934
+        latitude_e7: 381204647
+        easting_mm: 617502687
+        northing_mm: 4220029590
+      - longitude_e7: -1216566885
+        latitude_e7: 381193122
+        easting_mm: 617750421
+        northing_mm: 4219905269
+      - longitude_e7: -1216541615
+        latitude_e7: 381187147
+        easting_mm: 617972899
+        northing_mm: 4219842179
+      - longitude_e7: -1216524528
+        latitude_e7: 381178372
+        easting_mm: 618124101
+        northing_mm: 4219746981
+      - longitude_e7: -1216512315
+        latitude_e7: 381174056
+        easting_mm: 618231858
+        northing_mm: 4219700640
+      - longitude_e7: -1216507123
+        latitude_e7: 381176060
+        easting_mm: 618277045
+        northing_mm: 4219723542
+      - longitude_e7: -1216497661
+        latitude_e7: 381186167
+        easting_mm: 618358364
+        northing_mm: 4219836900
+      - longitude_e7: -1216483798
+        latitude_e7: 381189182
+        easting_mm: 618479404
+        northing_mm: 4219872120
+      - longitude_e7: -1216429861
+        latitude_e7: 381187264
+        easting_mm: 618952527
+        northing_mm: 4219857737
+      - longitude_e7: -1216403969
+        latitude_e7: 381183822
+        easting_mm: 619180061
+        northing_mm: 4219822872
+      - longitude_e7: -1216354113
+        latitude_e7: 381180608
+        easting_mm: 619617633
+        northing_mm: 4219793626
+      - longitude_e7: -1216296078
+        latitude_e7: 381170805
+        easting_mm: 620127993
+        northing_mm: 4219692346
+      - longitude_e7: -1216291834
+        latitude_e7: 381173080
+        easting_mm: 620164817
+        northing_mm: 4219718134
+      - longitude_e7: -1216287550
+        latitude_e7: 381178965
+        easting_mm: 620201411
+        northing_mm: 4219783995
+      - longitude_e7: -1216280927
+        latitude_e7: 381178973
+        easting_mm: 620259471
+        northing_mm: 4219784942
+      - longitude_e7: -1216277254
+        latitude_e7: 381183464
+        easting_mm: 620290929
+        northing_mm: 4219835251
+      - longitude_e7: -1216267124
+        latitude_e7: 381189850
+        easting_mm: 620378683
+        northing_mm: 4219907421
+      - longitude_e7: -1216258654
+        latitude_e7: 381197717
+        easting_mm: 620451636
+        northing_mm: 4219995812
+      - longitude_e7: -1216253608
+        latitude_e7: 381209044
+        easting_mm: 620494014
+        northing_mm: 4220122158
+      - longitude_e7: -1216246803
+        latitude_e7: 381240719
+        easting_mm: 620548452
+        northing_mm: 4220474517
+      - longitude_e7: -1216248182
+        latitude_e7: 381252984
+        easting_mm: 620534352
+        northing_mm: 4220610430
+      - longitude_e7: -1216253959
+        latitude_e7: 381265037
+        easting_mm: 620481735
+        northing_mm: 4220743418
+      - longitude_e7: -1216252518
+        latitude_e7: 381284648
+        easting_mm: 620491138
+        northing_mm: 4220961213
+      - longitude_e7: -1216246151
+        latitude_e7: 381302221
+        easting_mm: 620544049
+        northing_mm: 4221157037
+      - longitude_e7: -1216235469
+        latitude_e7: 381317364
+        easting_mm: 620635181
+        northing_mm: 4221326454
+      - longitude_e7: -1216223195
+        latitude_e7: 381360983
+        easting_mm: 620735579
+        northing_mm: 4221812057
+      - longitude_e7: -1216224434
+        latitude_e7: 381366637
+        easting_mm: 620723787
+        northing_mm: 4221874630
+      - longitude_e7: -1216237484
+        latitude_e7: 381387387
+        easting_mm: 620606000
+        northing_mm: 4222103179
+      - longitude_e7: -1216238342
+        latitude_e7: 381396077
+        easting_mm: 620597046
+        northing_mm: 4222199494
+      - longitude_e7: -1216236212
+        latitude_e7: 381411069
+        easting_mm: 620613243
+        northing_mm: 4222366129
+      - longitude_e7: -1216243464
+        latitude_e7: 381427194
+        easting_mm: 620547040
+        northing_mm: 4222544110
+      - longitude_e7: -1216243352
+        latitude_e7: 381431865
+        easting_mm: 620547247
+        northing_mm: 4222595956
+      - longitude_e7: -1216240518
+        latitude_e7: 381435257
+        easting_mm: 620571525
+        northing_mm: 4222633964
+      - longitude_e7: -1216231625
+        latitude_e7: 381440520
+        easting_mm: 620648595
+        northing_mm: 4222693527
+      - longitude_e7: -1216206700
+        latitude_e7: 381449397
+        easting_mm: 620865545
+        northing_mm: 4222795268
+      - longitude_e7: -1216198904
+        latitude_e7: 381450953
+        easting_mm: 620933611
+        northing_mm: 4222813556
+      - longitude_e7: -1216183311
+        latitude_e7: 381450696
+        easting_mm: 621070294
+        northing_mm: 4222812733
+      - longitude_e7: -1216173850
+        latitude_e7: 381454615
+        easting_mm: 621152551
+        northing_mm: 4222857457
+      - longitude_e7: -1216163156
+        latitude_e7: 381467986
+        easting_mm: 621244046
+        northing_mm: 4223007223
+      - longitude_e7: -1216160422
+        latitude_e7: 381485197
+        easting_mm: 621265160
+        northing_mm: 4223198557
+      - longitude_e7: -1216156110
+        latitude_e7: 381494913
+        easting_mm: 621301331
+        northing_mm: 4223306936
+      - longitude_e7: -1216147235
+        latitude_e7: 381502871
+        easting_mm: 621377777
+        northing_mm: 4223396394
+      - longitude_e7: -1216144813
+        latitude_e7: 381507105
+        easting_mm: 621398298
+        northing_mm: 4223443695
+      - longitude_e7: -1216146966
+        latitude_e7: 381514107
+        easting_mm: 621378271
+        northing_mm: 4223521113
+      - longitude_e7: -1216164769
+        latitude_e7: 381527295
+        easting_mm: 621220095
+        northing_mm: 4223665123
+      - longitude_e7: -1216165546
+        latitude_e7: 381531530
+        easting_mm: 621212585
+        northing_mm: 4223712010
+      - longitude_e7: -1216162800
+        latitude_e7: 381541080
+        easting_mm: 621235064
+        northing_mm: 4223818338
+      - longitude_e7: -1216168380
+        latitude_e7: 381551172
+        easting_mm: 621184506
+        northing_mm: 4223929597
+      - longitude_e7: -1216180425
+        latitude_e7: 381558499
+        easting_mm: 621077757
+        northing_mm: 4224009325
+      - longitude_e7: -1216183363
+        latitude_e7: 381565154
+        easting_mm: 621050916
+        northing_mm: 4224082784
+      - longitude_e7: -1216196519
+        latitude_e7: 381568472
+        easting_mm: 620935101
+        northing_mm: 4224117884
+      - longitude_e7: -1216168153
+        latitude_e7: 381627308
+        easting_mm: 621173891
+        northing_mm: 4224774449
+      - longitude_e7: -1216202683
+        latitude_e7: 381633600
+        easting_mm: 620870333
+        northing_mm: 4224839763
+      - longitude_e7: -1216267671
+        latitude_e7: 381652938
+        easting_mm: 620297810
+        northing_mm: 4225045884
+      - longitude_e7: -1216299585
+        latitude_e7: 381669018
+        easting_mm: 620015585
+        northing_mm: 4225220182
+      - longitude_e7: -1216326484
+        latitude_e7: 381673127
+        easting_mm: 619779268
+        northing_mm: 4225262295
+      - longitude_e7: -1216367579
+        latitude_e7: 381686551
+        easting_mm: 619417073
+        northing_mm: 4225405948
+      - longitude_e7: -1216387663
+        latitude_e7: 381690349
+        easting_mm: 619240511
+        northing_mm: 4225445501
+      - longitude_e7: -1216405011
+        latitude_e7: 381695428
+        easting_mm: 619087715
+        northing_mm: 4225499632
+      - longitude_e7: -1216419083
+        latitude_e7: 381701945
+        easting_mm: 618963390
+        northing_mm: 4225570142
+      - longitude_e7: -1216432621
+        latitude_e7: 381715210
+        easting_mm: 618842634
+        northing_mm: 4225715600
+      - longitude_e7: -1216438790
+        latitude_e7: 381718533
+        easting_mm: 618788059
+        northing_mm: 4225751677
+      - longitude_e7: -1216446117
+        latitude_e7: 381719669
+        easting_mm: 618723688
+        northing_mm: 4225763345
+  geometry_status: operational-drainage-district-footprint
+  elevation_summary:
+    vertical_datum: NAVD88
+    valid_cell_count: 303366
+    minimum_mm: -7300
+    median_mm: -4230
+    maximum_mm: 14080
+    source_id: dwr-bay-delta-dem-v4.3-delta-10m-raster
+  source_id: sacramento-county-drainage-districts-2026-08-05
+communities:
+- community_id: TWN-01
+  name: Isleton
+  island_id: ISL-01
+  census_geoid: 0636882
+  centroid:
+    longitude_e7: -1216052590
+    latitude_e7: 381617118
+    easting_mm: 622188028
+    northing_mm: 4224676543
+  geometry:
+    polygons:
+    - points:
+      - longitude_e7: -1216199410
+        latitude_e7: 381565580
+        easting_mm: 620910246
+        northing_mm: 4224085417
+      - longitude_e7: -1216193900
+        latitude_e7: 381564850
+        easting_mm: 620958643
+        northing_mm: 4224078035
+      - longitude_e7: -1216191720
+        latitude_e7: 381567080
+        easting_mm: 620977375
+        northing_mm: 4224103064
+      - longitude_e7: -1216183230
+        latitude_e7: 381565100
+        easting_mm: 621052088
+        northing_mm: 4224082202
+      - longitude_e7: -1216172620
+        latitude_e7: 381579330
+        easting_mm: 621142695
+        northing_mm: 4224241488
+      - longitude_e7: -1216160490
+        latitude_e7: 381588140
+        easting_mm: 621247512
+        northing_mm: 4224340832
+      - longitude_e7: -1216154950
+        latitude_e7: 381585330
+        easting_mm: 621296516
+        northing_mm: 4224310376
+      - longitude_e7: -1216121490
+        latitude_e7: 381599690
+        easting_mm: 621587288
+        northing_mm: 4224474101
+      - longitude_e7: -1216111320
+        latitude_e7: 381572760
+        easting_mm: 621680866
+        northing_mm: 4224176612
+      - longitude_e7: -1216018440
+        latitude_e7: 381614250
+        easting_mm: 622487697
+        northing_mm: 4224649228
+      - longitude_e7: -1216015010
+        latitude_e7: 381617520
+        easting_mm: 622517201
+        northing_mm: 4224685967
+      - longitude_e7: -1216007900
+        latitude_e7: 381620500
+        easting_mm: 622578992
+        northing_mm: 4224719973
+      - longitude_e7: -1216002780
+        latitude_e7: 381618640
+        easting_mm: 622624160
+        northing_mm: 4224700011
+      - longitude_e7: -1215993630
+        latitude_e7: 381622150
+        easting_mm: 622703735
+        northing_mm: 4224740170
+      - longitude_e7: -1215997330
+        latitude_e7: 381625740
+        easting_mm: 622670718
+        northing_mm: 4224779516
+      - longitude_e7: -1215930100
+        latitude_e7: 381655330
+        easting_mm: 623254733
+        northing_mm: 4225116774
+      - longitude_e7: -1215972910
+        latitude_e7: 381675990
+        easting_mm: 622876223
+        northing_mm: 4225340340
+      - longitude_e7: -1215994910
+        latitude_e7: 381672800
+        easting_mm: 622684031
+        northing_mm: 4225302029
+      - longitude_e7: -1216026790
+        latitude_e7: 381654860
+        easting_mm: 622407750
+        northing_mm: 4225098746
+      - longitude_e7: -1216056840
+        latitude_e7: 381644700
+        easting_mm: 622146191
+        northing_mm: 4224982044
+      - longitude_e7: -1216099570
+        latitude_e7: 381638530
+        easting_mm: 621772872
+        northing_mm: 4224907958
+      - longitude_e7: -1216135010
+        latitude_e7: 381638250
+        easting_mm: 621462437
+        northing_mm: 4224900202
+      - longitude_e7: -1216162390
+        latitude_e7: 381640140
+        easting_mm: 621222254
+        northing_mm: 4224917590
+      - longitude_e7: -1216199410
+        latitude_e7: 381565580
+        easting_mm: 620910246
+        northing_mm: 4224085417
+    - points:
+      - longitude_e7: -1215961360
+        latitude_e7: 381567810
+        easting_mm: 622995582
+        northing_mm: 4224141473
+      - longitude_e7: -1215927940
+        latitude_e7: 381549100
+        easting_mm: 623291547
+        northing_mm: 4223938300
+      - longitude_e7: -1215925700
+        latitude_e7: 381562870
+        easting_mm: 623308855
+        northing_mm: 4224091394
+      - longitude_e7: -1215922130
+        latitude_e7: 381570100
+        easting_mm: 623338916
+        northing_mm: 4224172095
+      - longitude_e7: -1215916700
+        latitude_e7: 381576040
+        easting_mm: 623385490
+        northing_mm: 4224238730
+      - longitude_e7: -1215911070
+        latitude_e7: 381578180
+        easting_mm: 623434457
+        northing_mm: 4224263225
+      - longitude_e7: -1215900410
+        latitude_e7: 381579440
+        easting_mm: 623527642
+        northing_mm: 4224278626
+      - longitude_e7: -1215874730
+        latitude_e7: 381578210
+        easting_mm: 623752845
+        northing_mm: 4224268402
+      - longitude_e7: -1215925680
+        latitude_e7: 381606530
+        easting_mm: 623301676
+        northing_mm: 4224575861
+      - longitude_e7: -1215961360
+        latitude_e7: 381567810
+        easting_mm: 622995582
+        northing_mm: 4224141473
+  source_id: census-tiger-isleton-2025
+crossings:
+- crossing_id: XNG-03
+  name: Three Mile Slough Bridge
+  carries: SR-160
+  crossing_type: movable_lift_bridge
+  design_description: '15: Movable - Lift'
+  source_feature_id: '2286'
+  location:
+    longitude_e7: -1217015639
+    latitude_e7: 381051306
+    easting_mm: 613838632
+    northing_mm: 4218275663
+  nominal_travel_s: 1800
+  source_id: caltrans-state-highway-bridges-2024
+- crossing_id: XNG-04
+  name: Isleton Bridge
+  carries: SR-160
+  crossing_type: movable_bascule_bridge
+  design_description: '16: Movable - Bascule'
+  source_feature_id: '2255'
+  location:
+    longitude_e7: -1215929750
+    latitude_e7: 381716222
+    easting_mm: 623247543
+    northing_mm: 4225792500
+  nominal_travel_s: 900
+  source_id: caltrans-state-highway-bridges-2024
+gauges:
+- gauge_id: RVB
+  name: Sacramento River at Rio Vista Bridge
+  location:
+    longitude_e7: -1216863550
+    latitude_e7: 381597370
+    easting_mm: 615086310
+    northing_mm: 4224353642
+  baseline_stage_millifeet: 3200
+  action_stage_millifeet: 7400
+  minor_flood_stage_millifeet: 11900
+  threshold_status: verified-cdec-2026-08-05
+  source_id: cdec-rvb-metadata-2026-08-05
+- gauge_id: MRU
+  name: Middle River at Undine Road
+  location:
+    longitude_e7: -1213860000
+    latitude_e7: 378339000
+    easting_mm: 642028602
+    northing_mm: 4188613347
+  baseline_stage_millifeet: 3400
+  action_stage_millifeet: -1
+  minor_flood_stage_millifeet: -1
+  threshold_status: unavailable-non-operative
+  source_id: cdec-mru-metadata-2026-08-05
+- gauge_id: FPT
+  name: Sacramento River at Freeport
+  location:
+    longitude_e7: -1215003000
+    latitude_e7: 384561120
+    easting_mm: 630853382
+    northing_mm: 4257488745
+  baseline_stage_millifeet: 4000
+  action_stage_millifeet: -1
+  minor_flood_stage_millifeet: -1
+  threshold_status: unavailable-non-operative
+  source_id: cdec-fpt-metadata-2026-08-05
+waterways:
+- waterway_id: WTR-SAC
+  name: Sacramento River
+  segments:
+  - points:
+    - longitude_e7: -1216883425
+      latitude_e7: 381470076
+      easting_mm: 614932157
+      northing_mm: 4222938702
+    - longitude_e7: -1216928589
+      latitude_e7: 381314940
+      easting_mm: 614560661
+      northing_mm: 4221211699
+    - longitude_e7: -1216981443
+      latitude_e7: 381249218
+      easting_mm: 614107650
+      northing_mm: 4220475925
+  - points:
+    - longitude_e7: -1215522761
+      latitude_e7: 382838625
+      easting_mm: 626617944
+      northing_mm: 4238302116
+    - longitude_e7: -1215473013
+      latitude_e7: 382809847
+      easting_mm: 627058076
+      northing_mm: 4237989602
+    - longitude_e7: -1215403355
+      latitude_e7: 382750437
+      easting_mm: 627677772
+      northing_mm: 4237339957
+    - longitude_e7: -1215147595
+      latitude_e7: 382558207
+      easting_mm: 629949285
+      northing_mm: 4235242475
+    - longitude_e7: -1215113835
+      latitude_e7: 382517617
+      easting_mm: 630251932
+      northing_mm: 4234796821
+    - longitude_e7: -1215109769
+      latitude_e7: 382505777
+      easting_mm: 630289620
+      northing_mm: 4234666002
+    - longitude_e7: -1215107849
+      latitude_e7: 382489585
+      easting_mm: 630309313
+      northing_mm: 4234486597
+    - longitude_e7: -1215108985
+      latitude_e7: 382471219
+      easting_mm: 630302657
+      northing_mm: 4234282638
+  - points:
+    - longitude_e7: -1215578951
+      latitude_e7: 382057806
+      easting_mm: 626261502
+      northing_mm: 4229630076
+    - longitude_e7: -1215581107
+      latitude_e7: 382009393
+      easting_mm: 626250988
+      northing_mm: 4229092576
+    - longitude_e7: -1215602035
+      latitude_e7: 381968891
+      easting_mm: 626074726
+      northing_mm: 4228640299
+    - longitude_e7: -1215627919
+      latitude_e7: 381946432
+      easting_mm: 625851924
+      northing_mm: 4228387569
+    - longitude_e7: -1215643703
+      latitude_e7: 381935536
+      easting_mm: 625715575
+      northing_mm: 4228264519
+    - longitude_e7: -1215722179
+      latitude_e7: 381913117
+      easting_mm: 625032174
+      northing_mm: 4228005125
+    - longitude_e7: -1215815629
+      latitude_e7: 381872293
+      easting_mm: 624220725
+      northing_mm: 4227539556
+    - longitude_e7: -1215883653
+      latitude_e7: 381800586
+      easting_mm: 623637092
+      northing_mm: 4226734775
+    - longitude_e7: -1215952557
+      latitude_e7: 381702213
+      easting_mm: 623050117
+      northing_mm: 4225634020
+    - longitude_e7: -1215981963
+      latitude_e7: 381673194
+      easting_mm: 622797383
+      northing_mm: 4225308120
+    - longitude_e7: -1216045951
+      latitude_e7: 381642189
+      easting_mm: 622242009
+      northing_mm: 4224955618
+    - longitude_e7: -1216111581
+      latitude_e7: 381634276
+      easting_mm: 621668351
+      northing_mm: 4224859182
+    - longitude_e7: -1216169267
+      latitude_e7: 381634956
+      easting_mm: 621162862
+      northing_mm: 4224859173
+    - longitude_e7: -1216204391
+      latitude_e7: 381644361
+      easting_mm: 620853594
+      northing_mm: 4224958945
+  - points:
+    - longitude_e7: -1215108985
+      latitude_e7: 382471219
+      easting_mm: 630302657
+      northing_mm: 4234282638
+    - longitude_e7: -1215122317
+      latitude_e7: 382451009
+      easting_mm: 630189590
+      northing_mm: 4234056500
+    - longitude_e7: -1215153397
+      latitude_e7: 382417637
+      easting_mm: 629923546
+      northing_mm: 4233681817
+    - longitude_e7: -1215172623
+      latitude_e7: 382400297
+      easting_mm: 629758372
+      northing_mm: 4233486713
+  - points:
+    - longitude_e7: -1216321363
+      latitude_e7: 381704105
+      easting_mm: 619819062
+      northing_mm: 4225606693
+    - longitude_e7: -1216361045
+      latitude_e7: 381723311
+      easting_mm: 619468312
+      northing_mm: 4225814689
+    - longitude_e7: -1216388001
+      latitude_e7: 381728693
+      easting_mm: 619231308
+      northing_mm: 4225870938
+    - longitude_e7: -1216469619
+      latitude_e7: 381728912
+      easting_mm: 618516320
+      northing_mm: 4225862904
+    - longitude_e7: -1216522189
+      latitude_e7: 381737843
+      easting_mm: 618054383
+      northing_mm: 4225955292
+    - longitude_e7: -1216563267
+      latitude_e7: 381748450
+      easting_mm: 617692858
+      northing_mm: 4226067769
+    - longitude_e7: -1216589213
+      latitude_e7: 381758883
+      easting_mm: 617463905
+      northing_mm: 4226180241
+    - longitude_e7: -1216638585
+      latitude_e7: 381767410
+      easting_mm: 617030077
+      northing_mm: 4226268616
+    - longitude_e7: -1216671891
+      latitude_e7: 381776839
+      easting_mm: 616736845
+      northing_mm: 4226369039
+  - points:
+    - longitude_e7: -1215584267
+      latitude_e7: 382373817
+      easting_mm: 626160359
+      northing_mm: 4233135953
+    - longitude_e7: -1215590287
+      latitude_e7: 382362247
+      easting_mm: 626109676
+      northing_mm: 4233006754
+    - longitude_e7: -1215588475
+      latitude_e7: 382338549
+      easting_mm: 626129630
+      northing_mm: 4232744036
+    - longitude_e7: -1215567895
+      latitude_e7: 382303233
+      easting_mm: 626315859
+      northing_mm: 4232354952
+    - longitude_e7: -1215562625
+      latitude_e7: 382281589
+      easting_mm: 626365738
+      northing_mm: 4232115507
+    - longitude_e7: -1215563099
+      latitude_e7: 382257619
+      easting_mm: 626365737
+      northing_mm: 4231849460
+    - longitude_e7: -1215578245
+      latitude_e7: 382154411
+      easting_mm: 626250997
+      northing_mm: 4230702142
+    - longitude_e7: -1215578359
+      latitude_e7: 382138749
+      easting_mm: 626252700
+      northing_mm: 4230528345
+  - points:
+    - longitude_e7: -1215578359
+      latitude_e7: 382138749
+      easting_mm: 626252700
+      northing_mm: 4230528345
+    - longitude_e7: -1215578951
+      latitude_e7: 382057806
+      easting_mm: 626261502
+      northing_mm: 4229630076
+  - points:
+    - longitude_e7: -1216204391
+      latitude_e7: 381644361
+      easting_mm: 620853594
+      northing_mm: 4224958945
+    - longitude_e7: -1216260789
+      latitude_e7: 381661007
+      easting_mm: 620356776
+      northing_mm: 4225136316
+    - longitude_e7: -1216279001
+      latitude_e7: 381672399
+      easting_mm: 620195359
+      northing_mm: 4225260362
+    - longitude_e7: -1216298389
+      latitude_e7: 381690002
+      easting_mm: 620022626
+      northing_mm: 4225453181
+    - longitude_e7: -1216321363
+      latitude_e7: 381704105
+      easting_mm: 619819062
+      northing_mm: 4225606693
+  - points:
+    - longitude_e7: -1217100895
+      latitude_e7: 381122007
+      easting_mm: 613080231
+      northing_mm: 4219049752
+    - longitude_e7: -1217311095
+      latitude_e7: 380971483
+      easting_mm: 611260260
+      northing_mm: 4217354126
+  - points:
+    - longitude_e7: -1216987833
+      latitude_e7: 381237850
+      easting_mm: 614053403
+      northing_mm: 4220348999
+    - longitude_e7: -1217026975
+      latitude_e7: 381187315
+      easting_mm: 613718143
+      northing_mm: 4219783448
+    - longitude_e7: -1217074029
+      latitude_e7: 381142651
+      easting_mm: 613312572
+      northing_mm: 4219282096
+    - longitude_e7: -1217100895
+      latitude_e7: 381122007
+      easting_mm: 613080231
+      northing_mm: 4219049752
+  - points:
+    - longitude_e7: -1217311095
+      latitude_e7: 380971483
+      easting_mm: 611260260
+      northing_mm: 4217354126
+    - longitude_e7: -1217368995
+      latitude_e7: 380929495
+      easting_mm: 610758898
+      northing_mm: 4216881303
+    - longitude_e7: -1217426265
+      latitude_e7: 380896681
+      easting_mm: 610261619
+      northing_mm: 4216510382
+    - longitude_e7: -1217495323
+      latitude_e7: 380860500
+      easting_mm: 609661418
+      northing_mm: 4216100743
+  - points:
+    - longitude_e7: -1215172623
+      latitude_e7: 382400297
+      easting_mm: 629758372
+      northing_mm: 4233486713
+    - longitude_e7: -1215181683
+      latitude_e7: 382397017
+      easting_mm: 629679670
+      northing_mm: 4233449039
+    - longitude_e7: -1215223543
+      latitude_e7: 382393947
+      easting_mm: 629313859
+      northing_mm: 4233409122
+    - longitude_e7: -1215267793
+      latitude_e7: 382385513
+      easting_mm: 628928088
+      northing_mm: 4233309360
+    - longitude_e7: -1215295989
+      latitude_e7: 382381671
+      easting_mm: 628681996
+      northing_mm: 4233262803
+    - longitude_e7: -1215332433
+      latitude_e7: 382383327
+      easting_mm: 628362744
+      northing_mm: 4233276118
+    - longitude_e7: -1215398245
+      latitude_e7: 382398533
+      easting_mm: 627784100
+      northing_mm: 4233435744
+    - longitude_e7: -1215464857
+      latitude_e7: 382411947
+      easting_mm: 627198798
+      northing_mm: 4233575416
+    - longitude_e7: -1215515679
+      latitude_e7: 382416771
+      easting_mm: 626753182
+      northing_mm: 4233621972
+    - longitude_e7: -1215545431
+      latitude_e7: 382411145
+      easting_mm: 626493783
+      northing_mm: 4233555464
+    - longitude_e7: -1215567015
+      latitude_e7: 382395827
+      easting_mm: 626307546
+      northing_mm: 4233382548
+    - longitude_e7: -1215584267
+      latitude_e7: 382373817
+      easting_mm: 626160359
+      northing_mm: 4233135953
+  - points:
+    - longitude_e7: -1216981443
+      latitude_e7: 381249218
+      easting_mm: 614107650
+      northing_mm: 4220475925
+    - longitude_e7: -1216987833
+      latitude_e7: 381237850
+      easting_mm: 614053403
+      northing_mm: 4220348999
+  - points:
+    - longitude_e7: -1216671891
+      latitude_e7: 381776839
+      easting_mm: 616736845
+      northing_mm: 4226369039
+    - longitude_e7: -1216743349
+      latitude_e7: 381695176
+      easting_mm: 616123894
+      northing_mm: 4225453913
+    - longitude_e7: -1216796463
+      latitude_e7: 381615226
+      easting_mm: 615671254
+      northing_mm: 4224560129
+    - longitude_e7: -1216851097
+      latitude_e7: 381559041
+      easting_mm: 615201441
+      northing_mm: 4223929882
+    - longitude_e7: -1216883425
+      latitude_e7: 381470076
+      easting_mm: 614932157
+      northing_mm: 4222938702
+  - points:
+    - longitude_e7: -1217495323
+      latitude_e7: 380860500
+      easting_mm: 609661418
+      northing_mm: 4216100743
+    - longitude_e7: -1217510811
+      latitude_e7: 380852083
+      easting_mm: 609526845
+      northing_mm: 4216005517
+  source_id: usgs-nhd-flowlines-2026-08-05
+- waterway_id: WTR-TMS
+  name: Threemile Slough
+  segments:
+  - points:
+    - longitude_e7: -1216847078
+      latitude_e7: 380866210
+      easting_mm: 615345625
+      northing_mm: 4216242627
+    - longitude_e7: -1216853247
+      latitude_e7: 380870148
+      easting_mm: 615290901
+      northing_mm: 4216285565
+    - longitude_e7: -1216856849
+      latitude_e7: 380924791
+      easting_mm: 615250736
+      northing_mm: 4216891438
+    - longitude_e7: -1216858623
+      latitude_e7: 380991932
+      easting_mm: 615224629
+      northing_mm: 4217636224
+    - longitude_e7: -1216854767
+      latitude_e7: 381019310
+      easting_mm: 615254138
+      northing_mm: 4217940492
+    - longitude_e7: -1216833005
+      latitude_e7: 381099080
+      easting_mm: 615432401
+      northing_mm: 4218828333
+    - longitude_e7: -1216829799
+      latitude_e7: 381140586
+      easting_mm: 615453968
+      northing_mm: 4219289287
+    - longitude_e7: -1216835557
+      latitude_e7: 381151701
+      easting_mm: 615401745
+      northing_mm: 4219411901
+  - points:
+    - longitude_e7: -1217022594
+      latitude_e7: 381068702
+      easting_mm: 613774952
+      northing_mm: 4218467849
+    - longitude_e7: -1217062740
+      latitude_e7: 381093420
+      easting_mm: 613419153
+      northing_mm: 4218737204
+    - longitude_e7: -1217096181
+      latitude_e7: 381120123
+      easting_mm: 613121849
+      northing_mm: 4219029421
+    - longitude_e7: -1217100895
+      latitude_e7: 381122007
+      easting_mm: 613080231
+      northing_mm: 4219049752
+  - points:
+    - longitude_e7: -1216835557
+      latitude_e7: 381151701
+      easting_mm: 615401745
+      northing_mm: 4219411901
+    - longitude_e7: -1216859015
+      latitude_e7: 381150736
+      easting_mm: 615196252
+      northing_mm: 4219398283
+    - longitude_e7: -1216890353
+      latitude_e7: 381136353
+      easting_mm: 614923774
+      northing_mm: 4219234798
+    - longitude_e7: -1216906889
+      latitude_e7: 381124259
+      easting_mm: 614780706
+      northing_mm: 4219098555
+    - longitude_e7: -1216929975
+      latitude_e7: 381093206
+      easting_mm: 614583161
+      northing_mm: 4218751139
+    - longitude_e7: -1216936492
+      latitude_e7: 381075054
+      easting_mm: 614528864
+      northing_mm: 4218548916
+    - longitude_e7: -1216945359
+      latitude_e7: 381058384
+      easting_mm: 614453726
+      northing_mm: 4218362852
+    - longitude_e7: -1216960259
+      latitude_e7: 381050569
+      easting_mm: 614324300
+      northing_mm: 4218274296
+    - longitude_e7: -1216981233
+      latitude_e7: 381050801
+      easting_mm: 614140369
+      northing_mm: 4218274290
+    - longitude_e7: -1217022594
+      latitude_e7: 381068702
+      easting_mm: 613774952
+      northing_mm: 4218467849
+  - points:
+    - longitude_e7: -1216813731
+      latitude_e7: 380844920
+      easting_mm: 615641427
+      northing_mm: 4216010547
+    - longitude_e7: -1216847078
+      latitude_e7: 380866210
+      easting_mm: 615345625
+      northing_mm: 4216242627
+  source_id: usgs-nhd-flowlines-2026-08-05
+- waterway_id: WTR-GEO
+  name: Georgiana Slough
+  segments:
+  - points:
+    - longitude_e7: -1215402760
+      latitude_e7: 382028938
+      easting_mm: 627809250
+      northing_mm: 4229333914
+    - longitude_e7: -1215401969
+      latitude_e7: 382021637
+      easting_mm: 627817455
+      northing_mm: 4229253004
+    - longitude_e7: -1215405419
+      latitude_e7: 382017770
+      easting_mm: 627787920
+      northing_mm: 4229209622
+    - longitude_e7: -1215439895
+      latitude_e7: 382004563
+      easting_mm: 627488338
+      northing_mm: 4229058323
+  - points:
+    - longitude_e7: -1215921072
+      latitude_e7: 381340115
+      easting_mm: 623386922
+      northing_mm: 4221620254
+    - longitude_e7: -1215884471
+      latitude_e7: 381305949
+      easting_mm: 623713483
+      northing_mm: 4221246017
+    - longitude_e7: -1215868141
+      latitude_e7: 381297477
+      easting_mm: 623858038
+      northing_mm: 4221154189
+    - longitude_e7: -1215842959
+      latitude_e7: 381297351
+      easting_mm: 624078782
+      northing_mm: 4221156156
+    - longitude_e7: -1215819037
+      latitude_e7: 381301111
+      easting_mm: 624287812
+      northing_mm: 4221201080
+    - longitude_e7: -1215795727
+      latitude_e7: 381301970
+      easting_mm: 624491975
+      northing_mm: 4221213741
+  - points:
+    - longitude_e7: -1215407707
+      latitude_e7: 382088051
+      easting_mm: 627755594
+      northing_mm: 4229989173
+    - longitude_e7: -1215411034
+      latitude_e7: 382079743
+      easting_mm: 627727917
+      northing_mm: 4229896528
+    - longitude_e7: -1215412272
+      latitude_e7: 382066323
+      easting_mm: 627719429
+      northing_mm: 4229747442
+    - longitude_e7: -1215402760
+      latitude_e7: 382028938
+      easting_mm: 627809250
+      northing_mm: 4229333914
+  - points:
+    - longitude_e7: -1215717624
+      latitude_e7: 381818255
+      easting_mm: 625088289
+      northing_mm: 4226953116
+    - longitude_e7: -1215762760
+      latitude_e7: 381816667
+      easting_mm: 624693228
+      northing_mm: 4226929404
+    - longitude_e7: -1215773183
+      latitude_e7: 381812955
+      easting_mm: 624602577
+      northing_mm: 4226886813
+    - longitude_e7: -1215780392
+      latitude_e7: 381807982
+      easting_mm: 624540275
+      northing_mm: 4226830661
+    - longitude_e7: -1215785151
+      latitude_e7: 381801200
+      easting_mm: 624499747
+      northing_mm: 4226754772
+    - longitude_e7: -1215804823
+      latitude_e7: 381758828
+      easting_mm: 624334648
+      northing_mm: 4226281950
+    - longitude_e7: -1215805727
+      latitude_e7: 381752831
+      easting_mm: 624327747
+      northing_mm: 4226215292
+    - longitude_e7: -1215800873
+      latitude_e7: 381722850
+      easting_mm: 624375363
+      northing_mm: 4225883261
+    - longitude_e7: -1215807440
+      latitude_e7: 381700959
+      easting_mm: 624321554
+      northing_mm: 4225639470
+    - longitude_e7: -1215826571
+      latitude_e7: 381669360
+      easting_mm: 624159328
+      northing_mm: 4225286270
+    - longitude_e7: -1215834709
+      latitude_e7: 381642995
+      easting_mm: 624092508
+      northing_mm: 4224992632
+    - longitude_e7: -1215860665
+      latitude_e7: 381589456
+      easting_mm: 623874171
+      northing_mm: 4224395075
+    - longitude_e7: -1215868949
+      latitude_e7: 381576176
+      easting_mm: 623803838
+      northing_mm: 4224246609
+    - longitude_e7: -1215876585
+      latitude_e7: 381573275
+      easting_mm: 623737425
+      northing_mm: 4224213396
+    - longitude_e7: -1215904663
+      latitude_e7: 381574141
+      easting_mm: 623491277
+      northing_mm: 4224219262
+    - longitude_e7: -1215913957
+      latitude_e7: 381571964
+      easting_mm: 623410208
+      northing_mm: 4224193871
+    - longitude_e7: -1215922419
+      latitude_e7: 381560974
+      easting_mm: 623337925
+      northing_mm: 4224070797
+    - longitude_e7: -1215922903
+      latitude_e7: 381547424
+      easting_mm: 623335967
+      northing_mm: 4223920377
+    - longitude_e7: -1215915441
+      latitude_e7: 381529554
+      easting_mm: 623404354
+      northing_mm: 4223723079
+    - longitude_e7: -1215907575
+      latitude_e7: 381521360
+      easting_mm: 623474664
+      northing_mm: 4223633203
+    - longitude_e7: -1215871751
+      latitude_e7: 381500332
+      easting_mm: 623792116
+      northing_mm: 4223404647
+    - longitude_e7: -1215867877
+      latitude_e7: 381493068
+      easting_mm: 623827285
+      northing_mm: 4223324560
+    - longitude_e7: -1215869541
+      latitude_e7: 381476187
+      easting_mm: 623815558
+      northing_mm: 4223137018
+    - longitude_e7: -1215874813
+      latitude_e7: 381468680
+      easting_mm: 623770630
+      northing_mm: 4223053018
+    - longitude_e7: -1215881603
+      latitude_e7: 381463480
+      easting_mm: 623712014
+      northing_mm: 4222994411
+    - longitude_e7: -1215891425
+      latitude_e7: 381462718
+      easting_mm: 623626068
+      northing_mm: 4222984646
+    - longitude_e7: -1215900265
+      latitude_e7: 381466697
+      easting_mm: 623547933
+      northing_mm: 4223027616
+    - longitude_e7: -1215920631
+      latitude_e7: 381497398
+      easting_mm: 623364302
+      northing_mm: 4223365576
+    - longitude_e7: -1215931357
+      latitude_e7: 381507738
+      easting_mm: 623268575
+      northing_mm: 4223478885
+    - longitude_e7: -1215941065
+      latitude_e7: 381512960
+      easting_mm: 623182626
+      northing_mm: 4223535540
+    - longitude_e7: -1215953089
+      latitude_e7: 381513807
+      easting_mm: 623077131
+      northing_mm: 4223543338
+    - longitude_e7: -1215966283
+      latitude_e7: 381511677
+      easting_mm: 622961874
+      northing_mm: 4223517953
+    - longitude_e7: -1215977109
+      latitude_e7: 381505117
+      easting_mm: 622868114
+      northing_mm: 4223443726
+    - longitude_e7: -1216002079
+      latitude_e7: 381472414
+      easting_mm: 622654800
+      northing_mm: 4223077543
+  - points:
+    - longitude_e7: -1215795727
+      latitude_e7: 381301970
+      easting_mm: 624491975
+      northing_mm: 4221213741
+    - longitude_e7: -1215775156
+      latitude_e7: 381299743
+      easting_mm: 624672660
+      northing_mm: 4221191790
+  - points:
+    - longitude_e7: -1215439895
+      latitude_e7: 382004563
+      easting_mm: 627488338
+      northing_mm: 4229058323
+    - longitude_e7: -1215447687
+      latitude_e7: 382000589
+      easting_mm: 627420801
+      northing_mm: 4229013154
+    - longitude_e7: -1215466499
+      latitude_e7: 381974591
+      easting_mm: 627260605
+      northing_mm: 4228722082
+    - longitude_e7: -1215471304
+      latitude_e7: 381964380
+      easting_mm: 627220302
+      northing_mm: 4228608112
+  - points:
+    - longitude_e7: -1215230350
+      latitude_e7: 382305185
+      easting_mm: 629270001
+      northing_mm: 4232423214
+    - longitude_e7: -1215242421
+      latitude_e7: 382292348
+      easting_mm: 629166620
+      northing_mm: 4232279085
+    - longitude_e7: -1215261699
+      latitude_e7: 382280855
+      easting_mm: 628999907
+      northing_mm: 4232148869
+    - longitude_e7: -1215267834
+      latitude_e7: 382266031
+      easting_mm: 628948831
+      northing_mm: 4231983516
+    - longitude_e7: -1215274548
+      latitude_e7: 382261439
+      easting_mm: 628890864
+      northing_mm: 4231931624
+    - longitude_e7: -1215280449
+      latitude_e7: 382262295
+      easting_mm: 628839058
+      northing_mm: 4231940308
+    - longitude_e7: -1215302626
+      latitude_e7: 382273812
+      easting_mm: 628642910
+      northing_mm: 4232065018
+    - longitude_e7: -1215313001
+      latitude_e7: 382274478
+      easting_mm: 628551982
+      northing_mm: 4232070970
+    - longitude_e7: -1215319187
+      latitude_e7: 382272670
+      easting_mm: 628498148
+      northing_mm: 4232050044
+    - longitude_e7: -1215326230
+      latitude_e7: 382267816
+      easting_mm: 628437351
+      northing_mm: 4231995203
+    - longitude_e7: -1215341840
+      latitude_e7: 382249637
+      easting_mm: 628303912
+      northing_mm: 4231791314
+    - longitude_e7: -1215350596
+      latitude_e7: 382244211
+      easting_mm: 628228215
+      northing_mm: 4231729901
+    - longitude_e7: -1215380387
+      latitude_e7: 382236597
+      easting_mm: 627968772
+      northing_mm: 4231641287
+    - longitude_e7: -1215430736
+      latitude_e7: 382230315
+      easting_mm: 627529127
+      northing_mm: 4231564633
+    - longitude_e7: -1215437589
+      latitude_e7: 382226603
+      easting_mm: 627469787
+      northing_mm: 4231522500
+    - longitude_e7: -1215440444
+      latitude_e7: 382217657
+      easting_mm: 627446353
+      northing_mm: 4231422829
+    - longitude_e7: -1215431878
+      latitude_e7: 382190436
+      easting_mm: 627526092
+      northing_mm: 4231121951
+    - longitude_e7: -1215432069
+      latitude_e7: 382179966
+      easting_mm: 627526254
+      northing_mm: 4231005749
+    - longitude_e7: -1215429213
+      latitude_e7: 382172828
+      easting_mm: 627552497
+      northing_mm: 4230926931
+    - longitude_e7: -1215420838
+      latitude_e7: 382164071
+      easting_mm: 627627351
+      northing_mm: 4230830920
+    - longitude_e7: -1215383813
+      latitude_e7: 382143132
+      easting_mm: 627955151
+      northing_mm: 4230603678
+    - longitude_e7: -1215359257
+      latitude_e7: 382114864
+      easting_mm: 628175093
+      northing_mm: 4230293399
+    - longitude_e7: -1215359257
+      latitude_e7: 382112199
+      easting_mm: 628175561
+      northing_mm: 4230263827
+    - longitude_e7: -1215364015
+      latitude_e7: 382108181
+      easting_mm: 628134608
+      northing_mm: 4230218580
+    - longitude_e7: -1215378483
+      latitude_e7: 382106393
+      easting_mm: 628008251
+      northing_mm: 4230196743
+    - longitude_e7: -1215395330
+      latitude_e7: 382100873
+      easting_mm: 627861721
+      northing_mm: 4230133159
+    - longitude_e7: -1215404562
+      latitude_e7: 382093354
+      easting_mm: 627782204
+      northing_mm: 4230048450
+    - longitude_e7: -1215407707
+      latitude_e7: 382088051
+      easting_mm: 627755594
+      northing_mm: 4229989173
+  - points:
+    - longitude_e7: -1215471304
+      latitude_e7: 381964380
+      easting_mm: 627220302
+      northing_mm: 4228608112
+    - longitude_e7: -1215477577
+      latitude_e7: 381955891
+      easting_mm: 627166844
+      northing_mm: 4228513058
+    - longitude_e7: -1215507327
+      latitude_e7: 381940591
+      easting_mm: 626908979
+      northing_mm: 4228339195
+    - longitude_e7: -1215545139
+      latitude_e7: 381912361
+      easting_mm: 626582738
+      northing_mm: 4228020778
+    - longitude_e7: -1215574001
+      latitude_e7: 381896695
+      easting_mm: 626332691
+      northing_mm: 4227843002
+  - points:
+    - longitude_e7: -1216002079
+      latitude_e7: 381472414
+      easting_mm: 622654800
+      northing_mm: 4223077543
+    - longitude_e7: -1216010033
+      latitude_e7: 381462200
+      easting_mm: 622586805
+      northing_mm: 4222963153
+    - longitude_e7: -1216011303
+      latitude_e7: 381454117
+      easting_mm: 622577029
+      northing_mm: 4222873291
+    - longitude_e7: -1216008487
+      latitude_e7: 381444049
+      easting_mm: 622603397
+      northing_mm: 4222761946
+    - longitude_e7: -1215985803
+      latitude_e7: 381417899
+      easting_mm: 622806558
+      northing_mm: 4222474779
+    - longitude_e7: -1215971997
+      latitude_e7: 381393791
+      easting_mm: 622931592
+      northing_mm: 4222209099
+    - longitude_e7: -1215956245
+      latitude_e7: 381372476
+      easting_mm: 623073218
+      northing_mm: 4221974675
+    - longitude_e7: -1215921072
+      latitude_e7: 381340115
+      easting_mm: 623386922
+      northing_mm: 4221620254
+  - points:
+    - longitude_e7: -1215574001
+      latitude_e7: 381896695
+      easting_mm: 626332691
+      northing_mm: 4227843002
+    - longitude_e7: -1215606251
+      latitude_e7: 381867313
+      easting_mm: 626055311
+      northing_mm: 4227512578
+    - longitude_e7: -1215652901
+      latitude_e7: 381850824
+      easting_mm: 625649585
+      northing_mm: 4227323266
+    - longitude_e7: -1215697981
+      latitude_e7: 381824801
+      easting_mm: 625259221
+      northing_mm: 4227028405
+    - longitude_e7: -1215709758
+      latitude_e7: 381819808
+      easting_mm: 625156922
+      northing_mm: 4226971402
+    - longitude_e7: -1215717624
+      latitude_e7: 381818255
+      easting_mm: 625088289
+      northing_mm: 4226953116
+  - points:
+    - longitude_e7: -1215172623
+      latitude_e7: 382400297
+      easting_mm: 629758372
+      northing_mm: 4233486713
+    - longitude_e7: -1215173311
+      latitude_e7: 382392071
+      easting_mm: 629753814
+      northing_mm: 4233395334
+  - points:
+    - longitude_e7: -1215173311
+      latitude_e7: 382392071
+      easting_mm: 629753814
+      northing_mm: 4233395334
+    - longitude_e7: -1215175451
+      latitude_e7: 382381173
+      easting_mm: 629737024
+      northing_mm: 4233274103
+    - longitude_e7: -1215173512
+      latitude_e7: 382365016
+      easting_mm: 629756868
+      northing_mm: 4233095094
+    - longitude_e7: -1215176082
+      latitude_e7: 382356736
+      easting_mm: 629735848
+      northing_mm: 4233002848
+    - longitude_e7: -1215230350
+      latitude_e7: 382305185
+      easting_mm: 629270001
+      northing_mm: 4232423214
+  source_id: usgs-nhd-flowlines-2026-08-05
+facilities:
+- facility_id: FAC-FIRE-01
+  name: Isleton Fire Department
+  facility_type: local_fire_and_rescue_base
+  location:
+    longitude_e7: -1216127380
+    latitude_e7: 381617260
+    easting_mm: 621532767
+    northing_mm: 4224668291
+  location_precision: secondary-address-geocode
+  operational_for_routing: true
+  source_ids:
+  - isleton-fire-department-2026-08-05
+  - osm-isleton-fire-geocode-2026-08-05
+- facility_id: FAC-RAMP-01
+  name: Brannan Island State Recreation Area launch
+  facility_type: boat_launch
+  location:
+    longitude_e7: -1216918643
+    latitude_e7: 381154406
+    easting_mm: 614672947
+    northing_mm: 4219431616
+  location_precision: state-park-unit-centroid-not-ramp-survey
+  operational_for_routing: false
+  source_ids:
+  - california-state-parks-brannan-2026-08-05
+  - california-dbw-sacramento-facilities-2026-08-05
+governance:
+- governance_id: GOV-RD-407
+  name: Andrus Island Reclamation District 407
+  governance_type: reclamation_district
+  island_ids:
+  - ISL-01
+  source_feature_id: '23'
+  source_id: sacramento-county-drainage-districts-2026-08-05
+- governance_id: GOV-RD-317
+  name: Lower Andrus Island Reclamation District 317
+  governance_type: reclamation_district
+  island_ids:
+  - ISL-01
+  source_feature_id: '22'
+  source_id: sacramento-county-drainage-districts-2026-08-05
+- governance_id: GOV-RD-556
+  name: Upper Andrus Island Reclamation District 556
+  governance_type: reclamation_district
+  island_ids:
+  - ISL-01
+  source_feature_id: '19'
+  source_id: sacramento-county-drainage-districts-2026-08-05
+- governance_id: GOV-RD-2067
+  name: Brannan Island Reclamation District 2067
+  governance_type: reclamation_district
+  island_ids:
+  - ISL-02
+  source_feature_id: '24'
+  source_id: sacramento-county-drainage-districts-2026-08-05

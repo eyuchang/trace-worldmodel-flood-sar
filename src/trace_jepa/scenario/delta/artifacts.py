@@ -118,7 +118,24 @@ def _safe_artifact_path(output_root: Path, file_name: str) -> Path:
     path = output_root / relative
     if path.is_symlink():
         raise ArtifactMismatchError(f"artifact path must not be a symlink: {path}")
+    if path.parent.resolve(strict=True) != output_root.resolve(strict=True):
+        raise ArtifactMismatchError(f"artifact path escapes output root: {path}")
     return path
+
+
+def _validate_output_root(output_root: Path, *, create: bool) -> Path:
+    if output_root.is_symlink():
+        raise ArtifactMismatchError(f"artifact root must not be a symlink: {output_root}")
+    if output_root.parent.is_symlink():
+        raise ArtifactMismatchError(
+            f"artifact root parent must not be a symlink: {output_root.parent}"
+        )
+    if create:
+        output_root.mkdir(parents=True, exist_ok=True)
+    resolved = output_root.resolve(strict=True)
+    if not resolved.is_dir():
+        raise ArtifactMismatchError(f"artifact root must be a directory: {resolved}")
+    return resolved
 
 
 def _write_artifact(
@@ -191,7 +208,7 @@ def write_scenario_artifacts(
     *,
     recorded_git_commit: str | None = None,
 ) -> ReplayManifest:
-    output_root.mkdir(parents=True, exist_ok=True)
+    _validate_output_root(output_root, create=True)
     repository_root = package_root.parents[1]
     physical_parameters = physical_parameter_table()
     population_parameters = population_parameter_table()
@@ -489,6 +506,7 @@ def write_scenario_artifacts(
 
 
 def verify_scenario_artifacts(output_root: Path) -> ReplayManifest:
+    _validate_output_root(output_root, create=False)
     manifest_path = _safe_artifact_path(output_root, "manifest.json")
     try:
         manifest = ReplayManifest.model_validate_json(manifest_path.read_text("utf-8"))

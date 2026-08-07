@@ -37,7 +37,13 @@ class LineGeometry(GeographyModel):
 class SourceRecord(GeographyModel):
     source_id: str
     title: str
+    # ``locator`` is retained so the immutable v2 catalog remains loadable.
+    # v3 records distinguish a human landing page from a machine endpoint.
     locator: str
+    landing_page_locator: str | None = None
+    retrieval_locator: str | None = None
+    media_type: str | None = None
+    snapshot_format: str | None = None
     snapshot_file_name: str
     retrieved_utc: datetime
     source_tier: str
@@ -47,6 +53,8 @@ class SourceRecord(GeographyModel):
     license_locator: str
     redistribution_status: str = "review-required"
     archive_member: str | None = None
+    archive_member_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    archive_member_verification: str | None = None
     extraction_command: str | None = None
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     byte_length: int = Field(gt=0)

@@ -1,0 +1,23 @@
+# WF-DFLD-01-SMALL canonical Python 3.11 reference environment.
+#
+# Compile with:
+#   python -m piptools compile --generate-hashes --resolver=backtracking \
+#     --output-file requirements-delta-python311.lock requirements-delta-python311.in
+#
+# Third-party V-JEPA weights and heavyweight JEPA dependencies are intentionally
+# excluded from the canonical Toy-predictor walkthrough.
+fastapi==0.141.1
+httpx==0.28.1
+mypy==2.3.0
+networkx==3.6.1
+numpy==2.2.6
+pydantic==2.13.4
+pyproj==3.7.2
+pytest==9.1.1
+PyYAML==6.0.3
+rasterio==1.4.4
+ruff==0.16.1
+shapely==2.1.2
+types-PyYAML==6.0.12.20260724
+uvicorn==0.52.1
+websockets==17.0.1
