@@ -46,7 +46,37 @@ INCIDENT_REQUIREMENTS = {
 LOCATION_METHODS = ("cell-sector", "landmark", "address-intersection", "gps-share")
 
 
-def population_parameter_table() -> dict[str, object]:
+def population_parameter_table(generator_version: str | None = None) -> dict[str, object]:
+    if generator_version == "delta-small-generator-v7":
+        from trace_jepa.scenario.delta.observations_v7 import (
+            BASE_LOCATION_METHOD_MILLI,
+            BASE_PRECISION_RANGES_M,
+            BASE_REPORTING_BY_HOUR_V1,
+            channel_probabilities_v7,
+        )
+        from trace_jepa.scenario.delta.truth_v7 import (
+            INCIDENT_REQUIREMENTS_V7,
+            TYPE_INTERCEPTS_V1,
+        )
+
+        return {
+            "schema_version": "delta-truth-observation-resource-parameters-v6",
+            "truth_schema_version": "delta-ground-truth-v4",
+            "observation_schema_version": "delta-observations-v4",
+            "coordination_schema_version": "delta-coordination-v1",
+            "truth_coefficients_version": "delta-truth-intercepts-v1",
+            "type_intercepts": TYPE_INTERCEPTS_V1,
+            "incident_requirements": INCIDENT_REQUIREMENTS_V7,
+            "observation_coefficients_version": "delta-observation-coefficients-v1",
+            "reporting_probability_by_hour_at_iota_0_9": BASE_REPORTING_BY_HOUR_V1,
+            "channel_probabilities_at_iota_0_9": channel_probabilities_v7(0.9),
+            "location_method_milli_at_iota_0_9": BASE_LOCATION_METHOD_MILLI,
+            "location_precision_ranges_m_at_iota_0_9": BASE_PRECISION_RANGES_M,
+            "location_error_scaling": "min(3, 0.9 / iota)",
+            "cohort_claim_limit": "synthetic-teaching-cohort-not-demographically-representative",
+            "resource_profile": "kappa-0.5-local-plus-automatic-aid-v1",
+            "physical_resource_concurrency": 1,
+        }
     return {
         "schema_version": "delta-truth-observation-resource-parameters-v5",
         "call_type_weights": CALL_TYPE_WEIGHTS,
@@ -722,7 +752,7 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
                 ("isleton-fire-department-2026-08-05",),
             )
         )
-    if config.generator_version == "delta-small-generator-v6":
+    if config.generator_version in {"delta-small-generator-v6", "delta-small-generator-v7"}:
         automatic_aid_count = max(0, round(2 * config.axes.kappa))
         for index in range(automatic_aid_count):
             definitions.append(
@@ -807,11 +837,15 @@ def generate_resources(config: DeltaScenarioConfig) -> ResourceArtifact:
     return ResourceArtifact(
         schema_version=(
             "delta-resources-v3"
-            if config.generator_version == "delta-small-generator-v6"
+            if config.generator_version in {"delta-small-generator-v6", "delta-small-generator-v7"}
             else "delta-resources-v2"
         ),
         capability_schema_version="delta-incident-resource-capabilities-v1",
-        coordination_domain=f"delta-small-logical-authorities-{config.axes.phi}",
+        coordination_domain=(
+            "delta-small-resource-inventory-v3"
+            if config.generator_version == "delta-small-generator-v7"
+            else f"delta-small-logical-authorities-{config.axes.phi}"
+        ),
         resource_profile_id=config.resource_profile_id,
         units=units,
     )

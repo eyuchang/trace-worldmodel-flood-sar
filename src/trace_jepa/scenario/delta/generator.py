@@ -4,9 +4,11 @@ import hashlib
 from pathlib import Path
 
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_bytes
+from trace_jepa.scenario.delta.coordination import generate_coordination
 from trace_jepa.scenario.delta.geography_models import GeographyCatalog
 from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
 from trace_jepa.scenario.delta.models import DeltaScenarioConfig, GeneratedScenario
+from trace_jepa.scenario.delta.observations_v7 import generate_observations_v7
 from trace_jepa.scenario.delta.physical import (
     generate_crossing_states,
     generate_gauges,
@@ -19,7 +21,8 @@ from trace_jepa.scenario.delta.population import (
     generate_resources,
     generate_truth,
 )
-from trace_jepa.scenario.delta.randomness import derive_stage_seed, seeded_random
+from trace_jepa.scenario.delta.randomness import KeyedRandom, derive_stage_seed, seeded_random
+from trace_jepa.scenario.delta.truth_v7 import generate_truth_v7
 
 GENERATION_ORDER = [
     "geography",
@@ -28,6 +31,17 @@ GENERATION_ORDER = [
     "road_crossing_state",
     "ground_truth",
     "observations",
+    "predictor_prior",
+    "resources",
+]
+GENERATION_ORDER_V7 = [
+    "geography",
+    "meteorology",
+    "hydrology",
+    "road_crossing_state",
+    "ground_truth",
+    "observations",
+    "coordination",
     "predictor_prior",
     "resources",
 ]
@@ -64,20 +78,42 @@ def generate_delta_small_from_models(
             "extent": config.extent.model_dump(mode="json"),
         }
     )
-    truth = generate_truth(
-        config,
-        geography,
-        weather,
-        crossing_states,
-        seeded_random(config.seed, seed_namespace_hash, "ground_truth"),
-    )
-    observations = generate_observations(
-        config,
-        truth,
-        weather,
-        crossing_states,
-        seeded_random(config.seed, seed_namespace_hash, "observations"),
-    )
+    if config.generator_version == "delta-small-generator-v7":
+        truth = generate_truth_v7(
+            config,
+            geography,
+            weather,
+            crossing_states,
+            KeyedRandom(config.seed, seed_namespace_hash, "ground_truth"),
+        )
+        observations = generate_observations_v7(
+            config,
+            truth,
+            KeyedRandom(config.seed, seed_namespace_hash, "observations"),
+        )
+        coordination = generate_coordination(
+            config,
+            observations,
+            KeyedRandom(config.seed, seed_namespace_hash, "coordination"),
+        )
+        generation_order = GENERATION_ORDER_V7
+    else:
+        truth = generate_truth(
+            config,
+            geography,
+            weather,
+            crossing_states,
+            seeded_random(config.seed, seed_namespace_hash, "ground_truth"),
+        )
+        observations = generate_observations(
+            config,
+            truth,
+            weather,
+            crossing_states,
+            seeded_random(config.seed, seed_namespace_hash, "observations"),
+        )
+        coordination = None
+        generation_order = GENERATION_ORDER
     resources = generate_resources(config)
     prior_profile = generate_prior_profile(config)
     return GeneratedScenario(
@@ -88,14 +124,15 @@ def generate_delta_small_from_models(
         crossing_states=crossing_states,
         truth=truth,
         observations=observations,
+        coordination=coordination,
         resources=resources,
         prior_profile=prior_profile,
         stage_seeds=[
             hashlib.sha256(
                 str(derive_stage_seed(config.seed, seed_namespace_hash, name)).encode("utf-8")
             ).hexdigest()
-            for name in GENERATION_ORDER
+            for name in generation_order
         ],
-        generation_order=GENERATION_ORDER,
+        generation_order=generation_order,
         source_path=source_path,
     )

@@ -235,8 +235,8 @@ def _visible_relationship(
                 previous.call_id,
             )
     for previous in reversed(earlier_calls):
-        if call.received_s - previous.received_s > 600:
-            break
+        if abs(call.received_s - previous.received_s) > 600:
+            continue
         if call.reported.call_type != previous.reported.call_type:
             continue
         distance_m = (
@@ -261,13 +261,15 @@ def _prediction_evidence(
     call: CallRecord,
     action: ActionInstance,
     available_units: int,
+    controller_time_s: int,
     visual_feature: PredictorVisualFeatureRef | None = None,
 ) -> WorldModelEvidence:
     route_id = action.route_id
     if route_id is None:
         raise ValueError("Delta actions require an explicit route")
-    route_state = _crossing_state(scenario, route_id, call.received_s)
-    weather = _weather(scenario, call.received_s)
+    route_state = _crossing_state(scenario, route_id, controller_time_s)
+    weather = _weather(scenario, controller_time_s)
+    observation_age_s = float(controller_time_s - call.received_s)
     plan = PlanCandidate(
         plan_id=f"plan-{call.call_id}",
         name=f"Respond to {call.call_id}",
@@ -287,11 +289,11 @@ def _prediction_evidence(
                         report=("unknown" if call.quality.call_dropped else route_state.status),
                         nominal_travel_s=float(route_state.travel_time_s),
                         confidence=route_state.confidence_milli / 1000.0,
-                        observation_age_s=0.0,
+                        observation_age_s=observation_age_s,
                     )
                 ],
                 context=PredictorContext(
-                    simulation_time_s=call.received_s,
+                    simulation_time_s=controller_time_s,
                     rain_milli_inches_per_hour=weather.rain_milli_inches_per_hour,
                     wind_milli_knots=weather.wind_milli_knots,
                     available_resource_units=available_units,
@@ -305,7 +307,7 @@ def _prediction_evidence(
             ),
         )
     )
-    stamp = scenario.config.timeline.epoch_utc + timedelta(seconds=call.received_s)
+    stamp = scenario.config.timeline.epoch_utc + timedelta(seconds=controller_time_s)
     provenance = predictor.provenance()
     profile = build_experimental_profile(
         predictor_version=provenance.predictor_version,
@@ -321,7 +323,11 @@ def _prediction_evidence(
         evidence_id=f"evidence-{call.call_id}",
         rollout_id=f"rollout-{call.call_id}",
         encoder_version=provenance.encoder_version or "delta-symbolic-observation-v2",
-        fusion_version="delta-small-controller-context-v2",
+        fusion_version=(
+            "delta-small-controller-context-v3"
+            if scenario.config.generator_version == "delta-small-generator-v7"
+            else "delta-small-controller-context-v2"
+        ),
         predictor_version=provenance.predictor_version,
         semantic_probe_versions=("delta-route-and-resource-probe-v2",),
         training_snapshot=provenance.training_snapshot,
@@ -352,7 +358,7 @@ def _prediction_evidence(
         },
         calibration_version=provenance.calibration_version,
         assumptions=prediction.assumptions,
-        observation_age_s=0.0,
+        observation_age_s=observation_age_s,
         created_at=stamp,
         experimental_profile=profile,
     )
@@ -536,6 +542,19 @@ def run_delta_small(
     busy_until = {unit.resource_id: unit.available_from_s for unit in scenario.resources.units}
     earlier_calls: list[CallRecord] = []
     cluster_by_call: dict[str, str] = {}
+    delivery_by_call = (
+        {item.call_id: item.available_to_controller_s for item in scenario.coordination.deliveries}
+        if scenario.coordination is not None
+        else {item.call_id: item.received_s for item in scenario.observations.calls}
+    )
+    active_call_ids = {item.call_id for item in scenario.observations.calls}
+    missing_deliveries = active_call_ids - set(delivery_by_call)
+    if missing_deliveries:
+        raise ValueError(f"coordination deliveries are missing calls: {sorted(missing_deliveries)}")
+    controller_calls = sorted(
+        scenario.observations.calls,
+        key=lambda item: (delivery_by_call[item.call_id], item.received_s, item.call_id),
+    )
 
     with _runtime_root(runtime_root) as store_root:
         repository = TraceRepository(store_root / "trace_records.jsonl")
@@ -547,14 +566,18 @@ def run_delta_small(
             commitments=commitment_log,
             policy=policy,
         )
-        for call in scenario.observations.calls:
+        for call in controller_calls:
+            controller_time_s = delivery_by_call[call.call_id]
+            controller_timestamp = scenario.config.timeline.epoch_utc + timedelta(
+                seconds=controller_time_s
+            )
             cluster_id, evidence_basis = _visible_relationship(call, earlier_calls, cluster_by_call)
             cluster_by_call[call.call_id] = cluster_id
             earlier_calls.append(call)
             action_name, capability = CALL_ACTION[call.reported.call_type]
             route_id = _route_for_call(scenario, call)
             candidate = _candidate_resource(
-                scenario, capability, call.received_s, route_id, busy_until
+                scenario, capability, controller_time_s, route_id, busy_until
             )
             actor_id = candidate[0].resource_id if candidate else "unassigned-local-resource"
             action = ActionInstance(
@@ -571,9 +594,9 @@ def run_delta_small(
                 for unit in scenario.resources.units
                 if capability in unit.capabilities
                 and unit.is_available
-                and unit.available_from_s <= call.received_s
-                and busy_until[unit.resource_id] <= call.received_s
-                and _routed_travel_s(scenario, unit, call.received_s, route_id) is not None
+                and unit.available_from_s <= controller_time_s
+                and busy_until[unit.resource_id] <= controller_time_s
+                and _routed_travel_s(scenario, unit, controller_time_s, route_id) is not None
             )
             evidence = _prediction_evidence(
                 scenario,
@@ -581,6 +604,7 @@ def run_delta_small(
                 call,
                 action,
                 available_units,
+                controller_time_s,
                 (visual_features or {}).get(call.call_id),
             )
             evidence_items.append(evidence)
@@ -591,7 +615,7 @@ def run_delta_small(
                 grounding={"call_id": call.call_id, "action_type": action_name},
                 confidence=0.82,
                 confidence_semantics="predictor action-prefix probability support",
-                created_at=call.received_ts,
+                created_at=controller_timestamp,
             )
             record, evaluation = runtime.assess(
                 claim=claim,
@@ -607,21 +631,21 @@ def run_delta_small(
                 },
                 lineage_key=f"delta-small-belief:{cluster_id}",
                 trigger_event_id=call.call_id,
-                created_at=call.received_ts,
+                created_at=controller_timestamp,
             )
             consumed = runtime.consume(
                 record,
                 evaluation,
                 consumer="delta-mission-controller",
                 consumer_action_id=f"consumer-{call.call_id}",
-                created_at=call.received_ts,
+                created_at=controller_timestamp,
             )
             if evidence_basis:
                 decisions.append(
                     DeltaDecisionEvent(
                         sequence=len(decisions) + 1,
                         call_id=call.call_id,
-                        simulation_time_s=call.received_s,
+                        simulation_time_s=controller_time_s,
                         event_type="repair",
                         resource_id="",
                         reason="controller revised a belief using controller-visible evidence",
@@ -637,14 +661,14 @@ def run_delta_small(
                 unit, travel_s = candidate
                 complete_s = min(
                     scenario.config.timeline.duration_s,
-                    call.received_s + travel_s + unit.service_duration_s,
+                    controller_time_s + travel_s + unit.service_duration_s,
                 )
                 busy_until[unit.resource_id] = complete_s
                 commitment = runtime.commit(
                     record=consumed,
                     action=action,
                     commitment_id=f"commitment-{call.call_id}",
-                    created_at=call.received_ts,
+                    created_at=controller_timestamp,
                 )
                 event_type = "allocation"
                 reason = "TRACE cleared and compatible reachable capacity was assigned"
@@ -674,7 +698,7 @@ def run_delta_small(
                 DeltaDecisionEvent(
                     sequence=len(decisions) + 1,
                     call_id=call.call_id,
-                    simulation_time_s=call.received_s,
+                    simulation_time_s=controller_time_s,
                     event_type=event_type,
                     resource_id=resource_id,
                     reason=reason,

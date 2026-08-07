@@ -91,6 +91,8 @@ class DeltaScenarioConfig(DeltaModel):
     scenario_id: str
     generator_version: str
     randomness_namespace_version: str | None = None
+    truth_coefficients_version: str | None = None
+    observation_coefficients_version: str | None = None
     resource_profile_id: str = "kappa-0.5-local-v1"
     seed: int = Field(ge=0)
     timeline: TimelineConfig
@@ -130,6 +132,19 @@ class DeltaScenarioConfig(DeltaModel):
                 raise ValueError("generator v6 requires the registered automatic-aid profile")
             if self.demand_capacity.schema_version != "delta-demand-capacity-v2":
                 raise ValueError("generator v6 requires delta-demand-capacity-v2")
+        if self.generator_version == "delta-small-generator-v7":
+            if self.schema_version != "trace-delta-scenario-v3":
+                raise ValueError("generator v7 requires trace-delta-scenario-v3")
+            if self.randomness_namespace_version != "delta-small-generator-v7":
+                raise ValueError("generator v7 requires its new keyed random namespace")
+            if self.resource_profile_id != "kappa-0.5-local-plus-automatic-aid-v1":
+                raise ValueError("generator v7 requires the documented v3 resource roster")
+            if self.demand_capacity.schema_version != "delta-demand-capacity-v3":
+                raise ValueError("generator v7 requires delta-demand-capacity-v3")
+            if self.truth_coefficients_version != "delta-truth-intercepts-v1":
+                raise ValueError("generator v7 requires frozen truth intercepts v1")
+            if self.observation_coefficients_version != "delta-observation-coefficients-v1":
+                raise ValueError("generator v7 requires frozen observation coefficients v1")
         return self
 
 
@@ -227,6 +242,8 @@ class IncidentTruth(DeltaModel):
     service_units: int = Field(gt=0)
     complexity_milli: int = Field(ge=0, le=1000)
     causal_mechanism: str
+    infrastructure_id: str | None = None
+    causal_factors_milli: dict[str, int] = Field(default_factory=dict)
 
 
 class GroundTruth(DeltaModel):
@@ -291,6 +308,25 @@ class ObservationArtifact(DeltaModel):
     lineage: list[CallLineage]
     expected_calls_total: float
     peak_expected_calls_per_hour: float
+    coefficients_version: str | None = None
+    location_method_target_milli: dict[str, int] | None = None
+    location_error_scale_milli: int | None = Field(default=None, ge=0)
+
+
+class CoordinationDelivery(DeltaModel):
+    call_id: str
+    source_authority_id: str
+    controller_authority_id: str
+    available_to_controller_s: int = Field(ge=0)
+    sharing_latency_s: int = Field(ge=0)
+
+
+class CoordinationArtifact(DeltaModel):
+    schema_version: str
+    phi: int = Field(ge=1, le=9)
+    logical_authority_ids: list[str] = Field(min_length=1)
+    semantics: str
+    deliveries: list[CoordinationDelivery]
 
 
 class PriorProfileArtifact(DeltaModel):
@@ -338,6 +374,7 @@ class GeneratedScenario(DeltaModel):
     crossing_states: list[CrossingState]
     truth: GroundTruth
     observations: ObservationArtifact
+    coordination: CoordinationArtifact | None = None
     resources: ResourceArtifact
     prior_profile: PriorProfileArtifact
     stage_seeds: list[str]

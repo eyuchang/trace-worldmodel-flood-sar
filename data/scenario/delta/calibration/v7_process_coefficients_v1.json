@@ -1,0 +1,86 @@
+{
+  "schema_version": "delta-v7-process-coefficient-calibration-v1",
+  "protocol_role": "development-only coefficient fitting before confirmatory-v6 seed materialization",
+  "development_seeds": {
+    "derivation": "consecutive-u31",
+    "first_seed": 20260803,
+    "seed_count": 100,
+    "last_seed": 20260902
+  },
+  "inputs": {
+    "scenario_configuration_sha256": "9b22a5562197b5b4ebc3b24ccd9c789cee2eb64a3344171dd8ad2b24e06712f2",
+    "historical_acceptance_with_development_seed_definition_sha256": "eb3a8aefc56b8d30cfc2853f1b5bb0536b962b937f003dbcf9e8f089c8937d7c",
+    "geography_catalog_sha256": "6121aea138d7a9295a8d33ac83175ec98cd81f2d9f2aa46bf148b576dd13fddf",
+    "calibration_script_sha256": "a9a27e0f28fcdcea50e1b3e61a151661799764d85849b366dba7b3bb88cf08bf",
+    "truth_implementation_sha256": "346af281726fef010e2e96b54956eaac16f1efa525885757ba8b58748721ff0b",
+    "observation_implementation_sha256": "3ea77e005e9d323a61a25655991187f19600fefe62dd6b52bec2ffb34d332830"
+  },
+  "truth": {
+    "coefficients_version": "delta-truth-intercepts-v1",
+    "target_expected_latent_total": 26.07,
+    "target_taxonomy_weights": {
+      "C-LEV": 11,
+      "C-MED": 14,
+      "C-MIS": 13,
+      "C-STR": 34,
+      "C-VEH": 8,
+      "C-WEL": 20
+    },
+    "type_intercepts": {
+      "C-LEV": 0.24001430962351156,
+      "C-MED": 0.005440831471262897,
+      "C-MIS": 0.00872872306670035,
+      "C-STR": 0.003802684544028396,
+      "C-VEH": 0.010590227133044604,
+      "C-WEL": 0.003542798578404174
+    },
+    "analytical_expected_by_hour": [
+      1.4944940042364718,
+      2.967229088681546,
+      6.114584544192874,
+      7.360468232205612,
+      5.261437395246022,
+      2.871786735435187
+    ],
+    "analytical_expected_total": 26.07
+  },
+  "observations": {
+    "coefficients_version": "delta-observation-coefficients-v1",
+    "design_iota": 0.9,
+    "fixed_reporting_probability_by_incident_onset_hour": [
+      0.9899046796655848,
+      0.9473066625001544,
+      0.6774532482591634,
+      0.995,
+      0.9138338895253811,
+      0.9787899115866391
+    ],
+    "derivation": "(hourly target - expected uniform false reports) / (development analytical latent mean by hour x expected zero-one-many report multiplier), capped at 0.995",
+    "baseline_location_method_milli": {
+      "cell-sector": 180,
+      "gps-or-address-intersection": 550,
+      "landmark": 270
+    },
+    "baseline_precision_ranges_m": {
+      "cell-sector": [400, 1500],
+      "gps-or-address-intersection": [15, 75],
+      "landmark": [200, 800]
+    }
+  },
+  "development_diagnostics_after_freeze": {
+    "realized_latent_mean": 25.3,
+    "realized_latent_range": [10, 42],
+    "realized_observed_call_mean": 38.77,
+    "realized_observed_call_range": [17, 68],
+    "realized_hourly_call_means": [2.75, 4.99, 7.12, 11.37, 7.31, 5.23],
+    "book_seed_latent_incidents": 17,
+    "book_seed_observed_calls": 23,
+    "interpretation": "development evidence only; no confirmatory inference or field-validity claim"
+  },
+  "claim_limits": [
+    "synthetic reduced-order process design",
+    "not calibrated to historical incidents, casualties, demographics, or operational call data",
+    "type intercepts are the only fitted truth coefficients",
+    "no evaluated seed is normalized to a fixed incident count"
+  ]
+}

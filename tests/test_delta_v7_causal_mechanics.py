@@ -1,0 +1,325 @@
+from __future__ import annotations
+
+import json
+from collections import defaultdict
+from pathlib import Path
+
+from trace_jepa.predictor import ToyActionPrefixPredictor
+from trace_jepa.scenario.delta.artifacts import canonical_json_bytes
+from trace_jepa.scenario.delta.generator import generate_delta_small_from_models
+from trace_jepa.scenario.delta.geography_models import GeographyCatalog
+from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
+from trace_jepa.scenario.delta.models import (
+    DeltaScenarioConfig,
+    GeneratedScenario,
+    PersonPosition,
+)
+from trace_jepa.scenario.delta.observations_v7 import (
+    BASE_PRECISION_RANGES_M,
+    channel_probabilities_v7,
+    location_error_scale_v7,
+    location_method_mixture_v7,
+    reporting_probability_v7,
+)
+from trace_jepa.scenario.delta.runner import run_delta_small
+from trace_jepa.util import sha256_file
+
+ROOT = Path(__file__).resolve().parents[1]
+CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
+GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
+POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"
+SOURCE_PATH = CONFIG.resolve(strict=True)
+
+
+def _models() -> tuple[DeltaScenarioConfig, GeographyCatalog]:
+    return load_scenario_config(CONFIG), load_geography_catalog(GEOGRAPHY)
+
+
+def _scenario(
+    config: DeltaScenarioConfig,
+    geography: GeographyCatalog,
+    **axis_updates: object,
+) -> GeneratedScenario:
+    axes = config.axes.model_copy(update=axis_updates)
+    return generate_delta_small_from_models(
+        config.model_copy(update={"axes": axes}),
+        geography,
+        SOURCE_PATH,
+    )
+
+
+def _position_at(
+    scenario: GeneratedScenario, person_id: str, simulation_time_s: int
+) -> PersonPosition:
+    eligible = [
+        item
+        for item in scenario.truth.person_positions
+        if item.person_id == person_id and item.simulation_time_s <= simulation_time_s
+    ]
+    return eligible[-1]
+
+
+def test_v7_contract_uses_new_keyed_namespace_and_versioned_artifacts() -> None:
+    config, geography = _models()
+    scenario = generate_delta_small_from_models(config, geography, SOURCE_PATH)
+    assert config.schema_version == "trace-delta-scenario-v3"
+    assert config.generator_version == "delta-small-generator-v7"
+    assert config.randomness_namespace_version == "delta-small-generator-v7"
+    assert scenario.geography.schema_version == "delta-small-geography-v3"
+    assert scenario.truth.schema_version == "delta-ground-truth-v4"
+    assert scenario.observations.schema_version == "delta-observations-v4"
+    assert scenario.coordination is not None
+    assert scenario.coordination.schema_version == "delta-coordination-v1"
+    assert "coordination" in scenario.generation_order
+
+
+def test_v7_calibration_record_binds_the_exact_fitted_implementations() -> None:
+    record = json.loads(
+        (ROOT / "data/scenario/delta/calibration/v7_process_coefficients_v1.json").read_text(
+            "utf-8"
+        )
+    )
+    assert record["inputs"]["truth_implementation_sha256"] == sha256_file(
+        ROOT / "src/trace_jepa/scenario/delta/truth_v7.py"
+    )
+    assert record["inputs"]["observation_implementation_sha256"] == sha256_file(
+        ROOT / "src/trace_jepa/scenario/delta/observations_v7.py"
+    )
+    assert record["truth"]["analytical_expected_total"] == 26.07
+    assert record["development_diagnostics_after_freeze"]["realized_observed_call_mean"] == 38.77
+
+
+def test_keyed_sigma_comparison_preserves_candidates_and_changes_hazard_truth() -> None:
+    config, geography = _models()
+    baseline = _scenario(config, geography)
+    severe = _scenario(config, geography, sigma=0.6)
+    assert baseline.resources == severe.resources
+    assert baseline.weather != severe.weather
+    assert baseline.gauges != severe.gauges
+    baseline_ids = {item.incident_id for item in baseline.truth.incidents}
+    severe_ids = {item.incident_id for item in severe.truth.incidents}
+    assert baseline_ids & severe_ids
+    assert len(severe_ids) > len(baseline_ids)
+
+
+def test_nonphysical_axes_preserve_declared_causal_layers() -> None:
+    config, geography = _models()
+    baseline = _scenario(config, geography)
+    capacity = _scenario(config, geography, kappa=1.0)
+    friction = _scenario(config, geography, mu=2.0)
+    information = _scenario(config, geography, iota=0.6)
+    coordination = _scenario(config, geography, phi=3)
+    prior = _scenario(config, geography, pi=0.5)
+    degraded = _scenario(config, geography, delta=0.6)
+
+    for variant in (capacity, friction, information, coordination, prior, degraded):
+        assert baseline.weather == variant.weather
+        assert baseline.gauges == variant.gauges
+        assert baseline.truth == variant.truth
+    assert baseline.observations == capacity.observations == friction.observations
+    assert baseline.observations == coordination.observations == prior.observations
+    assert baseline.observations == degraded.observations
+    assert baseline.resources != capacity.resources
+    assert baseline.resources != friction.resources
+    assert baseline.resources != degraded.resources
+    assert baseline.resources == information.resources == coordination.resources == prior.resources
+    assert baseline.observations != information.observations
+    assert baseline.coordination != coordination.coordination
+    assert baseline.prior_profile != prior.prior_profile
+
+
+def test_exposure_changes_placement_occupancy_and_vulnerability_not_physical_hazard() -> None:
+    config, geography = _models()
+    baseline = _scenario(config, geography)
+    vulnerable = _scenario(
+        config,
+        geography,
+        exposure_profile="isleton_high_vulnerability_v1",
+    )
+    assert baseline.weather == vulnerable.weather
+    assert baseline.gauges == vulnerable.gauges
+    assert baseline.crossing_states == vulnerable.crossing_states
+    assert baseline.truth.structures != vulnerable.truth.structures
+    assert baseline.truth.people != vulnerable.truth.people
+    assert baseline.resources == vulnerable.resources
+
+
+def test_truth_incidents_follow_the_declared_type_specific_mechanics() -> None:
+    config, geography = _models()
+    observed_types: set[str] = set()
+    for seed in range(config.seed, config.seed + 25):
+        scenario = generate_delta_small_from_models(
+            config.model_copy(update={"seed": seed}),
+            geography,
+            SOURCE_PATH,
+        )
+        state_by_key = {
+            (item.structure_id, item.simulation_time_s): item
+            for item in scenario.truth.structure_states
+        }
+        levee_by_key = {
+            (item.island_id, item.simulation_time_s): item for item in scenario.truth.levees
+        }
+        structure_by_id = {item.structure_id: item for item in scenario.truth.structures}
+        person_by_id = {item.person_id: item for item in scenario.truth.people}
+        for incident in scenario.truth.incidents:
+            observed_types.add(incident.incident_type)
+            state = state_by_key[(incident.structure_id, incident.onset_s)]
+            people = [person_by_id[item] for item in incident.person_ids]
+            if incident.incident_type == "C-STR":
+                assert state.flood_state == "shallow_ponding"
+                assert people
+            elif incident.incident_type == "C-VEH":
+                assert state.access_state == "impaired"
+                assert all(
+                    _position_at(scenario, item.person_id, incident.onset_s).state
+                    == "away_from_home"
+                    for item in people
+                )
+            elif incident.incident_type == "C-LEV":
+                assert not people
+                assert incident.infrastructure_id is not None
+                island_id = structure_by_id[incident.structure_id].island_id
+                assert levee_by_key[(island_id, incident.onset_s)].seepage_state != "none"
+            elif incident.incident_type == "C-MED":
+                assert people
+                assert all(item.medical_dependency != "none" for item in people)
+            elif incident.incident_type == "C-WEL":
+                assert people
+                assert all(
+                    item.mobility == "limited" or item.medical_dependency != "none"
+                    for item in people
+                )
+            elif incident.incident_type == "C-MIS":
+                assert people
+                assert all(
+                    _position_at(scenario, item.person_id, incident.onset_s).state
+                    == "away_from_home"
+                    for item in people
+                )
+            assert set(incident.causal_factors_milli) == {
+                "hazard",
+                "occupancy",
+                "vulnerability",
+                "access",
+                "candidate_probability",
+            }
+    assert observed_types == {"C-STR", "C-VEH", "C-LEV", "C-MED", "C-WEL", "C-MIS"}
+
+
+def test_truth_is_independent_of_the_configured_observation_hourly_target() -> None:
+    config, geography = _models()
+    baseline = generate_delta_small_from_models(config, geography, SOURCE_PATH)
+    revised_call_process = config.call_process.model_copy(
+        update={
+            "hourly_intensity": [5.0, 8.0, 12.0, 7.0, 5.0, 3.0],
+        }
+    )
+    variant = generate_delta_small_from_models(
+        config.model_copy(update={"call_process": revised_call_process}),
+        geography,
+        SOURCE_PATH,
+    )
+    assert baseline.truth == variant.truth
+    assert baseline.observations.calls == variant.observations.calls
+
+
+def test_observation_quality_mechanisms_are_monotone_and_baseline_mixture_is_frozen() -> None:
+    high = channel_probabilities_v7(0.9)
+    low = channel_probabilities_v7(0.6)
+    assert reporting_probability_v7(0.6, 3) < reporting_probability_v7(0.9, 3)
+    for key in ("duplicate", "multi_channel", "revision", "conflict", "callback_failure", "drop"):
+        assert low[key] > high[key]
+    high_mix = location_method_mixture_v7(0.9)
+    low_mix = location_method_mixture_v7(0.6)
+    assert high_mix == {
+        "gps-or-address-intersection": 0.55,
+        "landmark": 0.27,
+        "cell-sector": 0.18,
+    }
+    assert low_mix["cell-sector"] > high_mix["cell-sector"]
+    assert location_error_scale_v7(0.9) == 1.0
+    assert location_error_scale_v7(0.3) == 3.0
+
+
+def test_v7_calls_use_declared_location_ranges_and_visible_conflicts_only() -> None:
+    config, geography = _models()
+    scenario: GeneratedScenario | None = None
+    for seed in range(config.seed, config.seed + 25):
+        candidate = generate_delta_small_from_models(
+            config.model_copy(update={"seed": seed}),
+            geography,
+            SOURCE_PATH,
+        )
+        if any(
+            item.relationship == "conflicting_report" for item in candidate.observations.lineage
+        ):
+            scenario = candidate
+            break
+    assert scenario is not None
+    for call in scenario.observations.calls:
+        lower, upper = BASE_PRECISION_RANGES_M[call.location.method]
+        assert lower <= call.location.precision_m <= upper
+    lineage_by_incident: dict[str, list[str]] = defaultdict(list)
+    for item in scenario.observations.lineage:
+        if item.truth_incident_id is not None:
+            lineage_by_incident[item.truth_incident_id].append(item.call_id)
+    calls = {item.call_id: item for item in scenario.observations.calls}
+    conflicts = [
+        item for item in scenario.observations.lineage if item.relationship == "conflicting_report"
+    ]
+    assert conflicts
+    for conflict in conflicts:
+        peers = [calls[item] for item in lineage_by_incident[conflict.truth_incident_id or ""]]
+        visible = calls[conflict.call_id]
+        assert any(
+            (
+                visible.reported.call_type,
+                visible.reported.occupants,
+                visible.reported.medical,
+                visible.location.easting_mm,
+                visible.location.northing_mm,
+            )
+            != (
+                peer.reported.call_type,
+                peer.reported.occupants,
+                peer.reported.medical,
+                peer.location.easting_mm,
+                peer.location.northing_mm,
+            )
+            for peer in peers
+            if peer.call_id != visible.call_id
+        )
+    public = canonical_json_bytes(
+        [item.model_dump(mode="json") for item in scenario.observations.calls]
+    )
+    assert b"truth_incident" not in public
+    assert b"truth_person" not in public
+    assert b"conflicting_report" not in public
+
+
+def test_phi_changes_only_delivery_and_controller_behavior_without_task3_events() -> None:
+    config, geography = _models()
+    baseline = _scenario(config, geography)
+    fragmented = _scenario(config, geography, phi=3)
+    assert baseline.truth == fragmented.truth
+    assert baseline.observations == fragmented.observations
+    assert baseline.resources == fragmented.resources
+    assert baseline.coordination is not None
+    assert fragmented.coordination is not None
+    assert all(item.sharing_latency_s == 0 for item in baseline.coordination.deliveries)
+    assert any(item.sharing_latency_s > 0 for item in fragmented.coordination.deliveries)
+    result = run_delta_small(fragmented, ToyActionPrefixPredictor(), POLICY)
+    received_by_call = {item.call_id: item.received_s for item in fragmented.observations.calls}
+    assert all(
+        event.simulation_time_s >= received_by_call[event.call_id] for event in result.decisions
+    )
+    assert any(item.observation_age_s > 0 for item in result.evidence)
+    serialized = canonical_json_bytes(
+        {
+            "coordination": fragmented.coordination.model_dump(mode="json"),
+            "decisions": [item.model_dump(mode="json") for item in result.decisions],
+        }
+    ).lower()
+    for forbidden in (b"mutual-aid", b"authority-transfer", b"negotiation", b"federation"):
+        assert forbidden not in serialized

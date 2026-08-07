@@ -211,7 +211,7 @@ def write_scenario_artifacts(
     _validate_output_root(output_root, create=True)
     repository_root = package_root.parents[1]
     physical_parameters = physical_parameter_table()
-    population_parameters = population_parameter_table()
+    population_parameters = population_parameter_table(scenario.config.generator_version)
     acceptance_path = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
     validation_path = repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
     if validation_path.is_file():
@@ -397,9 +397,36 @@ def write_scenario_artifacts(
             False,
         ),
     ]
-    geography_manifest = geography_path.parent / "build_manifest_v2.json"
-    environment_contract = repository_root / "pyproject.toml"
-    dependency_lock = repository_root / "requirements-delta-ci.lock"
+    if scenario.coordination is not None:
+        lineage_index = next(
+            index for index, item in enumerate(artifacts) if item.name == "call_lineage"
+        )
+        artifacts.insert(
+            lineage_index + 1,
+            _write_artifact(
+                output_root,
+                "coordination",
+                "coordination.json",
+                scenario.coordination.model_dump(mode="json"),
+                False,
+            ),
+        )
+    geography_manifest = geography_path.parent / (
+        "build_manifest_v3.json"
+        if scenario.config.generator_version == "delta-small-generator-v7"
+        else "build_manifest_v2.json"
+    )
+    is_v7 = scenario.config.generator_version == "delta-small-generator-v7"
+    environment_contract = (
+        repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
+        if is_v7
+        else repository_root / "pyproject.toml"
+    )
+    dependency_lock = (
+        repository_root / "requirements-delta-python311.lock"
+        if is_v7
+        else repository_root / "requirements-delta-ci.lock"
+    )
     inputs = [
         ProvenanceInput(
             name="scenario_configuration",
@@ -473,6 +500,17 @@ def write_scenario_artifacts(
                 name="registered_validation_report",
                 identifier=validation_path.name,
                 sha256=sha256_file(validation_path),
+            )
+        )
+    if is_v7:
+        calibration_record = (
+            repository_root / "data/scenario/delta/calibration/v7_process_coefficients_v1.json"
+        )
+        inputs.append(
+            ProvenanceInput(
+                name="v7_process_calibration",
+                identifier=calibration_record.name,
+                sha256=sha256_file(calibration_record),
             )
         )
     if predictor_provenance.encoder_checkpoint_hash is not None:

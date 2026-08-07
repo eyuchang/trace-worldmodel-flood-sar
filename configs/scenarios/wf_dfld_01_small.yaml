@@ -1,7 +1,9 @@
-schema_version: trace-delta-scenario-v2
+schema_version: trace-delta-scenario-v3
 scenario_id: WF-DFLD-01-SMALL
-generator_version: delta-small-generator-v6
-randomness_namespace_version: delta-small-generator-v5
+generator_version: delta-small-generator-v7
+randomness_namespace_version: delta-small-generator-v7
+truth_coefficients_version: delta-truth-intercepts-v1
+observation_coefficients_version: delta-observation-coefficients-v1
 resource_profile_id: kappa-0.5-local-plus-automatic-aid-v1
 seed: 20260803
 timeline:
@@ -34,7 +36,7 @@ extent:
     - FPT
   roster_size: 60
 call_process:
-  model: hazard-latent-incidents-plus-hour-calibrated-lossy-channel-v3
+  model: keyed-structure-hazard-incidents-plus-fixed-lossy-channel-v4
   hourly_intensity:
     - 3.0
     - 5.0
@@ -53,14 +55,14 @@ call_process:
     - C-WEL
     - C-MIS
 demand_capacity:
-  schema_version: delta-demand-capacity-v2
+  schema_version: delta-demand-capacity-v3
   window_s: 900
   target_ratio: 1.5
   tolerance: 0.1
   demand_unit: normalized_concurrent_service_units
   capacity_unit: scheduled_mobilized_reachable_compatible_service_units
-  headline_metric: gross-compatible-scenario-load-v2
-  secondary_metric: residual-operational-pressure-v2
+  headline_metric: strict-one-resource-one-incident-concurrent-load-v3
+  secondary_metric: strict-residual-operational-pressure-v3
 expected:
   breaches: 0
   mutual_aid_tiers: 0
