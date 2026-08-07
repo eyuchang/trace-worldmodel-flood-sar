@@ -41,7 +41,7 @@ jobs:
             --volume "${GITHUB_WORKSPACE}:/workspace" \
             --volume "${RUNNER_TEMP}:/output" \
             --workdir /workspace \
-            python@sha256:fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04 \
+            python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d \
             sh -c '
               python -m pip install --require-hashes -r requirements-delta-python311.lock &&
               python -m pip install -e . --no-deps &&

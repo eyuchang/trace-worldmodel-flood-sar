@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import importlib.metadata
 import platform
 import re
@@ -36,6 +37,7 @@ class EnvironmentContract(BaseModel):
     dependency_lock_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     dependency_input_file: str
     dependency_input_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    required_imports: list[str] = Field(min_length=1)
     installation: str
     claims: list[str] = Field(min_length=1)
 
@@ -136,6 +138,11 @@ def inspect_reference_environment(
         installed[normalized_name] = actual_version
         if actual_version != expected_version:
             mismatches.append(f"{normalized_name} {actual_version} != locked {expected_version}")
+    for module_name in contract.required_imports:
+        try:
+            importlib.import_module(module_name)
+        except (ImportError, OSError) as exc:
+            mismatches.append(f"required import {module_name} failed: {exc}")
     return EnvironmentVerification(
         contract_id=contract.contract_id,
         contract_sha256=sha256_file(contract_path),

@@ -182,7 +182,7 @@ MLP and V-JEPA-backed predictors are unqualified unless a separate frozen
 qualification artifact names the exact model, calibration, and action class.
 
 The exact Delta environment is the digest-pinned Linux/amd64 image
-`python@sha256:fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04`
+`python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d`
 with [`requirements-delta-python311.lock`](requirements-delta-python311.lock).
 The image and complete lock are bound by the
 [`python311_linux_amd64_v1.json`](data/scenario/delta/environment/python311_linux_amd64_v1.json)

@@ -58,8 +58,12 @@ def test_reference_environment_contract_binds_exact_image_and_complete_hash_lock
     assert contract.exact_python_version == "3.11.14"
     assert contract.oci_platform == "linux/amd64"
     assert contract.immutable_image_reference.endswith(
-        "@sha256:fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04"
+        "@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d"
     )
+    assert contract.oci_index_sha256 == (
+        "3b3706a90cb23f04fabb0d255824f9a70ceb46177041898133dd5a35f3a50f0a"
+    )
+    assert contract.required_imports == ["pyproj", "rasterio", "shapely"]
     assert sha256_file(ENVIRONMENT_LOCK) == contract.dependency_lock_sha256
     locked = locked_distributions(ENVIRONMENT_LOCK)
     for required in ("numpy", "pydantic", "pyproj", "rasterio", "shapely", "pytest"):
