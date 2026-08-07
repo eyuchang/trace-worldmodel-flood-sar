@@ -16,12 +16,17 @@ LOGGER = logging.getLogger(__name__)
 
 def _defaults() -> dict[str, Path]:
     repository_root = Path(__file__).resolve().parents[4]
+    v7_acceptance = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
     return {
         "config": repository_root / "configs/scenarios/wf_dfld_01_small.yaml",
         "geography": repository_root
-        / "data/scenario/delta/geography/delta_small_geography_v2.yaml",
+        / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": (repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"),
+        "acceptance": (
+            v7_acceptance
+            if v7_acceptance.is_file()
+            else repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
+        ),
     }
 
 
@@ -41,6 +46,11 @@ def build_parser() -> argparse.ArgumentParser:
     run = commands.add_parser("run", help="Generate and execute one frozen Small run.")
     _add_execution_inputs(run)
     run.add_argument("--output", type=Path, required=True)
+    run.add_argument(
+        "--validation-report",
+        type=Path,
+        help="Explicit frozen validation report to bind; ambient files are ignored.",
+    )
 
     replay = commands.add_parser(
         "replay", help="Regenerate in a clean directory and compare every byte."
@@ -76,16 +86,19 @@ def main() -> None:
             arguments.policy,
             arguments.output,
             predictor,
+            validation_report_path=arguments.validation_report,
         )
         LOGGER.info(
             "completed %s: allocated=%d refused=%d repaired=%d "
-            "gross_load=%.3f residual_pressure_finite_peak=%.3f artifacts=%d",
+            "strict_load=%.3f historical_normalized_index=%.3f "
+            "residual_strict_pressure_finite_peak=%.3f artifacts=%d",
             execution.run_result.scenario_id,
             execution.run_result.allocated,
             execution.run_result.refused,
             execution.run_result.repaired,
-            execution.run_result.peak_gross_load_ratio_milli / 1000.0,
-            execution.run_result.peak_finite_residual_pressure_ratio_milli / 1000.0,
+            execution.run_result.peak_strict_concurrent_load_ratio_milli / 1000.0,
+            execution.run_result.peak_registered_normalized_coverable_load_index_milli / 1000.0,
+            execution.run_result.peak_finite_residual_strict_pressure_ratio_milli / 1000.0,
             len(execution.manifest.artifacts),
         )
     elif arguments.command == "replay":
@@ -102,7 +115,7 @@ def main() -> None:
         output_path = (
             arguments.output
             if arguments.output.suffix == ".json"
-            else arguments.output / "WF_DFLD_01_SMALL_VALIDATION_V2.json"
+            else arguments.output / "WF_DFLD_01_SMALL_VALIDATION_V3.json"
         )
         report = run_registered_validation(
             arguments.config,
@@ -112,11 +125,16 @@ def main() -> None:
             output_path,
         )
         studies = cast(list[dict[str, Any]], report["studies"])
-        primary = next(study for study in studies if study["study_id"] == "confirmatory-v5-primary")
+        primary = next(study for study in studies if "primary" in str(study["study_id"]))
+        ratio_key = (
+            "peak_strict_concurrent_load_ratio"
+            if "peak_strict_concurrent_load_ratio" in primary
+            else "peak_gross_load_ratio"
+        )
         LOGGER.info(
-            "validation completed: seeds=%d primary_median_ratio=%.3f output=%s",
+            "validation replication completed: seeds=%d primary_median_strict_ratio=%.3f output=%s",
             sum(study["seed_count"] for study in studies),
-            primary["peak_gross_load_ratio"]["estimate"],
+            primary[ratio_key]["estimate"],
             output_path,
         )
     elif arguments.command == "publish":

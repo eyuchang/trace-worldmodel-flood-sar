@@ -1,92 +1,115 @@
-# Observation and capacity protocol
+# V7 observation, reconciliation, and load protocol
 
-## Latent truth and lossy evidence
+## Causal boundary
 
-Latent incidents are sampled from physical hazard, exposure, and vulnerability.
-They are not sampled from the desired call schedule. The observation channel is
-applied afterward and supports non-reporting, first reports, duplicates,
-multi-channel reports, revisions, callback failures, dropped calls, third-party
-welfare checks, false benign levee reports, and location noise.
+Keyed structure/tick/type hazards generate latent incidents before any report.
+The configured hourly report profile calibrates fixed observation coefficients;
+it never creates truth and is never solved separately for an evaluated seed.
 
-At `iota=0.9`, expected reports are calibrated analytically to hourly arrivals
-`[3, 5, 7, 12, 8, 5]`. The calculation subtracts uniform expected false reports,
-conditions on the physical-hazard-derived latent rate, solves reporting and
-extra-report probabilities, and accounts for expected delay spill into the next
-hour. A unit test reconstructs the six expectations to numerical tolerance.
+The zero/one/many channel supports non-reporting, first and third-party reports,
+duplicates, multi-channel evidence, conflicting reports, revisions, callback
+failure, dropping, false benign levee reports, and imprecise locations. Public
+calls contain no truth relationship or person/incident identifier.
 
-Artifacts are separated into:
+At `iota=0.9`, location methods target 55% GPS/address intersection, 27%
+landmark, and 18% cell sector. Frozen precision ranges are 15–75 m, 200–800 m,
+and 400–1,500 m. Lower information quality monotonically transfers probability
+toward cell sector and scales ranges by `0.9 / iota`, capped at 3×. Reporting,
+duplicates, multi-channel evidence, conflicts, revision, callback failure, and
+dropping also degrade monotonically.
 
-- controller-visible raw calls;
-- controller-derived belief relationships/revisions;
-- hidden truth lineage used only after runtime for scoring.
+`phi` controls a separate coordination artifact. Unified immediate delivery is
+used at `phi=1`; higher test values partition source authorities and delay
+evidence sharing deterministically. Truth, raw calls, physics, and inventory are
+unchanged.
 
-The runtime has no lineage argument. Deleting lineage yields byte-identical
-public decisions, evidence, TRACE records, commitments, and outcomes.
+## Hidden/public artifacts
 
-## Offline evaluation metrics
+- Controller-visible raw calls contain report content and uncertainty.
+- Coordination contains only logical source/delivery information.
+- Controller decisions contain visible relationship evidence and belief IDs.
+- Hidden lineage links reports to synthetic truth for offline evaluation only.
 
-The registered report provides means or Wilson 95% intervals for total/hourly
-calls, non-reporting, relationship fractions, callback failure, dropped calls,
-location error, reconciliation accuracy, false-report outcomes, and operation
-counts. These intervals describe synthetic seed variation, not population or
-field uncertainty.
+Deleting lineage yields byte-identical decisions, evidence, TRACE records,
+commitments, and outcomes. If lineage is absent, offline reconciliation is
+explicitly marked unavailable; the controller does not fail or change behavior.
 
-For the untouched `confirmatory-v5-primary`:
+## Complete reconciliation evaluation
 
-- duplicate fraction: 0.0752 (95% CI 0.0673–0.0840);
-- multi-channel fraction: 0.0436 (0.0376–0.0505);
-- revision fraction: 0.1346 (0.1242–0.1458);
-- false-report fraction: 0.1185 (0.1087–0.1291);
-- callback-failure fraction: 0.1102 (0.1007–0.1205);
-- non-reporting fraction: 0.0532 (0.0451–0.0626);
-- mean location error: 179.42 m;
-- scored reconciliation accuracy: 0.8476 (0.8250–0.8677).
+Every set of reports from one non-null truth incident is a reference cluster.
+Every false report is its own singleton. The full controller partition is scored
+after runtime using:
 
-## Incident requirements and resource capabilities
+- pairwise precision, recall, and F1;
+- false-merge and missed-link rates;
+- false-report merge rate;
+- revision-link precision and recall;
+- occupant-revision correctness;
+- adjusted Rand index without a heavyweight dependency.
 
-The versioned tables live in the hashed population/resource parameter artifact.
-Each incident declares one required capability, initial-response duration, and
-service units. Each resource declares capabilities, base, route, activation,
-staging, travel, availability, service duration, and service units.
+Immutable pre-v7 reports retain their conditional repair score under its
+historical label. It is not used as complete reconciliation accuracy.
 
-The v2 `kappa=0.5` inventory is one local rescue boat and Type I engine plus a
-preauthorized Rio Vista Zodiac rescue boat and Type I engine staged at T+5,400
-seconds. The boats support water rescue and missing-person search. The engines
-support medical, road rescue, welfare checks, and levee inspection. Engines are
-ineligible for water rescue. `service_units=2` is a normalized analytical
-capability/load unit; each physical resource still permits one concurrent online
-commitment.
+## Incident and resource contracts
 
-## Demand/capacity definition
+Every incident declares one capability, service duration, service units, route,
+and causal mechanism. Every resource declares capabilities, service units,
+base/origin, route, activation/transit/staging/travel time, availability, and
+service duration.
 
-### Headline: gross compatible scenario load
+The roster is unchanged from v6: a local rescue boat and Type I engine plus a
+preauthorized Rio Vista Zodiac and Type I engine staged at T+5,400 seconds.
+Boats support water rescue and missing-person search; engines support medical,
+road rescue, welfare checks, and levee inspection. Engines cannot satisfy water
+rescue. `service_units=2` is a synthetic analytical rubric, while every physical
+resource can hold only one concurrent commitment.
 
-At each 15-minute grid time:
+## Intrinsic load measures
 
-1. select ground-truth incidents whose declared service interval is active;
-2. group required service units by capability and required crossing route;
-3. include scheduled, mobilized, reachable resources whether free or committed;
-4. assign each resource to at most one compatible capability/route bucket;
-5. maximize actually coverable service units without exceeding bucket demand;
-6. divide total active demand by gross compatible capacity.
+All intrinsic measures use active ground-truth incidents and the frozen resource
+schedule at fixed 15-minute points, independent of policy and predictor choice.
 
-This metric is calculated before policy execution and is identical under Toy,
-MLP, V-JEPA, or other policy choices at fixed scenario inputs.
+### Primary: strict concurrent load
 
-### Secondary: residual operational pressure
+Each scheduled, mobilized, reachable, available physical resource may match at
+most one compatible active incident and must have at least the incident's
+required units. Matching maximizes incident service units completely covered.
+Active demand is divided by that strict matched capacity.
 
-After TRACE execution, active authorized commitments remove the truth demand
-they cover. Only free, mobilized, reachable, compatible resources count against
-remaining demand. A false-report commitment consumes its physical resource but
-does not erase truth demand. Hidden lineage is used only in this offline
-aggregate evaluation; no truth identifier appears in the public windows.
+### Sensitivity: uncapped compatible-service-unit load
 
-Empty demand has ratio zero. Positive demand with zero compatible capacity is
-explicitly unserviceable and has no fabricated finite denominator.
+Each eligible physical resource compatible with at least one active incident is
+counted once at its declared service units, without capping capacity to demand.
 
-## Registered gate result
+### Historical sensitivity: registered normalized coverable load index
 
-The v2 book gross load is 1.5. The untouched confirmatory-v5 median is 1.5
-(bootstrap 95% CI 1.333–1.5), satisfying the preregistered median point-estimate
-band `[1.4, 1.6]`. The older v5 local-only/hybrid result of 3.0 remains preserved
-as adverse evidence. It is not recomputed or relabeled under the v2 definition.
+The v6 calculation assigns each resource to one capability/route bucket and caps
+its service units within aggregate bucket demand. It remains reproducible as
+`registered_normalized_coverable_load_index`. The historical v6 value of 1.5
+belongs only to this registered definition and is never called conventional
+demand/capacity in v7.
+
+Empty demand yields zero for every measure. Positive demand with no compatible
+capacity is explicitly unserviceable and has no finite ratio. The primary
+strict ratio has no numerical pass/fail gate and the resource roster will not be
+retuned after it is observed.
+
+## Residual strict pressure
+
+After TRACE execution, an active commitment removes truth demand only if its
+physical resource is capable, sufficiently sized, scheduled, available, and
+reachable for the true incident. Remaining incidents are matched to free
+resources using the same one-resource/one-incident semantics. A false-report or
+misclassified commitment consumes capacity without erasing truth demand.
+
+## Seed-cluster inference
+
+The write-once v7 report treats one seed as one cluster. Means and channel
+fractions use deterministic 10,000-resample cluster bootstrap intervals.
+Medians use exact binomial order-statistic intervals. Location errors are first
+summarized within seed. No interval treats individual calls as independent.
+
+The registered expected point estimates and absolute tolerances are calibrated
+from the declared development seeds and frozen in
+`configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml`. They are synthetic
+process-design checks, not field-validity targets.

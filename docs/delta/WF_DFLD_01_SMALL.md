@@ -1,251 +1,296 @@
-# WF-DFLD-01-SMALL frozen methodology
+# WF-DFLD-01-SMALL v7 frozen methodology
 
 ## Status and supported claim
 
-WF-DFLD-01-SMALL is a deterministic, runnable teaching simulator for testing
-TRACE accountability under incomplete flood-response evidence. It establishes
-that typed predictor evidence can be gated, revised, committed, persisted, and
-replayed. It does **not** establish flood-forecast accuracy, learned-predictor
-effectiveness, field generalization, operational readiness, demographic
-representativeness, or response safety.
+WF-DFLD-01-SMALL v7 is the runnable Tasks 1 and 2 teaching simulator. Its
+scientific mechanics, environment, metrics, and acceptance rules are frozen
+before the `confirmatory-v6` seed ensemble is executed. The confirmatory run and
+book-v3 publication bundle are intentionally absent until the preregistration
+commit is pushed. Rerunning the validator afterward is replication, not the
+original execution.
 
-The Small scenario is Task 2 of Dr. Chang's August specification. Task 3
-mechanisms—breaches, cascades, mutual aid, crew rotation, federation, the full
-crossing network, and casualty modeling—are deliberately absent.
+The supported claim is narrow: typed, versioned predictor evidence can be
+gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
+synthetic flood-response scenario. The project does not claim flood-forecast
+accuracy, learned-predictor effectiveness, field generalization, demographic
+representativeness, response safety, or operational readiness.
+
+Task 3 mechanisms—breach and cascade physics, negotiated mutual aid, duty
+cycles, federation, the full crossing network, casualty modeling, and a new
+Delta UI—remain excluded.
 
 ## Frozen contract
 
-| Item | Frozen definition |
+| Item | V7 definition |
 |---|---|
-| Scenario | `WF-DFLD-01-SMALL` |
-| Generator | `delta-small-generator-v6` (`v5` random namespace retained) |
+| Scenario schema | `trace-delta-scenario-v3` |
+| Generator | `delta-small-generator-v7`; new keyed v7 randomness namespace |
+| Truth / observations | `delta-ground-truth-v4` / `delta-observations-v4` |
+| Coordination | `delta-coordination-v1` |
+| Capacity | `delta-demand-capacity-v3` |
+| Acceptance / validation | `delta-small-acceptance-v7` / `delta-validation-v3` |
+| Replay | `delta-replay-manifest-v4` plus a separate execution receipt |
 | Book seed | `20260803`, descriptive walkthrough only |
-| Time | 2026-01-15 12:00–18:00 PST (20:00–02:00 UTC) |
-| Resolution | five-minute physical ticks; 15-minute demand/capacity grid |
+| Time | 2026-01-15 12:00–18:00 PST; five-minute physical ticks |
 | Extent | Andrus, Brannan, Isleton, XNG-03, XNG-04 |
 | Cohort | 60 deterministic synthetic people; no real identities or addresses |
-| Gauges | RVB threshold-operative; MRU and FPT observational only |
-| Expected reports | 40 total; hourly expectations `[3, 5, 7, 12, 8, 5]` |
-| Default predictor | transparent Toy teaching fixture |
-| Resources | local engine/boat plus fixed preauthorized Rio Vista engine/boat at T+5,400 s |
-| Scope exclusions | breach, cascade, mutual-aid negotiation/tiers, rotation, federation, casualty model, new UI |
+| Gauges | RVB threshold-operative; MRU/FPT observational only |
+| Process design | approximately 40 reports; configured 12-report peak hour |
+| Predictor | transparent Toy teaching fixture |
+| Resources | local engine/boat plus preauthorized Rio Vista engine/boat at T+5,400 s |
 
-Expected intensities are process expectations, not forced realization counts.
-The amended book seed realizes 45 calls, 13 allocations, 22 refusals, 10
-controller-visible repairs, a peak gross compatible load of 1.5, and a peak
-finite residual operational pressure of 3.0. Eleven windows have positive
-residual demand and zero free compatible capacity. These are descriptive
-results, not confirmatory evidence.
+Expected report counts are stochastic process-design targets, not forced
+realizations or claims about field call distributions.
 
-## Causal architecture
+## Causal architecture and axes
 
 ```mermaid
 flowchart LR
-    G["Frozen government geography"] --> P["Reduced-order physical state"]
+    G["Frozen government-source geography"] --> P["Reduced-order physical state"]
     S["sigma: severity"] --> P
-    P --> T["Latent ground truth"]
-    E["epsilon: exposure profile"] --> T
-    T --> O["Lossy observation channel"]
+    P --> T["Keyed latent ground truth"]
+    E["epsilon: exposure"] --> T
+    T --> O["Keyed lossy observation channel"]
     I["iota: information quality"] --> O
-    O --> B["Controller beliefs and revisions"]
-    K["kappa: inventory"] --> R["Local + scheduled automatic-aid resources"]
+    O --> CO["Coordination deliveries"]
+    F["phi: evidence sharing"] --> CO
+    CO --> B["Controller-visible beliefs"]
+    K["kappa: inventory"] --> R["Frozen resource schedule"]
     M["mu: mobilization friction"] --> R
-    D["delta: initial degradation"] --> R
-    F["phi: coordination representation"] --> R
-    PI["pi: prior/calibration profile"] --> W["Predictor boundary"]
+    D["delta: availability/degradation"] --> R
+    PI["pi: within-predictor prior"] --> W["Predictor boundary"]
     B --> W
     R --> W
     W --> TR["TRACE evidence, records, consumer actions"]
     TR --> C["Commitments and outcomes"]
-    T -. "offline scoring only" .-> Q["Reconciliation and process metrics"]
+    T -. "offline scoring only" .-> Q["Load and reconciliation evaluation"]
     C --> Q
 ```
 
-Every stochastic stage derives its stream from the root seed, scenario identity,
-frozen random-namespace version, extent, and stage name. Axis values do not
-reseed draws. Generator v6 explicitly retains the v5 random namespace because
-the amendment changes resources and metrics only. This common-random-number
-design permits mechanism comparisons without silently changing the underlying
-random realization.
-
-The required isolation is:
+Every stochastic candidate uses a SHA-256-derived semantic key rather than a
+mutable iteration stream. Candidate draws therefore remain common across axis
+comparisons even when an upstream mechanism changes which candidates realize.
 
 - `sigma` changes physical hazard and may causally change truth.
-- `kappa`, `mu`, and `delta` change resources, never hazard or truth.
+- `kappa` changes inventory only.
+- `mu` changes activation, staging, and travel friction only.
 - `iota` changes observations only.
-- `epsilon` changes placement/vulnerability, not hazard.
-- `phi` changes coordination representation, not physical inventory.
-- `pi` selects a prior/calibration profile within a predictor; it never selects
-  Toy versus MLP versus V-JEPA.
+- `epsilon` changes placement, occupancy, and vulnerability, not hazard.
+- `phi` changes logical authorities and evidence-delivery latency only.
+- `pi` selects a prior/calibration profile within one predictor.
+- `delta` changes resource availability/degradation only.
 
-## Truth, observations, and leakage boundary
+Predictor identity is a separate controlled factor, never a `pi` value.
 
-Truth is generated before reports. It contains structures, people, change-point
-person trajectories, time-varying access/flood state, levee condition, crossing
-state, and latent incidents. Structures are sampled with minimum separation from
-the geometric intersection of Isleton and the Sacramento County Andrus footprint,
-plus a separate Brannan footprint. No parcel or residential-address data are used.
+## Causal truth
 
-The observation channel implements zero/one/many reports per incident:
-non-reporting, first reports, duplicates, multi-channel reports, revisions,
-callback failures, dropped calls, third-party welfare checks, false benign levee
-reports, and imprecise multi-method locations. Expected hourly arrivals are
-calibrated analytically after truth generation, including expected delay spill
-between adjacent hours. The configured call profile never creates truth incidents.
+Candidate incidents are keyed by `(structure, tick, incident_type)`. A candidate
+intensity is the product of a frozen type intercept and local hazard, occupancy,
+vulnerability, and access factors. Mechanics are type-specific:
 
-Controller-visible calls contain no incident, person, or structure truth IDs.
-Belief repair uses only visible evidence: explicit revision links, shared synthetic
-callback tokens, or compatible spatial/temporal/taxonomic similarity. Hidden
-lineage is deleted in a test run and public decisions, evidence, TRACE records,
-commitments, and outcomes remain byte-identical.
+- water rescue requires occupied shallow ponding;
+- vehicle rescue requires impaired access plus movement;
+- levee inspection follows a newly visible, non-breach levee anomaly and may
+  have no associated person;
+- medical response requires current occupancy and medical dependency;
+- welfare checks emphasize limited mobility or medical dependency;
+- missing-person search requires deterministic movement away from home.
 
-## TRACE execution
+Only type intercepts were fitted, using the declared development seeds, to keep
+the analytical baseline latent expectation near 26.07 and the existing
+synthetic taxonomy design. The coefficients and development diagnostics are in
+`data/scenario/delta/calibration/v7_process_coefficients_v1.json`. No evaluated
+seed is normalized to a fixed incident total. Severity and exposure are allowed
+to change realized truth.
 
-Every report becomes a typed plan, action, route observation, resource snapshot,
-predictor request, `WorldModelEvidence`, and experimental profile. The complete
-`TraceRuntime` path persists evidence, versioned hash-chained TRACE records,
-consumer actions, commitments, and outcomes. A commitment is legal only when it
-cites the exact record/version whose final consumer action is `CLEAR`.
+Structures are seeded points inside the reviewed exposure footprint with a
+minimum-separation constraint. Person state is represented as deterministic
+change-point trajectories. Time-varying structure access/flood state, levee
+condition, crossing state, and incident requirements are emitted explicitly.
 
-Allocation uses generated crossing state and route travel time. Resources have
-versioned capability sets, activation/transit/staging/travel time, service
-duration, availability, and service units. The Type I engine has no
-`water_rescue` capability and is never counted or dispatched as a boat. Each
-physical resource permits only one concurrent commitment.
+## Lossy observations and coordination
 
-At `kappa=0.5`, the frozen profile contains a local Isleton engine and rescue
+The independently versioned observation channel maps each truth incident to
+zero, one, or many reports and adds independent false reports. It includes
+non-reporting, duplicates, multi-channel reports, later revisions, visible
+conflicts, callback failures, dropped calls, third-party reports, benign levee
+reports, and location noise.
+
+At `iota=0.9`, the frozen location-method mixture is 55% GPS/address
+intersection, 27% landmark, and 18% cell sector. Precision ranges are 15–75 m,
+200–800 m, and 400–1,500 m respectively. Lower `iota` monotonically shifts mass
+toward cell-sector reports and scales ranges by `0.9 / iota`, capped at 3×.
+Reporting and hourly coefficients are frozen globally; they are never solved
+again for an evaluated seed.
+
+At `phi=1`, one logical authority shares every report immediately. Higher test
+values partition reports among source authorities and impose keyed delivery
+latency. This is evidence-sharing behavior only: there is no negotiation,
+authority transfer, resource mutual aid, or federation.
+
+Public calls contain no truth incident, person, or structure identifier.
+Controller clustering uses only explicit revision links, shared synthetic
+callback tokens, time, location uncertainty, channel, taxonomy, and visible
+description. Deleting hidden lineage leaves decisions, evidence, TRACE records,
+commitments, and outcomes byte-identical.
+
+## TRACE execution and resources
+
+Each delivered report becomes a typed plan, grounded action, route belief,
+resource snapshot, predictor request, `WorldModelEvidence`, experimental
+profile, versioned TRACE record, and consumer action. Durable commitments cite
+the exact consumed record/version that authorized them. Outcomes cite the exact
+commitment. The append-only record chain and all closure links are verified for
+every seed.
+
+Resources declare capabilities, service units, base, route, activation,
+transit, staging, travel, service duration, and availability. Generated road and
+crossing state controls reachability and travel. Engines have no water-rescue
+capability. One physical resource can hold only one concurrent commitment.
+
+The `kappa=0.5` teaching profile contains one local Isleton engine and rescue
 boat plus one Rio Vista Type I engine and Zodiac rescue boat staged at T+5,400
-seconds. City materials document Station 55 at 350 Main Street, Type I engines,
-a Zodiac rescue boat, water rescue, and automatic aid to Isleton. The selected
-pair and arrival time are teaching assumptions, not claims about current
-staffing, real response time, or readiness. No request, negotiation, authority
-transfer, mutual-aid tier, or federation event is modeled.
+seconds. The latter are always labeled **preauthorized automatic aid**, never
+local inventory or modeled mutual aid. The selected pair, availability, and
+arrival time are scenario assumptions, not claims about real staffing or
+response time.
 
-Resource provenance is frozen in
-`data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json`. Field-level
-sources are the City [operations](https://www.riovistacity.com/fire/page/operations),
-[fire FAQ](https://www.riovistacity.com/fire/page/fire-department-faqs),
-[fire-suppression](https://www.riovistacity.com/fire/page/fire-suppression), and
-[2020 study](https://www.riovistacity.com/media/2931) materials. Because the City
-server returned HTTP 403 to the reproducibility client, the repository commits a
-project-authored factual extract, URL hashes, and the access limitation—not
-copies of the upstream pages. The Station 55 coordinate is a secondary address
-geocode and is not survey-grade.
+## Load definitions
 
-Two capacity measures are evaluated on a fixed 15-minute grid:
+V7 reports three intrinsic measures on the fixed 15-minute grid:
 
-1. **Gross compatible scenario load** is active truth demand divided by the
-   maximum units coverable by all scheduled, mobilized, reachable, compatible
-   resources, whether free or committed. It is computed independently of policy
-   and predictor behavior and is the headline scenario-difficulty metric.
-2. **Residual operational pressure** first removes truth demand covered by an
-   active authorized commitment, then divides remaining demand by free,
-   reachable, compatible capacity. False-report commitments consume capacity
-   but erase no truth demand. This is a controller-dependent diagnostic.
+1. **Strict concurrent load (primary).** Active truth service demand divided by
+   the maximum demand covered when each eligible physical resource may serve at
+   most one compatible incident and must have enough units to cover it.
+2. **Uncapped compatible-service-unit load (sensitivity).** Active demand divided
+   by all eligible compatible resource units, counted once per physical
+   resource without demand capping.
+3. **Registered normalized coverable load index (historical sensitivity).** The
+   v6 capability/route-bucket calculation, retained exactly for audit continuity.
+   The historical v6 book value of 1.5 belongs to this definition.
 
-In both measures, a resource is assigned to at most one capability/route bucket.
-Surplus capacity and incompatible resources cannot dilute demand. Zero demand
-has ratio zero. Positive demand with zero compatible capacity is explicitly
-unserviceable and receives no fabricated denominator.
+No numerical pass band is imposed on the primary strict measure, and the roster
+will not be retuned after observing it. Zero demand yields zero. Positive demand
+with no compatible capacity is explicitly unserviceable rather than divided by
+an invented denominator.
 
-## Predictor decision
+After TRACE execution, strict residual pressure removes only demand covered by
+an active, authorized, truth-compatible commitment and matches residual demand
+to free strict capacity with the same concurrency semantics. A false-report or
+misclassified commitment consumes its resource but erases no truth demand.
 
-August Task 1 requires a common predictor seam, not a new claim of Delta-specific
-JEPA accuracy. Toy, MLP, and V-JEPA-backed implementations share one
-`ActionPrefixPredictor` contract and provenance schema. The V-JEPA path consumes
-content-addressed features from a pinned frozen encoder and a separately versioned
-flood head. It rejects unsafe IDs, symlinks, pickle-based loading, missing files,
-non-finite features, and hash/version mismatches.
+## Reconciliation evaluation
 
-Heavyweight V-JEPA encoding is optional and offline. CI uses only project-owned
-deterministic feature/head fixtures. MLP and V-JEPA are `UNQUALIFIED` for Small
-high-consequence actions unless an external frozen qualification artifact names
-the exact predictor, calibration, hash, and action class. An unqualified
-substitution causes TRACE `HOLD`; it does not silently fall back to Toy.
+Calls sharing one non-null truth incident form a reference cluster; each false
+report is its own reference singleton. Controller belief clusters are compared
+against the complete reference partition after runtime. V7 reports pairwise
+precision, recall, and F1; false-merge, missed-link, and false-report-merge rates;
+revision-link precision/recall; occupant-revision correctness; and adjusted Rand
+index. Adjusted Rand is implemented directly without a heavy dependency.
 
-See [PREDICTOR_QUALIFICATION.md](PREDICTOR_QUALIFICATION.md).
+The old conditional score appears only in immutable historical reports and is
+not described as complete reconciliation accuracy.
 
-## Statistical protocol and adverse findings
+## Predictor boundary and qualification
 
-The amended seed list was committed in
-`configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml` before execution. The
-write-once report is
-`docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json`. The prior protocol,
-report, generator v5, and `book_v1` remain immutable adverse audit evidence.
+Toy, MLP, and V-JEPA-backed implementations share one `ActionPrefixPredictor`
+contract. Every learned qualification must come from a verified frozen artifact
+that exactly binds model/calibration hashes, encoder pin when applicable,
+feature/action schemas, action classes, evaluation protocol/report hashes,
+status, and issuer metadata. Constructor claims alone cannot qualify a learned
+model.
 
-The untouched `confirmatory-v5-primary` study ran all 100 registered seeds:
+V-JEPA features bind an observation digest, encoder version/checkpoint hash,
+feature schema and cache digest, and capture time. Loading rejects traversal,
+symlinks, nonregular files, stale/future observations, non-finite arrays,
+dimension/schema mismatch, and digest mismatch before inference. MLP loading is
+pickle-free, separates model and calibration files, validates exact arrays and
+schemas, and uses an overflow-safe sigmoid.
 
-| Measure | Result |
-|---|---:|
-| Observed calls, mean (95% CI) | 38.55 (37.00–40.10) |
-| Hour-four calls, mean (95% CI) | 11.18 (10.24–12.12) |
-| Configured 12/hour within hour-four 95% CI | yes |
-| Peak gross load, median (bootstrap 95% CI) | 1.5 (1.333–1.5) |
-| Peak gross load, mean and range | 1.536; 1.0–2.0 |
-| Peak finite residual pressure, median (bootstrap 95% CI) | 2.25 (2.0–3.0) |
-| Allocation / refusal / repair means | 13.69 / 13.70 / 11.16 |
-| Gross / residual unserviceable window means | 0.0 / 7.71 |
-| TRACE chains verified | 100/100 |
-| v5/v6 protected layers byte-identical | all fields, 100/100 seeds |
+Toy has a committed, explicitly non-empirical teaching-fixture qualification.
+MLP and V-JEPA remain `UNQUALIFIED` absent an independent matching artifact;
+TRACE therefore holds their high-consequence decisions. Heavyweight V-JEPA
+encoding is optional offline adapter execution, not effectiveness evidence.
 
-All frozen v2 numeric and TRACE-chain gates passed. The bootstrap interval is
-reported in full; the preregistered gate applies to the median point estimate,
-not to containment of its entire interval. These are generator-process results,
-not operational-effectiveness evidence.
+## Geography, environment, and replay
 
-Generator v5 remains a valid adverse finding: the local-only inventory and old
-hybrid accounting produced a book ratio of 3.0 and a confirmatory-v4 median of
-3.0. The v2 amendment does not rewrite those files. It resolves the mismatch
-between the prose scope and the `kappa=0.5` local-plus-county capacity table, and
-separates intrinsic scenario load from controller-dependent spare-capacity
-pressure. See `WF_DFLD_01_SMALL_V2_AMENDMENT.md`.
+The v3 offline catalog uses government-source anchors and records separate
+landing and machine-retrieval URLs, media/schema/license status, exact digests,
+CRS transformations, DEM archive/member proof, and safe-refresh rules. Runtime
+and CI make no network request. See `GEOGRAPHY_DATA_CARD.md`.
+
+The canonical Delta environment is Python 3.11.14 in the pinned Linux/amd64 OCI
+manifest with the complete hash-locked dependency file. General package support
+remains Python `>=3.10`; this does not weaken the reference contract.
+
+The replay manifest binds the source-tree hash, environment contract, lock,
+expanded configuration, geography/build manifest, parameter/calibration tables,
+policy, prior, predictor provenance, and all scientific artifacts. The
+source-tree hash covers source code and excludes generated reference/publication
+outputs. Actual interpreter, platform, installed distributions, CI run, source
+commit, and timestamp live in a separate execution receipt and cannot perturb
+scientific byte identity. Validation input is always explicit; ambient files do
+not change generation.
+
+## Statistical protocol
+
+The 100 development seeds are the only seeds used for debugging and coefficient
+calibration. The untouched holdout is derived exactly from
+`SHA-256("WF-DFLD-01-SMALL|confirmatory-v6|index")` with the registered unsigned
+31-bit reduction. Its exact 100 seeds, mechanics hashes, environment, and gates
+are in `configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml`.
+
+The acceptance file discloses that its midnight timestamp is an inaccurate
+administrative placeholder; the first pushed Git commit time is authoritative.
+No holdout seed may run before that push.
+
+Inference treats one complete seed as the cluster. Means and fractions use a
+deterministic 10,000-resample cluster bootstrap whose randomness derives from
+`SHA-256(protocol_hash|metric_name|cluster-bootstrap-v1)`. Medians use an exact
+binomial order-statistic interval. Location error is summarized within seed
+before the seed-cluster interval. Calls are never pooled as independent samples.
+
+The registered gates cover mean reports, the configured peak within the
+peak-hour mean interval, every frozen observation-channel tolerance, book
+allocation share, nonzero allocation/refusal/repair behavior, TRACE integrity,
+and the 55-second generate/run/replay budget. Strict, uncapped, and historical
+load values are reported, but strict load has no numerical gate. Any holdout
+failure must be published without tuning or seed replacement.
 
 ## Reproduction
 
-Install the exact direct dependency lock and package:
-
 ```bash
-python -m venv .venv
-.venv/bin/python -m pip install -r requirements-delta-ci.lock
+python3.11 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements-delta-python311.lock
 .venv/bin/python -m pip install -e . --no-deps
+
+.venv/bin/trace-jepa-delta-small run --output /tmp/delta-v7
+.venv/bin/trace-jepa-delta-small replay \
+  --reference /tmp/delta-v7 --output /tmp/delta-v7-replay
 ```
 
-Run, replay, validate, and publish:
+After the original remote confirmatory execution is published, this command is
+an independent replication:
 
 ```bash
-.venv/bin/trace-jepa-delta-small run --output /tmp/delta-book
-.venv/bin/trace-jepa-delta-small replay \
-  --reference /tmp/delta-book --output /tmp/delta-replay
 .venv/bin/trace-jepa-delta-small validate \
-  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V2.json
-.venv/bin/trace-jepa-delta-small publish \
-  --reference /tmp/delta-book --output /tmp/delta-figures
+  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V3.json
 ```
 
-Runtime and CI make no network requests. Rebuilding the source geography bundle
-requires the separately verified DWR DEM archive/raster; ordinary run, replay,
-validation, and publication use the committed offline catalog only.
-
-The committed canonical bundles are
-`data/scenario/delta/reference/wf_dfld_01_small_book_v1` and
-`data/scenario/delta/reference/wf_dfld_01_small_book_v2`. Reproducing v1 exactly
-uses the source commit recorded in its manifest. A new `validate` output is an
-independent replication of the frozen seed study; the committed v2 report is the
-original write-once confirmatory execution.
+Historical `book_v1`, `book_v2`, validation reports, configurations, and figures
+remain byte-preserved. Their original definitions and results are protocol
+history, not competing v7 confirmatory evidence.
 
 ## Threats to validity
 
 - Hydrology is reduced-order teaching physics, not a calibrated forecast.
-- Geography is simulation-grade and unsuitable for navigation, surveying, or
-  incident operations.
+- Geography is simulation-grade and unsuitable for navigation or operations.
 - The cohort is synthetic and nonrepresentative.
-- Report and resource parameters are process-calibrated, not field-estimated.
-- The automatic-aid arrival is fixed and omits staffing uncertainty, requests,
-  negotiation, shift turnover, and cascading outages.
-- Reconciliation metrics depend on synthetic hidden lineage and do not prove
-  identity resolution on real calls.
-- The Toy run establishes execution-path coverage, not decision quality.
-- Learned predictors have no Small effectiveness claim.
-
-Additional source and model limitations are in the geography, hydrology,
-observation/capacity, and predictor cards in this directory.
+- Incident/report coefficients are synthetic process calibration, not field
+  estimation.
+- Automatic aid omits real staffing, request, negotiation, shift, and outage
+  uncertainty.
+- Reconciliation uses synthetic lineage and does not establish performance on
+  real emergency calls.
+- Toy demonstrates execution-path accountability, not decision quality.
+- No learned predictor has a Delta effectiveness or qualification claim.

@@ -3,7 +3,10 @@
 
 TRACE-WorldModel is an active TRACE architecture for auditable world models.
 
-The current verified implementation is **D0.5 Predictive Scheduling**.
+The repository has two verified execution surfaces:
+
+1. **D0.5 Predictive Scheduling**, the browser teaching workbench.
+2. **WF-DFLD-01-SMALL**, the headless Tasks 1 and 2 Delta simulator.
 
 ## Naming note
 
@@ -18,7 +21,8 @@ In this repository:
 ```text
 TRACE-WorldModel = public framework name
 Flood-SAR        = first end-to-end implementation
-V-JEPA / AdaJEPA = optional future learned-world-model plug-ins
+V-JEPA          = implemented optional adapter; no qualified Delta head
+AdaJEPA         = possible future learned-world-model plug-in
 trace_jepa       = temporary internal Python package name
 trace-jepa-*     = temporary CLI command prefix
 ```
@@ -98,22 +102,28 @@ The architecture combines:
 
 The current world model is a transparent, auditable simulator over mission state, fleet state, road and waterway graphs, transfer docks, hospitals, and dynamic incidents.
 
-Learned latent prediction is optional future work behind the same world-model service boundary.
+Learned prediction is optional behind the same boundary. The repository includes
+governed MLP and V-JEPA-backed adapters, but no learned Delta predictor is
+qualified or used by the canonical walkthrough.
 
-## Current release
+## Current execution surfaces
 
 - Current implementation: **D0.5**
 - Baseline tag: `v2-baseline-d05`
 - Main branch: `main`
-- Development branch: `v2-fleet-map`
 - Primary workbench: D0.5 browser interface
 - Geography: OpenStreetMap-derived road and waterway graphs
 - Experimental evaluation layer: **RQ5 revalidation-guard protocol** (optional; off by default in the teaching gate)
+- Delta research surface: **WF-DFLD-01-SMALL v7**, headless and deterministic
+- Delta canonical predictor: transparent Toy teaching fixture
+- Delta learned-predictor status: MLP and V-JEPA are **unqualified**
 
-## Requirements
+## Requirements and Python versions
 
 - macOS or Linux
-- Python 3.12
+- Python 3.10 or later for the package
+- Python 3.12 is the D0.5 workshop recommendation
+- Python 3.11.14 on Linux/amd64 is the exact Delta reference environment
 - Conda or Miniforge
 - Git
 - GitHub CLI, recommended for private repo access and release assets
@@ -140,7 +150,7 @@ conda activate trace-jepa
 Install the package:
 
 ```bash
-python -m pip install -e ".[ui,dev]"
+python -m pip install -e ".[ui,dev,geography]"
 ```
 
 Verify the installation:
@@ -171,29 +181,101 @@ and one substitutable predictor protocol. Toy is the default teaching fixture;
 MLP and V-JEPA-backed predictors are unqualified unless a separate frozen
 qualification artifact names the exact model, calibration, and action class.
 
-Install the frozen Delta dependencies:
+The exact Delta environment is the digest-pinned Linux/amd64 image
+`python@sha256:fa7a862d74b4decf68fb7d3a85147efc14dbcd3779c0abd56c071d27a1ffee04`
+with [`requirements-delta-python311.lock`](requirements-delta-python311.lock).
+The image and complete lock are bound by the
+[`python311_linux_amd64_v1.json`](data/scenario/delta/environment/python311_linux_amd64_v1.json)
+contract. A local environment is convenient for development but is not the
+canonical book environment unless it passes that contract exactly.
+
+Install the frozen Delta dependencies in Python 3.11:
 
 ```bash
-python -m venv .venv
-.venv/bin/python -m pip install -r requirements-delta-ci.lock
+python3.11 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements-delta-python311.lock
 .venv/bin/python -m pip install -e . --no-deps
 ```
 
-Run the canonical commands:
+Generate and cleanly replay a fresh run:
 
 ```bash
-.venv/bin/trace-jepa-delta-small run --output /tmp/delta-book
+.venv/bin/trace-jepa-delta-small run --output /tmp/delta-v7
 .venv/bin/trace-jepa-delta-small replay \
-  --reference /tmp/delta-book --output /tmp/delta-replay
-.venv/bin/trace-jepa-delta-small validate \
-  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V2.json
-.venv/bin/trace-jepa-delta-small publish \
-  --reference /tmp/delta-book --output /tmp/delta-figures
+  --reference /tmp/delta-v7 --output /tmp/delta-v7-replay
 ```
 
-The methodology, preserved v5 adverse result, and balanced v2 amendment are documented in
-[WF-DFLD-01-SMALL frozen methodology](docs/delta/WF_DFLD_01_SMALL.md). Small is
-a synthetic teaching simulator, not a flood forecast or operational product.
+After the write-once v7 report and book bundle have been published, verify the
+committed reference directly:
+
+```bash
+.venv/bin/trace-jepa-delta-small replay \
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v3 \
+  --output /tmp/delta-book-v3-replay
+```
+
+Replicate the registered validation study and regenerate publication artifacts:
+
+```bash
+.venv/bin/trace-jepa-delta-small validate \
+  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V3.json
+.venv/bin/trace-jepa-delta-small publish \
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v3 \
+  --output /tmp/delta-v7-figures
+```
+
+Rerunning `validate` is a replication, not the original confirmatory execution.
+The `confirmatory-v6` holdout may be executed only once, after its complete seed
+list, input hashes, environment, and gates are pushed. Until that workflow runs,
+no v7 confirmatory result is claimed.
+
+The primary v7 operational-load measure is strict one-resource/one-incident
+concurrency. The v6 value of 1.5 is retained only as the historical
+`registered_normalized_coverable_load_index`; it is not relabeled as conventional
+demand/capacity. V7 reports strict, uncapped compatible-service-unit, and
+historical normalized measures together and has no post-hoc strict-ratio gate.
+
+The common predictor seam includes a real content-addressed V-JEPA adapter and a
+separate flood-head loader. Heavyweight official-checkpoint encoding is optional
+and offline; it is not a qualification study. Run the small project-owned fixture:
+
+```bash
+.venv/bin/python -m pytest -q tests/test_vjepa_adapter.py
+```
+
+Download an official checkpoint only as an explicit optional action. The
+immutable pin is input and the mutable receipt is a separate output:
+
+```bash
+.venv/bin/trace-jepa-download \
+  --pin-manifest models/manifests/vjepa2_1_vit_base_384.manifest.json \
+  --receipt models/receipts/vjepa2_1_vit_base_384.download.json \
+  --checkpoint-dir models/external/vjepa2
+```
+
+No learned Delta predictor is qualified. Without an exact frozen qualification
+artifact, MLP and V-JEPA evidence fails closed and high-consequence actions HOLD.
+
+Delta documentation:
+
+- [Frozen v7 methodology](docs/delta/WF_DFLD_01_SMALL.md)
+- [V7 remediation and acceptance protocol](docs/delta/WF_DFLD_01_SMALL_V7_PROTOCOL.md)
+- [Geography data card](docs/delta/GEOGRAPHY_DATA_CARD.md)
+- [Reduced-order hydrology model card](docs/delta/HYDROLOGY_MODEL_CARD.md)
+- [Observation, reconciliation, and capacity protocol](docs/delta/OBSERVATION_AND_CAPACITY_PROTOCOL.md)
+- [Predictor qualification table](docs/delta/PREDICTOR_QUALIFICATION.md)
+- [V2 amendment and retained history](docs/delta/WF_DFLD_01_SMALL_V2_AMENDMENT.md)
+- V7 validation report: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V3.json` after the once-only run
+- V7 reference bundle: `data/scenario/delta/reference/wf_dfld_01_small_book_v3` after publication
+- V7 figures: `docs/delta/figures/wf_dfld_01_small_v3` after publication
+
+Every v7 numerical statement published after the holdout must be generated from
+the v3 machine-readable publication table. Small uses a synthetic,
+nonrepresentative cohort; simulation-grade geography; reduced-order uncalibrated
+hydrology; and a frozen preauthorized-automatic-aid teaching assumption. It is
+not historically or demographically calibrated, does not establish operational
+readiness, and excludes Task 3 breach, cascade, negotiated mutual aid, crew
+rotation, federation, casualty, full-network, and UI mechanisms.
 
 Or open this address manually:
 
@@ -513,9 +595,14 @@ trace-worldmodel-flood-sar/
 ├── configs/
 │   ├── policies/            TRACE gate thresholds (baseline and RQ5 guard)
 │   ├── protocols/           pre-registered campaign protocols (RQ5)
+│   ├── scenarios/           frozen Delta scenario and acceptance contracts
 │   └── experimental/        experimental-profile bootstrap settings
-├── data/                    geography, manifests, and generated data
-├── docs/                    mission brief, tutorials, and instructor notes
+├── data/
+│   ├── geography/           D0.4 workbench geography
+│   └── scenario/delta/      Delta sources, catalogs, calibration, references
+├── docs/
+│   ├── delta/               Delta methods, cards, validation, and figures
+│   └── ...                  mission brief, tutorials, and instructor notes
 ├── labs/                    student laboratory exercises
 ├── models/                  model manifests and optional external weights
 ├── scripts/                 setup, geography, workbench, and protocol registration
@@ -525,7 +612,8 @@ trace-worldmodel-flood-sar/
 │   ├── runtime/             TRACE repository, ledger, and gate
 │   ├── planning/            candidate plans and repair
 │   ├── predictor/           world-model and action prediction interfaces
-│   ├── scenario/            Flood Environment
+│   ├── scenario/delta/      WF-DFLD-01 generator, TRACE runner, evaluation
+│   ├── scenario/            other Flood Environment components
 │   └── workbench/           D0.1–D0.5 browser workbenches
 ├── tests/                   unit, integration, acceptance, and RQ5 contract tests
 └── third_party/             optional external dependencies
@@ -630,13 +718,17 @@ See:
 
 These materials remain useful for teaching the core TRACE accountability path.
 
-## Optional learned world-model extension
+## Optional learned world-model execution
 
-TRACE-WorldModel does not require a learned latent model to run the current Flood-SAR D0.5 workbench.
+TRACE-WorldModel does not require a learned latent model to run either verified
+surface. D0.5 and the canonical Delta walkthrough use transparent models.
 
 The D0.5 release uses a transparent simulator and graph-based mission model so that students can inspect every state transition.
 
-Future extensions may attach learned latent predictors, including V-JEPA or AdaJEPA-style modules, behind the same world-model service boundary.
+The repository implements MLP and V-JEPA-backed adapters behind the same
+action-prefix predictor boundary. Their presence establishes interface,
+provenance, fail-closed loading, substitution, and revalidation behavior—not
+Delta prediction effectiveness.
 
 Optional install, if the learned-model extension is enabled:
 
@@ -650,7 +742,10 @@ Optional model download, if configured:
 trace-jepa-download --model vjepa2_1_vit_base_384
 ```
 
-V-JEPA is not treated as a complete rescue simulator. It may provide learned visual representations or latent predictions, but TRACE remains responsible for evidence validation, gating, revision, and authority separation.
+V-JEPA is not treated as a complete rescue simulator. The pinned encoder may
+provide content-addressed visual features to a separately versioned flood head,
+but no learned head is qualified in this repository. TRACE remains responsible
+for evidence validation, gating, revision, and authority separation.
 
 The target extension architecture is:
 

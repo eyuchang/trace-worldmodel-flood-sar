@@ -7,9 +7,9 @@ WF-DFLD-01-SMALL. It is not suitable for navigation, surveying, levee
 engineering, parcel analysis, dispatch, or public-safety operations.
 
 Runtime input:
-`data/scenario/delta/geography/delta_small_geography_v2.yaml`.
+`data/scenario/delta/geography/delta_small_geography_v3.yaml`.
 Build provenance:
-`data/scenario/delta/geography/build_manifest_v2.json`.
+`data/scenario/delta/geography/build_manifest_v3.json`.
 
 Source geometry is retained in WGS84. Metric operations use NAD83 / UTM Zone
 10N (`EPSG:26910`). Runtime coordinates are quantized integer millimetres and
@@ -29,7 +29,8 @@ deterministic computation; it does not imply millimetre measurement accuracy.
 | Fire base | City of Isleton official address and apparatus record | OSM Nominatim is a secondary address geocode |
 | Boat launch | State Parks unit boundary and DBW directory | No reviewed ramp coordinate; park centroid is non-operative |
 
-Each `SourceRecord` stores source ID/title, exact locator/query, retrieval time,
+Each `SourceRecord` stores source ID/title, a human landing page separately from
+any machine-readable retrieval endpoint, retrieval time,
 source tier, use, status, license locator, redistribution decision, SHA-256, and
 byte length. The DEM has separate records for the 69,839,544-byte upstream ZIP
 and the exact 504,815,460-byte extracted GeoTIFF, including archive member,
@@ -79,11 +80,17 @@ DWR archive and extracted raster can rebuild:
 ```bash
 .venv/bin/python scripts/build_delta_small_geography.py \
   --source-root data/scenario/delta/geography/sources \
-  --geography-output data/scenario/delta/geography/delta_small_geography_v2.yaml \
-  --manifest-output data/scenario/delta/geography/build_manifest_v2.json \
+  --geography-output data/scenario/delta/geography/delta_small_geography_v3.yaml \
+  --manifest-output data/scenario/delta/geography/build_manifest_v3.json \
   --dem-archive /path/to/dem_delta_10m_20250312.zip \
   --dem-raster /path/to/dem_delta_10m_20250312.tif
 ```
 
 `--refresh-sources` is an explicit maintainer action and is never used by run,
 replay, validation, publication, or CI.
+
+Refresh downloads to a temporary regular file, validates size, media type,
+schema, digest, archive members, and traversal safety, then replaces a snapshot
+atomically. A source without a machine-readable endpoint fails safely rather
+than saving an HTML landing page as JSON. Output symlinks and parents resolving
+outside the requested root are rejected.

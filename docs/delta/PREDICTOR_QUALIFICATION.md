@@ -36,6 +36,23 @@ observation IDs, regular non-symlink files, content digest, encoder/head
 agreement, finite features, and calibration metadata. All NPZ loading uses
 `allow_pickle=False`. Missing or mismatched evidence fails closed.
 
+A learned model cannot become `QUALIFIED` through a constructor argument. A
+verified `QualificationArtifact` must bind predictor/model, calibration,
+encoder/checkpoint when applicable, feature and action schemas, exact action
+classes, evaluation protocol/report hashes, adequacy status, issuer
+identity/version, and claim limit. Any mismatch fails closed. The Toy artifact
+is explicitly scoped to a non-empirical teaching fixture.
+
+Visual feature references additionally bind feature-cache SHA-256, observation
+digest, capture time, feature schema, encoder version, and checkpoint hash.
+Inference rejects traversal, symlinks, nonregular files, future captures,
+features older than 300 simulation seconds, dimension mismatch, non-finite
+values, and digest mismatch before opening the feature array.
+
+MLP model and calibration artifacts are separate and independently hashed.
+Loading rejects unexpected arrays, malformed shapes or schemas, and non-finite
+values, and uses an overflow-safe sigmoid.
+
 ## Offline V-JEPA path
 
 CI fixtures are generated deterministically by:
@@ -54,6 +71,16 @@ cache, and optionally executes a separately supplied flood head:
 
 No official or project claim treats the CI head as calibrated effectiveness
 evidence.
+
+The encoder pin is immutable. The downloader consumes the pin and writes a
+separate receipt; it is forbidden from overwriting the pin:
+
+```bash
+.venv/bin/trace-jepa-download \
+  --pin-manifest models/manifests/vjepa2_1_vit_base_384.manifest.json \
+  --receipt models/receipts/vjepa2_1_vit_base_384.download.json \
+  --checkpoint-dir models/external/vjepa2
+```
 
 ## Revalidation rule
 

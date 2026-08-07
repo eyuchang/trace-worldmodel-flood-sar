@@ -2,6 +2,13 @@
 
 Status: development protocol, frozen before v7 mechanics or evaluation were changed.
 
+Implementation note (added after the audited mechanics were completed): the v7
+mechanics and development-only coefficient record are frozen locally. The
+`confirmatory-v6` ensemble remains unexecuted and may run only after the complete
+acceptance file and its bound implementation commit are pushed. The acceptance
+file discloses that its midnight timestamp is an administrative placeholder; the
+first publishing Git commit time is authoritative.
+
 ## Purpose
 
 This protocol corrects limitations identified in the publication-readiness audit of
