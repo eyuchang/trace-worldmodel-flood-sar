@@ -1,15 +1,16 @@
-"""Compatibility facade for the v8 reconciliation implementation."""
+"""Controller-visible evidence-graph reconciliation."""
 
-from trace_jepa.scenario.delta.reconciliation import (
+from .baseline import baseline_v7_clusters, baseline_v7_visible_relationship
+from .graph import (
     EVIDENCE_GRAPH_CANDIDATES,
     EvidenceGraphReconciler,
+    evidence_graph_clusters,
+)
+from .models import (
     ReconciliationArtifact,
     ReconciliationLink,
     ReconciliationNode,
     ReconciliationStep,
-    baseline_v7_clusters,
-    baseline_v7_visible_relationship,
-    evidence_graph_clusters,
 )
 
 __all__ = [

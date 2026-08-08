@@ -13,13 +13,8 @@ from trace_jepa.scenario.delta.reconciliation_selection import (
     CANONICAL_RECONCILIATION_ALGORITHM,
 )
 from trace_jepa.scenario.delta.reconciliation_v8 import EvidenceGraphReconciler
-from trace_jepa.scenario.delta.runner import (
-    _historical_capped_coverable_capacity_units,
-    _strict_matched_capacity_units,
-    _uncapped_compatible_service_unit_capacity,
-    evaluate_capacity_windows,
-    run_delta_small,
-)
+from trace_jepa.scenario.delta.runner import evaluate_capacity_windows, run_delta_small
+from trace_jepa.scenario.delta.runtime import CapacityEvaluator
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
@@ -51,9 +46,10 @@ def _two_single_unit_incidents():
 
 def test_strict_matching_enforces_one_resource_per_incident() -> None:
     scenario, incidents = _two_single_unit_incidents()
-    assert _strict_matched_capacity_units(scenario, incidents, 300, ()) == 1
-    assert _uncapped_compatible_service_unit_capacity(scenario, incidents, 300, ()) == 2
-    assert _historical_capped_coverable_capacity_units(scenario, incidents, 300, ()) == 2
+    evaluator = CapacityEvaluator(scenario)
+    assert evaluator.strict_matched_units(incidents, 300, ()) == 1
+    assert evaluator.uncapped_units(incidents, 300, ()) == 2
+    assert evaluator.historical_capped_units(incidents, 300, ()) == 2
 
 
 def test_multiunit_incident_requires_a_sufficient_physical_resource() -> None:
@@ -68,14 +64,15 @@ def test_multiunit_incident_requires_a_sufficient_physical_resource() -> None:
     amended = scenario.model_copy(
         update={"resources": scenario.resources.model_copy(update={"units": units})}
     )
-    assert _strict_matched_capacity_units(amended, [incident], 300, ()) == 0
-    assert _uncapped_compatible_service_unit_capacity(amended, [incident], 300, ()) == 1
-    assert _historical_capped_coverable_capacity_units(amended, [incident], 300, ()) == 1
+    evaluator = CapacityEvaluator(amended)
+    assert evaluator.strict_matched_units([incident], 300, ()) == 0
+    assert evaluator.uncapped_units([incident], 300, ()) == 1
+    assert evaluator.historical_capped_units([incident], 300, ()) == 1
 
 
 def test_zero_demand_and_zero_capacity_have_explicit_semantics() -> None:
     scenario, incidents = _two_single_unit_incidents()
-    assert _strict_matched_capacity_units(scenario, [], 300, ()) == 0
+    assert CapacityEvaluator(scenario).strict_matched_units([], 300, ()) == 0
     unavailable = scenario.model_copy(
         update={
             "resources": scenario.resources.model_copy(
