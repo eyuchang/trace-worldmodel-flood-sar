@@ -1,19 +1,29 @@
-"""Compatibility facade for registered v8 validation APIs."""
+"""One-release compatibility facade for registered validation APIs."""
 
 from trace_jepa.scenario.delta.validation.registered import (
     ORIGINAL_CONFIRMATION_TOKEN,
     ValidationStudy,
+    _require_original_remote_context,
     canonical_v8_paths,
+    canonical_v9_paths,
     run_v8_development_validation,
     run_v8_registered_validation,
+    run_v9_development_validation,
+    run_v9_registered_validation,
     verify_registered_v8_inputs,
+    verify_registered_v9_inputs,
 )
 
 __all__ = [
     "ORIGINAL_CONFIRMATION_TOKEN",
     "ValidationStudy",
+    "_require_original_remote_context",
     "canonical_v8_paths",
+    "canonical_v9_paths",
     "run_v8_development_validation",
     "run_v8_registered_validation",
+    "run_v9_development_validation",
+    "run_v9_registered_validation",
     "verify_registered_v8_inputs",
+    "verify_registered_v9_inputs",
 ]

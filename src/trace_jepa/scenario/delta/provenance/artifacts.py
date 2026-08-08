@@ -13,6 +13,7 @@ from trace_jepa.predictor.protocol import PredictorProvenance
 from trace_jepa.scenario.delta.domain import DeltaModel, GeneratedScenario
 from trace_jepa.scenario.delta.physical import physical_parameter_table
 from trace_jepa.scenario.delta.population import population_parameter_table
+from trace_jepa.support import canonical_json_bytes, sha256_file
 
 if TYPE_CHECKING:
     from trace_jepa.scenario.delta.runner import DeltaRunResult
@@ -55,29 +56,8 @@ class ArtifactMismatchError(RuntimeError):
     pass
 
 
-def canonical_json_bytes(value: object) -> bytes:
-    return (
-        json.dumps(
-            value,
-            sort_keys=True,
-            separators=(",", ":"),
-            ensure_ascii=True,
-            allow_nan=False,
-        )
-        + "\n"
-    ).encode("utf-8")
-
-
 def sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def source_tree_sha256(package_root: Path) -> str:
@@ -291,7 +271,7 @@ def write_scenario_artifacts(
                 )
             ),
             "status": (
-                "confirmatory-v7-executed"
+                "confirmatory-v8-original-executed"
                 if is_v8
                 else ("confirmatory-v6-executed" if is_modern else "confirmatory-v5-executed")
             ),
@@ -345,7 +325,11 @@ def write_scenario_artifacts(
                 )
             ),
             "status": (
-                "confirmatory-v7-not-yet-derived"
+                (
+                    "confirmatory-v8-preregistered-not-yet-executed"
+                    if acceptance_path.suffix == ".yaml"
+                    else "confirmatory-v8-not-yet-derived"
+                )
                 if is_v8
                 else (
                     "confirmatory-v6-preregistered-not-yet-executed"

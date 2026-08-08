@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import importlib
 import importlib.metadata
 import platform
@@ -10,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from trace_jepa.support import sha256_file
 
 _LOCK_REQUIREMENT = re.compile(r"^([A-Za-z0-9_.-]+)==([^ ;\\]+)")
 
@@ -61,14 +62,6 @@ class EnvironmentVerification(BaseModel):
     @property
     def matches(self) -> bool:
         return not self.mismatches
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def load_environment_contract(path: Path) -> EnvironmentContract:

@@ -1,94 +1,15 @@
-name: Delta confirmatory-v7 (authorized original, once-only)
+name: Delta confirmatory-v7 (superseded; execution disabled)
 
 on:
   workflow_dispatch:
-    inputs:
-      preregistration_commit:
-        description: Exact pushed v8 preregistration commit SHA
-        required: true
-        type: string
-      confirmation:
-        description: Type EXECUTE-CONFIRMATORY-V7-ORIGINAL-ONCE
-        required: true
-        type: string
 
 permissions:
-  actions: read
   contents: read
 
-concurrency:
-  group: delta-confirmatory-v7-original
-  cancel-in-progress: false
-
 jobs:
-  validate:
-    if: inputs.confirmation == 'EXECUTE-CONFIRMATORY-V7-ORIGINAL-ONCE'
+  superseded:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    env:
-      TRACE_DELTA_EXECUTION_ROLE: original-confirmatory
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.preregistration_commit }}
-      - name: Verify exact remote preregistration commit
-        shell: bash
-        run: |
-          test "$(git rev-parse HEAD)" = "${{ inputs.preregistration_commit }}"
-          test ! -e docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json
-          test ! -e data/scenario/delta/reference/wf_dfld_01_small_book_v4
-      - name: Refuse a second original evidence artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ARTIFACT_PREFIX: delta-confirmatory-v7-${{ inputs.preregistration_commit }}-run-
-        shell: bash
-        run: |
-          existing="$({ gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts" \
-            --jq ".artifacts[] | select(.name | startswith(\"${ARTIFACT_PREFIX}\")) | .id" || exit 1; } | wc -l)"
-          test "${existing// /}" = "0"
-      - name: Execute original study and publication in the canonical environment
-        shell: bash
-        run: |
-          docker run --rm \
-            --env GITHUB_ACTIONS=true \
-            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
-            --env GITHUB_SHA="${{ inputs.preregistration_commit }}" \
-            --env TRACE_DELTA_EXECUTION_ROLE="${TRACE_DELTA_EXECUTION_ROLE}" \
-            --volume "${GITHUB_WORKSPACE}:/workspace" \
-            --volume "${RUNNER_TEMP}:/output" \
-            --workdir /workspace \
-            docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d \
-            sh -ec '
-              python -m pip install --require-hashes -r requirements-delta-python311.lock
-              python -m pip install -e . --no-deps
-              python scripts/verify_delta_reference_environment.py \
-                --contract data/scenario/delta/environment/python311_linux_amd64_v1.json \
-                --lock requirements-delta-python311.lock \
-                --require-match
-              trace-jepa-delta-small validate \
-                --study original-confirmatory \
-                --confirmation-token EXECUTE-CONFIRMATORY-V7-ORIGINAL-ONCE \
-                --acceptance configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml \
-                --scientific-manifest data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json \
-                --output /output/WF_DFLD_01_SMALL_VALIDATION_V4.json
-              trace-jepa-delta-small run \
-                --validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V4.json \
-                --output /output/wf_dfld_01_small_book_v4
-              trace-jepa-delta-small replay \
-                --reference /output/wf_dfld_01_small_book_v4 \
-                --output /output/wf_dfld_01_small_book_v4_replay
-              trace-jepa-delta-small publish \
-                --reference /output/wf_dfld_01_small_book_v4 \
-                --output /output/wf_dfld_01_small_book_v4_publication
-            '
-      - name: Upload source-bound write-once evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: delta-confirmatory-v7-${{ inputs.preregistration_commit }}-run-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/WF_DFLD_01_SMALL_VALIDATION_V4.json
-            ${{ runner.temp }}/wf_dfld_01_small_book_v4
-            ${{ runner.temp }}/wf_dfld_01_small_book_v4_replay
-            ${{ runner.temp }}/wf_dfld_01_small_book_v4_publication
-          if-no-files-found: error
-          retention-days: 90
+      - run: >-
+          echo "confirmatory-v7 was superseded-before-execution by the committed v9 protocol;
+          no seed is executed by this historical workflow"

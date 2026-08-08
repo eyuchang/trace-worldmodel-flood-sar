@@ -24,7 +24,7 @@ class AcceptanceConfirmatoryEnsemble(DeltaModel):
         if not self.derivation.startswith(prefix) or not self.derivation.endswith("|index"):
             raise ValueError("unknown confirmatory seed derivation")
         version = self.derivation.removeprefix(prefix).removesuffix("|index")
-        if version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7"}:
+        if version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"}:
             raise ValueError("unsupported confirmatory protocol version")
         expected = [
             int.from_bytes(
@@ -129,6 +129,10 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
     registration_erratum: str | None = None
     frozen_input_sha256: dict[str, str] = Field(default_factory=dict)
     scientific_input_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    scientific_input_manifest_path: str | None = None
+    scientific_input_core_aggregate_sha256: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
     reconciliation_comparison: AcceptanceReconciliationComparison | None = None
     inference: AcceptanceInference | None = None
     protocol_amendment: str
@@ -139,7 +143,46 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
 
     @model_validator(mode="after")
     def validate_protocol_generation(self) -> DeltaSmallAcceptanceConfig:
-        if self.schema_version == "delta-small-acceptance-v8":
+        if self.schema_version == "delta-small-acceptance-v9":
+            if self.v8_confirmatory_registered_utc is None:
+                raise ValueError("acceptance v9 requires a registration timestamp")
+            if self.v8_confirmatory_ensemble is None:
+                raise ValueError("acceptance v9 requires confirmatory-v8 seeds")
+            if "confirmatory-v8" not in self.v8_confirmatory_ensemble.derivation:
+                raise ValueError("acceptance v9 must use untouched confirmatory-v8 seeds")
+            if self.scientific_input_manifest_path != (
+                "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json"
+            ):
+                raise ValueError("acceptance v9 must name the canonical scientific manifest")
+            if self.scientific_input_core_aggregate_sha256 is None:
+                raise ValueError("acceptance v9 must bind the self-reference-free core aggregate")
+            if self.scientific_input_manifest_sha256 is not None:
+                raise ValueError(
+                    "acceptance v9 cannot contain its enclosing manifest hash; the tag/report "
+                    "bind the full aggregate"
+                )
+            if self.reconciliation_comparison is None or self.inference is None:
+                raise ValueError("acceptance v9 requires reconciliation and inference protocols")
+            if self.reconciliation_comparison.selected_algorithm_id != "evidence-graph-q075":
+                raise ValueError("acceptance v9 must bind the selected evidence graph")
+            if self.inference.call_pooling_as_independent_observations:
+                raise ValueError("acceptance v9 forbids pooling calls as independent samples")
+            if self.demand_capacity.primary_metric != "strict_concurrent_load_ratio":
+                raise ValueError("acceptance v9 requires strict concurrency as primary")
+            if self.demand_capacity.strict_numerical_gate is not None:
+                raise ValueError("acceptance v9 forbids a strict-load numerical gate")
+            if any(
+                value is not None
+                for value in (
+                    self.demand_capacity.target_peak_ratio,
+                    self.demand_capacity.book_seed_minimum,
+                    self.demand_capacity.book_seed_maximum,
+                    self.demand_capacity.confirmatory_median_minimum,
+                    self.demand_capacity.confirmatory_median_maximum,
+                )
+            ):
+                raise ValueError("acceptance v9 forbids historical ratio targets")
+        elif self.schema_version == "delta-small-acceptance-v8":
             if self.v8_confirmatory_registered_utc is None:
                 raise ValueError("acceptance v8 requires a registration timestamp field")
             if self.v8_confirmatory_ensemble is None:

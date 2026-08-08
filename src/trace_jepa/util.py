@@ -7,6 +7,17 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from trace_jepa.support import sha256_file
+
+__all__ = [
+    "canonical_json",
+    "new_id",
+    "sha256_file",
+    "sha256_value",
+    "utc_now",
+    "write_json",
+]
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -24,14 +35,6 @@ def canonical_json(value: Any) -> str:
 
 def sha256_value(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
-
-
-def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def write_json(path: Path, value: Any) -> None:

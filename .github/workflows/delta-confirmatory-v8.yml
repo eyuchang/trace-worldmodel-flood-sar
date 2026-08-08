@@ -1,0 +1,105 @@
+name: Delta confirmatory-v8 original (tag-authorized, once-only)
+
+on:
+  push:
+    tags:
+      - wf-dfld-01-small-confirmatory-v8-original
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: wf-dfld-01-small-confirmatory-v8-original
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TRACE_DELTA_EXECUTION_ROLE: original-confirmatory
+      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-original
+      TRACE_DELTA_WORKFLOW_FILE: delta-confirmatory-v8.yml
+    steps:
+      - name: Check out the immutable tagged commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag, commit, and first-attempt authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}"
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git cat-file -t "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}")" = "tag"
+          test "$(git rev-list -n 1 "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}")" = "${GITHUB_SHA}"
+
+      - name: Refuse any prior successful original for this tag and commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          prior="$({
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs?event=push&status=success&per_page=100" \
+              --jq ".workflow_runs[] | select(.head_sha == \"${GITHUB_SHA}\" and .event == \"push\" and .id != ${GITHUB_RUN_ID}) | .id"
+          } | wc -l | tr -d ' ')"
+          test "${prior}" = "0"
+
+      - name: Execute the original study in the exact reference container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_WORKFLOW="${GITHUB_WORKFLOW}" \
+            --env TRACE_DELTA_AUTHORIZATION_TAG="${TRACE_DELTA_AUTHORIZATION_TAG}" \
+            --env TRACE_DELTA_EXECUTION_ROLE="${TRACE_DELTA_EXECUTION_ROLE}" \
+            --env TRACE_DELTA_WORKFLOW_FILE="${TRACE_DELTA_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --volume "${RUNNER_TEMP}:/output" \
+            --workdir /workspace \
+            docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d \
+            sh -ec '
+              python -m pip install --require-hashes -r requirements-delta-python311.lock
+              python -m pip install -e . --no-deps
+              python scripts/verify_delta_reference_environment.py \
+                --contract data/scenario/delta/environment/python311_linux_amd64_v1.json \
+                --lock requirements-delta-python311.lock \
+                --require-match
+              trace-jepa-delta-small validate \
+                --study original-confirmatory \
+                --confirmation-token EXECUTE-CONFIRMATORY-V8-ORIGINAL-ONCE \
+                --acceptance configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml \
+                --scientific-manifest data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json \
+                --output /output/WF_DFLD_01_SMALL_VALIDATION_V5.json
+              trace-jepa-delta-small run \
+                --validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V5.json \
+                --output /output/wf_dfld_01_small_book_v5
+              trace-jepa-delta-small replay \
+                --reference /output/wf_dfld_01_small_book_v5 \
+                --output /output/wf_dfld_01_small_book_v5_replay
+              trace-jepa-delta-small publish \
+                --reference /output/wf_dfld_01_small_book_v5 \
+                --output /output/wf_dfld_01_small_book_v5_publication
+            '
+
+      - name: Upload source-bound original evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: delta-confirmatory-v8-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/WF_DFLD_01_SMALL_VALIDATION_V5.json
+            ${{ runner.temp }}/wf_dfld_01_small_book_v5
+            ${{ runner.temp }}/wf_dfld_01_small_book_v5_replay
+            ${{ runner.temp }}/wf_dfld_01_small_book_v5_publication
+          if-no-files-found: error
+          retention-days: 90

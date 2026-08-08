@@ -17,6 +17,7 @@ from trace_jepa.scenario.delta.artifacts import (
 from trace_jepa.scenario.delta.environment import execution_receipt
 from trace_jepa.scenario.delta.generator import generate_delta_small
 from trace_jepa.scenario.delta.runner import DeltaRunResult, run_delta_small
+from trace_jepa.support import atomic_write_bytes
 
 
 class DeltaExecution:
@@ -77,7 +78,12 @@ def execute_delta_small(
             )
         if receipt_path.parent.resolve(strict=True) != output_root.resolve(strict=True):
             raise ArtifactMismatchError("execution receipt path escapes output root")
-        receipt_path.write_bytes(canonical_json_bytes(receipt))
+        atomic_write_bytes(
+            receipt_path,
+            canonical_json_bytes(receipt),
+            root=output_root,
+            label="Delta execution receipt",
+        )
     return DeltaExecution(manifest, run_result, receipt)
 
 

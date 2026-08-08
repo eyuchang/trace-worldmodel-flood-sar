@@ -19,19 +19,15 @@ LOGGER = logging.getLogger(__name__)
 
 def _defaults() -> dict[str, Path]:
     repository_root = Path(__file__).resolve().parents[4]
-    v8_acceptance = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml"
     return {
         "config": repository_root / "configs/scenarios/wf_dfld_01_small.yaml",
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": (
-            v8_acceptance
-            if v8_acceptance.is_file()
-            else repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
-        ),
+        "acceptance": repository_root
+        / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
         "scientific_manifest": repository_root
-        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json",
+        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json",
     }
 
 
