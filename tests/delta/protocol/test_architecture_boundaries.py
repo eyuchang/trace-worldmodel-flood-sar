@@ -153,3 +153,11 @@ def test_one_release_compatibility_facades_retain_public_surfaces() -> None:
     assert DeltaScenarioConfig.__name__ == "DeltaScenarioConfig"
     assert DeltaRunResult.__name__ == "DeltaRunResult"
     assert callable(run_delta_small)
+
+
+def test_ci_checks_the_complete_branch_diff_with_full_history() -> None:
+    workflow = (ROOT / ".github/workflows/ci.yml").read_text("utf-8")
+    assert "fetch-depth: 0" in workflow
+    assert "git merge-base HEAD origin/main" in workflow
+    assert 'git diff --check "${base}..HEAD"' in workflow
+    assert "git diff --check HEAD^" not in workflow
