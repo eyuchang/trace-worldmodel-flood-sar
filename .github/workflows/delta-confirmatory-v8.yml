@@ -69,6 +69,7 @@ jobs:
             --workdir /workspace \
             docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d \
             sh -ec '
+              git config --global --add safe.directory /workspace
               python -m pip install --require-hashes -r requirements-delta-python311.lock
               python -m pip install -e . --no-deps
               python scripts/verify_delta_reference_environment.py \

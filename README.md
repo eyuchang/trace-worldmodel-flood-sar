@@ -286,18 +286,18 @@ are diagnostics—not confirmatory evidence:
 
 | Development diagnostic | Estimate | 95% interval or range |
 |---|---:|---:|
-| Observed calls per seed | 40.01 | 38.27–41.74 |
-| Hour-four calls per seed | 11.84 | 11.02–12.65 |
+| Observed calls per seed | 40.01 | 38.27–41.72 |
+| Hour-four calls per seed | 11.84 | 11.01–12.66 |
 | Finite strict-load median | 2.00 | 2.00–2.00 |
 | Finite uncapped-load median | 1.50 | 1.50–1.50 |
 | Finite historical normalized-index median | 1.80 | 1.60–2.00 |
-| Strict unserviceable windows per seed | 0.11 | 0.05–0.17 |
-| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.68–9.60 / 17.71–19.53 / 11.39–13.10 |
+| Strict unserviceable windows per seed | 0.11 | 0.05–0.18 |
+| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.68–9.60 / 17.70–19.55 / 11.37–13.11 |
 | Selected-minus-baseline false-merge rate | −0.040 | −0.071–−0.009 |
 | Selected-minus-baseline pairwise recall | −0.024 | −0.039–−0.009 |
 
 The selected graph also had a +0.023 development difference in false-report
-merge rate (95% interval −0.012 to +0.058). This adverse diagnostic is retained;
+merge rate (95% interval −0.011 to +0.058). This adverse diagnostic is retained;
 the untouched paired confirmatory comparison remains the only basis for a later
 improvement claim.
 

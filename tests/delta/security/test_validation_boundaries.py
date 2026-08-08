@@ -236,6 +236,7 @@ def test_remote_workflow_uses_exact_tag_and_expiration_independent_once_only_gua
     assert "wf-dfld-01-small-confirmatory-v8-original" in original
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in original
     assert "actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs" in original
+    assert "git config --global --add safe.directory /workspace" in original
     assert "listArtifactsForRepo" not in original
     assert "--study original-confirmatory" in original
     assert ORIGINAL_CONFIRMATION_TOKEN in original

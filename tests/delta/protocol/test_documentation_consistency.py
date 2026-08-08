@@ -103,11 +103,19 @@ def test_readme_development_values_match_the_canonical_report() -> None:
     )
     study = report["study"]
     readme = README.read_text("utf-8")
+    interval_separator = "\N{EN DASH}"
     assert report["execution_role"] == "development"
     assert report["confirmatory_seeds_accessed"] is False
-    assert f"| Observed calls per seed | {study['call_count']['estimate']:.2f} |" in readme
+    call_count = study["call_count"]
+    assert (
+        f"| Observed calls per seed | {call_count['estimate']:.2f} | "
+        f"{call_count['lower_95']:.2f}{interval_separator}{call_count['upper_95']:.2f} |"
+    ) in readme
     hour_four = study["call_count"]["hourly_mean_95"][3]
-    assert f"| Hour-four calls per seed | {hour_four['estimate']:.2f} |" in readme
+    assert (
+        f"| Hour-four calls per seed | {hour_four['estimate']:.2f} | "
+        f"{hour_four['lower_95']:.2f}{interval_separator}{hour_four['upper_95']:.2f} |"
+    ) in readme
     strict = study["peak_finite_strict_concurrent_load_ratio"]
     assert f"| Finite strict-load median | {strict['estimate']:.2f} |" in readme
     operations = study["operations"]

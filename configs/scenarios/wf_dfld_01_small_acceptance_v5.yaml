@@ -1,11 +1,11 @@
 schema_version: delta-small-acceptance-v9
-registered_utc: "2026-08-08T22:22:38Z"
+registered_utc: "2026-08-08T23:03:15Z"
 book_seed: 20260803
 book_seed_role: descriptive_walkthrough_not_confirmatory
 development_ensemble:
   first_seed: 20260803
   seed_count: 100
-v8_confirmatory_registered_utc: "2026-08-08T22:22:38Z"
+v8_confirmatory_registered_utc: "2026-08-08T23:03:15Z"
 v8_confirmatory_ensemble:
   derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v8|index"
   protocol_role: untouched_holdout_after_protocol_v9_code_metrics_documentation_workflow_manifest_environment_and_gates_freeze
@@ -114,17 +114,21 @@ registration_erratum: >-
   Acceptance v8 and confirmatory-v7 remain immutable but were superseded before
   execution because their original workflow could not be authorized from an
   unmerged feature branch and their scientific-input freeze was incomplete.
-  Confirmatory-v8 is the only registered holdout for protocol v9.
+  Confirmatory-v8 is the only registered holdout for protocol v9. The first
+  local v9 registration commit was superseded before execution after branch CI
+  demonstrated that root-owned workflow containers require an explicit trusted
+  checkout declaration. The seed list is unchanged and has never been executed.
 scientific_input_manifest_path: data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json
 scientific_input_manifest_sha256: null
-scientific_input_core_aggregate_sha256: 364d8f7c39c7e5ac860c3b4b9dadcf8c9a593b9b027549b0e110718e89a8a044
+scientific_input_core_aggregate_sha256: 47d63bc60f3887b772c34dcb3e001e97b96d67fbd40f84cb324ee42be9d6176a
 protocol_amendment: >-
   Protocol v9 preserves generator-v8 truth, observations, resources, and
   reconciliation while introducing tag-authorized once-only original execution,
   a complete scientific-input inventory, finite-only load metric labels, exact
   original-report identity, trusted artifact roots, and professional package
   boundaries. No coefficient, seed, resource, or reconciliation threshold was
-  retuned for this registration.
+  retuned for this registration. The tagged workflow declares its mounted
+  checkout as safe before any Git-bound provenance check.
 call_process:
   expected_total_mean: 40.0
   total_mean_absolute_tolerance: 2.5
