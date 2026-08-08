@@ -1,13 +1,13 @@
-# WF-DFLD-01-SMALL v7 frozen methodology
+# WF-DFLD-01-SMALL v8 frozen methodology
 
 ## Status and supported claim
 
-WF-DFLD-01-SMALL v7 is the runnable Tasks 1 and 2 teaching simulator. Its
-scientific mechanics, environment, metrics, and acceptance rules are frozen
-before the `confirmatory-v6` seed ensemble is executed. The confirmatory run and
-book-v3 publication bundle are intentionally absent until the preregistration
-commit is pushed. Rerunning the validator afterward is replication, not the
-original execution.
+WF-DFLD-01-SMALL v8 is the runnable Tasks 1 and 2 teaching simulator. The v7
+protocol and its `confirmatory-v6` seed list were superseded before execution.
+V8 mechanics, environment, metrics, evidence-graph selection, and acceptance
+rules are frozen before the new `confirmatory-v7` seed ensemble is derived. The
+confirmatory report and book-v4 publication bundle remain absent until the
+preregistration commit is pushed and the dedicated remote workflow runs.
 
 The supported claim is narrow: typed, versioned predictor evidence can be
 gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
@@ -21,15 +21,16 @@ Delta UI—remain excluded.
 
 ## Frozen contract
 
-| Item | V7 definition |
+| Item | V8 definition |
 |---|---|
-| Scenario schema | `trace-delta-scenario-v3` |
-| Generator | `delta-small-generator-v7`; new keyed v7 randomness namespace |
-| Truth / observations | `delta-ground-truth-v4` / `delta-observations-v4` |
+| Scenario schema | `trace-delta-scenario-v4` |
+| Generator | `delta-small-generator-v8`; keyed v8 randomness namespace |
+| Truth / observations | `delta-ground-truth-v5` / `delta-observations-v5` |
 | Coordination | `delta-coordination-v1` |
-| Capacity | `delta-demand-capacity-v3` |
-| Acceptance / validation | `delta-small-acceptance-v7` / `delta-validation-v3` |
-| Replay | `delta-replay-manifest-v4` plus a separate execution receipt |
+| Reconciliation | `delta-reconciliation-v3`; selected `evidence-graph-q075` |
+| Capacity | `delta-demand-capacity-v4` |
+| Acceptance / validation | `delta-small-acceptance-v8` / `delta-statistical-validation-v4` |
+| Replay | `delta-replay-manifest-v5` plus a separate execution receipt |
 | Book seed | `20260803`, descriptive walkthrough only |
 | Time | 2026-01-15 12:00–18:00 PST; five-minute physical ticks |
 | Extent | Andrus, Brannan, Isleton, XNG-03, XNG-04 |
@@ -46,7 +47,7 @@ realizations or claims about field call distributions.
 
 ```mermaid
 flowchart LR
-    G["Frozen government-source geography"] --> P["Reduced-order physical state"]
+    G["Offline simulation-grade geography curated from government sources"] --> P["Reduced-order physical state"]
     S["sigma: severity"] --> P
     P --> T["Keyed latent ground truth"]
     E["epsilon: exposure"] --> T
@@ -84,7 +85,7 @@ Predictor identity is a separate controlled factor, never a `pi` value.
 
 ## Causal truth
 
-Candidate incidents are keyed by `(structure, tick, incident_type)`. A candidate
+Candidate draws are keyed by `(structure, tick, incident_type)`. A candidate
 intensity is the product of a frozen type intercept and local hazard, occupancy,
 vulnerability, and access factors. Mechanics are type-specific:
 
@@ -96,10 +97,19 @@ vulnerability, and access factors. Mechanics are type-specific:
 - welfare checks emphasize limited mobility or medical dependency;
 - missing-person search requires deterministic movement away from home.
 
+Accepted repeated candidates are then thinned into auditable continuous
+eligibility episodes. Episode identity uses type plus structure or
+infrastructure, the continuous enabling interval, and the current affected
+subject set. At most one incident is emitted within an episode; eligibility
+must clear or the affected subject set must change before another episode can
+begin. Distinct simultaneous incident types remain distinct. The hidden
+`incident_candidate_audit.json` records every candidate digest, probability,
+draw digest, episode key, disposition, and suppression reason.
+
 Only type intercepts were fitted, using the declared development seeds, to keep
 the analytical baseline latent expectation near 26.07 and the existing
 synthetic taxonomy design. The coefficients and development diagnostics are in
-`data/scenario/delta/calibration/v7_process_coefficients_v1.json`. No evaluated
+`data/scenario/delta/calibration/v8_process_coefficients_v1.json`. No evaluated
 seed is normalized to a fixed incident total. Severity and exposure are allowed
 to change realized truth.
 
@@ -129,19 +139,28 @@ latency. This is evidence-sharing behavior only: there is no negotiation,
 authority transfer, resource mutual aid, or federation.
 
 Public calls contain no truth incident, person, or structure identifier.
-Controller clustering uses only explicit revision links, shared synthetic
-callback tokens, time, location uncertainty, channel, taxonomy, and visible
-description. Deleting hidden lineage leaves decisions, evidence, TRACE records,
-commitments, and outcomes byte-identical.
+Controller reconciliation uses a reversible evidence graph. Explicit revision
+pointers and exact available shared callback tokens are hard confirmation.
+Soft confirmation requires compatible time, uncertainty-aware distance and
+taxonomy; descriptor or occupant/medical corroboration; exactly one eligible
+destination cluster; a bounded post-merge time span; and no visible
+contradiction. Ambiguity remains a `suspected` link and does not merge clusters
+or suppress dispatch. Descriptors come from a small taxonomy-conditioned
+vocabulary reused across incidents; they are weak evidence, never lineage IDs.
+Deleting hidden lineage leaves decisions, evidence, TRACE records, commitments,
+and outcomes byte-identical.
 
 ## TRACE execution and resources
 
 Each delivered report becomes a typed plan, grounded action, route belief,
 resource snapshot, predictor request, `WorldModelEvidence`, experimental
 profile, versioned TRACE record, and consumer action. Durable commitments cite
-the exact consumed record/version that authorized them. Outcomes cite the exact
-commitment. The append-only record chain and all closure links are verified for
-every seed.
+the exact consumed record/version that authorized them. Outcomes cite that
+exact commitment and TRACE record/version. Scheduled completion is never
+truncated to the six-hour horizon. A service completing in the window is
+`completed_within_window`; otherwise it remains busy and is
+`active_at_scenario_censoring` with no observed completion. The append-only
+record chain and all closure links are verified for every seed.
 
 Resources declare capabilities, service units, base, route, activation,
 transit, staging, travel, service duration, and availability. Generated road and
@@ -157,7 +176,7 @@ response time.
 
 ## Load definitions
 
-V7 reports three intrinsic measures on the fixed 15-minute grid:
+V8 reports three intrinsic measures on the fixed 15-minute grid:
 
 1. **Strict concurrent load (primary).** Active truth service demand divided by
    the maximum demand covered when each eligible physical resource may serve at
@@ -183,10 +202,22 @@ misclassified commitment consumes its resource but erases no truth demand.
 
 Calls sharing one non-null truth incident form a reference cluster; each false
 report is its own reference singleton. Controller belief clusters are compared
-against the complete reference partition after runtime. V7 reports pairwise
+against the complete reference partition after runtime. V8 reports pairwise
 precision, recall, and F1; false-merge, missed-link, and false-report-merge rates;
-revision-link precision/recall; occupant-revision correctness; and adjusted Rand
-index. Adjusted Rand is implemented directly without a heavy dependency.
+revision-link precision/recall;
+`reported_occupant_revision_truth_accuracy`; and adjusted Rand index. The
+reported-occupant metric scores the observation channel against truth and is
+not called controller performance. Adjusted Rand is implemented directly
+without a heavy dependency.
+
+Three spatial multipliers were frozen before development evaluation. Five-fold
+selection chose `evidence-graph-q075` because every fold reduced false-merge
+rate relative to the immutable old heuristic while losing no more than 0.05
+absolute recall. The selection report, including the adverse increase in
+development false-report merge rate, is
+`data/scenario/delta/calibration/v8_reconciliation_selection_v1.json`.
+Confirmatory claims require a paired seed-cluster interval whose false-merge
+difference is wholly below zero and recall difference is wholly above −0.05.
 
 The old conditional score appears only in immutable historical reports and is
 not described as complete reconciliation accuracy.
@@ -199,6 +230,13 @@ that exactly binds model/calibration hashes, encoder pin when applicable,
 feature/action schemas, action classes, evaluation protocol/report hashes,
 status, and issuer metadata. Constructor claims alone cannot qualify a learned
 model.
+
+Guarded adequacy binds the exact model hash, calibration version and hash, and
+action class. Each request selects the nearest registered gauge to the route
+crossing with a gauge-ID tie break, keeps call and coordination age separate,
+uses crossing-sample age for route evidence, and sends the maximum relevant age
+to TRACE freshness checks. The complete canonical request is hashed and
+persisted for inference reproduction.
 
 V-JEPA features bind an observation digest, encoder version/checkpoint hash,
 feature schema and cache digest, and capture time. Loading rejects traversal,
@@ -214,7 +252,8 @@ encoding is optional offline adapter execution, not effectiveness evidence.
 
 ## Geography, environment, and replay
 
-The v3 offline catalog uses government-source anchors and records separate
+The v3 offline simulation-grade catalog is curated from authoritative
+government sources and records separate
 landing and machine-retrieval URLs, media/schema/license status, exact digests,
 CRS transformations, DEM archive/member proof, and safe-refresh rules. Runtime
 and CI make no network request. See `GEOGRAPHY_DATA_CARD.md`.
@@ -229,20 +268,27 @@ policy, prior, predictor provenance, and all scientific artifacts. The
 source-tree hash covers source code and excludes generated reference/publication
 outputs. Actual interpreter, platform, installed distributions, CI run, source
 commit, and timestamp live in a separate execution receipt and cannot perturb
-scientific byte identity. Validation input is always explicit; ambient files do
-not change generation.
+scientific byte identity. A separate complete scientific-input manifest covers
+all Delta mechanics, predictor and TRACE guard code, configuration, calibration,
+geography snapshots, policy, and environment. Registered validation recomputes
+every member digest and rejects path substitution before loading input.
 
 ## Statistical protocol
 
-The 100 development seeds are the only seeds used for debugging and coefficient
-calibration. The untouched holdout is derived exactly from
-`SHA-256("WF-DFLD-01-SMALL|confirmatory-v6|index")` with the registered unsigned
-31-bit reduction. Its exact 100 seeds, mechanics hashes, environment, and gates
-are in `configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml`.
+The 100 development seeds are the only seeds used for debugging, coefficient
+calibration, and reconciliation-algorithm selection. Only after the v8 code,
+documentation, scientific-input manifest, coefficients, algorithm ID,
+endpoints, and gates are frozen is the untouched holdout derived from
+`SHA-256("WF-DFLD-01-SMALL|confirmatory-v7|index")` with the unsigned 31-bit
+reduction. Its exact 100 seeds are materialized once in
+`configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml` at preregistration.
 
 The acceptance file discloses that its midnight timestamp is an inaccurate
 administrative placeholder; the first pushed Git commit time is authoritative.
-No holdout seed may run before that push.
+No confirmatory-v7 seed may run before that push. Development mode cannot load
+the holdout. Original confirmation is restricted to the dedicated remote
+workflow and canonical container; replication requires the verified original
+report.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from
@@ -264,22 +310,30 @@ python3.11 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements-delta-python311.lock
 .venv/bin/python -m pip install -e . --no-deps
 
-.venv/bin/trace-jepa-delta-small run --output /tmp/delta-v7
+delta_work_root="$(mktemp -d)"
+.venv/bin/trace-jepa-delta-small run --output "$delta_work_root/run"
 .venv/bin/trace-jepa-delta-small replay \
-  --reference /tmp/delta-v7 --output /tmp/delta-v7-replay
+  --reference "$delta_work_root/run" \
+  --output "$delta_work_root/replay"
+.venv/bin/trace-jepa-delta-small validate \
+  --study development \
+  --output "$delta_work_root/development-validation.json"
 ```
 
-After the original remote confirmatory execution is published, this command is
-an independent replication:
+After the original remote confirmatory report is published, an independent
+replication must name it explicitly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
-  --output /tmp/WF_DFLD_01_SMALL_VALIDATION_V3.json
+  --study replication \
+  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json \
+  --output "$delta_work_root/validation-replication.json"
 ```
 
 Historical `book_v1`, `book_v2`, validation reports, configurations, and figures
 remain byte-preserved. Their original definitions and results are protocol
-history, not competing v7 confirmatory evidence.
+history, not competing v8 confirmatory evidence. The unexecuted v7
+`confirmatory-v6` registration is retained as superseded protocol history.
 
 ## Threats to validity
 

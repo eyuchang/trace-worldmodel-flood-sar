@@ -19,6 +19,14 @@ controller-visible context: route/crossing belief, confidence, timestamp/age,
 travel estimate, resource telemetry, weather/hydrology observations, selected
 prior profile, and optional content-addressed visual-feature reference.
 
+The route context selects the nearest registered gauge to the route crossing
+using fixed-point geography coordinates and a gauge-ID tie break. Gauge stage,
+sample time, threshold-operability status, crossing-state age, call age, and
+coordination-delivery age remain distinct. The freshness gate uses the maximum
+relevant evidence age. Resource context is labeled registered compatible
+capacity and preserves the Rio Vista origin/staged base distinction for
+preauthorized automatic aid.
+
 `pi` selects a versioned prior/calibration profile inside the configured
 predictor. Predictor identity is a separate experimental factor.
 
@@ -89,4 +97,7 @@ prior profile constant while predictor identity changes. Unqualified MLP/V-JEPA
 evidence causes high-consequence decisions to `HOLD`. Qualification may clear
 only the exact current predictor/calibration/model/action-class combination.
 Superseded, mismatched, unregistered, pending, or unqualified evidence cannot
-authorize a durable commitment.
+authorize a durable commitment. When the revalidation guard is enabled,
+evidence missing either the model hash or calibration hash fails closed. The
+guard matches the exact model hash, calibration version and hash, and action
+class; version-only calibration adequacy is insufficient.

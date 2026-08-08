@@ -1,8 +1,12 @@
-# V7 observation, reconciliation, and load protocol
+# V8 observation, reconciliation, outcome, and load protocol
 
 ## Causal boundary
 
-Keyed structure/tick/type hazards generate latent incidents before any report.
+Keyed structure/tick/type hazards generate candidate draws before any report.
+Continuous eligibility episodes suppress repeated accepted candidates until the
+enabling state clears or the affected subject set changes. This prevents a
+persistent condition from being mislabeled as several incidents while
+preserving distinct simultaneous incident types.
 The configured hourly report profile calibrates fixed observation coefficients;
 it never creates truth and is never solved separately for an evaluated seed.
 
@@ -17,6 +21,10 @@ and 400–1,500 m. Lower information quality monotonically transfers probability
 toward cell sector and scales ranges by `0.9 / iota`, capped at 3×. Reporting,
 duplicates, multi-channel evidence, conflicts, revision, callback failure, and
 dropping also degrade monotonically.
+
+Descriptions use a small taxonomy-conditioned vocabulary. Reports from one
+incident probabilistically share a descriptor family, but the same descriptors
+occur across unrelated incidents; no public token uniquely identifies lineage.
 
 `phi` controls a separate coordination artifact. Unified immediate delivery is
 used at `phi=1`; higher test values partition source authorities and delay
@@ -34,6 +42,22 @@ Deleting lineage yields byte-identical decisions, evidence, TRACE records,
 commitments, and outcomes. If lineage is absent, offline reconciliation is
 explicitly marked unavailable; the controller does not fail or change behavior.
 
+## Reversible controller evidence graph
+
+Each public call is a node. Proposed links are `confirmed`, `suspected`,
+`rejected`, or `superseded`. Valid revision pointers and exact available shared
+callback tokens are hard confirmation. Soft confirmation requires time within
+1,500 seconds, uncertainty-aware spatial compatibility, exact taxonomy, at
+least descriptor or occupant/medical corroboration, one eligible destination
+cluster, a post-merge span no longer than 1,800 seconds, and no visible cluster
+contradiction. Ambiguous soft links remain suspected and separate.
+
+The frozen candidates `evidence-graph-q075`, `q100`, and `q125` differ only in
+their spatial uncertainty multiplier. Five development folds selected q075 by
+the preregistered false-merge/recall rule. Confirmatory evaluation is paired by
+seed against the immutable v7 heuristic, with false-merge improvement primary
+and recall noninferiority margin −0.05.
+
 ## Complete reconciliation evaluation
 
 Every set of reports from one non-null truth incident is a reference cluster.
@@ -44,10 +68,11 @@ after runtime using:
 - false-merge and missed-link rates;
 - false-report merge rate;
 - revision-link precision and recall;
-- occupant-revision correctness;
+- reported-occupant-revision truth accuracy (an observation-channel measure,
+  not controller performance);
 - adjusted Rand index without a heavyweight dependency.
 
-Immutable pre-v7 reports retain their conditional repair score under its
+Immutable pre-v8 reports retain their prior scores under their historical
 historical label. It is not used as complete reconciliation accuracy.
 
 ## Incident and resource contracts
@@ -87,7 +112,7 @@ The v6 calculation assigns each resource to one capability/route bucket and caps
 its service units within aggregate bucket demand. It remains reproducible as
 `registered_normalized_coverable_load_index`. The historical v6 value of 1.5
 belongs only to this registered definition and is never called conventional
-demand/capacity in v7.
+demand/capacity in v8.
 
 Empty demand yields zero for every measure. Positive demand with no compatible
 capacity is explicitly unserviceable and has no finite ratio. The primary
@@ -102,14 +127,23 @@ reachable for the true incident. Remaining incidents are matched to free
 resources using the same one-resource/one-incident semantics. A false-report or
 misclassified commitment consumes capacity without erasing truth demand.
 
+## Completion and censoring
+
+Every allocation records the untruncated scheduled completion, the scenario
+censoring time, its exact authorizing commitment, and exact TRACE record/version.
+Completion observed on or before the six-hour horizon is
+`completed_within_window`. Later service remains committed and busy and is
+`active_at_scenario_censoring`; it has no observed completion and is never
+truncated or relabeled complete.
+
 ## Seed-cluster inference
 
-The write-once v7 report treats one seed as one cluster. Means and channel
+The write-once v8 report treats one seed as one cluster. Means and channel
 fractions use deterministic 10,000-resample cluster bootstrap intervals.
 Medians use exact binomial order-statistic intervals. Location errors are first
 summarized within seed. No interval treats individual calls as independent.
 
 The registered expected point estimates and absolute tolerances are calibrated
 from the declared development seeds and frozen in
-`configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml`. They are synthetic
+`configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml`. They are synthetic
 process-design checks, not field-validity targets.
