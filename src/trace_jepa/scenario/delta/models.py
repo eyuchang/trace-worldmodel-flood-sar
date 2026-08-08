@@ -145,6 +145,19 @@ class DeltaScenarioConfig(DeltaModel):
                 raise ValueError("generator v7 requires frozen truth intercepts v1")
             if self.observation_coefficients_version != "delta-observation-coefficients-v1":
                 raise ValueError("generator v7 requires frozen observation coefficients v1")
+        if self.generator_version == "delta-small-generator-v8":
+            if self.schema_version != "trace-delta-scenario-v4":
+                raise ValueError("generator v8 requires trace-delta-scenario-v4")
+            if self.randomness_namespace_version != "delta-small-generator-v8":
+                raise ValueError("generator v8 requires its new keyed random namespace")
+            if self.resource_profile_id != "kappa-0.5-local-plus-automatic-aid-v1":
+                raise ValueError("generator v8 requires the unchanged documented roster")
+            if self.demand_capacity.schema_version != "delta-demand-capacity-v4":
+                raise ValueError("generator v8 requires delta-demand-capacity-v4")
+            if self.truth_coefficients_version != "delta-truth-intercepts-v2":
+                raise ValueError("generator v8 requires frozen truth intercepts v2")
+            if self.observation_coefficients_version != "delta-observation-coefficients-v2":
+                raise ValueError("generator v8 requires frozen observation coefficients v2")
         return self
 
 
@@ -246,6 +259,21 @@ class IncidentTruth(DeltaModel):
     causal_factors_milli: dict[str, int] = Field(default_factory=dict)
 
 
+class IncidentCandidateAudit(DeltaModel):
+    """Hidden record of keyed candidate thinning and episode formation."""
+
+    candidate_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    draw_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    structure_id: str
+    infrastructure_id: str | None = None
+    incident_type: str
+    simulation_time_s: int = Field(ge=0)
+    probability_millionths: int = Field(ge=0, le=1_000_000)
+    episode_key: str
+    disposition: str
+    suppression_reason: str | None = None
+
+
 class GroundTruth(DeltaModel):
     schema_version: str
     cohort_label: str
@@ -255,6 +283,10 @@ class GroundTruth(DeltaModel):
     person_positions: list[PersonPosition]
     levees: list[LeveeTruth]
     incidents: list[IncidentTruth]
+
+
+class GroundTruthV8(GroundTruth):
+    candidate_audit: list[IncidentCandidateAudit]
 
 
 class CallLocation(DeltaModel):
@@ -372,7 +404,7 @@ class GeneratedScenario(DeltaModel):
     weather: list[WeatherSample]
     gauges: list[GaugeSample]
     crossing_states: list[CrossingState]
-    truth: GroundTruth
+    truth: GroundTruth | GroundTruthV8
     observations: ObservationArtifact
     coordination: CoordinationArtifact | None = None
     resources: ResourceArtifact

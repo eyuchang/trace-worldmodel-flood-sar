@@ -21,7 +21,10 @@ from trace_jepa.scenario.delta.observations_v7 import (
     location_method_mixture_v7,
     reporting_probability_v7,
 )
+from trace_jepa.scenario.delta.randomness import KeyedRandom
 from trace_jepa.scenario.delta.runner import run_delta_small
+from trace_jepa.scenario.delta.truth_v7 import IncidentCandidate
+from trace_jepa.scenario.delta.truth_v8 import form_episode_candidates_v8
 from trace_jepa.util import sha256_file
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +60,63 @@ def _position_at(
         if item.person_id == person_id and item.simulation_time_s <= simulation_time_s
     ]
     return eligible[-1]
+
+
+def _episode_candidate(simulation_time_s: int, person_ids: tuple[str, ...]) -> IncidentCandidate:
+    return IncidentCandidate(
+        structure_id="STR-001",
+        simulation_time_s=simulation_time_s,
+        incident_type="C-WEL",
+        person_ids=person_ids,
+        factor=1.0,
+        hazard_factor=1.0,
+        occupancy_factor=1.0,
+        vulnerability_factor=1.0,
+        access_factor=1.0,
+        causal_mechanism="test-eligibility",
+    )
+
+
+def test_v8_episode_keys_continue_only_while_eligibility_and_subjects_are_continuous() -> None:
+    keyed = KeyedRandom(17, "parameter-hash", "ground_truth")
+    formed = form_episode_candidates_v8(
+        [
+            _episode_candidate(0, ("PER-001",)),
+            _episode_candidate(300, ("PER-001",)),
+            _episode_candidate(600, ("PER-001", "PER-002")),
+            _episode_candidate(1_200, ("PER-001", "PER-002")),
+        ],
+        keyed,
+        300,
+        {"C-WEL": 1.0},
+    )
+    assert formed[0].episode_key == formed[1].episode_key
+    assert formed[1].episode_key != formed[2].episode_key
+    assert formed[2].episode_key != formed[3].episode_key
+
+
+def test_v8_episode_formation_preserves_keyed_candidate_draws() -> None:
+    keyed = KeyedRandom(23, "parameter-hash", "ground_truth")
+    candidates = [
+        _episode_candidate(0, ("PER-001",)),
+        _episode_candidate(300, ("PER-001",)),
+        _episode_candidate(600, ("PER-001",)),
+    ]
+    formed = form_episode_candidates_v8(candidates, keyed, 300, {"C-WEL": 0.4})
+    expected = [
+        keyed.bernoulli(
+            item.probability,
+            "incident-candidate",
+            item.candidate.structure_id,
+            item.candidate.simulation_time_s,
+            item.candidate.incident_type,
+            "no-infrastructure",
+        )
+        for item in formed
+    ]
+    assert [item.accepted_draw for item in formed] == expected
+    assert len({item.candidate_digest for item in formed}) == len(formed)
+    assert len({item.draw_digest for item in formed}) == len(formed)
 
 
 def test_v7_contract_uses_new_keyed_namespace_and_versioned_artifacts() -> None:

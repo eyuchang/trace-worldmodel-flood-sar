@@ -23,6 +23,7 @@ from trace_jepa.scenario.delta.population import (
 )
 from trace_jepa.scenario.delta.randomness import KeyedRandom, derive_stage_seed, seeded_random
 from trace_jepa.scenario.delta.truth_v7 import generate_truth_v7
+from trace_jepa.scenario.delta.truth_v8 import generate_truth_v8
 
 GENERATION_ORDER = [
     "geography",
@@ -78,8 +79,13 @@ def generate_delta_small_from_models(
             "extent": config.extent.model_dump(mode="json"),
         }
     )
-    if config.generator_version == "delta-small-generator-v7":
-        truth = generate_truth_v7(
+    if config.generator_version in {"delta-small-generator-v7", "delta-small-generator-v8"}:
+        truth_generator = (
+            generate_truth_v8
+            if config.generator_version == "delta-small-generator-v8"
+            else generate_truth_v7
+        )
+        truth = truth_generator(
             config,
             geography,
             weather,
