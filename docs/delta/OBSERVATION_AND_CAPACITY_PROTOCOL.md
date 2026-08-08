@@ -1,4 +1,4 @@
-# V8 observation, reconciliation, outcome, and load protocol
+# Generator-v8 observation, reconciliation, outcome, and load protocol
 
 ## Causal boundary
 
@@ -73,7 +73,7 @@ after runtime using:
 - adjusted Rand index without a heavyweight dependency.
 
 Immutable pre-v8 reports retain their prior scores under their historical
-historical label. It is not used as complete reconciliation accuracy.
+label. That score is not used as complete reconciliation accuracy.
 
 ## Incident and resource contracts
 
@@ -138,12 +138,12 @@ truncated or relabeled complete.
 
 ## Seed-cluster inference
 
-The write-once v8 report treats one seed as one cluster. Means and channel
+The write-once protocol-v9 report treats one seed as one cluster. Means and channel
 fractions use deterministic 10,000-resample cluster bootstrap intervals.
 Medians use exact binomial order-statistic intervals. Location errors are first
 summarized within seed. No interval treats individual calls as independent.
 
 The registered expected point estimates and absolute tolerances are calibrated
 from the declared development seeds and frozen in
-`configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml`. They are synthetic
+`configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml`. They are synthetic
 process-design checks, not field-validity targets.

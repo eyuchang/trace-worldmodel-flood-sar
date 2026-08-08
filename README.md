@@ -114,7 +114,7 @@ qualified or used by the canonical walkthrough.
 - Primary workbench: D0.5 browser interface
 - Geography: OpenStreetMap-derived road and waterway graphs
 - Experimental evaluation layer: **RQ5 revalidation-guard protocol** (optional; off by default in the teaching gate)
-- Delta research surface: **WF-DFLD-01-SMALL v8**, headless and deterministic
+- Delta research surface: **WF-DFLD-01-SMALL generator v8 / protocol v9**, headless and deterministic
 - Delta canonical predictor: transparent Toy teaching fixture
 - Delta learned-predictor status: MLP and V-JEPA are **unqualified**
 
@@ -172,6 +172,8 @@ Open the workbench on macOS:
 open "http://127.0.0.1:8030/d05"
 ```
 
+Or open `http://127.0.0.1:8030/d05` manually in a browser.
+
 ## WF-DFLD-01-SMALL Delta simulator
 
 The August WF-DFLD-01 Tasks 1 and 2 deliverable is a separate headless,
@@ -189,6 +191,10 @@ The image and complete lock are bound by the
 [`python311_linux_amd64_v1.json`](data/scenario/delta/environment/python311_linux_amd64_v1.json)
 contract. A local environment is convenient for development but is not the
 canonical book environment unless it passes that contract exactly.
+
+The research CLI resolves its default configuration, geography, policy, and
+protocol paths from a repository checkout. Installed-package use outside a
+checkout must provide those input paths explicitly.
 
 Install the frozen Delta dependencies in Python 3.11:
 
@@ -217,13 +223,13 @@ development seeds and cannot load the untouched holdout:
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the write-once v8 report and book bundle have been published, verify the
+After the write-once v9 report and book bundle have been published, verify the
 committed reference directly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small replay \
-  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v4 \
-  --output "$delta_work_root/book-v4-replay"
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
+  --output "$delta_work_root/book-v5-replay"
 ```
 
 Only after the verified original report exists, replicate the registered study
@@ -232,29 +238,39 @@ and regenerate publication artifacts:
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json \
+  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
   --output "$delta_work_root/validation-replication.json"
 .venv/bin/trace-jepa-delta-small publish \
-  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v4 \
-  --output "$delta_work_root/book-v4-figures"
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
+  --output "$delta_work_root/book-v5-figures"
 ```
 
-The original `confirmatory-v7` execution is not exposed as a local reproduction
-command. It requires the dedicated, manually authorized remote workflow, the
-exact pushed preregistration commit, the complete scientific-input manifest,
-and the digest-pinned environment. The earliest successful authorized workflow
-is the original; every later execution is labeled replication. Until that
-workflow runs, no v8 confirmatory result is claimed.
+The original `confirmatory-v8` execution is not exposed as a local command. It
+is authorized only by the exact annotated tag
+`wf-dfld-01-small-confirmatory-v8-original`, after the preregistration commit is
+pushed and separately approved. The workflow verifies the immutable tagged
+commit, complete scientific-input manifest, first run attempt, absence of any
+prior successful original run, and digest-pinned environment. The three
+externally visible steps—branch push, authorization-tag push, and result-commit
+push—each require separate approval. Until the tagged workflow runs, no v9
+confirmatory result is claimed; every authorized later execution is a
+replication and must match the committed original-report registry byte-for-byte.
 
-The primary v8 operational-load measure is strict one-resource/one-incident
-concurrency. The v6 value of 1.5 is retained only as the historical
+The primary v9 operational-load measure is strict one-resource/one-incident
+concurrency. All published peak aggregates are explicitly finite-only and are
+reported beside their corresponding unserviceable-window counts. The serialized
+fields are `peak_finite_strict_concurrent_load_ratio_milli`,
+`peak_finite_uncapped_compatible_load_ratio_milli`,
+`peak_finite_registered_normalized_coverable_load_index_milli`, and
+`peak_finite_residual_strict_pressure_ratio_milli`. The v6 value of 1.5 is
+retained only as the historical
 `registered_normalized_coverable_load_index`; it is not relabeled as conventional
-demand/capacity. V8 reports strict, uncapped compatible-service-unit, and
+demand/capacity. V9 reports strict, uncapped compatible-service-unit, and
 historical normalized measures together and has no post-hoc strict-ratio gate.
 Services scheduled beyond the six-hour window remain busy and are reported as
 `active_at_scenario_censoring`, never as completed.
 
-V8 reconciliation uses a reversible controller-visible evidence graph. Hard
+V8 generator mechanics use a reversible controller-visible evidence graph. Hard
 revision/callback links may confirm a relationship; ambiguous soft evidence is
 retained as `suspected` without merging or suppressing dispatch. The canonical
 `evidence-graph-q075` rule was selected on development seeds only. Its paired
@@ -266,25 +282,51 @@ separate flood-head loader. Heavyweight official-checkpoint encoding is optional
 and offline; it is not a qualification study. Run the small project-owned fixture:
 
 ```bash
-.venv/bin/python -m pytest -q tests/test_vjepa_adapter.py
+.venv/bin/python -m pytest -q tests/predictor/test_vjepa_adapter.py
 ```
 
 Download an official checkpoint only as an explicit optional action. The
 immutable pin is input and the mutable receipt is a separate output:
 
 ```bash
+mkdir -p models/receipts models/external/vjepa2
 .venv/bin/trace-jepa-download \
   --pin-manifest models/manifests/vjepa2_1_vit_base_384.manifest.json \
+  --pin-root models/manifests \
   --receipt models/receipts/vjepa2_1_vit_base_384.download.json \
+  --receipt-root models/receipts \
   --checkpoint-dir models/external/vjepa2
 ```
+
+The immutable encoder pin is never overwritten. The mutable download receipt is
+written atomically beneath its separately trusted receipt root, and the official
+checkpoint remains in the explicitly named checkpoint directory. To exercise a
+real synchronized clip after that optional download, create a private work root
+and pass every trusted root explicitly:
+
+```bash
+delta_feature_root="$(mktemp -d)"
+mkdir -p "$delta_feature_root/frames" "$delta_feature_root/cache"
+# Place a finite [T,H,W,C] NumPy array at $delta_feature_root/frames/clip.npy.
+.venv/bin/python scripts/run_delta_vjepa_offline.py \
+  --frames "$delta_feature_root/frames/clip.npy" \
+  --frames-root "$delta_feature_root/frames" \
+  --observation-id delta-small-offline-clip \
+  --cache-dir "$delta_feature_root/cache" \
+  --cache-root "$delta_feature_root" \
+  --checkpoint-dir models/external/vjepa2
+```
+
+This verifies the content-addressed adapter path; it is not predictor
+qualification or evidence of Delta flood accuracy.
 
 No learned Delta predictor is qualified. Without an exact frozen qualification
 artifact, MLP and V-JEPA evidence fails closed and high-consequence actions HOLD.
 
 Delta documentation:
 
-- [Frozen v8 methodology](docs/delta/WF_DFLD_01_SMALL.md)
+- [Frozen generator-v8 / protocol-v9 methodology](docs/delta/WF_DFLD_01_SMALL.md)
+- [V9 pre-push remediation protocol](docs/delta/WF_DFLD_01_SMALL_V9_PROTOCOL.md)
 - [V8 remediation protocol](docs/delta/WF_DFLD_01_SMALL_V8_PROTOCOL.md)
 - [Superseded unexecuted v7 protocol](docs/delta/WF_DFLD_01_SMALL_V7_PROTOCOL.md)
 - [Geography data card](docs/delta/GEOGRAPHY_DATA_CARD.md)
@@ -292,27 +334,27 @@ Delta documentation:
 - [Observation, reconciliation, and capacity protocol](docs/delta/OBSERVATION_AND_CAPACITY_PROTOCOL.md)
 - [Predictor qualification table](docs/delta/PREDICTOR_QUALIFICATION.md)
 - [V2 amendment and retained history](docs/delta/WF_DFLD_01_SMALL_V2_AMENDMENT.md)
-- [Scientific-input manifest](data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json)
+- Scientific-input manifest v2: `data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json` after preregistration
 - [Process calibration report](data/scenario/delta/calibration/v8_process_coefficients_v1.json)
 - [Reconciliation selection report](data/scenario/delta/calibration/v8_reconciliation_selection_v1.json)
-- [V8 acceptance protocol](configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml)
-- V8 validation report: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json` after the once-only run
-- V8 reference bundle: `data/scenario/delta/reference/wf_dfld_01_small_book_v4` after publication
-- V8 figures: `docs/delta/figures/wf_dfld_01_small_v4` after publication
+- Acceptance v9: `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` after preregistration
+- Development report v5: `docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json` after the frozen development run
+- Original validation report v5: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json` after the once-only run
+- Original-report registry: `data/scenario/delta/validation/original_report_registry_v1.json` only after the original report is committed
+- Reference bundle v5: `data/scenario/delta/reference/wf_dfld_01_small_book_v5` after publication
+- Figures v5: `docs/delta/figures/wf_dfld_01_small_v5` after publication
+- [Delta package-boundary decision](docs/adr/0001-delta-package-boundaries.md)
+- [Once-only confirmation decision](docs/adr/0002-tag-authorized-original-confirmation.md)
+- [Refactor equivalence report](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_EQUIVALENCE.json)
+- [Pinned-container performance comparison](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_PERFORMANCE.json)
 
-Every v8 numerical statement published after the holdout must be generated from
-the v4 book bundle's machine-readable publication table. Small uses a synthetic,
+Every post-holdout numerical statement must be generated from the v5 book
+bundle's machine-readable publication table. Small uses a synthetic,
 nonrepresentative cohort; simulation-grade geography; reduced-order uncalibrated
 hydrology; and a frozen preauthorized-automatic-aid teaching assumption. It is
 not historically or demographically calibrated, does not establish operational
 readiness, and excludes Task 3 breach, cascade, negotiated mutual aid, crew
 rotation, federation, casualty, full-network, and UI mechanisms.
-
-Or open this address manually:
-
-```text
-http://127.0.0.1:8030/d05
-```
 
 ## Student installation guide
 
@@ -643,10 +685,22 @@ trace-worldmodel-flood-sar/
 │   ├── runtime/             TRACE repository, ledger, and gate
 │   ├── planning/            candidate plans and repair
 │   ├── predictor/           world-model and action prediction interfaces
-│   ├── scenario/delta/      WF-DFLD-01 generator, TRACE runner, evaluation
+│   ├── scenario/delta/      WF-DFLD-01 public facades and compatibility paths
+│   │   ├── domain/          immutable typed scientific contracts
+│   │   ├── geography/       sourced catalogs and secure offline derivation
+│   │   ├── generation/      physics, exposure, truth, reports, resources
+│   │   ├── runtime/         routing, predictor context, capacity, TRACE mission
+│   │   ├── reconciliation/  visible-evidence graph and immutable baseline
+│   │   ├── provenance/      deterministic artifacts and scientific freeze
+│   │   ├── validation/      typed studies, inference, gates, execution roles
+│   │   ├── publication/     deterministic figure families and bundle publisher
+│   │   └── legacy/          frozen historical implementations for replay
 │   ├── scenario/            other Flood Environment components
 │   └── workbench/           D0.1–D0.5 browser workbenches
-├── tests/                   unit, integration, acceptance, and RQ5 contract tests
+├── tests/
+│   ├── delta/               unit, integration, protocol, security, replay tests
+│   ├── predictor/           adapter, qualification, and failure-boundary tests
+│   └── ...                  workbench and RQ5 contract tests
 └── third_party/             optional external dependencies
 ```
 
@@ -675,6 +729,12 @@ Begin with:
 - `src/trace_jepa/experimental/`
 - `src/trace_jepa/planning/`
 - `src/trace_jepa/predictor/`
+- `src/trace_jepa/scenario/delta/`
+- `tests/delta/`
+- `tests/predictor/`
+- `CONTRIBUTING.md`
+- `docs/adr/0001-delta-package-boundaries.md`
+- `docs/adr/0002-tag-authorized-original-confirmation.md`
 - `configs/protocols/rq5_revalidation_guard.yaml`
 - `configs/policies/trace_rq5_guard_v1.yaml`
 - `scripts/register_rq5_protocol.py`

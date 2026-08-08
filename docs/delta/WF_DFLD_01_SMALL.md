@@ -1,13 +1,15 @@
-# WF-DFLD-01-SMALL v8 frozen methodology
+# WF-DFLD-01-SMALL generator-v8 / protocol-v9 methodology
 
 ## Status and supported claim
 
-WF-DFLD-01-SMALL v8 is the runnable Tasks 1 and 2 teaching simulator. The v7
-protocol and its `confirmatory-v6` seed list were superseded before execution.
-V8 mechanics, environment, metrics, evidence-graph selection, and acceptance
-rules are frozen before the new `confirmatory-v7` seed ensemble is derived. The
-confirmatory report and book-v4 publication bundle remain absent until the
-preregistration commit is pushed and the dedicated remote workflow runs.
+WF-DFLD-01-SMALL generator v8 is the runnable Tasks 1 and 2 teaching simulator.
+Protocol v9 preserves the v8 scientific mechanics while correcting experiment
+authorization, complete-input freezing, finite-metric labels, replication
+identity, and package architecture. The v7 and v8 registrations were superseded
+before execution. Protocol v9 is frozen before the new `confirmatory-v8` seed
+ensemble is derived. The original report and book-v5 publication bundle remain
+absent until the preregistration commit and exact annotated authorization tag
+are separately approved and pushed.
 
 The supported claim is narrow: typed, versioned predictor evidence can be
 gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
@@ -21,16 +23,16 @@ Delta UI—remain excluded.
 
 ## Frozen contract
 
-| Item | V8 definition |
+| Item | Current definition |
 |---|---|
-| Scenario schema | `trace-delta-scenario-v4` |
+| Scenario schema | `trace-delta-scenario-v5` |
 | Generator | `delta-small-generator-v8`; keyed v8 randomness namespace |
 | Truth / observations | `delta-ground-truth-v5` / `delta-observations-v5` |
 | Coordination | `delta-coordination-v1` |
 | Reconciliation | `delta-reconciliation-v3`; selected `evidence-graph-q075` |
-| Capacity | `delta-demand-capacity-v4` |
-| Acceptance / validation | `delta-small-acceptance-v8` / `delta-statistical-validation-v4` |
-| Replay | `delta-replay-manifest-v5` plus a separate execution receipt |
+| Capacity | `delta-demand-capacity-v5` |
+| Acceptance / validation | `delta-small-acceptance-v9` / `delta-statistical-validation-v5` |
+| Replay | `delta-replay-manifest-v6` plus a separate execution receipt |
 | Book seed | `20260803`, descriptive walkthrough only |
 | Time | 2026-01-15 12:00–18:00 PST; five-minute physical ticks |
 | Extent | Andrus, Brannan, Isleton, XNG-03, XNG-04 |
@@ -71,6 +73,12 @@ flowchart LR
 Every stochastic candidate uses a SHA-256-derived semantic key rather than a
 mutable iteration stream. Candidate draws therefore remain common across axis
 comparisons even when an upstream mechanism changes which candidates realize.
+
+The declared and executed generation order is identical:
+geography → meteorology → hydrology → crossing state → truth → observations →
+coordination → resources → predictor prior. Truth is therefore complete before
+the lossy observation channel is evaluated, and coordination cannot alter raw
+reports, physical state, or inventory.
 
 - `sigma` changes physical hazard and may causally change truth.
 - `kappa` changes inventory only.
@@ -176,7 +184,7 @@ response time.
 
 ## Load definitions
 
-V8 reports three intrinsic measures on the fixed 15-minute grid:
+The current protocol reports three intrinsic measures on the fixed 15-minute grid:
 
 1. **Strict concurrent load (primary).** Active truth service demand divided by
    the maximum demand covered when each eligible physical resource may serve at
@@ -189,9 +197,10 @@ V8 reports three intrinsic measures on the fixed 15-minute grid:
    The historical v6 book value of 1.5 belongs to this definition.
 
 No numerical pass band is imposed on the primary strict measure, and the roster
-will not be retuned after observing it. Zero demand yields zero. Positive demand
-with no compatible capacity is explicitly unserviceable rather than divided by
-an invented denominator.
+will not be retuned after observing it. Every peak aggregate is explicitly
+labeled finite and reported beside its corresponding unserviceable-window
+count. Zero demand yields zero. Positive demand with no compatible capacity is
+explicitly unserviceable rather than divided by an invented denominator.
 
 After TRACE execution, strict residual pressure removes only demand covered by
 an active, authorized, truth-compatible commitment and matches residual demand
@@ -202,7 +211,7 @@ misclassified commitment consumes its resource but erases no truth demand.
 
 Calls sharing one non-null truth incident form a reference cluster; each false
 report is its own reference singleton. Controller belief clusters are compared
-against the complete reference partition after runtime. V8 reports pairwise
+against the complete reference partition after runtime. The simulator reports pairwise
 precision, recall, and F1; false-merge, missed-link, and false-report-merge rates;
 revision-link precision/recall;
 `reported_occupant_revision_truth_accuracy`; and adjusted Rand index. The
@@ -276,19 +285,21 @@ every member digest and rejects path substitution before loading input.
 ## Statistical protocol
 
 The 100 development seeds are the only seeds used for debugging, coefficient
-calibration, and reconciliation-algorithm selection. Only after the v8 code,
+calibration, and reconciliation-algorithm selection. Only after the generator-v8
+mechanics and protocol-v9 code,
 documentation, scientific-input manifest, coefficients, algorithm ID,
 endpoints, and gates are frozen is the untouched holdout derived from
-`SHA-256("WF-DFLD-01-SMALL|confirmatory-v7|index")` with the unsigned 31-bit
+`SHA-256("WF-DFLD-01-SMALL|confirmatory-v8|index")` with the unsigned 31-bit
 reduction. Its exact 100 seeds are materialized once in
-`configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml` at preregistration.
+`configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` at preregistration.
 
-The acceptance file discloses that its midnight timestamp is an inaccurate
-administrative placeholder; the first pushed Git commit time is authoritative.
-No confirmatory-v7 seed may run before that push. Development mode cannot load
-the holdout. Original confirmation is restricted to the dedicated remote
-workflow and canonical container; replication requires the verified original
-report.
+No confirmatory-v8 seed may run locally or before the preregistration branch
+push. Original confirmation is restricted to the exact annotated tag
+`wf-dfld-01-small-confirmatory-v8-original`, the dedicated remote workflow, and
+the canonical container. Branch push, authorization-tag push, and result-commit
+push require separate approval. The earliest successful authorized workflow is
+the original; replication is disabled until a byte-bound original-report
+registry is committed.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from
@@ -326,14 +337,15 @@ replication must name it explicitly:
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json \
+  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
   --output "$delta_work_root/validation-replication.json"
 ```
 
 Historical `book_v1`, `book_v2`, validation reports, configurations, and figures
 remain byte-preserved. Their original definitions and results are protocol
-history, not competing v8 confirmatory evidence. The unexecuted v7
-`confirmatory-v6` registration is retained as superseded protocol history.
+history, not competing current confirmatory evidence. The unexecuted v7
+`confirmatory-v6` and v8 `confirmatory-v7` registrations are retained as
+superseded-before-execution protocol history.
 
 ## Threats to validity
 

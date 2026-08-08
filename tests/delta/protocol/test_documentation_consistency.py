@@ -76,6 +76,13 @@ def test_delta_docs_use_v8_metric_reconciliation_and_censoring_labels() -> None:
     assert "gross compatible scenario load" not in (
         ROOT / "docs/delta/OBSERVATION_AND_CAPACITY_PROTOCOL.md"
     ).read_text("utf-8")
+    for field_name in (
+        "peak_finite_strict_concurrent_load_ratio_milli",
+        "peak_finite_uncapped_compatible_load_ratio_milli",
+        "peak_finite_registered_normalized_coverable_load_index_milli",
+        "peak_finite_residual_strict_pressure_ratio_milli",
+    ):
+        assert field_name in README.read_text("utf-8")
 
 
 def test_readme_historical_1_5_label_is_supported_by_immutable_table() -> None:
@@ -97,6 +104,8 @@ def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None
     assert "/tmp" not in joined
     assert "authoritative offline geography" not in joined.lower()
     assert "--study original-confirmatory" not in README.read_text("utf-8")
+    assert "confirmatory-v7 execution" not in README.read_text("utf-8")
+    assert "wf-dfld-01-small-confirmatory-v8-original" in README.read_text("utf-8")
     for block in re.findall(r"```bash\n(.*?)```", joined, flags=re.DOTALL):
         if "trace-jepa-delta-small validate" in block:
             assert "--study" in block
@@ -127,3 +136,13 @@ def test_documented_delta_cli_options_are_current() -> None:
     assert "--pin-manifest" in README.read_text("utf-8")
     assert "--receipt" in README.read_text("utf-8")
     assert "--checkpoint-dir" in README.read_text("utf-8")
+    assert "--frames-root" in README.read_text("utf-8")
+    assert "--cache-root" in README.read_text("utf-8")
+
+
+def test_current_methodology_matches_executed_generation_order() -> None:
+    methodology = (ROOT / "docs/delta/WF_DFLD_01_SMALL.md").read_text("utf-8")
+    assert (
+        "geography → meteorology → hydrology → crossing state → truth → observations →\n"
+        "coordination → resources → predictor prior"
+    ) in methodology

@@ -86,9 +86,17 @@ separate receipt; it is forbidden from overwriting the pin:
 ```bash
 .venv/bin/trace-jepa-download \
   --pin-manifest models/manifests/vjepa2_1_vit_base_384.manifest.json \
+  --pin-root models/manifests \
   --receipt models/receipts/vjepa2_1_vit_base_384.download.json \
+  --receipt-root models/receipts \
   --checkpoint-dir models/external/vjepa2
 ```
+
+All model, feature, head, pin, qualification, receipt, and checkpoint paths are
+resolved against caller-declared trusted roots. The implementation rejects
+symlinked roots or intermediate components, path traversal, nonregular files,
+oversized or malformed archives, extra NPZ arrays, digest mismatches, and unsafe
+receipt destinations. Downloads and receipts use atomic replacement.
 
 ## Revalidation rule
 
