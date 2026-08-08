@@ -109,6 +109,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           base="$(git merge-base HEAD origin/main)"
           git diff --check "${base}..HEAD"
           git diff --check
