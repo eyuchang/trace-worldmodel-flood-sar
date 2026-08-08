@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from trace_jepa.scenario.delta.artifacts import (
+from trace_jepa.scenario.delta.provenance.artifacts import (
     canonical_json_bytes,
     sha256_bytes,
     sha256_file,
