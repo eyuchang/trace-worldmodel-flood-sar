@@ -85,7 +85,16 @@ class DeltaDecisionEvent(DeltaModel):
     trace_record_id: str
     trace_record_version: int = Field(gt=0)
     commitment_id: str | None = None
-    service_complete_s: int | None = Field(default=None, ge=0)
+    scheduled_completion_s: int | None = Field(default=None, ge=0)
+    observed_completion_s: int | None = Field(default=None, ge=0)
+    censoring_s: int | None = Field(default=None, ge=0)
+    outcome_status: str | None = None
+
+    @property
+    def service_complete_s(self) -> int | None:
+        """Deprecated source alias for the untruncated scheduled completion."""
+
+        return self.scheduled_completion_s
 
 
 class DemandWindow(DeltaModel):
@@ -171,8 +180,28 @@ class DeltaResourceOutcome(DeltaModel):
     call_id: str
     resource_id: str
     status: str
-    completed_s: int = Field(ge=0)
+    scheduled_completion_s: int = Field(ge=0)
+    observed_completion_s: int | None = Field(default=None, ge=0)
+    censoring_s: int = Field(ge=0)
     authorizing_commitment_id: str
+    authorizing_trace_record_id: str
+    authorizing_trace_record_version: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_censoring(self) -> DeltaResourceOutcome:
+        if self.status == "completed_within_window":
+            if self.observed_completion_s != self.scheduled_completion_s:
+                raise ValueError("within-window completion must be observed at its scheduled time")
+            if self.scheduled_completion_s > self.censoring_s:
+                raise ValueError("within-window completion cannot follow censoring")
+        elif self.status == "active_at_scenario_censoring":
+            if self.observed_completion_s is not None:
+                raise ValueError("censored active service has no observed completion")
+            if self.scheduled_completion_s <= self.censoring_s:
+                raise ValueError("censored active service must complete after censoring")
+        else:
+            raise ValueError("unknown Delta resource outcome status")
+        return self
 
 
 class DeltaRunResult(DeltaModel):
@@ -917,11 +946,8 @@ def run_delta_small(
                 continue
             if evaluation.decision == CommitmentDecision.CLEAR and candidate is not None:
                 unit, travel_s = candidate
-                complete_s = min(
-                    scenario.config.timeline.duration_s,
-                    controller_time_s + travel_s + unit.service_duration_s,
-                )
-                busy_until[unit.resource_id] = complete_s
+                scheduled_completion_s = controller_time_s + travel_s + unit.service_duration_s
+                busy_until[unit.resource_id] = scheduled_completion_s
                 commitment = runtime.commit(
                     record=consumed,
                     action=action,
@@ -931,21 +957,37 @@ def run_delta_small(
                 event_type = "allocation"
                 reason = "TRACE cleared and compatible reachable capacity was assigned"
                 resource_id = unit.resource_id
+                observed_completion_s = (
+                    scheduled_completion_s
+                    if scheduled_completion_s <= scenario.config.timeline.duration_s
+                    else None
+                )
+                outcome_status = (
+                    "completed_within_window"
+                    if observed_completion_s is not None
+                    else "active_at_scenario_censoring"
+                )
                 outcomes.append(
                     DeltaResourceOutcome(
                         outcome_id=f"outcome-{call.call_id}",
                         call_id=call.call_id,
                         resource_id=unit.resource_id,
-                        status="service_completed_by_declared_duration",
-                        completed_s=complete_s,
+                        status=outcome_status,
+                        scheduled_completion_s=scheduled_completion_s,
+                        observed_completion_s=observed_completion_s,
+                        censoring_s=scenario.config.timeline.duration_s,
                         authorizing_commitment_id=commitment.commitment_id,
+                        authorizing_trace_record_id=commitment.authorizing_record_id,
+                        authorizing_trace_record_version=(commitment.authorizing_record_version),
                     )
                 )
                 commitment_id = commitment.commitment_id
             else:
                 event_type = "refusal"
                 resource_id = ""
-                complete_s = None
+                scheduled_completion_s = None
+                observed_completion_s = None
+                outcome_status = None
                 commitment_id = None
                 reason = (
                     "TRACE held the unqualified or unsupported action"
@@ -965,7 +1007,14 @@ def run_delta_small(
                     trace_record_id=consumed.record_id,
                     trace_record_version=consumed.record_version,
                     commitment_id=commitment_id,
-                    service_complete_s=complete_s,
+                    scheduled_completion_s=scheduled_completion_s,
+                    observed_completion_s=observed_completion_s,
+                    censoring_s=(
+                        scenario.config.timeline.duration_s
+                        if scheduled_completion_s is not None
+                        else None
+                    ),
+                    outcome_status=outcome_status,
                 )
             )
         trace_records = repository.all()

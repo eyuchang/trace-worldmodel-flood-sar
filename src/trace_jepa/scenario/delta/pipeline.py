@@ -57,7 +57,10 @@ def execute_delta_small(
     )
     verify_scenario_artifacts(output_root)
     receipt: dict[str, object] | None = None
-    if manifest.generator_version == "delta-small-generator-v7":
+    if manifest.generator_version in {
+        "delta-small-generator-v7",
+        "delta-small-generator-v8",
+    }:
         repository_root = package_root.parents[1]
         receipt = execution_receipt(
             repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json",
@@ -92,15 +95,18 @@ def verify_exact_replay(
             "current source tree differs from the source bound by the reference manifest"
         )
     recorded_commit = reference_manifest.git_commit
-    if reference_manifest.schema_version == "delta-replay-manifest-v4":
+    if reference_manifest.schema_version in {
+        "delta-replay-manifest-v4",
+        "delta-replay-manifest-v5",
+    }:
         receipt_path = reference_root / "execution_receipt.json"
         if receipt_path.is_symlink() or not receipt_path.is_file():
-            raise ArtifactMismatchError("v4 reference is missing a safe execution receipt")
+            raise ArtifactMismatchError("modern reference is missing a safe execution receipt")
         try:
             receipt_payload = json.loads(receipt_path.read_text("utf-8"))
             recorded_commit = str(receipt_payload["source_commit"])
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            raise ArtifactMismatchError("v4 reference execution receipt is invalid") from exc
+            raise ArtifactMismatchError("modern reference execution receipt is invalid") from exc
     replay = execute_delta_small(
         config_path,
         geography_path,

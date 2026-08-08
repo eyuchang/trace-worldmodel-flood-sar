@@ -172,9 +172,13 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
     ]
     return {
         "schema_version": (
-            "delta-small-machine-result-summary-v3"
-            if scenario.config.generator_version == "delta-small-generator-v7"
-            else "delta-small-machine-result-summary-v2"
+            "delta-small-machine-result-summary-v4"
+            if scenario.config.generator_version == "delta-small-generator-v8"
+            else (
+                "delta-small-machine-result-summary-v3"
+                if scenario.config.generator_version == "delta-small-generator-v7"
+                else "delta-small-machine-result-summary-v2"
+            )
         ),
         "scenario_id": scenario.config.scenario_id,
         "seed": scenario.config.seed,
@@ -235,22 +239,34 @@ def write_scenario_artifacts(
     repository_root = package_root.parents[1]
     physical_parameters = physical_parameter_table()
     population_parameters = population_parameter_table(scenario.config.generator_version)
-    is_v7 = scenario.config.generator_version == "delta-small-generator-v7"
+    is_v8 = scenario.config.generator_version == "delta-small-generator-v8"
+    is_modern = scenario.config.generator_version in {
+        "delta-small-generator-v7",
+        "delta-small-generator-v8",
+    }
     acceptance_path = (
         repository_root
         / "configs/scenarios"
         / (
-            "wf_dfld_01_small_acceptance_v3.yaml"
-            if is_v7
-            else "wf_dfld_01_small_acceptance_v2.yaml"
+            "wf_dfld_01_small_acceptance_v4.yaml"
+            if is_v8
+            else (
+                "wf_dfld_01_small_acceptance_v3.yaml"
+                if is_modern
+                else "wf_dfld_01_small_acceptance_v2.yaml"
+            )
         )
     )
-    if is_v7 and not acceptance_path.is_file():
+    if is_modern and not acceptance_path.is_file():
         # The implementation freeze intentionally precedes the seed-list
         # preregistration commit. Keep that interim state explicitly runnable.
-        acceptance_path = repository_root / "docs/delta/WF_DFLD_01_SMALL_V7_PROTOCOL.md"
+        acceptance_path = (
+            repository_root
+            / "docs/delta"
+            / ("WF_DFLD_01_SMALL_V8_PROTOCOL.md" if is_v8 else "WF_DFLD_01_SMALL_V7_PROTOCOL.md")
+        )
     validation_path = validation_report_path
-    if validation_path is None and not is_v7:
+    if validation_path is None and not is_modern:
         legacy_validation = (
             repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
         )
@@ -260,11 +276,19 @@ def write_scenario_artifacts(
         validation_report = json.loads(validation_path.read_text("utf-8"))
         validation_summary: dict[str, object] = {
             "schema_version": (
-                "delta-small-validation-summary-v3"
-                if is_v7
-                else "delta-small-validation-summary-v2"
+                "delta-small-validation-summary-v4"
+                if is_v8
+                else (
+                    "delta-small-validation-summary-v3"
+                    if is_modern
+                    else "delta-small-validation-summary-v2"
+                )
             ),
-            "status": ("confirmatory-v6-executed" if is_v7 else "confirmatory-v5-executed"),
+            "status": (
+                "confirmatory-v7-executed"
+                if is_v8
+                else ("confirmatory-v6-executed" if is_modern else "confirmatory-v5-executed")
+            ),
             "source_report_sha256": sha256_file(validation_path),
             "book_walkthrough": validation_report["book_walkthrough"],
             "studies": [
@@ -288,7 +312,7 @@ def write_scenario_artifacts(
                             ],
                             "reconciliation": study["reconciliation"],
                         }
-                        if is_v7
+                        if is_modern
                         else {
                             "peak_gross_load_ratio": study["peak_gross_load_ratio"],
                             "peak_finite_residual_pressure_ratio": study[
@@ -306,14 +330,22 @@ def write_scenario_artifacts(
     else:
         validation_summary = {
             "schema_version": (
-                "delta-small-validation-summary-v3"
-                if is_v7
-                else "delta-small-validation-summary-v2"
+                "delta-small-validation-summary-v4"
+                if is_v8
+                else (
+                    "delta-small-validation-summary-v3"
+                    if is_modern
+                    else "delta-small-validation-summary-v2"
+                )
             ),
             "status": (
-                "confirmatory-v6-preregistered-not-yet-executed"
-                if is_v7
-                else "confirmatory-v5-preregistered-not-yet-executed"
+                "confirmatory-v7-not-yet-derived"
+                if is_v8
+                else (
+                    "confirmatory-v6-preregistered-not-yet-executed"
+                    if is_modern
+                    else "confirmatory-v5-preregistered-not-yet-executed"
+                )
             ),
             "acceptance_protocol_sha256": sha256_file(acceptance_path),
             "studies": [],
@@ -531,17 +563,18 @@ def write_scenario_artifacts(
         )
     geography_manifest = geography_path.parent / (
         "build_manifest_v3.json"
-        if scenario.config.generator_version == "delta-small-generator-v7"
+        if scenario.config.generator_version
+        in {"delta-small-generator-v7", "delta-small-generator-v8"}
         else "build_manifest_v2.json"
     )
     environment_contract = (
         repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
-        if is_v7
+        if is_modern
         else repository_root / "pyproject.toml"
     )
     dependency_lock = (
         repository_root / "requirements-delta-python311.lock"
-        if is_v7
+        if is_modern
         else repository_root / "requirements-delta-ci.lock"
     )
     inputs = [
@@ -619,13 +652,15 @@ def write_scenario_artifacts(
                 sha256=sha256_file(validation_path),
             )
         )
-    if is_v7:
+    if is_modern:
         calibration_record = (
-            repository_root / "data/scenario/delta/calibration/v7_process_coefficients_v1.json"
+            repository_root
+            / "data/scenario/delta/calibration"
+            / ("v8_process_coefficients_v1.json" if is_v8 else "v7_process_coefficients_v1.json")
         )
         inputs.append(
             ProvenanceInput(
-                name="v7_process_calibration",
+                name="v8_process_calibration" if is_v8 else "v7_process_calibration",
                 identifier=calibration_record.name,
                 sha256=sha256_file(calibration_record),
             )
@@ -639,13 +674,19 @@ def write_scenario_artifacts(
             )
         )
     manifest = ReplayManifest(
-        schema_version="delta-replay-manifest-v4" if is_v7 else "delta-replay-manifest-v3",
+        schema_version=(
+            "delta-replay-manifest-v5"
+            if is_v8
+            else ("delta-replay-manifest-v4" if is_modern else "delta-replay-manifest-v3")
+        ),
         scenario_id=scenario.config.scenario_id,
         generator_version=scenario.config.generator_version,
-        git_commit=(recorded_git_commit or _git_commit(repository_root)) if not is_v7 else None,
+        git_commit=(recorded_git_commit or _git_commit(repository_root)) if not is_modern else None,
         source_tree_sha256=source_tree_sha256(package_root),
-        python_implementation=None if is_v7 else platform.python_implementation(),
-        python_version=(None if is_v7 else f"{sys.version_info.major}.{sys.version_info.minor}"),
+        python_implementation=None if is_modern else platform.python_implementation(),
+        python_version=(
+            None if is_modern else f"{sys.version_info.major}.{sys.version_info.minor}"
+        ),
         generation_order=scenario.generation_order,
         stage_seeds=[
             StageSeedRecord(stage_name=name, seed_sha256=seed_hash)
@@ -655,7 +696,7 @@ def write_scenario_artifacts(
         artifacts=artifacts,
     )
     _safe_artifact_path(output_root, "manifest.json").write_bytes(
-        canonical_json_bytes(manifest.model_dump(mode="json", exclude_none=is_v7))
+        canonical_json_bytes(manifest.model_dump(mode="json", exclude_none=is_modern))
     )
     return manifest
 

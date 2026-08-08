@@ -130,6 +130,19 @@ def _trace_artifacts_verify(result: DeltaRunResult) -> bool:
     commitment_ids = {item.commitment_id for item in result.commitments}
     if commitment_ids != {item.authorizing_commitment_id for item in result.outcomes}:
         return False
+    commitment_by_id = {item.commitment_id: item for item in result.commitments}
+    if any(
+        (
+            outcome.authorizing_trace_record_id,
+            outcome.authorizing_trace_record_version,
+        )
+        != (
+            commitment_by_id[outcome.authorizing_commitment_id].authorizing_record_id,
+            commitment_by_id[outcome.authorizing_commitment_id].authorizing_record_version,
+        )
+        for outcome in result.outcomes
+    ):
+        return False
     for commitment in result.commitments:
         authorizing_record = records.get(
             (commitment.authorizing_record_id, commitment.authorizing_record_version)

@@ -306,7 +306,7 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
     hidden = {
         descriptor.name for descriptor in manifest.artifacts if descriptor.contains_hidden_truth
     }
-    assert hidden == {"ground_truth", "call_lineage"}
+    assert hidden == {"ground_truth", "call_lineage", "incident_candidate_audit"}
     expected_inputs = {
         "scenario_configuration",
         "geography_catalog",
@@ -321,7 +321,7 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
         "dependency_lock",
         "registered_acceptance_protocol",
         "automatic_aid_source_extract",
-        "v7_process_calibration",
+        "v8_process_calibration",
     }
     assert {item.name for item in manifest.inputs} == expected_inputs
     manifest_payload = json.loads((reference / "manifest.json").read_text("utf-8"))

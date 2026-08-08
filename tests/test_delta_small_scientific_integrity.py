@@ -191,6 +191,38 @@ def test_every_commitment_has_exact_clear_trace_authorization() -> None:
             commitment.authorizing_record_id,
             commitment.authorizing_record_version,
         )
+        outcome = next(
+            item
+            for item in result.outcomes
+            if item.authorizing_commitment_id == commitment.commitment_id
+        )
+        assert (
+            outcome.authorizing_trace_record_id,
+            outcome.authorizing_trace_record_version,
+        ) == (
+            commitment.authorizing_record_id,
+            commitment.authorizing_record_version,
+        )
+
+
+def test_service_outcomes_distinguish_observed_completion_from_scenario_censoring() -> None:
+    scenario = generate_delta_small(CONFIG, GEOGRAPHY)
+    result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
+    assert result.outcomes
+    assert any(item.status == "active_at_scenario_censoring" for item in result.outcomes)
+    decisions = {item.commitment_id: item for item in result.decisions if item.commitment_id}
+    for outcome in result.outcomes:
+        decision = decisions[outcome.authorizing_commitment_id]
+        assert decision.scheduled_completion_s == outcome.scheduled_completion_s
+        assert decision.censoring_s == scenario.config.timeline.duration_s
+        assert outcome.censoring_s == scenario.config.timeline.duration_s
+        if outcome.scheduled_completion_s <= scenario.config.timeline.duration_s:
+            assert outcome.status == "completed_within_window"
+            assert outcome.observed_completion_s == outcome.scheduled_completion_s
+        else:
+            assert outcome.status == "active_at_scenario_censoring"
+            assert outcome.observed_completion_s is None
+            assert decision.service_complete_s > scenario.config.timeline.duration_s
 
 
 def test_engine_is_never_counted_or_dispatched_for_water_rescue() -> None:
