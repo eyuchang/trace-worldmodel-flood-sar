@@ -97,6 +97,28 @@ def test_readme_historical_1_5_label_is_supported_by_immutable_table() -> None:
     assert "v6 value of 1.5" in payload
 
 
+def test_readme_development_values_match_the_canonical_report() -> None:
+    report = json.loads(
+        (ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json").read_text("utf-8")
+    )
+    study = report["study"]
+    readme = README.read_text("utf-8")
+    assert report["execution_role"] == "development"
+    assert report["confirmatory_seeds_accessed"] is False
+    assert f"| Observed calls per seed | {study['call_count']['estimate']:.2f} |" in readme
+    hour_four = study["call_count"]["hourly_mean_95"][3]
+    assert f"| Hour-four calls per seed | {hour_four['estimate']:.2f} |" in readme
+    strict = study["peak_finite_strict_concurrent_load_ratio"]
+    assert f"| Finite strict-load median | {strict['estimate']:.2f} |" in readme
+    operations = study["operations"]
+    assert (
+        "| Allocations / refusals / repairs per seed | "
+        f"{operations['allocations']['estimate']:.2f} / "
+        f"{operations['refusals']['estimate']:.2f} / "
+        f"{operations['repairs']['estimate']:.2f} |"
+    ) in readme
+
+
 def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None:
     payloads = [README.read_text("utf-8"), *[path.read_text("utf-8") for path in DELTA_DOCS]]
     joined = "\n".join(payloads)

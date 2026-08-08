@@ -277,6 +277,30 @@ retained as `suspected` without merging or suppressing dispatch. The canonical
 comparison with the immutable old heuristic is preregistered for the untouched
 holdout; no improvement claim is made before that comparison succeeds.
 
+### Development-only evidence
+
+The frozen 100-seed development study is
+[recorded here](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json).
+These seeds were used for calibration and algorithm selection, so the results
+are diagnostics—not confirmatory evidence:
+
+| Development diagnostic | Estimate | 95% interval or range |
+|---|---:|---:|
+| Observed calls per seed | 40.01 | 38.27–41.74 |
+| Hour-four calls per seed | 11.84 | 11.02–12.65 |
+| Finite strict-load median | 2.00 | 2.00–2.00 |
+| Finite uncapped-load median | 1.50 | 1.50–1.50 |
+| Finite historical normalized-index median | 1.80 | 1.60–2.00 |
+| Strict unserviceable windows per seed | 0.11 | 0.05–0.17 |
+| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.68–9.60 / 17.71–19.53 / 11.39–13.10 |
+| Selected-minus-baseline false-merge rate | −0.040 | −0.071–−0.009 |
+| Selected-minus-baseline pairwise recall | −0.024 | −0.039–−0.009 |
+
+The selected graph also had a +0.023 development difference in false-report
+merge rate (95% interval −0.012 to +0.058). This adverse diagnostic is retained;
+the untouched paired confirmatory comparison remains the only basis for a later
+improvement claim.
+
 The common predictor seam includes a real content-addressed V-JEPA adapter and a
 separate flood-head loader. Heavyweight official-checkpoint encoding is optional
 and offline; it is not a qualification study. Run the small project-owned fixture:
@@ -338,7 +362,7 @@ Delta documentation:
 - [Process calibration report](data/scenario/delta/calibration/v8_process_coefficients_v1.json)
 - [Reconciliation selection report](data/scenario/delta/calibration/v8_reconciliation_selection_v1.json)
 - Acceptance v9: `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` after preregistration
-- Development report v5: `docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json` after the frozen development run
+- [Development report v5](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json)
 - Original validation report v5: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json` after the once-only run
 - Original-report registry: `data/scenario/delta/validation/original_report_registry_v1.json` only after the original report is committed
 - Reference bundle v5: `data/scenario/delta/reference/wf_dfld_01_small_book_v5` after publication

@@ -314,6 +314,15 @@ and the 55-second generate/run/replay budget. Strict, uncapped, and historical
 load values are reported, but strict load has no numerical gate. Any holdout
 failure must be published without tuning or seed replacement.
 
+The frozen development-only report is
+`docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json`. It records 40.01
+mean calls, an hour-four mean of 11.84 whose 95% interval contains 12, a 2.0
+finite strict-load median, and nonzero allocation, refusal, and repair means.
+The selected evidence graph reduced development false-merge rate relative to
+the baseline while satisfying the recall guardrail. Its adverse +0.023 mean
+false-report-merge difference is also retained. None of these development
+diagnostics is a confirmatory result.
+
 ## Reproduction
 
 ```bash
