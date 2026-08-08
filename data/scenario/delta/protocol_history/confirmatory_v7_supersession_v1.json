@@ -1,0 +1,12 @@
+{
+  "disposition": "superseded-before-execution",
+  "execution_status": "never-executed",
+  "immutability_rule": "The acceptance-v8 file and confirmatory-v7 seed list remain preserved as protocol history and must never be executed or relabeled.",
+  "reason": "A pre-push audit identified incomplete scientific-input closure, ambiguous finite-load labels, a feature-branch workflow trigger that could not launch, and maintainability defects that must be corrected before the scientific freeze.",
+  "record_type": "confirmatory-ensemble-supersession",
+  "schema_version": "delta-protocol-history-v1",
+  "successor_ensemble": "confirmatory-v8",
+  "successor_protocol": "WF-DFLD-01-SMALL-v9",
+  "superseded_acceptance_path": "configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml",
+  "superseded_ensemble": "confirmatory-v7"
+}
