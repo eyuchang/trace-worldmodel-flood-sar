@@ -100,6 +100,7 @@ def verify_exact_replay(
     if reference_manifest.schema_version in {
         "delta-replay-manifest-v4",
         "delta-replay-manifest-v5",
+        "delta-replay-manifest-v6",
     }:
         receipt_path = reference_root / "execution_receipt.json"
         if receipt_path.is_symlink() or not receipt_path.is_file():

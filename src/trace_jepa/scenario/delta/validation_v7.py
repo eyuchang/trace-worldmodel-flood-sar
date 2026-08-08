@@ -233,16 +233,16 @@ def _seed_row(scenario: GeneratedScenario, result: DeltaRunResult) -> dict[str, 
         ],
         "channel_counts": channel_counts,
         "location_error_mean_m": statistics.fmean(location_errors) if location_errors else 0.0,
-        "peak_strict_concurrent_load_ratio": (
-            result.peak_strict_concurrent_load_ratio_milli / 1000.0
+        "peak_finite_strict_concurrent_load_ratio": (
+            result.peak_finite_strict_concurrent_load_ratio_milli / 1000.0
         ),
         "strict_unserviceable_windows": result.strict_unserviceable_windows,
-        "peak_uncapped_compatible_load_ratio": (
-            result.peak_uncapped_compatible_load_ratio_milli / 1000.0
+        "peak_finite_uncapped_compatible_load_ratio": (
+            result.peak_finite_uncapped_compatible_load_ratio_milli / 1000.0
         ),
         "uncapped_unserviceable_windows": result.uncapped_unserviceable_windows,
-        "peak_registered_normalized_coverable_load_index": (
-            result.peak_registered_normalized_coverable_load_index_milli / 1000.0
+        "peak_finite_registered_normalized_coverable_load_index": (
+            result.peak_finite_registered_normalized_coverable_load_index_milli / 1000.0
         ),
         "historical_capped_unserviceable_windows": (result.historical_capped_unserviceable_windows),
         "peak_finite_residual_strict_pressure_ratio": (
@@ -381,15 +381,15 @@ def run_v7_study(
             "maximum": max(call_values),
             "hourly_mean_95": hourly,
         },
-        "peak_strict_concurrent_load_ratio": _metric_summary(
-            rows, "peak_strict_concurrent_load_ratio", protocol_hash, median=True
+        "peak_finite_strict_concurrent_load_ratio": _metric_summary(
+            rows, "peak_finite_strict_concurrent_load_ratio", protocol_hash, median=True
         ),
-        "peak_uncapped_compatible_load_ratio": _metric_summary(
-            rows, "peak_uncapped_compatible_load_ratio", protocol_hash, median=True
+        "peak_finite_uncapped_compatible_load_ratio": _metric_summary(
+            rows, "peak_finite_uncapped_compatible_load_ratio", protocol_hash, median=True
         ),
-        "peak_registered_normalized_coverable_load_index": _metric_summary(
+        "peak_finite_registered_normalized_coverable_load_index": _metric_summary(
             rows,
-            "peak_registered_normalized_coverable_load_index",
+            "peak_finite_registered_normalized_coverable_load_index",
             protocol_hash,
             median=True,
         ),

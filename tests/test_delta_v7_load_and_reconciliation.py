@@ -8,6 +8,7 @@ import pytest
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.evaluation import evaluate_partitions
 from trace_jepa.scenario.delta.generator import generate_delta_small
+from trace_jepa.scenario.delta.loading import load_scenario_config
 from trace_jepa.scenario.delta.models import CallRecord
 from trace_jepa.scenario.delta.reconciliation_selection import (
     CANONICAL_RECONCILIATION_ALGORITHM,
@@ -99,6 +100,35 @@ def test_zero_demand_and_zero_capacity_have_explicit_semantics() -> None:
     )
     assert all(item.strict_concurrent_load_ratio_milli == 0 for item in empty_windows)
     assert all(item.residual_strict_pressure_ratio_milli == 0 for item in empty_windows)
+
+
+def test_v5_configuration_has_no_active_historical_ratio_target() -> None:
+    config = load_scenario_config(CONFIG)
+    assert config.schema_version == "trace-delta-scenario-v5"
+    assert config.demand_capacity.schema_version == "delta-demand-capacity-v5"
+    assert config.demand_capacity.target_ratio is None
+    assert config.demand_capacity.tolerance is None
+    raw = CONFIG.read_text("utf-8")
+    assert "target_ratio:" not in raw
+    assert "tolerance:" not in raw
+
+
+def test_v5_result_serializes_only_finite_qualified_peak_names() -> None:
+    result = run_delta_small(_scenario(), ToyActionPrefixPredictor(), POLICY)
+    payload = result.model_dump(mode="json")
+    expected = {
+        "peak_finite_strict_concurrent_load_ratio_milli",
+        "peak_finite_uncapped_compatible_load_ratio_milli",
+        "peak_finite_registered_normalized_coverable_load_index_milli",
+        "peak_finite_residual_strict_pressure_ratio_milli",
+    }
+    assert expected <= payload.keys()
+    assert "peak_strict_concurrent_load_ratio_milli" not in payload
+    assert "peak_uncapped_compatible_load_ratio_milli" not in payload
+    assert "peak_registered_normalized_coverable_load_index_milli" not in payload
+    assert result.peak_strict_concurrent_load_ratio_milli == (
+        result.peak_finite_strict_concurrent_load_ratio_milli
+    )
 
 
 def test_complete_partition_metrics_penalize_false_merges() -> None:

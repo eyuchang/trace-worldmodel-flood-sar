@@ -685,7 +685,10 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     validation = _load_json(reference_root / "validation_summary.json")
     trace_records = _load_json(reference_root / "trace_records.json")
     is_modern = bool(windows and "strict_concurrent_load_ratio_milli" in windows[0])
-    is_v8 = summary.get("schema_version") == "delta-small-machine-result-summary-v4"
+    is_v8 = summary.get("schema_version") in {
+        "delta-small-machine-result-summary-v4",
+        "delta-small-machine-result-summary-v5",
+    }
     coordination_path = reference_root / "coordination.json"
     coordination = _load_json(coordination_path) if is_v8 and coordination_path.is_file() else None
     reconciliation_path = reference_root / "controller_reconciliation.json"

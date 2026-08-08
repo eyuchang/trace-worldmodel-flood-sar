@@ -16,9 +16,7 @@ def link_id(
     status: str,
     evidence_families: Iterable[str],
 ) -> str:
-    payload = "|".join(
-        (algorithm_id, source_call_id, target_call_id, status, *evidence_families)
-    )
+    payload = "|".join((algorithm_id, source_call_id, target_call_id, status, *evidence_families))
     return "RL-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
@@ -78,6 +76,8 @@ def soft_evidence(
         )
         if present
     )
-    return temporal and spatial and taxonomy and (descriptor or occupant_medical), evidence, (
-        temporal and spatial
+    return (
+        temporal and spatial and taxonomy and (descriptor or occupant_medical),
+        evidence,
+        (temporal and spatial),
     )

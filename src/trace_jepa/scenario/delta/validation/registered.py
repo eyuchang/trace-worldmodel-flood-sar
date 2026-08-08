@@ -224,7 +224,7 @@ def run_v8_development_validation(
         ),
     }
     report: dict[str, object] = {
-        "schema_version": "delta-statistical-validation-v4",
+        "schema_version": "delta-statistical-validation-v5",
         "execution_role": "development",
         "confirmatory_seeds_accessed": False,
         "scientific_input_manifest_sha256": sha256_file(scientific_manifest_path),
@@ -416,7 +416,7 @@ def run_v8_registered_validation(
     }
     studies[1]["registered_gate_evaluation"] = confirmatory_gates
     report: dict[str, object] = {
-        "schema_version": "delta-statistical-validation-v4",
+        "schema_version": "delta-statistical-validation-v5",
         "execution_role": study,
         "execution_policy": "original-once-then-explicit-replication",
         "source_commit": source_commit,
@@ -441,14 +441,25 @@ def run_v8_registered_validation(
             "refusals": book_result.refused,
             "visible_evidence_repairs": book_result.repaired,
             "allocation_share": allocation_share,
-            "peak_strict_concurrent_load_ratio": (
-                book_result.peak_strict_concurrent_load_ratio_milli / 1000.0
+            "peak_finite_strict_concurrent_load_ratio": (
+                book_result.peak_finite_strict_concurrent_load_ratio_milli / 1000.0
             ),
-            "peak_uncapped_compatible_load_ratio": (
-                book_result.peak_uncapped_compatible_load_ratio_milli / 1000.0
+            "peak_finite_uncapped_compatible_load_ratio": (
+                book_result.peak_finite_uncapped_compatible_load_ratio_milli / 1000.0
             ),
-            "historical_normalized_coverable_load_index": (
-                book_result.peak_registered_normalized_coverable_load_index_milli / 1000.0
+            "peak_finite_registered_normalized_coverable_load_index": (
+                book_result.peak_finite_registered_normalized_coverable_load_index_milli / 1000.0
+            ),
+            "strict_unserviceable_windows": book_result.strict_unserviceable_windows,
+            "uncapped_unserviceable_windows": book_result.uncapped_unserviceable_windows,
+            "historical_capped_unserviceable_windows": (
+                book_result.historical_capped_unserviceable_windows
+            ),
+            "peak_finite_residual_strict_pressure_ratio": (
+                book_result.peak_finite_residual_strict_pressure_ratio_milli / 1000.0
+            ),
+            "residual_strict_unserviceable_windows": (
+                book_result.residual_strict_unserviceable_windows
             ),
             "registered_gate_evaluation": book_gates,
         },

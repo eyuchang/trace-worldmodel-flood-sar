@@ -106,14 +106,15 @@ def main() -> None:
         )
         LOGGER.info(
             "completed %s: allocated=%d refused=%d repaired=%d "
-            "strict_load=%.3f historical_normalized_index=%.3f "
+            "finite_strict_load=%.3f finite_historical_normalized_index=%.3f "
             "residual_strict_pressure_finite_peak=%.3f artifacts=%d",
             execution.run_result.scenario_id,
             execution.run_result.allocated,
             execution.run_result.refused,
             execution.run_result.repaired,
-            execution.run_result.peak_strict_concurrent_load_ratio_milli / 1000.0,
-            execution.run_result.peak_registered_normalized_coverable_load_index_milli / 1000.0,
+            execution.run_result.peak_finite_strict_concurrent_load_ratio_milli / 1000.0,
+            execution.run_result.peak_finite_registered_normalized_coverable_load_index_milli
+            / 1000.0,
             execution.run_result.peak_finite_residual_strict_pressure_ratio_milli / 1000.0,
             len(execution.manifest.artifacts),
         )

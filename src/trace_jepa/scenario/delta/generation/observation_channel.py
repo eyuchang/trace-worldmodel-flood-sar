@@ -107,9 +107,7 @@ class ObservationChannel:
         self.truth = truth
         self.keyed = keyed
         self.reporting_by_hour = reporting_by_hour or BASE_REPORTING_BY_HOUR_V2
-        self.false_report_hour_weights = (
-            false_report_hour_weights or FALSE_REPORT_HOUR_WEIGHTS_V1
-        )
+        self.false_report_hour_weights = false_report_hour_weights or FALSE_REPORT_HOUR_WEIGHTS_V1
         self.probabilities = channel_probabilities(config.axes.iota)
         self.structures = {item.structure_id: item for item in truth.structures}
         self.people = {item.person_id: item for item in truth.people}
@@ -118,9 +116,9 @@ class ObservationChannel:
 
     @staticmethod
     def _report_id(incident_key: str, relationship: str, ordinal: int) -> str:
-        digest = hashlib.sha256(
-            f"{incident_key}|{relationship}|{ordinal}".encode()
-        ).hexdigest()[:16]
+        digest = hashlib.sha256(f"{incident_key}|{relationship}|{ordinal}".encode()).hexdigest()[
+            :16
+        ]
         return f"C8-{digest}"
 
     def _descriptor(
@@ -135,14 +133,10 @@ class ObservationChannel:
         if (
             incident_descriptor is not None
             and incident_descriptor in vocabulary
-            and self.keyed.bernoulli(
-                share_probability, "call", call_id, "shared-descriptor"
-            )
+            and self.keyed.bernoulli(share_probability, "call", call_id, "shared-descriptor")
         ):
             return incident_descriptor
-        return vocabulary[
-            self.keyed.choice_index(len(vocabulary), "call", call_id, "descriptor")
-        ]
+        return vocabulary[self.keyed.choice_index(len(vocabulary), "call", call_id, "descriptor")]
 
     def _visible_fields(
         self, draft: ReportDraft, call_id: str
@@ -180,15 +174,12 @@ class ObservationChannel:
         disagreement = self.keyed.choice_index(4, "call", call_id, "conflict-field")
         if disagreement == 0:
             call_type = alternatives[
-                self.keyed.choice_index(
-                    len(alternatives), "call", call_id, "conflict-taxonomy"
-                )
+                self.keyed.choice_index(len(alternatives), "call", call_id, "conflict-taxonomy")
             ]
         elif disagreement == 1:
             occupants = max(
                 0,
-                occupants
-                + (-1 if self.keyed.bernoulli(0.5, "call", call_id, "count-sign") else 1),
+                occupants + (-1 if self.keyed.bernoulli(0.5, "call", call_id, "count-sign") else 1),
             )
         elif disagreement == 2:
             medical = ["unverified-medical-description"]
@@ -198,9 +189,7 @@ class ObservationChannel:
         incident_id = draft.incident.incident_id if draft.incident is not None else None
         incident_key = incident_id if incident_id is not None else draft.callback_group
         call_id = self._report_id(incident_key, draft.relationship, draft.ordinal)
-        structure, person_ids, call_type, occupants, medical = self._visible_fields(
-            draft, call_id
-        )
+        structure, person_ids, call_type, occupants, medical = self._visible_fields(draft, call_id)
         call_type, occupants, medical, disagreement = self._apply_conflict(
             draft, call_id, call_type, occupants, medical
         )
@@ -214,16 +203,13 @@ class ObservationChannel:
             if callback_failed
             else f"SYNTH-CB-{draft.callback_group}"
         )
-        bounded_received_s = min(
-            self.config.timeline.duration_s - 1, max(0, draft.received_s)
-        )
+        bounded_received_s = min(self.config.timeline.duration_s - 1, max(0, draft.received_s))
         incident_type = draft.incident.incident_type if draft.incident is not None else "C-LEV"
         self.calls.append(
             CallRecord(
                 call_id=call_id,
                 received_s=bounded_received_s,
-                received_ts=self.config.timeline.epoch_utc
-                + timedelta(seconds=bounded_received_s),
+                received_ts=self.config.timeline.epoch_utc + timedelta(seconds=bounded_received_s),
                 psap="Sacramento County",
                 channel=draft.channel,
                 callback_token=callback_token,
@@ -237,9 +223,7 @@ class ObservationChannel:
                     northing_mm=structure.northing_mm,
                     structure_number=int(structure.structure_id[-3:]),
                     iota=self.config.axes.iota,
-                    conflict=(
-                        draft.relationship == "conflicting_report" and disagreement == 3
-                    ),
+                    conflict=(draft.relationship == "conflicting_report" and disagreement == 3),
                 ),
                 reported=ReportedCall(
                     call_type=call_type,
@@ -315,9 +299,7 @@ class ObservationChannel:
             ("conflict", "911-transfer", 180, 1_099),
             ("revision", "911-callback", 300, 1_499),
         )
-        for ordinal, (probability_name, channel, minimum, maximum) in enumerate(
-            specs, start=1
-        ):
+        for ordinal, (probability_name, channel, minimum, maximum) in enumerate(specs, start=1):
             if not self.keyed.bernoulli(
                 self.probabilities[probability_name],
                 "incident",
@@ -347,9 +329,7 @@ class ObservationChannel:
                     ),
                     callback_group=callback_group,
                     descriptor_family=descriptor,
-                    revision_of_call_id=(
-                        base_call if report_relationship == "revision" else None
-                    ),
+                    revision_of_call_id=(base_call if report_relationship == "revision" else None),
                 )
             )
 
@@ -394,9 +374,7 @@ class ObservationChannel:
             location_method_target_milli={
                 key: round(1_000 * value) for key, value in mixture.items()
             },
-            location_error_scale_milli=round(
-                1_000 * location_error_scale(self.config.axes.iota)
-            ),
+            location_error_scale_milli=round(1_000 * location_error_scale(self.config.axes.iota)),
         )
 
 

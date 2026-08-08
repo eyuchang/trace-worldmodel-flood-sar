@@ -172,7 +172,7 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
     ]
     return {
         "schema_version": (
-            "delta-small-machine-result-summary-v4"
+            "delta-small-machine-result-summary-v5"
             if scenario.config.generator_version == "delta-small-generator-v8"
             else (
                 "delta-small-machine-result-summary-v3"
@@ -201,16 +201,16 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
             item.status == "active_at_scenario_censoring" for item in run_result.outcomes
         ),
         "trace_chain_verified": run_result.trace_chain_verified,
-        "peak_strict_concurrent_load_ratio_milli": (
-            run_result.peak_strict_concurrent_load_ratio_milli
+        "peak_finite_strict_concurrent_load_ratio_milli": (
+            run_result.peak_finite_strict_concurrent_load_ratio_milli
         ),
         "strict_unserviceable_windows": run_result.strict_unserviceable_windows,
-        "peak_uncapped_compatible_load_ratio_milli": (
-            run_result.peak_uncapped_compatible_load_ratio_milli
+        "peak_finite_uncapped_compatible_load_ratio_milli": (
+            run_result.peak_finite_uncapped_compatible_load_ratio_milli
         ),
         "uncapped_unserviceable_windows": run_result.uncapped_unserviceable_windows,
-        "peak_registered_normalized_coverable_load_index_milli": (
-            run_result.peak_registered_normalized_coverable_load_index_milli
+        "peak_finite_registered_normalized_coverable_load_index_milli": (
+            run_result.peak_finite_registered_normalized_coverable_load_index_milli
         ),
         "historical_capped_unserviceable_windows": (
             run_result.historical_capped_unserviceable_windows
@@ -254,7 +254,7 @@ def write_scenario_artifacts(
         repository_root
         / "configs/scenarios"
         / (
-            "wf_dfld_01_small_acceptance_v4.yaml"
+            "wf_dfld_01_small_acceptance_v5.yaml"
             if is_v8
             else (
                 "wf_dfld_01_small_acceptance_v3.yaml"
@@ -282,7 +282,7 @@ def write_scenario_artifacts(
         validation_report = json.loads(validation_path.read_text("utf-8"))
         validation_summary: dict[str, object] = {
             "schema_version": (
-                "delta-small-validation-summary-v4"
+                "delta-small-validation-summary-v5"
                 if is_v8
                 else (
                     "delta-small-validation-summary-v3"
@@ -304,14 +304,14 @@ def write_scenario_artifacts(
                     "call_count": study["call_count"],
                     **(
                         {
-                            "peak_strict_concurrent_load_ratio": study[
-                                "peak_strict_concurrent_load_ratio"
+                            "peak_finite_strict_concurrent_load_ratio": study[
+                                "peak_finite_strict_concurrent_load_ratio"
                             ],
-                            "peak_uncapped_compatible_load_ratio": study[
-                                "peak_uncapped_compatible_load_ratio"
+                            "peak_finite_uncapped_compatible_load_ratio": study[
+                                "peak_finite_uncapped_compatible_load_ratio"
                             ],
-                            "peak_registered_normalized_coverable_load_index": study[
-                                "peak_registered_normalized_coverable_load_index"
+                            "peak_finite_registered_normalized_coverable_load_index": study[
+                                "peak_finite_registered_normalized_coverable_load_index"
                             ],
                             "peak_finite_residual_strict_pressure_ratio": study[
                                 "peak_finite_residual_strict_pressure_ratio"
@@ -336,7 +336,7 @@ def write_scenario_artifacts(
     else:
         validation_summary = {
             "schema_version": (
-                "delta-small-validation-summary-v4"
+                "delta-small-validation-summary-v5"
                 if is_v8
                 else (
                     "delta-small-validation-summary-v3"
@@ -681,7 +681,7 @@ def write_scenario_artifacts(
         )
     manifest = ReplayManifest(
         schema_version=(
-            "delta-replay-manifest-v5"
+            "delta-replay-manifest-v6"
             if is_v8
             else ("delta-replay-manifest-v4" if is_modern else "delta-replay-manifest-v3")
         ),

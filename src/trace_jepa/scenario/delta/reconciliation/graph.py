@@ -51,9 +51,7 @@ class EvidenceGraphReconciler:
         reason: str,
     ) -> ReconciliationLink:
         return ReconciliationLink(
-            link_id=link_id(
-                self.algorithm_id, current.call_id, target.call_id, status, evidence
-            ),
+            link_id=link_id(self.algorithm_id, current.call_id, target.call_id, status, evidence),
             source_call_id=current.call_id,
             target_call_id=target.call_id,
             status=status,
@@ -228,9 +226,7 @@ class EvidenceGraphReconciler:
         )
 
 
-def evidence_graph_clusters(
-    calls: list[CallRecord], algorithm_id: str
-) -> ReconciliationArtifact:
+def evidence_graph_clusters(calls: list[CallRecord], algorithm_id: str) -> ReconciliationArtifact:
     reconciler = EvidenceGraphReconciler(algorithm_id)
     for call in calls:
         reconciler.process(call, call.received_s)

@@ -323,7 +323,7 @@ def run_delta_small(
     ]
     reconciliation = evaluate_reconciliation(scenario, decisions)
     return DeltaRunResult(
-        schema_version="delta-small-run-result-v4",
+        schema_version="delta-small-run-result-v5",
         scenario_id=scenario.config.scenario_id,
         predictor_version=provenance.predictor_version,
         calibration_version=provenance.calibration_version,
@@ -337,15 +337,17 @@ def run_delta_small(
         reconciliation_artifact=reconciler.artifact() if reconciler is not None else None,
         reconciliation_evaluation=reconciliation,
         trace_chain_verified=chain_verified,
-        peak_strict_concurrent_load_ratio_milli=max(strict_ratios, default=0),
+        peak_finite_strict_concurrent_load_ratio_milli=max(strict_ratios, default=0),
         strict_unserviceable_windows=sum(item.strict_unserviceable for item in windows),
-        peak_uncapped_compatible_load_ratio_milli=max(uncapped_ratios, default=0),
+        peak_finite_uncapped_compatible_load_ratio_milli=max(uncapped_ratios, default=0),
         uncapped_unserviceable_windows=sum(
             item.active_demand_units > 0
             and item.uncapped_compatible_service_unit_capacity_units == 0
             for item in windows
         ),
-        peak_registered_normalized_coverable_load_index_milli=max(historical_ratios, default=0),
+        peak_finite_registered_normalized_coverable_load_index_milli=max(
+            historical_ratios, default=0
+        ),
         historical_capped_unserviceable_windows=sum(
             item.active_demand_units > 0 and item.historical_capped_coverable_capacity_units == 0
             for item in windows

@@ -22,14 +22,14 @@ class ProtocolRevision:
     observation_coefficients: str | None = None
 
 
-PROTOCOL_REVISIONS: dict[str, ProtocolRevision] = {
-    "delta-small-generator-v6": ProtocolRevision(
+PROTOCOL_REVISIONS: dict[tuple[str, str], ProtocolRevision] = {
+    ("delta-small-generator-v6", "trace-delta-scenario-v2"): ProtocolRevision(
         scenario_schema="trace-delta-scenario-v2",
         randomness_namespace="delta-small-generator-v5",
         resource_profile="kappa-0.5-local-plus-automatic-aid-v1",
         demand_capacity_schema="delta-demand-capacity-v2",
     ),
-    "delta-small-generator-v7": ProtocolRevision(
+    ("delta-small-generator-v7", "trace-delta-scenario-v3"): ProtocolRevision(
         scenario_schema="trace-delta-scenario-v3",
         randomness_namespace="delta-small-generator-v7",
         resource_profile="kappa-0.5-local-plus-automatic-aid-v1",
@@ -37,11 +37,19 @@ PROTOCOL_REVISIONS: dict[str, ProtocolRevision] = {
         truth_coefficients="delta-truth-intercepts-v1",
         observation_coefficients="delta-observation-coefficients-v1",
     ),
-    "delta-small-generator-v8": ProtocolRevision(
+    ("delta-small-generator-v8", "trace-delta-scenario-v4"): ProtocolRevision(
         scenario_schema="trace-delta-scenario-v4",
         randomness_namespace="delta-small-generator-v8",
         resource_profile="kappa-0.5-local-plus-automatic-aid-v1",
         demand_capacity_schema="delta-demand-capacity-v4",
+        truth_coefficients="delta-truth-intercepts-v2",
+        observation_coefficients="delta-observation-coefficients-v2",
+    ),
+    ("delta-small-generator-v8", "trace-delta-scenario-v5"): ProtocolRevision(
+        scenario_schema="trace-delta-scenario-v5",
+        randomness_namespace="delta-small-generator-v8",
+        resource_profile="kappa-0.5-local-plus-automatic-aid-v1",
+        demand_capacity_schema="delta-demand-capacity-v5",
         truth_coefficients="delta-truth-intercepts-v2",
         observation_coefficients="delta-observation-coefficients-v2",
     ),
@@ -107,12 +115,20 @@ class CallProcessConfig(DeltaModel):
 class DemandCapacityConfig(DeltaModel):
     schema_version: str
     window_s: int = Field(gt=0)
-    target_ratio: float = Field(gt=0.0)
-    tolerance: float = Field(gt=0.0)
+    target_ratio: float | None = Field(default=None, gt=0.0)
+    tolerance: float | None = Field(default=None, gt=0.0)
     demand_unit: str
     capacity_unit: str
     headline_metric: str = "legacy-hybrid-uncovered-demand-over-free-capacity"
     secondary_metric: str = "not-defined"
+
+    @model_validator(mode="after")
+    def forbid_active_legacy_target(self) -> DemandCapacityConfig:
+        if self.schema_version == "delta-demand-capacity-v5" and (
+            self.target_ratio is not None or self.tolerance is not None
+        ):
+            raise ValueError("demand/capacity v5 forbids historical target fields")
+        return self
 
 
 class ExpectedConfig(DeltaModel):
@@ -170,7 +186,7 @@ class DeltaScenarioConfig(DeltaModel):
             raise ValueError("breaches are outside the Small scope")
         if self.expected.mutual_aid_tiers != 0 or self.expected.crew_rotation:
             raise ValueError("mutual aid and crew rotation are outside the Small scope")
-        revision = PROTOCOL_REVISIONS.get(self.generator_version)
+        revision = PROTOCOL_REVISIONS.get((self.generator_version, self.schema_version))
         if revision is None:
             return self
         bindings = {

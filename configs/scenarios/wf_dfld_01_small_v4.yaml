@@ -1,4 +1,4 @@
-schema_version: trace-delta-scenario-v5
+schema_version: trace-delta-scenario-v4
 scenario_id: WF-DFLD-01-SMALL
 generator_version: delta-small-generator-v8
 randomness_namespace_version: delta-small-generator-v8
@@ -55,12 +55,14 @@ call_process:
     - C-WEL
     - C-MIS
 demand_capacity:
-  schema_version: delta-demand-capacity-v5
+  schema_version: delta-demand-capacity-v4
   window_s: 900
+  target_ratio: 1.5
+  tolerance: 0.1
   demand_unit: normalized_concurrent_service_units
   capacity_unit: scheduled_mobilized_reachable_compatible_service_units
-  headline_metric: strict-one-resource-one-incident-concurrent-load-v5
-  secondary_metric: strict-residual-operational-pressure-v5
+  headline_metric: strict-one-resource-one-incident-concurrent-load-v4
+  secondary_metric: strict-residual-operational-pressure-v4
 expected:
   breaches: 0
   mutual_aid_tiers: 0

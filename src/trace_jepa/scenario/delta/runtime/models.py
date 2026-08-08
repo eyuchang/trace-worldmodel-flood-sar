@@ -159,11 +159,11 @@ class DeltaRunResult(DeltaModel):
     reconciliation_artifact: ReconciliationArtifact | None = None
     reconciliation_evaluation: ReconciliationEvaluation
     trace_chain_verified: bool
-    peak_strict_concurrent_load_ratio_milli: int = Field(ge=0)
+    peak_finite_strict_concurrent_load_ratio_milli: int = Field(ge=0)
     strict_unserviceable_windows: int = Field(ge=0)
-    peak_uncapped_compatible_load_ratio_milli: int = Field(ge=0)
+    peak_finite_uncapped_compatible_load_ratio_milli: int = Field(ge=0)
     uncapped_unserviceable_windows: int = Field(ge=0)
-    peak_registered_normalized_coverable_load_index_milli: int = Field(ge=0)
+    peak_finite_registered_normalized_coverable_load_index_milli: int = Field(ge=0)
     historical_capped_unserviceable_windows: int = Field(ge=0)
     peak_finite_residual_strict_pressure_ratio_milli: int = Field(ge=0)
     residual_strict_unserviceable_windows: int = Field(ge=0)
@@ -173,11 +173,29 @@ class DeltaRunResult(DeltaModel):
 
     @property
     def peak_demand_capacity_ratio_milli(self) -> int:
-        return self.peak_strict_concurrent_load_ratio_milli
+        return self.peak_finite_strict_concurrent_load_ratio_milli
+
+    @property
+    def peak_strict_concurrent_load_ratio_milli(self) -> int:
+        """Deprecated read-only alias for one release."""
+
+        return self.peak_finite_strict_concurrent_load_ratio_milli
+
+    @property
+    def peak_uncapped_compatible_load_ratio_milli(self) -> int:
+        """Deprecated read-only alias for one release."""
+
+        return self.peak_finite_uncapped_compatible_load_ratio_milli
+
+    @property
+    def peak_registered_normalized_coverable_load_index_milli(self) -> int:
+        """Deprecated read-only alias for one release."""
+
+        return self.peak_finite_registered_normalized_coverable_load_index_milli
 
     @property
     def peak_gross_load_ratio_milli(self) -> int:
-        return self.peak_registered_normalized_coverable_load_index_milli
+        return self.peak_finite_registered_normalized_coverable_load_index_milli
 
     @property
     def gross_unserviceable_windows(self) -> int:

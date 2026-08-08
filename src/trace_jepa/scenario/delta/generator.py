@@ -34,8 +34,8 @@ GENERATION_ORDER = [
     "road_crossing_state",
     "ground_truth",
     "observations",
-    "predictor_prior",
     "resources",
+    "predictor_prior",
 ]
 GENERATION_ORDER_V7 = [
     "geography",
@@ -45,8 +45,8 @@ GENERATION_ORDER_V7 = [
     "ground_truth",
     "observations",
     "coordination",
-    "predictor_prior",
     "resources",
+    "predictor_prior",
 ]
 
 
