@@ -21,14 +21,21 @@ from trace_jepa.scenario.delta.observations_v7 import (
     location_method_mixture_v7,
     reporting_probability_v7,
 )
+from trace_jepa.scenario.delta.observations_v8 import (
+    BASE_REPORTING_BY_HOUR_V2,
+    FALSE_REPORT_HOUR_WEIGHTS_V1,
+    channel_probabilities_v8,
+)
+from trace_jepa.scenario.delta.pipeline import execute_delta_small
 from trace_jepa.scenario.delta.randomness import KeyedRandom
 from trace_jepa.scenario.delta.runner import run_delta_small
 from trace_jepa.scenario.delta.truth_v7 import IncidentCandidate
-from trace_jepa.scenario.delta.truth_v8 import form_episode_candidates_v8
+from trace_jepa.scenario.delta.truth_v8 import TYPE_INTERCEPTS_V2, form_episode_candidates_v8
 from trace_jepa.util import sha256_file
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
+CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small_v3.yaml"
+V8_CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"
 SOURCE_PATH = CONFIG.resolve(strict=True)
@@ -117,6 +124,75 @@ def test_v8_episode_formation_preserves_keyed_candidate_draws() -> None:
     assert [item.accepted_draw for item in formed] == expected
     assert len({item.candidate_digest for item in formed}) == len(formed)
     assert len({item.draw_digest for item in formed}) == len(formed)
+
+
+def test_v8_default_emits_episode_audit_and_nonunique_visible_descriptors() -> None:
+    config = load_scenario_config(V8_CONFIG)
+    geography = load_geography_catalog(GEOGRAPHY)
+    scenario = generate_delta_small_from_models(config, geography, V8_CONFIG.resolve(strict=True))
+    assert config.generator_version == "delta-small-generator-v8"
+    assert scenario.truth.schema_version == "delta-ground-truth-v5"
+    assert scenario.observations.schema_version == "delta-observations-v5"
+    accepted = [
+        item.episode_key
+        for item in scenario.truth.candidate_audit
+        if item.disposition == "accepted_as_truth_incident"
+    ]
+    assert len(accepted) == len(set(accepted)) == len(scenario.truth.incidents)
+    assert any(
+        item.disposition == "suppressed_existing_episode_incident"
+        for item in scenario.truth.candidate_audit
+    )
+    descriptor_counts: dict[str, int] = defaultdict(int)
+    for call in scenario.observations.calls:
+        descriptor_counts[call.reported.description_token] += 1
+    assert len(descriptor_counts) < len(scenario.observations.calls)
+    assert all(not value.startswith(("INC", "PER", "STR")) for value in descriptor_counts)
+
+
+def test_v8_calibration_record_matches_frozen_code_constants_and_development_scope() -> None:
+    record = json.loads(
+        (ROOT / "data/scenario/delta/calibration/v8_process_coefficients_v1.json").read_text(
+            "utf-8"
+        )
+    )
+    assert record["development_seeds"] == {
+        "first_seed": 20260803,
+        "last_seed": 20260902,
+        "seed_count": 100,
+    }
+    assert record["truth"]["type_intercepts"] == TYPE_INTERCEPTS_V2
+    assert (
+        tuple(record["observations"]["fixed_reporting_probability_by_incident_onset_hour"])
+        == BASE_REPORTING_BY_HOUR_V2
+    )
+    assert tuple(record["observations"]["fixed_false_report_hour_weights"]) == (
+        FALSE_REPORT_HOUR_WEIGHTS_V1
+    )
+    assert record["solver"]["iterations_per_type"] == 80
+    assert len(record["solver"]["candidate_trace"]) == 6 * 80
+    assert record["truth"]["analytical_expected_total"] == 26.07
+    assert record["observations"]["realized_development_call_mean"] == 40.01
+    assert channel_probabilities_v8(0.6)["duplicate"] > channel_probabilities_v8(0.9)["duplicate"]
+
+
+def test_v8_candidate_audit_is_a_separate_hidden_artifact(tmp_path: Path) -> None:
+    execution = execute_delta_small(
+        V8_CONFIG,
+        GEOGRAPHY,
+        POLICY,
+        tmp_path / "run",
+        ToyActionPrefixPredictor(),
+    )
+    descriptors = {item.name: item for item in execution.manifest.artifacts}
+    assert descriptors["incident_candidate_audit"].contains_hidden_truth
+    assert descriptors["ground_truth"].contains_hidden_truth
+    ground_truth = json.loads((tmp_path / "run/ground_truth.json").read_text("utf-8"))
+    candidate_audit = json.loads(
+        (tmp_path / "run/incident_candidate_audit.json").read_text("utf-8")
+    )
+    assert "candidate_audit" not in ground_truth
+    assert len(candidate_audit) > len(ground_truth["incidents"])
 
 
 def test_v7_contract_uses_new_keyed_namespace_and_versioned_artifacts() -> None:

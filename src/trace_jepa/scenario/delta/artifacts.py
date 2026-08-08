@@ -322,6 +322,8 @@ def write_scenario_artifacts(
         repository_root / "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json"
     )
     resource_provenance = json.loads(resource_source.read_text("utf-8"))
+    truth_payload = scenario.truth.model_dump(mode="json")
+    candidate_audit_payload = truth_payload.pop("candidate_audit", None)
     artifacts = [
         _write_artifact(
             output_root,
@@ -376,7 +378,7 @@ def write_scenario_artifacts(
             output_root,
             "ground_truth",
             "ground_truth.json",
-            scenario.truth.model_dump(mode="json"),
+            truth_payload,
             True,
         ),
         _write_artifact(
@@ -478,6 +480,20 @@ def write_scenario_artifacts(
             False,
         ),
     ]
+    if candidate_audit_payload is not None:
+        ground_truth_index = next(
+            index for index, item in enumerate(artifacts) if item.name == "ground_truth"
+        )
+        artifacts.insert(
+            ground_truth_index + 1,
+            _write_artifact(
+                output_root,
+                "incident_candidate_audit",
+                "incident_candidate_audit.json",
+                candidate_audit_payload,
+                True,
+            ),
+        )
     if scenario.coordination is not None:
         lineage_index = next(
             index for index, item in enumerate(artifacts) if item.name == "call_lineage"

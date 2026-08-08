@@ -9,6 +9,7 @@ from trace_jepa.scenario.delta.geography_models import GeographyCatalog
 from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
 from trace_jepa.scenario.delta.models import DeltaScenarioConfig, GeneratedScenario
 from trace_jepa.scenario.delta.observations_v7 import generate_observations_v7
+from trace_jepa.scenario.delta.observations_v8 import generate_observations_v8
 from trace_jepa.scenario.delta.physical import (
     generate_crossing_states,
     generate_gauges,
@@ -92,7 +93,12 @@ def generate_delta_small_from_models(
             crossing_states,
             KeyedRandom(config.seed, seed_namespace_hash, "ground_truth"),
         )
-        observations = generate_observations_v7(
+        observation_generator = (
+            generate_observations_v8
+            if config.generator_version == "delta-small-generator-v8"
+            else generate_observations_v7
+        )
+        observations = observation_generator(
             config,
             truth,
             KeyedRandom(config.seed, seed_namespace_hash, "observations"),

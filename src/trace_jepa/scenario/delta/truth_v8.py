@@ -25,15 +25,13 @@ from trace_jepa.scenario.delta.truth_v7 import (
     build_truth_inputs_v7,
 )
 
-# Placeholder development coefficients. They are replaced only by the committed
-# calibration procedure before v8 becomes the default or a holdout is derived.
 TYPE_INTERCEPTS_V2 = {
-    "C-STR": 0.003802684544028396,
-    "C-VEH": 0.010590227133044604,
-    "C-LEV": 0.24001430962351156,
-    "C-MED": 0.005440831471262897,
-    "C-WEL": 0.003542798578404174,
-    "C-MIS": 0.00872872306670035,
+    "C-STR": 0.004669363452122014,
+    "C-VEH": 0.012172248210240474,
+    "C-LEV": 0.2400143096235115,
+    "C-MED": 0.011851372943652303,
+    "C-WEL": 0.005640336084340708,
+    "C-MIS": 0.01038177378441998,
 }
 
 
