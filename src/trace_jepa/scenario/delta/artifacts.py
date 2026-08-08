@@ -508,6 +508,20 @@ def write_scenario_artifacts(
                 False,
             ),
         )
+    if run_result.reconciliation_artifact is not None:
+        decisions_index = next(
+            index for index, item in enumerate(artifacts) if item.name == "controller_decisions"
+        )
+        artifacts.insert(
+            decisions_index + 1,
+            _write_artifact(
+                output_root,
+                "controller_reconciliation",
+                "controller_reconciliation.json",
+                run_result.reconciliation_artifact.model_dump(mode="json"),
+                False,
+            ),
+        )
     geography_manifest = geography_path.parent / (
         "build_manifest_v3.json"
         if scenario.config.generator_version == "delta-small-generator-v7"

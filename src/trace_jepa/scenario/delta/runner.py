@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import tempfile
 from collections import defaultdict
 from collections.abc import Iterator, Sequence
@@ -52,6 +51,14 @@ from trace_jepa.scenario.delta.models import (
     IncidentTruth,
     ResourceUnit,
     WeatherSample,
+)
+from trace_jepa.scenario.delta.reconciliation_selection import (
+    CANONICAL_RECONCILIATION_ALGORITHM,
+)
+from trace_jepa.scenario.delta.reconciliation_v8 import (
+    EvidenceGraphReconciler,
+    ReconciliationArtifact,
+    baseline_v7_visible_relationship,
 )
 
 CALL_ACTION = {
@@ -178,6 +185,7 @@ class DeltaRunResult(DeltaModel):
     evidence: list[WorldModelEvidence]
     commitments: list[Commitment]
     outcomes: list[DeltaResourceOutcome]
+    reconciliation_artifact: ReconciliationArtifact | None = None
     reconciliation_evaluation: ReconciliationEvaluation
     trace_chain_verified: bool
     peak_strict_concurrent_load_ratio_milli: int = Field(ge=0)
@@ -295,41 +303,6 @@ def _candidate_resource(
         if travel_s is not None:
             return unit, travel_s
     return None
-
-
-def _visible_relationship(
-    call: CallRecord,
-    earlier_calls: list[CallRecord],
-    cluster_by_call: dict[str, str],
-) -> tuple[str, tuple[str, ...]]:
-    if call.quality.revision_of_call_id is not None:
-        source = call.quality.revision_of_call_id
-        return cluster_by_call.get(source, source), ("explicit_report_revision", source)
-    for previous in reversed(earlier_calls):
-        if call.callback_token == previous.callback_token:
-            return cluster_by_call[previous.call_id], (
-                "shared_synthetic_callback_token",
-                previous.call_id,
-            )
-    for previous in reversed(earlier_calls):
-        if abs(call.received_s - previous.received_s) > 600:
-            continue
-        if call.reported.call_type != previous.reported.call_type:
-            continue
-        distance_m = (
-            math.hypot(
-                call.location.easting_mm - previous.location.easting_mm,
-                call.location.northing_mm - previous.location.northing_mm,
-            )
-            / 1000.0
-        )
-        tolerance_m = call.location.precision_m + previous.location.precision_m
-        if distance_m <= tolerance_m:
-            return cluster_by_call[previous.call_id], (
-                "spatiotemporal_taxonomy_similarity",
-                previous.call_id,
-            )
-    return call.call_id, ()
 
 
 def _prediction_evidence(
@@ -750,6 +723,11 @@ def run_delta_small(
     evidence_items: list[WorldModelEvidence] = []
     outcomes: list[DeltaResourceOutcome] = []
     busy_until = {unit.resource_id: unit.available_from_s for unit in scenario.resources.units}
+    reconciler = (
+        EvidenceGraphReconciler(CANONICAL_RECONCILIATION_ALGORITHM)
+        if scenario.config.generator_version == "delta-small-generator-v8"
+        else None
+    )
     earlier_calls: list[CallRecord] = []
     cluster_by_call: dict[str, str] = {}
     delivery_by_call = (
@@ -781,9 +759,16 @@ def run_delta_small(
             controller_timestamp = scenario.config.timeline.epoch_utc + timedelta(
                 seconds=controller_time_s
             )
-            cluster_id, evidence_basis = _visible_relationship(call, earlier_calls, cluster_by_call)
-            cluster_by_call[call.call_id] = cluster_id
-            earlier_calls.append(call)
+            if reconciler is not None:
+                reconciliation_step = reconciler.process(call, controller_time_s)
+                cluster_id = reconciliation_step.belief_cluster_id
+                evidence_basis = reconciliation_step.visible_evidence_basis
+            else:
+                cluster_id, evidence_basis = baseline_v7_visible_relationship(
+                    call, earlier_calls, cluster_by_call
+                )
+                cluster_by_call[call.call_id] = cluster_id
+                earlier_calls.append(call)
             action_name, capability = CALL_ACTION[call.reported.call_type]
             route_id = _route_for_call(scenario, call)
             candidate = _candidate_resource(
@@ -957,6 +942,7 @@ def run_delta_small(
         evidence=evidence_items,
         commitments=commitments,
         outcomes=outcomes,
+        reconciliation_artifact=reconciler.artifact() if reconciler is not None else None,
         reconciliation_evaluation=reconciliation,
         trace_chain_verified=chain_verified,
         peak_strict_concurrent_load_ratio_milli=max(strict_ratios, default=0),

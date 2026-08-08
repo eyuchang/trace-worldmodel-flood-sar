@@ -244,7 +244,9 @@ def _seed_row(scenario: GeneratedScenario, result: DeltaRunResult) -> dict[str, 
             "false_report_merge_rate": reconciliation.false_report_merge_rate,
             "revision_link_precision": reconciliation.revision_link_precision,
             "revision_link_recall": reconciliation.revision_link_recall,
-            "occupant_revision_correctness": reconciliation.occupant_revision_correctness,
+            "reported_occupant_revision_truth_accuracy": (
+                reconciliation.reported_occupant_revision_truth_accuracy
+            ),
             "adjusted_rand_index": reconciliation.adjusted_rand_index,
         },
     }

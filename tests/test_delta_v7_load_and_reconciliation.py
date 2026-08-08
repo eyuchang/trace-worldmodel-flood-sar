@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,11 @@ import pytest
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.evaluation import evaluate_partitions
 from trace_jepa.scenario.delta.generator import generate_delta_small
+from trace_jepa.scenario.delta.models import CallRecord
+from trace_jepa.scenario.delta.reconciliation_selection import (
+    CANONICAL_RECONCILIATION_ALGORITHM,
+)
+from trace_jepa.scenario.delta.reconciliation_v8 import EvidenceGraphReconciler
 from trace_jepa.scenario.delta.runner import (
     _historical_capped_coverable_capacity_units,
     _strict_matched_capacity_units,
@@ -17,7 +23,7 @@ from trace_jepa.scenario.delta.runner import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
-GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v2.yaml"
+GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"
 
 
@@ -117,7 +123,8 @@ def test_complete_partition_metrics_penalize_false_merges() -> None:
     assert result.false_report_merge_rate == 1.0
     assert result.revision_link_precision == 1.0
     assert result.revision_link_recall == 1.0
-    assert result.occupant_revision_correctness == 0.5
+    assert result.reported_occupant_revision_truth_accuracy == 0.5
+    assert result.controller_occupant_belief_accuracy is None
     assert result.adjusted_rand_index < 1.0
 
 
@@ -130,3 +137,127 @@ def test_runtime_emits_complete_reconciliation_evaluation() -> None:
     assert evaluation.controller_cluster_count > 0
     assert 0.0 <= evaluation.pairwise_f1 <= 1.0
     assert -1.0 <= evaluation.adjusted_rand_index <= 1.0
+    assert result.reconciliation_artifact is not None
+    assert result.reconciliation_artifact.hidden_lineage_used is False
+
+
+def test_v8_selection_report_matches_the_frozen_canonical_algorithm() -> None:
+    report = json.loads(
+        (ROOT / "data/scenario/delta/calibration/v8_reconciliation_selection_v1.json").read_text(
+            "utf-8"
+        )
+    )
+    assert report["selected_algorithm_id"] == CANONICAL_RECONCILIATION_ALGORITHM
+    assert report["selection_guardrail_failure"] is False
+    assert report["candidates"][CANONICAL_RECONCILIATION_ALGORITHM]["every_fold_eligible"]
+    assert all(
+        fold["eligible"]
+        for fold in report["candidates"][CANONICAL_RECONCILIATION_ALGORITHM]["folds"]
+    )
+
+
+def test_evidence_graph_hard_revision_and_available_callback_confirm() -> None:
+    scenario = _scenario()
+    calls = scenario.observations.calls
+    first = calls[0].model_copy(
+        update={
+            "call_id": "hard-first",
+            "callback_token": "SYNTH-CB-SHARED",
+            "quality": calls[0].quality.model_copy(
+                update={"callback_failed": False, "revision_of_call_id": None}
+            ),
+        }
+    )
+    callback = calls[1].model_copy(
+        update={
+            "call_id": "hard-callback",
+            "callback_token": "SYNTH-CB-SHARED",
+            "quality": calls[1].quality.model_copy(
+                update={"callback_failed": False, "revision_of_call_id": None}
+            ),
+        }
+    )
+    revision = calls[2].model_copy(
+        update={
+            "call_id": "hard-revision",
+            "callback_token": "SYNTH-CB-UNAVAILABLE-hard-revision",
+            "quality": calls[2].quality.model_copy(
+                update={"callback_failed": True, "revision_of_call_id": "hard-first"}
+            ),
+        }
+    )
+    reconciler = EvidenceGraphReconciler("evidence-graph-q100")
+    first_step = reconciler.process(first, first.received_s)
+    callback_step = reconciler.process(callback, max(callback.received_s, first.received_s))
+    revision_step = reconciler.process(
+        revision, max(revision.received_s, callback.received_s, first.received_s)
+    )
+    assert first_step.confirmed_link is None
+    assert callback_step.confirmed_link is not None
+    assert callback_step.confirmed_link.evidence_families == (
+        "exact_shared_available_callback_token",
+    )
+    assert revision_step.confirmed_link is not None
+    assert revision_step.confirmed_link.evidence_families == ("explicit_report_revision",)
+    assert len(set(reconciler.artifact().cluster_by_call.values())) == 1
+
+
+def test_evidence_graph_ambiguous_soft_relationship_stays_suspected_and_separate() -> None:
+    template = _scenario().observations.calls[0]
+
+    def fixture(call_id: str, received_s: int) -> CallRecord:
+        return template.model_copy(
+            update={
+                "call_id": call_id,
+                "received_s": received_s,
+                "received_ts": template.received_ts,
+                "callback_token": f"SYNTH-CB-{call_id}",
+                "quality": template.quality.model_copy(
+                    update={"callback_failed": False, "revision_of_call_id": None}
+                ),
+            }
+        )
+
+    first = fixture("ambiguous-a", 0)
+    second = fixture("ambiguous-b", 3_000)
+    current = fixture("ambiguous-current", 1_500)
+    reconciler = EvidenceGraphReconciler("evidence-graph-q100")
+    reconciler.process(first, 0)
+    reconciler.process(second, 3_000)
+    step = reconciler.process(current, 4_000)
+    assert step.confirmed_link is None
+    assert len(step.emitted_links) == 2
+    assert all(item.status == "suspected" for item in step.emitted_links)
+    artifact = reconciler.artifact()
+    assert len(set(artifact.cluster_by_call.values())) == 3
+
+
+def test_evidence_graph_visible_contradiction_rejects_soft_link() -> None:
+    template = _scenario().observations.calls[0]
+    first = template.model_copy(
+        update={
+            "call_id": "contradiction-first",
+            "callback_token": "SYNTH-CB-first",
+            "reported": template.reported.model_copy(update={"occupants": 0}),
+            "quality": template.quality.model_copy(
+                update={"callback_failed": False, "revision_of_call_id": None}
+            ),
+        }
+    )
+    current = template.model_copy(
+        update={
+            "call_id": "contradiction-current",
+            "received_s": first.received_s + 60,
+            "callback_token": "SYNTH-CB-current",
+            "reported": template.reported.model_copy(update={"occupants": 4}),
+            "quality": template.quality.model_copy(
+                update={"callback_failed": False, "revision_of_call_id": None}
+            ),
+        }
+    )
+    reconciler = EvidenceGraphReconciler("evidence-graph-q100")
+    reconciler.process(first, first.received_s)
+    step = reconciler.process(current, current.received_s)
+    assert step.confirmed_link is None
+    assert len(step.emitted_links) == 1
+    assert step.emitted_links[0].status == "rejected"

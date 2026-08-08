@@ -187,12 +187,16 @@ def test_v8_candidate_audit_is_a_separate_hidden_artifact(tmp_path: Path) -> Non
     descriptors = {item.name: item for item in execution.manifest.artifacts}
     assert descriptors["incident_candidate_audit"].contains_hidden_truth
     assert descriptors["ground_truth"].contains_hidden_truth
+    assert not descriptors["controller_reconciliation"].contains_hidden_truth
     ground_truth = json.loads((tmp_path / "run/ground_truth.json").read_text("utf-8"))
     candidate_audit = json.loads(
         (tmp_path / "run/incident_candidate_audit.json").read_text("utf-8")
     )
     assert "candidate_audit" not in ground_truth
     assert len(candidate_audit) > len(ground_truth["incidents"])
+    public_reconciliation = (tmp_path / "run/controller_reconciliation.json").read_text("utf-8")
+    assert "truth_incident" not in public_reconciliation
+    assert '"hidden_lineage_used":false' in public_reconciliation
 
 
 def test_v7_contract_uses_new_keyed_namespace_and_versioned_artifacts() -> None:

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class ReconciliationEvaluation(DeltaModel):
-    schema_version: str = "delta-reconciliation-evaluation-v2"
+    schema_version: str = "delta-reconciliation-evaluation-v3"
     evaluation_available: bool = True
     unavailable_reason: str | None = None
     call_count: int = Field(ge=0)
@@ -36,10 +36,17 @@ class ReconciliationEvaluation(DeltaModel):
     revision_true_positive_links: int = Field(ge=0)
     revision_link_precision: float = Field(ge=0.0, le=1.0)
     revision_link_recall: float = Field(ge=0.0, le=1.0)
-    occupant_revisions_scored: int = Field(ge=0)
-    occupant_revisions_correct: int = Field(ge=0)
-    occupant_revision_correctness: float = Field(ge=0.0, le=1.0)
+    reported_occupant_revisions_scored: int = Field(ge=0)
+    reported_occupant_revisions_truth_correct: int = Field(ge=0)
+    reported_occupant_revision_truth_accuracy: float = Field(ge=0.0, le=1.0)
+    controller_occupant_belief_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
     adjusted_rand_index: float = Field(ge=-1.0, le=1.0)
+
+    @property
+    def occupant_revision_correctness(self) -> float:
+        """Deprecated source-only alias; never serialized as controller performance."""
+
+        return self.reported_occupant_revision_truth_accuracy
 
 
 def _ratio(numerator: int, denominator: int, *, empty: float) -> float:
@@ -143,9 +150,9 @@ def evaluate_partitions(
         revision_true_positive_links=revision_true_positive,
         revision_link_precision=_ratio(revision_true_positive, revision_predicted, empty=0.0),
         revision_link_recall=_ratio(revision_true_positive, revision_reference, empty=1.0),
-        occupant_revisions_scored=len(occupant_revision_results),
-        occupant_revisions_correct=occupant_correct,
-        occupant_revision_correctness=_ratio(
+        reported_occupant_revisions_scored=len(occupant_revision_results),
+        reported_occupant_revisions_truth_correct=occupant_correct,
+        reported_occupant_revision_truth_accuracy=_ratio(
             occupant_correct, len(occupant_revision_results), empty=1.0
         ),
         adjusted_rand_index=_adjusted_rand_index(reference_by_call, predicted_by_call),
