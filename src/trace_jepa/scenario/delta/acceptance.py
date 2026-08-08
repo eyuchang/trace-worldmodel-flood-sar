@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import Field, model_validator
 
-from trace_jepa.scenario.delta.models import DeltaModel
+from trace_jepa.scenario.delta.domain import DeltaModel
 
 
 class AcceptanceEnsemble(DeltaModel):

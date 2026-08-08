@@ -3,8 +3,7 @@ from __future__ import annotations
 import random
 from datetime import timedelta
 
-from trace_jepa.scenario.delta.geography_models import GeographyCatalog, LinearRing
-from trace_jepa.scenario.delta.models import (
+from trace_jepa.scenario.delta.domain import (
     CallLineage,
     CallLocation,
     CallQuality,
@@ -25,6 +24,7 @@ from trace_jepa.scenario.delta.models import (
     StructureTruth,
     WeatherSample,
 )
+from trace_jepa.scenario.delta.geography_models import GeographyCatalog, LinearRing
 from trace_jepa.scenario.delta.randomness import sample_poisson
 
 CALL_TYPE_WEIGHTS = (

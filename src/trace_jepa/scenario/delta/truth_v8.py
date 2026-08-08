@@ -4,8 +4,7 @@ import hashlib
 import math
 from dataclasses import dataclass
 
-from trace_jepa.scenario.delta.geography_models import GeographyCatalog
-from trace_jepa.scenario.delta.models import (
+from trace_jepa.scenario.delta.domain import (
     CrossingState,
     DeltaScenarioConfig,
     GroundTruthV8,
@@ -18,6 +17,7 @@ from trace_jepa.scenario.delta.models import (
     StructureTruth,
     WeatherSample,
 )
+from trace_jepa.scenario.delta.geography_models import GeographyCatalog
 from trace_jepa.scenario.delta.randomness import KeyedRandom
 from trace_jepa.scenario.delta.truth_v7 import (
     INCIDENT_REQUIREMENTS_V7,

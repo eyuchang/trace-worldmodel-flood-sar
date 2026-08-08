@@ -1,44 +1,41 @@
-"""Compatibility facade for the typed Delta domain package.
+"""Typed domain surface for WF-DFLD-01-SMALL."""
 
-New code should import from :mod:`trace_jepa.scenario.delta.domain`.  This module
-remains for one release so existing notebooks and downstream teaching material
-continue to import the same public names.
-"""
-
-from trace_jepa.scenario.delta.domain import (
+from .base import DeltaModel
+from .config import (
     PROTOCOL_REVISIONS,
     AxisConfig,
-    CallLineage,
-    CallLocation,
     CallProcessConfig,
-    CallQuality,
-    CallRecord,
-    CoordinationArtifact,
-    CoordinationDelivery,
-    CrossingState,
-    DeltaModel,
     DeltaScenarioConfig,
     DemandCapacityConfig,
     ExpectedConfig,
     ExtentConfig,
+    ProtocolRevision,
+    TimelineConfig,
+)
+from .observations import (
+    CallLineage,
+    CallLocation,
+    CallQuality,
+    CallRecord,
+    CoordinationArtifact,
+    CoordinationDelivery,
+    ObservationArtifact,
+    ReportedCall,
+)
+from .resources import PriorProfileArtifact, ResourceArtifact, ResourceUnit
+from .scenario import GeneratedScenario
+from .state import (
+    CrossingState,
     GaugeSample,
-    GeneratedScenario,
     GroundTruth,
     GroundTruthV8,
     IncidentCandidateAudit,
     IncidentTruth,
     LeveeTruth,
-    ObservationArtifact,
     PersonPosition,
     PersonTruth,
-    PriorProfileArtifact,
-    ProtocolRevision,
-    ReportedCall,
-    ResourceArtifact,
-    ResourceUnit,
     StructureState,
     StructureTruth,
-    TimelineConfig,
     WeatherSample,
 )
 

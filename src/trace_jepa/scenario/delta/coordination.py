@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from trace_jepa.scenario.delta.models import (
+from trace_jepa.scenario.delta.domain import (
     CoordinationArtifact,
     CoordinationDelivery,
     DeltaScenarioConfig,

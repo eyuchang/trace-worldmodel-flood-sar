@@ -10,13 +10,13 @@ from typing import TypedDict
 
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_file
+from trace_jepa.scenario.delta.domain import GeneratedScenario
 from trace_jepa.scenario.delta.generator import generate_delta_small_from_models
 from trace_jepa.scenario.delta.loading import (
     load_acceptance_config,
     load_geography_catalog,
     load_scenario_config,
 )
-from trace_jepa.scenario.delta.models import GeneratedScenario
 from trace_jepa.scenario.delta.runner import DeltaRunResult, run_delta_small
 
 LEGACY_V1_DURATIONS_S = {

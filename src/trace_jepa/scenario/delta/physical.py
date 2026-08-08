@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import math
 
+from trace_jepa.scenario.delta.domain import (
+    CrossingState,
+    DeltaScenarioConfig,
+    GaugeSample,
+    WeatherSample,
+)
 from trace_jepa.scenario.delta.geography_models import (
     Crossing,
     Gauge,
     GeographyCatalog,
     Island,
-)
-from trace_jepa.scenario.delta.models import (
-    CrossingState,
-    DeltaScenarioConfig,
-    GaugeSample,
-    WeatherSample,
 )
 
 # Frozen reduced-order teaching parameters. These are not forecast coefficients.

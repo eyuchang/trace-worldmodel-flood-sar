@@ -5,8 +5,8 @@ from pathlib import Path
 import yaml
 
 from trace_jepa.scenario.delta.acceptance import DeltaSmallAcceptanceConfig
+from trace_jepa.scenario.delta.domain import DeltaScenarioConfig
 from trace_jepa.scenario.delta.geography_models import GeographyCatalog
-from trace_jepa.scenario.delta.models import DeltaScenarioConfig
 
 MAXIMUM_INPUT_BYTES = 1_000_000
 

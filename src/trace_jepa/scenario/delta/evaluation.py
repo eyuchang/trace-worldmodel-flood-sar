@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import Field
 
-from trace_jepa.scenario.delta.models import DeltaModel, GeneratedScenario
+from trace_jepa.scenario.delta.domain import DeltaModel, GeneratedScenario
 
 if TYPE_CHECKING:
     from trace_jepa.scenario.delta.runner import DeltaDecisionEvent

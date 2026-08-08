@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from pydantic import Field, model_validator
 
-from trace_jepa.scenario.delta.models import CallRecord, DeltaModel
+from trace_jepa.scenario.delta.domain import CallRecord, DeltaModel
 
 EVIDENCE_GRAPH_CANDIDATES = {
     "evidence-graph-q075": 0.75,

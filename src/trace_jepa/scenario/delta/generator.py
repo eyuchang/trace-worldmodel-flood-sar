@@ -5,11 +5,14 @@ from pathlib import Path
 
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_bytes
 from trace_jepa.scenario.delta.coordination import generate_coordination
+from trace_jepa.scenario.delta.domain import DeltaScenarioConfig, GeneratedScenario
+from trace_jepa.scenario.delta.generation import generate_prior_profile, generate_resources
+from trace_jepa.scenario.delta.generation.observation_channel import (
+    generate_observations_v8,
+)
 from trace_jepa.scenario.delta.geography_models import GeographyCatalog
 from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
-from trace_jepa.scenario.delta.models import DeltaScenarioConfig, GeneratedScenario
 from trace_jepa.scenario.delta.observations_v7 import generate_observations_v7
-from trace_jepa.scenario.delta.observations_v8 import generate_observations_v8
 from trace_jepa.scenario.delta.physical import (
     generate_crossing_states,
     generate_gauges,
@@ -18,8 +21,6 @@ from trace_jepa.scenario.delta.physical import (
 )
 from trace_jepa.scenario.delta.population import (
     generate_observations,
-    generate_prior_profile,
-    generate_resources,
     generate_truth,
 )
 from trace_jepa.scenario.delta.randomness import KeyedRandom, derive_stage_seed, seeded_random

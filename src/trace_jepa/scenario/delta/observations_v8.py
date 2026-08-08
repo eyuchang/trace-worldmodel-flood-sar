@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from datetime import timedelta
 
-from trace_jepa.scenario.delta.models import (
+from trace_jepa.scenario.delta.domain import (
     CallLineage,
     CallQuality,
     CallRecord,

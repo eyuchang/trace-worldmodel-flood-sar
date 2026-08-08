@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from pydantic import Field
 
 from trace_jepa.predictor.protocol import PredictorProvenance
-from trace_jepa.scenario.delta.models import DeltaModel, GeneratedScenario
+from trace_jepa.scenario.delta.domain import DeltaModel, GeneratedScenario
 from trace_jepa.scenario.delta.physical import physical_parameter_table
 from trace_jepa.scenario.delta.population import population_parameter_table
 
