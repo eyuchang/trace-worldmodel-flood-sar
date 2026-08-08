@@ -4,30 +4,35 @@ import hashlib
 from pathlib import Path
 
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_bytes
-from trace_jepa.scenario.delta.coordination import generate_coordination
 from trace_jepa.scenario.delta.domain import DeltaScenarioConfig, GeneratedScenario
-from trace_jepa.scenario.delta.generation import generate_prior_profile, generate_resources
-from trace_jepa.scenario.delta.generation.observation_channel import (
+from trace_jepa.scenario.delta.domain.loading import load_geography_catalog, load_scenario_config
+from trace_jepa.scenario.delta.generation import (
     generate_observations_v8,
+    generate_prior_profile,
+    generate_resources,
 )
-from trace_jepa.scenario.delta.geography_models import GeographyCatalog
-from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
-from trace_jepa.scenario.delta.observations_v7 import generate_observations_v7
-from trace_jepa.scenario.delta.physical import (
+from trace_jepa.scenario.delta.generation.coordination import generate_coordination
+from trace_jepa.scenario.delta.generation.physical import (
     generate_crossing_states,
     generate_gauges,
     generate_geography,
     generate_weather,
 )
+from trace_jepa.scenario.delta.generation.randomness import (
+    KeyedRandom,
+    derive_stage_seed,
+    seeded_random,
+)
+from trace_jepa.scenario.delta.geography.models import GeographyCatalog
+from trace_jepa.scenario.delta.observations_v7 import generate_observations_v7
 from trace_jepa.scenario.delta.population import (
     generate_observations,
     generate_truth,
 )
-from trace_jepa.scenario.delta.randomness import KeyedRandom, derive_stage_seed, seeded_random
 from trace_jepa.scenario.delta.truth_v7 import generate_truth_v7
 from trace_jepa.scenario.delta.truth_v8 import generate_truth_v8
 
-GENERATION_ORDER = [
+GENERATION_ORDER = (
     "geography",
     "meteorology",
     "hydrology",
@@ -36,8 +41,8 @@ GENERATION_ORDER = [
     "observations",
     "resources",
     "predictor_prior",
-]
-GENERATION_ORDER_V7 = [
+)
+GENERATION_ORDER_COORDINATED = (
     "geography",
     "meteorology",
     "hydrology",
@@ -47,7 +52,10 @@ GENERATION_ORDER_V7 = [
     "coordination",
     "resources",
     "predictor_prior",
-]
+)
+
+# One-release compatibility alias; the name predated coordination v1.
+GENERATION_ORDER_V7 = GENERATION_ORDER_COORDINATED
 
 
 def _projection_hash(value: object) -> str:
@@ -81,6 +89,7 @@ def generate_delta_small_from_models(
             "extent": config.extent.model_dump(mode="json"),
         }
     )
+    generation_order: tuple[str, ...]
     if config.generator_version in {"delta-small-generator-v7", "delta-small-generator-v8"}:
         truth_generator = (
             generate_truth_v8
@@ -109,7 +118,7 @@ def generate_delta_small_from_models(
             observations,
             KeyedRandom(config.seed, seed_namespace_hash, "coordination"),
         )
-        generation_order = GENERATION_ORDER_V7
+        generation_order = GENERATION_ORDER_COORDINATED
     else:
         truth = generate_truth(
             config,

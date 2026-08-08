@@ -16,8 +16,9 @@ from trace_jepa.predictor import (
     PredictorRouteObservation,
     PredictorVisualFeatureRef,
 )
-from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_bytes
 from trace_jepa.scenario.delta.domain import CallRecord, GeneratedScenario
+from trace_jepa.scenario.delta.geography import Gauge
+from trace_jepa.support import canonical_json_bytes, sha256_bytes
 
 from .routing import ScenarioIndex
 
@@ -37,7 +38,7 @@ class PredictorEvidenceBuilder:
         self.busy_until = busy_until
         self.index = scenario_index
 
-    def _nearest_gauge(self, route_id: str):
+    def _nearest_gauge(self, route_id: str) -> Gauge:
         crossing = next(
             item for item in self.scenario.geography.crossings if item.crossing_id == route_id
         )

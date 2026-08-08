@@ -76,9 +76,7 @@ class OriginalReportIdentity(DeltaModel):
     def canonical_sha256(self) -> str:
         import hashlib
 
-        return hashlib.sha256(
-            canonical_json_bytes(self.model_dump(mode="json"))
-        ).hexdigest()
+        return hashlib.sha256(canonical_json_bytes(self.model_dump(mode="json"))).hexdigest()
 
 
 class OriginalReportRegistry(DeltaModel):
@@ -97,9 +95,7 @@ def verify_registered_original_report(
 
     if not registry_path.is_file() or registry_path.is_symlink():
         raise ValueError("replication is disabled until the original-report registry is committed")
-    registry = OriginalReportRegistry.model_validate_json(
-        registry_path.read_text("utf-8")
-    )
+    registry = OriginalReportRegistry.model_validate_json(registry_path.read_text("utf-8"))
     expected = (repository_root / registry.report_path).resolve(strict=True)
     supplied = supplied_report.resolve(strict=True)
     if supplied != expected or supplied.is_symlink() or not supplied.is_file():

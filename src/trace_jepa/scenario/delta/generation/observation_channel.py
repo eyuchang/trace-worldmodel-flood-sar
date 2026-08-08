@@ -17,10 +17,11 @@ from trace_jepa.scenario.delta.domain import (
     ReportedCall,
     StructureTruth,
 )
-from trace_jepa.scenario.delta.randomness import KeyedRandom
+from trace_jepa.scenario.delta.generation.randomness import KeyedRandom
 
 from .observation_primitives import (
     OTHER_CALL_TYPES,
+    LocationRequest,
     call_location,
     channel_probabilities,
     location_error_scale,
@@ -218,12 +219,14 @@ class ObservationChannel:
                 language=self.people[person_ids[0]].preferred_language if person_ids else "en",
                 location=call_location(
                     self.keyed,
-                    call_id,
-                    easting_mm=structure.easting_mm,
-                    northing_mm=structure.northing_mm,
-                    structure_number=int(structure.structure_id[-3:]),
-                    iota=self.config.axes.iota,
-                    conflict=(draft.relationship == "conflicting_report" and disagreement == 3),
+                    LocationRequest(
+                        call_id=call_id,
+                        easting_mm=structure.easting_mm,
+                        northing_mm=structure.northing_mm,
+                        structure_number=int(structure.structure_id[-3:]),
+                        iota=self.config.axes.iota,
+                        conflict=(draft.relationship == "conflicting_report" and disagreement == 3),
+                    ),
                 ),
                 reported=ReportedCall(
                     call_type=call_type,
@@ -395,3 +398,8 @@ def generate_observations_v8(
         reporting_by_hour=reporting_by_hour,
         false_report_hour_weights=false_report_hour_weights,
     ).generate()
+
+
+# One-release names retained for historical calibration scripts.
+channel_probabilities_v8 = channel_probabilities
+reporting_probability_v8 = reporting_probability

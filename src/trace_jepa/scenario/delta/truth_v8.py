@@ -17,13 +17,13 @@ from trace_jepa.scenario.delta.domain import (
     StructureTruth,
     WeatherSample,
 )
-from trace_jepa.scenario.delta.geography_models import GeographyCatalog
-from trace_jepa.scenario.delta.randomness import KeyedRandom
-from trace_jepa.scenario.delta.truth_v7 import (
+from trace_jepa.scenario.delta.generation.incidents import (
     INCIDENT_REQUIREMENTS_V7,
     IncidentCandidate,
-    build_truth_inputs_v7,
 )
+from trace_jepa.scenario.delta.generation.truth_inputs import build_truth_inputs_v7
+from trace_jepa.scenario.delta.geography.models import GeographyCatalog
+from trace_jepa.scenario.delta.randomness import KeyedRandom
 
 TYPE_INTERCEPTS_V2 = {
     "C-STR": 0.004669363452122014,
@@ -43,6 +43,20 @@ class EpisodeCandidate:
     episode_key: str
     probability: float
     accepted_draw: bool
+
+
+@dataclass(frozen=True)
+class TruthAssemblyInput:
+    """Causal truth components consumed by deterministic episode assembly."""
+
+    config: DeltaScenarioConfig
+    structures: list[StructureTruth]
+    states: list[StructureState]
+    people: list[PersonTruth]
+    positions: list[PersonPosition]
+    levees: list[LeveeTruth]
+    episode_candidates: list[EpisodeCandidate]
+    keyed: KeyedRandom
 
 
 def _digest(*parts: object) -> str:
@@ -138,20 +152,11 @@ def form_episode_candidates_v8(
     return result
 
 
-def _truth_from_inputs_v8(
-    config: DeltaScenarioConfig,
-    structures: list[StructureTruth],
-    states: list[StructureState],
-    people: list[PersonTruth],
-    positions: list[PersonPosition],
-    levees: list[LeveeTruth],
-    episode_candidates: list[EpisodeCandidate],
-    keyed: KeyedRandom,
-) -> GroundTruthV8:
+def _truth_from_inputs_v8(request: TruthAssemblyInput) -> GroundTruthV8:
     incidents: list[IncidentTruth] = []
     audit: list[IncidentCandidateAudit] = []
     accepted_episode_keys: set[str] = set()
-    for item in episode_candidates:
+    for item in request.episode_candidates:
         candidate = item.candidate
         if not item.accepted_draw:
             disposition = "rejected_by_keyed_draw"
@@ -180,7 +185,7 @@ def _truth_from_inputs_v8(
                     onset_s=candidate.simulation_time_s,
                     service_duration_s=service_duration_s,
                     service_units=service_units,
-                    complexity_milli=keyed.randint(
+                    complexity_milli=request.keyed.randint(
                         0,
                         1_000,
                         "incident-complexity",
@@ -222,11 +227,11 @@ def _truth_from_inputs_v8(
     return GroundTruthV8(
         schema_version="delta-ground-truth-v5",
         cohort_label="synthetic-isleton-teaching-cohort-v4-not-demographic",
-        structures=structures,
-        structure_states=states,
-        people=people,
-        person_positions=positions,
-        levees=levees,
+        structures=request.structures,
+        structure_states=request.states,
+        people=request.people,
+        person_positions=request.positions,
+        levees=request.levees,
         incidents=sorted(incidents, key=lambda incident: (incident.onset_s, incident.incident_id)),
         candidate_audit=audit,
     )
@@ -251,14 +256,16 @@ def generate_truth_v8(
         intercepts,
     )
     return _truth_from_inputs_v8(
-        config,
-        structures,
-        states,
-        people,
-        positions,
-        levees,
-        episode_candidates,
-        keyed,
+        TruthAssemblyInput(
+            config=config,
+            structures=structures,
+            states=states,
+            people=people,
+            positions=positions,
+            levees=levees,
+            episode_candidates=episode_candidates,
+            keyed=keyed,
+        )
     )
 
 
@@ -276,7 +283,7 @@ def expected_incidents_by_type_v8(
     for item in episode_candidates:
         key = (item.candidate.incident_type, item.episode_key)
         rejection_by_episode[key] = rejection_by_episode.get(key, 1.0) * (1.0 - item.probability)
-    result = {incident_type: 0.0 for incident_type in INCIDENT_REQUIREMENTS_V7}
+    result = dict.fromkeys(INCIDENT_REQUIREMENTS_V7, 0.0)
     for (incident_type, _episode_key), rejection_probability in rejection_by_episode.items():
         result[incident_type] += 1.0 - rejection_probability
     return result

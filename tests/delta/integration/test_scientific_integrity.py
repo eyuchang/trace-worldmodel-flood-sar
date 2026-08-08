@@ -31,7 +31,7 @@ from trace_jepa.scenario.delta.publication import publish_reference_bundle
 from trace_jepa.scenario.delta.runner import evaluate_capacity_windows, run_delta_small
 from trace_jepa.util import sha256_file
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 GEOGRAPHY_MANIFEST = ROOT / "data/scenario/delta/geography/build_manifest_v3.json"

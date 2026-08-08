@@ -23,7 +23,7 @@ from trace_jepa.scenario.delta.validation_v8 import (
     verify_registered_v8_inputs,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 CANONICAL = canonical_v9_paths(ROOT)
 
 
@@ -64,9 +64,7 @@ def test_development_mode_uses_only_declared_development_seeds(
         observed["paired"] = list(kwargs["seeds"])  # type: ignore[arg-type]
         return {"seed_count": len(observed["paired"])}
 
-    monkeypatch.setattr(
-        "trace_jepa.scenario.delta.validation.registered.run_v7_study", fake_study
-    )
+    monkeypatch.setattr("trace_jepa.scenario.delta.validation.registered.run_v7_study", fake_study)
     monkeypatch.setattr(
         "trace_jepa.scenario.delta.validation.registered.paired_reconciliation_report",
         fake_paired,
@@ -116,9 +114,7 @@ def test_original_confirmation_requires_exact_tag_and_first_attempt(
         monkeypatch.setenv(name, value)
     with pytest.raises(ValueError, match="exact authorization tag"):
         _require_original_remote_context(ORIGINAL_CONFIRMATION_TOKEN)
-    monkeypatch.setenv(
-        "GITHUB_REF", "refs/tags/wf-dfld-01-small-confirmatory-v8-original"
-    )
+    monkeypatch.setenv("GITHUB_REF", "refs/tags/wf-dfld-01-small-confirmatory-v8-original")
     monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "2")
     with pytest.raises(ValueError, match="attempt one"):
         _require_original_remote_context(ORIGINAL_CONFIRMATION_TOKEN)

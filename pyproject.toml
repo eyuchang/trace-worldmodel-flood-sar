@@ -18,6 +18,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8",
+  "pytest-cov>=7",
   "ruff>=0.6",
   "mypy>=1.17",
   "types-PyYAML>=6.0",
@@ -88,6 +89,42 @@ testpaths = ["tests"]
 line-length = 100
 src = ["src", "tests", "scripts"]
 
+[tool.ruff.lint]
+extend-select = [
+  "B",
+  "C4",
+  "C90",
+  "I",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "RUF",
+  "SIM",
+  "UP",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pylint]
+max-args = 6
+max-branches = 12
+max-statements = 50
+
+[tool.ruff.lint.per-file-ignores]
+# Historical implementations remain readable audit evidence and are not the
+# canonical Task 1/2 architecture. Compatibility facades retain old imports.
+"scripts/calibrate_delta_v8.py" = ["PLR0915"]
+"scripts/select_delta_v8_reconciliation.py" = ["PLR0915"]
+"scripts/train_action_predictor.py" = ["PLR0915"]
+"src/trace_jepa/controller.py" = ["PLR0913", "PLR0915"]
+"src/trace_jepa/scenario/delta/legacy/**" = ["C90", "PLR0912", "PLR0913", "PLR0915"]
+"src/trace_jepa/scenario/delta/observations_v7.py" = ["C90", "PLR0913", "PLR0915"]
+"src/trace_jepa/scenario/delta/pipeline.py" = ["PLR0913"]
+"src/trace_jepa/scenario/delta/truth_v7.py" = ["C4", "C90", "PLR0912", "PLR0913", "PLR0915"]
+"src/trace_jepa/scenario/delta/validation_v7.py" = ["C90", "PLR0912", "PLR0913", "PLR0915"]
+"tests/**" = ["PLR0913"]
+
 [tool.mypy]
 python_version = "3.10"
 plugins = ["pydantic.mypy"]
@@ -98,8 +135,34 @@ no_implicit_optional = true
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
+module = [
+  "trace_jepa.experimental.revalidation",
+  "trace_jepa.predictor.*",
+  "trace_jepa.scenario.delta.domain.*",
+  "trace_jepa.scenario.delta.generation.*",
+  "trace_jepa.scenario.delta.geography.*",
+  "trace_jepa.scenario.delta.provenance.*",
+  "trace_jepa.scenario.delta.publication.*",
+  "trace_jepa.scenario.delta.reconciliation.*",
+  "trace_jepa.scenario.delta.runtime.*",
+  "trace_jepa.scenario.delta.validation.*",
+  "trace_jepa.support.*",
+]
+strict = true
+
+[[tool.mypy.overrides]]
 module = ["numpy", "numpy.*"]
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+# Frozen historical implementations are retained to reproduce prior evidence;
+# strict typing applies to the canonical packages and compatibility facades.
+module = [
+  "trace_jepa.scenario.delta.legacy.*",
+  "trace_jepa.scenario.delta.observations_v7",
+  "trace_jepa.scenario.delta.truth_v7",
+]
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = ["rasterio", "rasterio.*", "shapely", "shapely.*"]

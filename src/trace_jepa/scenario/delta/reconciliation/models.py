@@ -7,13 +7,14 @@ from dataclasses import dataclass
 from pydantic import Field, model_validator
 
 from trace_jepa.scenario.delta.domain import DeltaModel
+from trace_jepa.scenario.delta.domain.types import ReconciliationLinkStatus
 
 
 class ReconciliationLink(DeltaModel):
     link_id: str
     source_call_id: str
     target_call_id: str
-    status: str
+    status: ReconciliationLinkStatus
     evidence_families: tuple[str, ...]
     reason: str
     supersedes_link_id: str | None = None
@@ -37,8 +38,8 @@ class ReconciliationArtifact(DeltaModel):
     schema_version: str = "delta-reconciliation-v3"
     algorithm_id: str
     hidden_lineage_used: bool = False
-    nodes: list[ReconciliationNode]
-    links: list[ReconciliationLink]
+    nodes: tuple[ReconciliationNode, ...]
+    links: tuple[ReconciliationLink, ...]
     cluster_by_call: dict[str, str]
 
 

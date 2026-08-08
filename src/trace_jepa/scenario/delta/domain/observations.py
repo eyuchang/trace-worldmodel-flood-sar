@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import Field
 
 from .base import DeltaModel
+from .types import CallTaxonomy
 
 
 class CallLocation(DeltaModel):
@@ -19,10 +20,10 @@ class CallLocation(DeltaModel):
 
 
 class ReportedCall(DeltaModel):
-    call_type: str
+    call_type: CallTaxonomy
     occupants: int = Field(ge=0)
     occupants_confidence: str
-    medical: list[str]
+    medical: tuple[str, ...]
     description_token: str
 
 
@@ -50,14 +51,14 @@ class CallRecord(DeltaModel):
 class CallLineage(DeltaModel):
     call_id: str
     truth_incident_id: str | None
-    truth_person_ids: list[str]
+    truth_person_ids: tuple[str, ...]
     relationship: str
 
 
 class ObservationArtifact(DeltaModel):
     schema_version: str
-    calls: list[CallRecord]
-    lineage: list[CallLineage]
+    calls: tuple[CallRecord, ...]
+    lineage: tuple[CallLineage, ...]
     expected_calls_total: float
     peak_expected_calls_per_hour: float
     coefficients_version: str | None = None
@@ -76,6 +77,6 @@ class CoordinationDelivery(DeltaModel):
 class CoordinationArtifact(DeltaModel):
     schema_version: str
     phi: int = Field(ge=1, le=9)
-    logical_authority_ids: list[str] = Field(min_length=1)
+    logical_authority_ids: tuple[str, ...] = Field(min_length=1)
     semantics: str
-    deliveries: list[CoordinationDelivery]
+    deliveries: tuple[CoordinationDelivery, ...]

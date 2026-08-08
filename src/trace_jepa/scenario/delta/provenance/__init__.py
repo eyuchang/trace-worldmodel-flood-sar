@@ -2,6 +2,7 @@
 
 from .artifacts import (
     ArtifactMismatchError,
+    ArtifactWriteRequest,
     ReplayManifest,
     canonical_json_bytes,
     sha256_bytes,
@@ -17,6 +18,7 @@ from .scientific_inputs import (
 
 __all__ = [
     "ArtifactMismatchError",
+    "ArtifactWriteRequest",
     "ReplayManifest",
     "ScientificInputError",
     "ScientificInputManifest",

@@ -17,7 +17,7 @@ from trace_jepa.scenario.delta.reconciliation_v8 import EvidenceGraphReconciler
 from trace_jepa.scenario.delta.runner import evaluate_capacity_windows, run_delta_small
 from trace_jepa.scenario.delta.runtime import CapacityEvaluator
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"

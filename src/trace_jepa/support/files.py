@@ -37,6 +37,12 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
+def sha256_bytes(payload: bytes) -> str:
+    """Return a lowercase SHA-256 digest for an in-memory payload."""
+
+    return hashlib.sha256(payload).hexdigest()
+
+
 @dataclass(frozen=True)
 class ArtifactLocator:
     """A bounded relative artifact name beneath a caller-trusted root."""
@@ -129,6 +135,29 @@ def safe_regular_file(
         raise ValueError(f"{label} must be a regular file")
     if metadata.st_size > maximum_bytes:
         raise ValueError(f"{label} exceeds the maximum expected size")
+    return resolved
+
+
+def safe_directory(path: Path, *, declared_root: Path, label: str) -> Path:
+    """Resolve a directory beneath a caller-trusted root without symlinks."""
+
+    candidate = Path(path)
+    root = Path(declared_root)
+    resolved_root = _safe_root(root, label)
+    if candidate.absolute() == root.absolute():
+        relative = Path()
+    else:
+        relative = _relative_candidate(candidate, root, label)
+        _reject_intermediate_symlinks(root, relative, label)
+    if candidate.is_symlink():
+        raise ValueError(f"{label} must not be a symlink")
+    try:
+        resolved = candidate.resolve(strict=True)
+        resolved.relative_to(resolved_root)
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"{label} escapes or is absent from its declared root") from exc
+    if not resolved.is_dir():
+        raise ValueError(f"{label} must be a directory")
     return resolved
 
 

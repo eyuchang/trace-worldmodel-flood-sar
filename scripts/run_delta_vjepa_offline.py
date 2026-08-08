@@ -24,6 +24,7 @@ from trace_jepa.predictor import (
     write_deterministic_feature_cache,
 )
 from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_file
+from trace_jepa.support import ArtifactLocator, atomic_write_bytes, safe_directory, safe_output_file
 
 SAFE_IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 
@@ -36,8 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument("--frames", type=Path, required=True, help="Pickle-free NPY [T,H,W,C].")
+    parser.add_argument("--frames-root", type=Path, required=True)
     parser.add_argument("--observation-id", required=True)
     parser.add_argument("--cache-dir", type=Path, required=True)
+    parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument(
         "--manifest",
@@ -46,7 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--manifest-root", type=Path, default=Path("models/manifests"))
     parser.add_argument("--head", type=Path)
+    parser.add_argument("--head-root", type=Path)
     parser.add_argument("--result", type=Path)
+    parser.add_argument("--result-root", type=Path)
     parser.add_argument(
         "--action-type",
         choices=(
@@ -65,30 +70,50 @@ def main() -> None:
     arguments = build_parser().parse_args()
     if not SAFE_IDENTIFIER.fullmatch(arguments.observation_id):
         raise ValueError("observation identifier is unsafe")
-    if not arguments.frames.is_file() or arguments.frames.is_symlink():
-        raise ValueError("frame input must be a safe regular NPY file")
-    frames = np.load(arguments.frames, allow_pickle=False)
+    frame_path = ArtifactLocator.from_path(
+        root=arguments.frames_root,
+        path=arguments.frames,
+        maximum_bytes=2_000_000_000,
+        label="offline V-JEPA frame array",
+    ).resolve()
+    frames = np.load(frame_path, allow_pickle=False)
     if frames.ndim != 4 or not np.isfinite(frames).all():
         raise ValueError("frames must be a finite four-dimensional array")
     manifest = load_encoder_pin(arguments.manifest, trusted_root=arguments.manifest_root)
     checkpoint_metadata = manifest["checkpoint"]
-    checkpoint_path = arguments.checkpoint_dir / str(checkpoint_metadata["file_name"])
-    encoder = VJEPA2Encoder(checkpoint_dir=arguments.checkpoint_dir)
+    checkpoint_dir = safe_directory(
+        arguments.checkpoint_dir,
+        declared_root=arguments.checkpoint_dir,
+        label="V-JEPA checkpoint directory",
+    )
+    checkpoint_path = ArtifactLocator(
+        root=checkpoint_dir,
+        relative_name=Path(str(checkpoint_metadata["file_name"])),
+        maximum_bytes=2_000_000_000,
+        label="V-JEPA checkpoint",
+    ).resolve()
+    encoder = VJEPA2Encoder(checkpoint_dir=checkpoint_dir)
     if sha256_file(checkpoint_path) != checkpoint_metadata["sha256"]:
         raise ValueError("loaded V-JEPA checkpoint disagrees with the pinned manifest")
     feature = encoder.encode_frames(frames).reshape(-1)
-    arguments.cache_dir.mkdir(parents=True, exist_ok=True)
-    if arguments.cache_dir.is_symlink():
-        raise ValueError("cache directory must not be a symlink")
-    observation_sha256 = sha256_file(arguments.frames)
-    cache_path = arguments.cache_dir / f"{arguments.observation_id}.npz"
+    cache_dir = safe_directory(
+        arguments.cache_dir,
+        declared_root=arguments.cache_root,
+        label="V-JEPA feature-cache directory",
+    )
+    observation_sha256 = sha256_file(frame_path)
+    cache_path = safe_output_file(
+        cache_dir / f"{arguments.observation_id}.npz",
+        declared_root=arguments.cache_root,
+        label="V-JEPA feature-cache output",
+    )
     write_deterministic_feature_cache(
         cache_path,
         feature=feature,
         observation_sha256=observation_sha256,
         encoder_version=str(manifest["encoder_version"]),
         encoder_checkpoint_hash=str(checkpoint_metadata["sha256"]),
-        output_root=arguments.cache_dir,
+        output_root=cache_dir,
     )
     summary: dict[str, object] = {
         "schema_version": "delta-vjepa-offline-execution-v1",
@@ -104,14 +129,16 @@ def main() -> None:
         "encoder_manifest_sha256": sha256_file(arguments.manifest),
     }
     if arguments.head is not None:
-        if arguments.result is None:
-            raise ValueError("--result is required when --head is supplied")
+        if arguments.head_root is None:
+            raise ValueError("--head-root is required when --head is supplied")
+        if arguments.result is None or arguments.result_root is None:
+            raise ValueError("--result and --result-root are required when --head is supplied")
         provider = CachedVJEPAFeatureProvider(
-            arguments.cache_dir,
+            cache_dir,
             encoder_version=str(manifest["encoder_version"]),
             encoder_checkpoint_hash=str(checkpoint_metadata["sha256"]),
         )
-        head = CalibratedVJEPAHead.load(arguments.head, trusted_root=arguments.checkpoint_dir)
+        head = CalibratedVJEPAHead.load(arguments.head, trusted_root=arguments.head_root)
         predictor = VJEPABackedActionPrefixPredictor(
             provider, head, adequacy_status=AdequacyStatus.UNQUALIFIED
         )
@@ -161,8 +188,17 @@ def main() -> None:
         )
         summary["prediction"] = predictor.predict(request).model_dump(mode="json")
         summary["provenance"] = predictor.provenance().model_dump(mode="json")
-        arguments.result.parent.mkdir(parents=True, exist_ok=True)
-        arguments.result.write_bytes(canonical_json_bytes(summary))
+        result_path = safe_output_file(
+            arguments.result,
+            declared_root=arguments.result_root,
+            label="offline V-JEPA result",
+        )
+        atomic_write_bytes(
+            result_path,
+            canonical_json_bytes(summary),
+            root=arguments.result_root,
+            label="offline V-JEPA result",
+        )
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 

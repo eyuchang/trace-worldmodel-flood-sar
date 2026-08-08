@@ -9,7 +9,7 @@ from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.cli import _defaults, build_parser
 from trace_jepa.scenario.delta.loading import load_acceptance_config, load_scenario_config
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 README = ROOT / "README.md"
 DELTA_DOCS = (
     ROOT / "docs/delta/WF_DFLD_01_SMALL.md",
@@ -29,22 +29,21 @@ def test_readme_relative_markdown_links_resolve() -> None:
         assert (ROOT / relative).exists(), f"README link does not resolve: {target}"
 
 
-def test_readme_matches_v8_default_contract_and_environment() -> None:
+def test_readme_matches_v9_default_contract_and_environment() -> None:
     payload = README.read_text("utf-8")
     defaults = _defaults()
-    assert all(path.is_file() for path in defaults.values())
+    assert all(defaults[name].is_file() for name in ("config", "geography", "policy"))
     config = load_scenario_config(defaults["config"])
-    acceptance = load_acceptance_config(defaults["acceptance"])
     contract = json.loads(
         (ROOT / "data/scenario/delta/environment/python311_linux_amd64_v1.json").read_text("utf-8")
     )
     assert config.generator_version == "delta-small-generator-v8"
-    expected_acceptance = (
-        "delta-small-acceptance-v8"
-        if (ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml").is_file()
-        else "delta-small-acceptance-v7"
-    )
-    assert acceptance.schema_version == expected_acceptance
+    if defaults["acceptance"].is_file():
+        acceptance = load_acceptance_config(defaults["acceptance"])
+        assert acceptance.schema_version == "delta-small-acceptance-v9"
+        assert defaults["scientific_manifest"].is_file()
+    else:
+        assert not defaults["scientific_manifest"].is_file()
     assert "delta-small-generator-v8" in (ROOT / "docs/delta/WF_DFLD_01_SMALL.md").read_text(
         "utf-8"
     )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import Field, model_validator
 
 from .base import DeltaModel
+from .types import CallTaxonomy, Capability, RouteStatus
 
 
 class WeatherSample(DeltaModel):
@@ -43,7 +44,7 @@ class GaugeSample(DeltaModel):
 class CrossingState(DeltaModel):
     crossing_id: str
     simulation_time_s: int = Field(ge=0)
-    status: str
+    status: RouteStatus
     travel_time_s: int = Field(gt=0)
     confidence_milli: int = Field(ge=0, le=1000)
     evidence: str
@@ -93,9 +94,9 @@ class PersonPosition(DeltaModel):
 class IncidentTruth(DeltaModel):
     incident_id: str
     structure_id: str
-    person_ids: list[str]
-    incident_type: str
-    required_capability: str
+    person_ids: tuple[str, ...]
+    incident_type: CallTaxonomy
+    required_capability: Capability
     onset_s: int = Field(ge=0)
     service_duration_s: int = Field(gt=0)
     service_units: int = Field(gt=0)
@@ -112,7 +113,7 @@ class IncidentCandidateAudit(DeltaModel):
     draw_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     structure_id: str
     infrastructure_id: str | None = None
-    incident_type: str
+    incident_type: CallTaxonomy
     simulation_time_s: int = Field(ge=0)
     probability_millionths: int = Field(ge=0, le=1_000_000)
     episode_key: str
@@ -123,13 +124,13 @@ class IncidentCandidateAudit(DeltaModel):
 class GroundTruth(DeltaModel):
     schema_version: str
     cohort_label: str
-    structures: list[StructureTruth]
-    structure_states: list[StructureState]
-    people: list[PersonTruth]
-    person_positions: list[PersonPosition]
-    levees: list[LeveeTruth]
-    incidents: list[IncidentTruth]
+    structures: tuple[StructureTruth, ...]
+    structure_states: tuple[StructureState, ...]
+    people: tuple[PersonTruth, ...]
+    person_positions: tuple[PersonPosition, ...]
+    levees: tuple[LeveeTruth, ...]
+    incidents: tuple[IncidentTruth, ...]
 
 
 class GroundTruthV8(GroundTruth):
-    candidate_audit: list[IncidentCandidateAudit]
+    candidate_audit: tuple[IncidentCandidateAudit, ...]

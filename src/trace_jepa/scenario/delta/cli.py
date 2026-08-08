@@ -24,8 +24,7 @@ def _defaults() -> dict[str, Path]:
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": repository_root
-        / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
+        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
         "scientific_manifest": repository_root
         / "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json",
     }

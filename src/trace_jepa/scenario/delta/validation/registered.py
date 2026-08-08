@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 from typing import Literal, cast
 
-from trace_jepa.scenario.delta.acceptance import DeltaSmallAcceptanceConfig
 from trace_jepa.scenario.delta.domain import GeneratedScenario
+from trace_jepa.scenario.delta.domain.acceptance import DeltaSmallAcceptanceConfig
+from trace_jepa.scenario.delta.domain.loading import load_acceptance_config, load_scenario_config
 from trace_jepa.scenario.delta.environment import require_reference_environment
-from trace_jepa.scenario.delta.loading import load_acceptance_config, load_scenario_config
 from trace_jepa.scenario.delta.provenance.artifacts import (
     canonical_json_bytes,
     current_git_commit,
@@ -59,8 +59,7 @@ def canonical_v9_paths(repository_root: Path) -> dict[str, Path]:
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": repository_root
-        / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
+        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
         "scientific_manifest": repository_root
         / "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json",
         "environment": repository_root
@@ -350,15 +349,11 @@ def _book_summary(
         ),
         "strict_unserviceable_windows": result.strict_unserviceable_windows,
         "uncapped_unserviceable_windows": result.uncapped_unserviceable_windows,
-        "historical_capped_unserviceable_windows": (
-            result.historical_capped_unserviceable_windows
-        ),
+        "historical_capped_unserviceable_windows": (result.historical_capped_unserviceable_windows),
         "peak_finite_residual_strict_pressure_ratio": (
             result.peak_finite_residual_strict_pressure_ratio_milli / 1000.0
         ),
-        "residual_strict_unserviceable_windows": (
-            result.residual_strict_unserviceable_windows
-        ),
+        "residual_strict_unserviceable_windows": (result.residual_strict_unserviceable_windows),
         "registered_gate_evaluation": gates,
     }
 
@@ -415,18 +410,12 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
     book_scenario, book_result, elapsed = book_and_performance(
         request.config_path, request.geography_path, request.policy_path
     )
-    book_gate_values, allocation_share = book_gates(
-        book_scenario, book_result, protocol
-    )
-    confirmatory_gate_values, channel_gates = confirmatory_gates(
-        studies[1], protocol, elapsed
-    )
+    book_gate_values, allocation_share = book_gates(book_scenario, book_result, protocol)
+    confirmatory_gate_values, channel_gates = confirmatory_gates(studies[1], protocol, elapsed)
     studies[0]["registered_gate_evaluation"] = {
         "protocol_role": "development-only-no-confirmatory-gates",
         "all_episode_keys_unique": bool(
-            cast(dict[str, object], studies[0]["operations"])[
-                "all_episode_keys_unique"
-            ]
+            cast(dict[str, object], studies[0]["operations"])["all_episode_keys_unique"]
         ),
     }
     studies[1]["registered_gate_evaluation"] = confirmatory_gate_values
@@ -472,8 +461,7 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
             "observation_channel_metric_gates": channel_gates,
             "strict_load_numeric_gate": None,
             "all_registered_non_reconciliation_gates_met": (
-                all(book_gate_values.values())
-                and all(confirmatory_gate_values.values())
+                all(book_gate_values.values()) and all(confirmatory_gate_values.values())
             ),
         },
         "performance": {

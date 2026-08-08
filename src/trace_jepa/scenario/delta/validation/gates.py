@@ -4,17 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from trace_jepa.scenario.delta.acceptance import DeltaSmallAcceptanceConfig
 from trace_jepa.scenario.delta.domain import GeneratedScenario
+from trace_jepa.scenario.delta.domain.acceptance import DeltaSmallAcceptanceConfig
 from trace_jepa.scenario.delta.runtime import DeltaRunResult
 from trace_jepa.scenario.delta.validation.verification import trace_artifacts_verify
 
 
 def reconciliation_claims(paired: dict[str, object]) -> dict[str, bool]:
     metrics = cast(dict[str, Any], paired["metrics"])
-    false_merge = metrics["false_merge_rate"][
-        "paired_difference_selected_minus_baseline"
-    ]
+    false_merge = metrics["false_merge_rate"]["paired_difference_selected_minus_baseline"]
     recall = metrics["pairwise_recall"]["paired_difference_selected_minus_baseline"]
     return {
         "false_merge_improvement": float(false_merge["upper_95"]) < 0.0,
@@ -46,19 +44,13 @@ def confirmatory_gates(
             <= protocol.call_process.configured_peak_intensity_per_hour
             <= float(peak_hour["upper_95"])
         ),
-        "observation_channel_points_within_frozen_tolerances": all(
-            channel_gates.values()
-        ),
+        "observation_channel_points_within_frozen_tolerances": all(channel_gates.values()),
         "nonzero_operational_means": all(
             float(operations[name]["estimate"]) > 0
             for name in ("allocations", "refusals", "repairs")
         ),
-        "all_trace_and_outcome_links_verified": bool(
-            operations["all_trace_artifacts_verified"]
-        ),
-        "no_overlapping_incident_episode_violations": bool(
-            operations["all_episode_keys_unique"]
-        ),
+        "all_trace_and_outcome_links_verified": bool(operations["all_trace_artifacts_verified"]),
+        "no_overlapping_incident_episode_violations": bool(operations["all_episode_keys_unique"]),
         "runtime_below_55_seconds": (
             elapsed_seconds <= protocol.performance.maximum_generate_run_replay_s
         ),

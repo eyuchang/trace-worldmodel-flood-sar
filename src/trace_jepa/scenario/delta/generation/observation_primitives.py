@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 from trace_jepa.scenario.delta.domain import CallLocation
-from trace_jepa.scenario.delta.randomness import KeyedRandom
+from trace_jepa.scenario.delta.generation.randomness import KeyedRandom
 
 BASE_LOCATION_METHOD_MILLI = {
     "gps-or-address-intersection": 550,
@@ -18,6 +19,18 @@ BASE_PRECISION_RANGES_M = {
     "cell-sector": (400, 1_500),
 }
 OTHER_CALL_TYPES = ("C-STR", "C-VEH", "C-LEV", "C-MED", "C-WEL", "C-MIS")
+
+
+@dataclass(frozen=True)
+class LocationRequest:
+    """Controller-visible anchor and channel parameters for one noisy location."""
+
+    call_id: str
+    easting_mm: int
+    northing_mm: int
+    structure_number: int
+    iota: float
+    conflict: bool
 
 
 def channel_probabilities(iota: float) -> dict[str, float]:
@@ -63,30 +76,24 @@ def select_location_method(keyed: KeyedRandom, call_id: str, iota: float) -> str
 
 def call_location(
     keyed: KeyedRandom,
-    call_id: str,
-    *,
-    easting_mm: int,
-    northing_mm: int,
-    structure_number: int,
-    iota: float,
-    conflict: bool,
+    request: LocationRequest,
 ) -> CallLocation:
     """Generate one noisy, fixed-point controller-visible location."""
 
-    method = select_location_method(keyed, call_id, iota)
+    method = select_location_method(keyed, request.call_id, request.iota)
     base_lower, base_upper = BASE_PRECISION_RANGES_M[method]
-    scale = location_error_scale(iota)
+    scale = location_error_scale(request.iota)
     lower = max(1, round(base_lower * scale))
     upper = max(lower, round(base_upper * scale))
-    precision_m = keyed.randint(lower, upper, "call", call_id, "precision")
-    radius_m = precision_m * math.sqrt(keyed.uniform("call", call_id, "radius"))
-    if conflict:
+    precision_m = keyed.randint(lower, upper, "call", request.call_id, "precision")
+    radius_m = precision_m * math.sqrt(keyed.uniform("call", request.call_id, "radius"))
+    if request.conflict:
         radius_m = min(precision_m * 1.5, radius_m + 0.75 * precision_m)
-    angle = 2.0 * math.pi * keyed.uniform("call", call_id, "angle")
+    angle = 2.0 * math.pi * keyed.uniform("call", request.call_id, "angle")
     return CallLocation(
-        stated=f"synthetic landmark {structure_number:02d}",
-        easting_mm=easting_mm + round(1_000 * radius_m * math.cos(angle)),
-        northing_mm=northing_mm + round(1_000 * radius_m * math.sin(angle)),
+        stated=f"synthetic landmark {request.structure_number:02d}",
+        easting_mm=request.easting_mm + round(1_000 * radius_m * math.cos(angle)),
+        northing_mm=request.northing_mm + round(1_000 * radius_m * math.sin(angle)),
         precision_m=precision_m,
         method=method,
         confidence_milli=max(50, round(1_000 / (1.0 + precision_m / 100.0))),

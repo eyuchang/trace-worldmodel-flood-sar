@@ -3,6 +3,7 @@
 from trace_jepa.scenario.delta.provenance.artifacts import (
     ArtifactDescriptor,
     ArtifactMismatchError,
+    ArtifactWriteRequest,
     ProvenanceInput,
     ReplayManifest,
     StageSeedRecord,
@@ -18,6 +19,7 @@ from trace_jepa.scenario.delta.provenance.artifacts import (
 __all__ = [
     "ArtifactDescriptor",
     "ArtifactMismatchError",
+    "ArtifactWriteRequest",
     "ProvenanceInput",
     "ReplayManifest",
     "StageSeedRecord",

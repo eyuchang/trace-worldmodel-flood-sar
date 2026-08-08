@@ -24,9 +24,10 @@ from trace_jepa.scenario.delta.geography_builder import (
 from trace_jepa.scenario.delta.geography_models import GeographyCatalog
 from trace_jepa.scenario.delta.geography_sources import GeographySourceDefinition
 from trace_jepa.scenario.delta.loading import DeltaConfigurationError, load_geography_catalog
+from trace_jepa.support import ArtifactLocator
 from trace_jepa.util import sha256_file
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 ENVIRONMENT_CONTRACT = ROOT / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
 ENVIRONMENT_LOCK = ROOT / "requirements-delta-python311.lock"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
@@ -165,13 +166,21 @@ def test_dem_member_verification_rejects_traversal_and_digest_mismatch(tmp_path:
         bundle.writestr("../escape", b"unsafe")
         bundle.writestr("dem.tif", raster.read_bytes())
     with pytest.raises(GeographyBuildSecurityError, match="unsafe DEM archive member"):
-        _verify_archive_member(unsafe_archive, raster, "dem.tif")
+        _verify_archive_member(
+            ArtifactLocator(tmp_path, Path("unsafe.zip"), 1_000_000, "DEM archive"),
+            ArtifactLocator(tmp_path, Path("dem.tif"), 1_000_000, "DEM raster"),
+            "dem.tif",
+        )
 
     safe_archive = tmp_path / "safe.zip"
     with zipfile.ZipFile(safe_archive, "w") as bundle:
         bundle.writestr("dem.tif", b"different-raster")
-    with pytest.raises(GeographyBuildSecurityError, match="size mismatch|digest mismatch"):
-        _verify_archive_member(safe_archive, raster, "dem.tif")
+    with pytest.raises(GeographyBuildSecurityError, match=r"size mismatch|digest mismatch"):
+        _verify_archive_member(
+            ArtifactLocator(tmp_path, Path("safe.zip"), 1_000_000, "DEM archive"),
+            ArtifactLocator(tmp_path, Path("dem.tif"), 1_000_000, "DEM raster"),
+            "dem.tif",
+        )
 
 
 def test_geography_outputs_reject_symlink_targets_and_parents(tmp_path: Path) -> None:

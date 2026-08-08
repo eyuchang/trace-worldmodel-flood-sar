@@ -7,6 +7,7 @@ from pathlib import Path
 from trace_jepa.predictor import ActionPrefixPredictor
 from trace_jepa.scenario.delta.artifacts import (
     ArtifactMismatchError,
+    ArtifactWriteRequest,
     ReplayManifest,
     canonical_json_bytes,
     current_git_commit,
@@ -47,15 +48,17 @@ def execute_delta_small(
     run_result = run_delta_small(scenario, predictor, policy_path)
     package_root = Path(__file__).resolve().parents[2]
     manifest = write_scenario_artifacts(
-        scenario,
-        run_result,
-        policy_path,
-        predictor.provenance(),
-        geography_path,
-        output_root,
-        package_root,
-        recorded_git_commit=recorded_git_commit,
-        validation_report_path=validation_report_path,
+        ArtifactWriteRequest(
+            scenario=scenario,
+            run_result=run_result,
+            policy_path=policy_path,
+            predictor_provenance=predictor.provenance(),
+            geography_path=geography_path,
+            output_root=output_root,
+            package_root=package_root,
+            recorded_git_commit=recorded_git_commit,
+            validation_report_path=validation_report_path,
+        )
     )
     verify_scenario_artifacts(output_root)
     receipt: dict[str, object] | None = None

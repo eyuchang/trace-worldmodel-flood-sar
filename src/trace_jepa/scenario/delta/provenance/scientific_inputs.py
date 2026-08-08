@@ -34,9 +34,7 @@ class ScientificInputManifest(BaseModel):
     members: list[ScientificInputMember] = Field(min_length=1)
     core_aggregate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     aggregate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    acceptance_member_path: str = (
-        "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
-    )
+    acceptance_member_path: str = "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
     exclusions: tuple[str, ...] = (
         "generated reports",
         "reference bundles",
@@ -107,10 +105,7 @@ def scientific_input_paths(
 
     paths = {repository_root / relative for relative in _EXPLICIT_CORE_INPUTS}
     if include_acceptance:
-        paths.add(
-            repository_root
-            / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
-        )
+        paths.add(repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml")
     paths.update((repository_root / "src/trace_jepa").rglob("*.py"))
     paths.update((repository_root / "scripts").glob("*.py"))
     paths.update((repository_root / "data/scenario/delta/geography/sources").glob("*"))
@@ -188,9 +183,7 @@ def verify_scientific_input_manifest(
     if safe_manifest.stat().st_size > 2_000_000:
         raise ScientificInputError("scientific input manifest exceeds 2 MB")
     try:
-        manifest = ScientificInputManifest.model_validate_json(
-            safe_manifest.read_text("utf-8")
-        )
+        manifest = ScientificInputManifest.model_validate_json(safe_manifest.read_text("utf-8"))
     except (OSError, ValueError) as exc:
         raise ScientificInputError("invalid scientific input manifest") from exc
     expected = build_scientific_input_manifest(repository_root)
@@ -198,17 +191,13 @@ def verify_scientific_input_manifest(
         expected_by_path = {member.path: member for member in expected.members}
         for member in manifest.members:
             if expected_by_path.get(member.path) != member:
-                raise ScientificInputError(
-                    f"scientific input changed after freeze: {member.path}"
-                )
+                raise ScientificInputError(f"scientific input changed after freeze: {member.path}")
         raise ScientificInputError("scientific input membership or aggregate changed")
     return manifest
 
 
 def _module_name(repository_root: Path, path: Path) -> str:
-    relative = path.resolve(strict=True).relative_to(
-        (repository_root / "src").resolve(strict=True)
-    )
+    relative = path.resolve(strict=True).relative_to((repository_root / "src").resolve(strict=True))
     parts = list(relative.with_suffix("").parts)
     if parts[-1] == "__init__":
         parts.pop()

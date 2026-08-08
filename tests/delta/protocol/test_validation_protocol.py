@@ -11,7 +11,7 @@ from trace_jepa.scenario.delta.validation_v7 import (
     run_v7_study,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 ACCEPTANCE = ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small_v3.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
@@ -69,9 +69,9 @@ def test_development_study_smoke_reports_all_v7_metrics_without_holdout() -> Non
     )
     assert study["seed_count"] == 3
     assert study["generator_version"] == "delta-small-generator-v7"
-    assert "peak_strict_concurrent_load_ratio" in study
-    assert "peak_uncapped_compatible_load_ratio" in study
-    assert "peak_registered_normalized_coverable_load_index" in study
+    assert "peak_finite_strict_concurrent_load_ratio" in study
+    assert "peak_finite_uncapped_compatible_load_ratio" in study
+    assert "peak_finite_registered_normalized_coverable_load_index" in study
     assert "adjusted_rand_index" in study["reconciliation"]
     assert study["operations"]["all_trace_artifacts_verified"] is True
     assert study["operations"]["all_episode_keys_unique"] is True

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PIN = ROOT / "models/manifests/vjepa2_1_vit_base_384.manifest.json"
 
 

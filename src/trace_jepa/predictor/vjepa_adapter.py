@@ -19,9 +19,11 @@ from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import (
     PredictorProvenance,
     PredictorRequest,
+    PredictorVisualFeatureRef,
     request_feature_vector,
 )
 from trace_jepa.predictor.qualification import (
+    QualificationBinding,
     VerifiedQualification,
     verify_qualification_binding,
 )
@@ -35,6 +37,18 @@ from trace_jepa.util import sha256_file
 
 class PredictorInputUnavailable(RuntimeError):
     """Raised when a declared learned-model input cannot be verified."""
+
+
+@dataclass(frozen=True)
+class FeatureCacheWriteRequest:
+    """Content and encoder identity for one deterministic feature-cache file."""
+
+    feature: NDArray[Any]
+    observation_sha256: str
+    encoder_version: str
+    encoder_checkpoint_hash: str
+    output_root: Path
+    feature_schema_version: str = "vjepa-frozen-feature-v1"
 
 
 def _npy_bytes(value: NDArray[Any]) -> bytes:
@@ -84,25 +98,24 @@ def write_deterministic_npz(
 
 def write_deterministic_feature_cache(
     path: Path,
-    *,
-    feature: NDArray[Any],
-    observation_sha256: str,
-    encoder_version: str,
-    encoder_checkpoint_hash: str,
-    feature_schema_version: str = "vjepa-frozen-feature-v1",
-    output_root: Path,
+    request: FeatureCacheWriteRequest | None = None,
+    **legacy_request: object,
 ) -> None:
     """Write a byte-stable, pickle-free V-JEPA feature-cache record."""
+    if request is not None and legacy_request:
+        raise TypeError("provide FeatureCacheWriteRequest or legacy keyword fields, not both")
+    if request is None:
+        request = FeatureCacheWriteRequest(**legacy_request)  # type: ignore[arg-type]
     write_deterministic_npz(
         path,
         {
-            "encoder_checkpoint_hash": np.asarray(encoder_checkpoint_hash),
-            "encoder_version": np.asarray(encoder_version),
-            "feature": np.asarray(feature, dtype=np.float32),
-            "feature_schema_version": np.asarray(feature_schema_version),
-            "observation_sha256": np.asarray(observation_sha256),
+            "encoder_checkpoint_hash": np.asarray(request.encoder_checkpoint_hash),
+            "encoder_version": np.asarray(request.encoder_version),
+            "feature": np.asarray(request.feature, dtype=np.float32),
+            "feature_schema_version": np.asarray(request.feature_schema_version),
+            "observation_sha256": np.asarray(request.observation_sha256),
         },
-        output_root=output_root,
+        output_root=request.output_root,
     )
 
 
@@ -121,6 +134,16 @@ class VJEPAFeatureObservation:
         object.__setattr__(self, "vector", vector)
 
 
+@dataclass(frozen=True)
+class VJEPAFeatureCacheSpec:
+    """Immutable encoder/schema constraints for one offline feature cache."""
+
+    encoder_version: str
+    encoder_checkpoint_hash: str
+    feature_schema_version: str = "vjepa-frozen-feature-v1"
+    maximum_age_s: int = 300
+
+
 class CachedVJEPAFeatureProvider:
     """Load verified offline V-JEPA features without pickle or implicit fallback."""
 
@@ -129,12 +152,13 @@ class CachedVJEPAFeatureProvider:
     def __init__(
         self,
         cache_dir: Path,
-        *,
-        encoder_version: str,
-        encoder_checkpoint_hash: str,
-        feature_schema_version: str = "vjepa-frozen-feature-v1",
-        maximum_age_s: int = 300,
+        spec: VJEPAFeatureCacheSpec | None = None,
+        **legacy_spec: object,
     ) -> None:
+        if spec is not None and legacy_spec:
+            raise TypeError("provide VJEPAFeatureCacheSpec or legacy keyword fields, not both")
+        if spec is None:
+            spec = VJEPAFeatureCacheSpec(**legacy_spec)  # type: ignore[arg-type]
         candidate_root = Path(cache_dir)
         if candidate_root.is_symlink():
             raise ValueError("V-JEPA feature-cache root must not be a symlink")
@@ -145,12 +169,12 @@ class CachedVJEPAFeatureProvider:
         if not resolved_root.is_dir():
             raise ValueError("V-JEPA feature-cache root must be a directory")
         self.cache_dir = candidate_root
-        self.encoder_version = encoder_version
-        self.encoder_checkpoint_hash = encoder_checkpoint_hash
-        self.feature_schema_version = feature_schema_version
-        self.maximum_age_s = maximum_age_s
+        self.encoder_version = spec.encoder_version
+        self.encoder_checkpoint_hash = spec.encoder_checkpoint_hash
+        self.feature_schema_version = spec.feature_schema_version
+        self.maximum_age_s = spec.maximum_age_s
 
-    def features(self, request: PredictorRequest) -> VJEPAFeatureObservation:
+    def _feature_path(self, request: PredictorRequest) -> tuple[Path, PredictorVisualFeatureRef]:
         reference = request.observation.context.visual_feature
         if reference is None:
             raise PredictorInputUnavailable("prediction has no visual feature reference")
@@ -168,6 +192,18 @@ class CachedVJEPAFeatureProvider:
         if reference.feature_schema_version != self.feature_schema_version:
             raise PredictorInputUnavailable("visual feature schema mismatch")
         path = self.cache_dir / f"{reference.observation_id}.npz"
+        try:
+            safe_path = ArtifactLocator.from_path(
+                root=self.cache_dir,
+                path=path,
+                maximum_bytes=100_000_000,
+                label="cached V-JEPA feature",
+            ).resolve()
+        except ValueError as exc:
+            raise PredictorInputUnavailable(str(exc)) from exc
+        return safe_path, reference
+
+    def _load_feature_arrays(self, path: Path) -> tuple[NDArray[np.float32], str, str, str, str]:
         required = {
             "feature",
             "observation_sha256",
@@ -176,12 +212,6 @@ class CachedVJEPAFeatureProvider:
             "feature_schema_version",
         }
         try:
-            path = ArtifactLocator.from_path(
-                root=self.cache_dir,
-                path=path,
-                maximum_bytes=100_000_000,
-                label="cached V-JEPA feature",
-            ).resolve()
             validate_npz_container(
                 path,
                 expected_arrays=required,
@@ -190,8 +220,6 @@ class CachedVJEPAFeatureProvider:
             )
         except ValueError as exc:
             raise PredictorInputUnavailable(str(exc)) from exc
-        if sha256_file(path) != reference.feature_cache_sha256:
-            raise PredictorInputUnavailable("visual feature-cache digest mismatch")
         try:
             with np.load(path, allow_pickle=False) as payload:
                 if set(payload.files) != required:
@@ -205,6 +233,25 @@ class CachedVJEPAFeatureProvider:
                 feature_schema_version = str(payload["feature_schema_version"].item())
         except (OSError, ValueError) as exc:
             raise PredictorInputUnavailable("cached V-JEPA feature is malformed") from exc
+        return (
+            feature,
+            observation_sha256,
+            encoder_version,
+            encoder_checkpoint_hash,
+            feature_schema_version,
+        )
+
+    def features(self, request: PredictorRequest) -> VJEPAFeatureObservation:
+        path, reference = self._feature_path(request)
+        if sha256_file(path) != reference.feature_cache_sha256:
+            raise PredictorInputUnavailable("visual feature-cache digest mismatch")
+        (
+            feature,
+            observation_sha256,
+            encoder_version,
+            encoder_checkpoint_hash,
+            feature_schema_version,
+        ) = self._load_feature_arrays(path)
         if observation_sha256 != reference.observation_sha256:
             raise PredictorInputUnavailable("visual observation digest mismatch")
         if encoder_version != self.encoder_version:
@@ -364,15 +411,17 @@ class VJEPABackedActionPrefixPredictor:
         else:
             self.qualified_action_types = verify_qualification_binding(
                 qualification,
-                predictor_version=self.predictor_version,
-                model_hash=self.model_hash,
-                calibration_version=self.calibration_version,
-                calibration_hash=self.calibration_hash,
-                encoder_version=self.encoder_version,
-                encoder_checkpoint_hash=self.encoder_checkpoint_hash,
-                feature_schema_version=self.feature_schema_version,
-                action_schema_version=self.action_schema_version,
-                supported_action_types=self.supported_action_types,
+                QualificationBinding(
+                    predictor_version=self.predictor_version,
+                    model_hash=self.model_hash,
+                    calibration_version=self.calibration_version,
+                    calibration_hash=self.calibration_hash,
+                    encoder_version=self.encoder_version,
+                    encoder_checkpoint_hash=self.encoder_checkpoint_hash,
+                    feature_schema_version=self.feature_schema_version,
+                    action_schema_version=self.action_schema_version,
+                    supported_action_types=self.supported_action_types,
+                ),
             )
             self.adequacy_status = AdequacyStatus.QUALIFIED
             self.qualification_artifact_sha256 = qualification.artifact_sha256

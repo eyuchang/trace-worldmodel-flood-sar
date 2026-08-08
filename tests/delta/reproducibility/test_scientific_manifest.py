@@ -15,7 +15,7 @@ from trace_jepa.scenario.delta.scientific_manifest import (
     write_scientific_input_manifest,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() -> None:
@@ -37,9 +37,7 @@ def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() ->
     assert "data/scenario/delta/geography/build_manifest_v3.json" in paths
     assert any(path.startswith("data/scenario/delta/geography/sources/") for path in paths)
     assert not any(
-        path.startswith(
-            ("data/scenario/delta/reference/", "docs/delta/validation/")
-        )
+        path.startswith(("data/scenario/delta/reference/", "docs/delta/validation/"))
         for path in paths
     )
 
@@ -84,8 +82,7 @@ def test_manifest_rejects_symlinked_member() -> None:
 
 def test_complete_source_inventory_contains_registered_import_closure() -> None:
     inventory = {
-        path.resolve(strict=True)
-        for path in scientific_input_paths(ROOT, include_acceptance=False)
+        path.resolve(strict=True) for path in scientific_input_paths(ROOT, include_acceptance=False)
     }
     closure = import_closure(
         ROOT,

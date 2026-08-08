@@ -12,9 +12,9 @@
   "oci_platform_manifest_sha256": "88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d",
   "oci_platform": "linux/amd64",
   "dependency_lock_file": "requirements-delta-python311.lock",
-  "dependency_lock_sha256": "96b8c575ac944220dd55131a44c61be0803fdfbf4fc27220aae2f7d4d9151b0c",
+  "dependency_lock_sha256": "06b286ad1b4b4d2397af27e567de3c207db59e67400d329edd214032d58355e1",
   "dependency_input_file": "requirements-delta-python311.in",
-  "dependency_input_sha256": "c23e7070a6ad4cbff21b20df4a1d2a90efe845cc35af7011dc4cea663d2c10f4",
+  "dependency_input_sha256": "b1f0802da0001e064cc940df37aed2533a826745caf0908af71d2d04f183a4fe",
   "required_imports": ["pyproj", "rasterio", "shapely"],
   "installation": "python -m pip install --require-hashes -r requirements-delta-python311.lock",
   "claims": [

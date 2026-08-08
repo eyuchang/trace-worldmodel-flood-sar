@@ -7,6 +7,7 @@ from trace_jepa.contracts import PlanPrediction
 from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import PredictorProvenance, PredictorRequest
 from trace_jepa.predictor.qualification import (
+    QualificationBinding,
     load_qualification_artifact,
     verify_qualification_binding,
 )
@@ -48,15 +49,17 @@ class ToyActionPrefixPredictor:
         qualification = load_qualification_artifact(path, trusted_root=root)
         self.qualified_action_types = verify_qualification_binding(
             qualification,
-            predictor_version=self.predictor_version,
-            model_hash=self.model_hash,
-            calibration_version=self.calibration_version,
-            calibration_hash=self.calibration_hash,
-            encoder_version=None,
-            encoder_checkpoint_hash=None,
-            feature_schema_version=self.feature_schema_version,
-            action_schema_version=self.action_schema_version,
-            supported_action_types=self.supported_action_types,
+            QualificationBinding(
+                predictor_version=self.predictor_version,
+                model_hash=self.model_hash,
+                calibration_version=self.calibration_version,
+                calibration_hash=self.calibration_hash,
+                encoder_version=None,
+                encoder_checkpoint_hash=None,
+                feature_schema_version=self.feature_schema_version,
+                action_schema_version=self.action_schema_version,
+                supported_action_types=self.supported_action_types,
+            ),
         )
         self.adequacy_status = AdequacyStatus.QUALIFIED
         self.qualification_artifact_sha256 = qualification.artifact_sha256

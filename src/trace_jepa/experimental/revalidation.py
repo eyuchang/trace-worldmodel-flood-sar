@@ -75,6 +75,19 @@ class RevalidationSnapshot(FrozenModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 
+@dataclass(frozen=True)
+class PredictorReplacementRequest:
+    """Complete identity and timing for one guarded predictor replacement."""
+
+    new_predictor_version: str
+    new_calibration_version: str
+    simulation_time_s: float
+    new_model_hash: str | None = None
+    new_calibration_hash: str | None = None
+    initially_unqualified_families: tuple[str, ...] = ()
+    metadata: dict[str, Any] | None = None
+
+
 @dataclass
 class RevalidationGuard:
     """Mutable mid-mission registry consulted by the TRACE gate.
@@ -158,58 +171,56 @@ class RevalidationGuard:
 
     def replace_predictor(
         self,
-        *,
-        new_predictor_version: str,
-        new_calibration_version: str,
-        new_model_hash: str | None = None,
-        new_calibration_hash: str | None = None,
-        simulation_time_s: float,
-        initially_unqualified_families: Iterable[str] = (),
-        metadata: dict[str, Any] | None = None,
+        request: PredictorReplacementRequest | None = None,
+        **legacy_request: object,
     ) -> PredictorVersionReplacement:
-        new_hash = new_model_hash or sha256_value(
+        if request is not None and legacy_request:
+            raise TypeError("provide PredictorReplacementRequest or legacy keywords, not both")
+        if request is None:
+            request = PredictorReplacementRequest(**legacy_request)  # type: ignore[arg-type]
+        new_hash = request.new_model_hash or sha256_value(
             {
-                "predictor_version": new_predictor_version,
-                "calibration_version": new_calibration_version,
+                "predictor_version": request.new_predictor_version,
+                "calibration_version": request.new_calibration_version,
             }
         )
-        new_calibration_digest = new_calibration_hash or sha256_value(
-            {"calibration_version": new_calibration_version}
+        new_calibration_digest = request.new_calibration_hash or sha256_value(
+            {"calibration_version": request.new_calibration_version}
         )
         event = PredictorVersionReplacement(
             old_predictor_version=self.current_predictor_version,
-            new_predictor_version=new_predictor_version,
+            new_predictor_version=request.new_predictor_version,
             old_model_hash=self.current_model_hash,
             new_model_hash=new_hash,
             old_calibration_version=self.current_calibration_version,
             old_calibration_hash=self.current_calibration_hash,
-            new_calibration_version=new_calibration_version,
+            new_calibration_version=request.new_calibration_version,
             new_calibration_hash=new_calibration_digest,
             new_adequacy_status=AdequacyStatus.UNQUALIFIED,
-            simulation_time_s=simulation_time_s,
-            metadata=metadata or {},
+            simulation_time_s=request.simulation_time_s,
+            metadata=request.metadata or {},
         )
         self.superseded_versions.add(self.current_predictor_version)
-        self.current_predictor_version = new_predictor_version
+        self.current_predictor_version = request.new_predictor_version
         self.current_model_hash = new_hash
-        self.current_calibration_version = new_calibration_version
+        self.current_calibration_version = request.new_calibration_version
         self.current_calibration_hash = new_calibration_digest
         # Successor starts unqualified for the listed high-consequence families.
         updated = dict(self.adequacy.adequate_by_family)
-        for family in initially_unqualified_families:
+        for family in request.initially_unqualified_families:
             allowed = [
                 identity
                 for identity in updated.get(family, ())
                 if identity
                 != CalibrationIdentity(
-                    calibration_version=new_calibration_version,
+                    calibration_version=request.new_calibration_version,
                     calibration_hash=new_calibration_digest,
                 )
             ]
             updated[family] = tuple(allowed)
         self.adequacy = CalibrationAdequacyTable(adequate_by_family=updated)
         self.replacements.append(event)
-        self.replacement_simulation_time_s = simulation_time_s
+        self.replacement_simulation_time_s = request.simulation_time_s
         self.restored_ordinary_operation_at = None
         self._log_transition("predictor_version_replacement", event.to_store_payload())
         return event

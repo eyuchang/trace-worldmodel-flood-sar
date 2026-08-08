@@ -18,6 +18,7 @@ from trace_jepa.predictor.protocol import (
     request_feature_vector,
 )
 from trace_jepa.predictor.qualification import (
+    QualificationBinding,
     VerifiedQualification,
     load_qualification_artifact,
     verify_qualification_binding,
@@ -111,53 +112,67 @@ class NumpyMLPBackend:
         return cast(list[float], (hidden @ self.weight_2 + self.bias_2).tolist())
 
 
+@dataclass(frozen=True)
+class MLPPredictorSpec:
+    """Immutable identity and schema surface for one calibrated MLP."""
+
+    predictor_version: str
+    calibration_version: str
+    training_snapshot: str
+    model_hash: str
+    calibration_hash: str
+    adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED
+    supported_action_types: tuple[str, ...] = (
+        "dispatch_rescue_boat",
+        "deploy_ground_team",
+        "perform_welfare_check",
+        "inspect_levee",
+    )
+    feature_schema_version: str = "action-prefix-features-v2"
+    action_schema_version: str = "delta-response-actions-v2"
+
+
 class MLPActionPrefixPredictor:
     def __init__(
         self,
         backend: CalibratedMLPBackend,
-        predictor_version: str,
-        calibration_version: str,
-        training_snapshot: str,
-        model_hash: str,
-        calibration_hash: str,
-        adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED,
-        supported_action_types: tuple[str, ...] = (
-            "dispatch_rescue_boat",
-            "deploy_ground_team",
-            "perform_welfare_check",
-            "inspect_levee",
-        ),
-        feature_schema_version: str = "action-prefix-features-v2",
-        action_schema_version: str = "delta-response-actions-v2",
+        spec: MLPPredictorSpec | None = None,
         qualification: VerifiedQualification | None = None,
+        **legacy_spec: object,
     ) -> None:
+        if spec is not None and legacy_spec:
+            raise TypeError("provide MLPPredictorSpec or legacy keyword fields, not both")
+        if spec is None:
+            spec = MLPPredictorSpec(**legacy_spec)  # type: ignore[arg-type]
         self._backend = backend
-        self.predictor_version = predictor_version
-        self.calibration_version = calibration_version
-        self.training_snapshot = training_snapshot
-        self.model_hash = model_hash
-        self.calibration_hash = calibration_hash
-        self.supported_action_types = supported_action_types
-        self.feature_schema_version = feature_schema_version
-        self.action_schema_version = action_schema_version
-        if adequacy_status == AdequacyStatus.QUALIFIED and qualification is None:
+        self.predictor_version = spec.predictor_version
+        self.calibration_version = spec.calibration_version
+        self.training_snapshot = spec.training_snapshot
+        self.model_hash = spec.model_hash
+        self.calibration_hash = spec.calibration_hash
+        self.supported_action_types = spec.supported_action_types
+        self.feature_schema_version = spec.feature_schema_version
+        self.action_schema_version = spec.action_schema_version
+        if spec.adequacy_status == AdequacyStatus.QUALIFIED and qualification is None:
             raise ValueError("learned MLP qualification requires a verified artifact")
         if qualification is None:
-            self.adequacy_status = adequacy_status
+            self.adequacy_status = spec.adequacy_status
             self.qualified_action_types: tuple[str, ...] = ()
             self.qualification_artifact_sha256: str | None = None
         else:
             self.qualified_action_types = verify_qualification_binding(
                 qualification,
-                predictor_version=self.predictor_version,
-                model_hash=self.model_hash,
-                calibration_version=self.calibration_version,
-                calibration_hash=self.calibration_hash,
-                encoder_version=None,
-                encoder_checkpoint_hash=None,
-                feature_schema_version=self.feature_schema_version,
-                action_schema_version=self.action_schema_version,
-                supported_action_types=self.supported_action_types,
+                QualificationBinding(
+                    predictor_version=self.predictor_version,
+                    model_hash=self.model_hash,
+                    calibration_version=self.calibration_version,
+                    calibration_hash=self.calibration_hash,
+                    encoder_version=None,
+                    encoder_checkpoint_hash=None,
+                    feature_schema_version=self.feature_schema_version,
+                    action_schema_version=self.action_schema_version,
+                    supported_action_types=self.supported_action_types,
+                ),
             )
             self.adequacy_status = AdequacyStatus.QUALIFIED
             self.qualification_artifact_sha256 = qualification.artifact_sha256
@@ -214,15 +229,17 @@ class MLPActionPrefixPredictor:
             )
         return cls(
             backend=backend,
-            predictor_version=str(metadata["predictor_version"]),
-            calibration_version=calibration.calibration_version,
-            training_snapshot=str(metadata["training_snapshot"]),
-            model_hash=sha256_file(path),
-            calibration_hash=sha256_file(calibration_path),
-            adequacy_status=AdequacyStatus.UNQUALIFIED,
-            supported_action_types=backend.action_names,
-            feature_schema_version=str(metadata["feature_schema_version"]),
-            action_schema_version=str(metadata["action_schema_version"]),
+            spec=MLPPredictorSpec(
+                predictor_version=str(metadata["predictor_version"]),
+                calibration_version=calibration.calibration_version,
+                training_snapshot=str(metadata["training_snapshot"]),
+                model_hash=sha256_file(path),
+                calibration_hash=sha256_file(calibration_path),
+                adequacy_status=AdequacyStatus.UNQUALIFIED,
+                supported_action_types=backend.action_names,
+                feature_schema_version=str(metadata["feature_schema_version"]),
+                action_schema_version=str(metadata["action_schema_version"]),
+            ),
             qualification=qualification,
         )
 

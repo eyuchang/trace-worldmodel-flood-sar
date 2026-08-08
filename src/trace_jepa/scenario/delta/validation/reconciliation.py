@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from trace_jepa.scenario.delta.evaluation import evaluate_partitions
+from trace_jepa.scenario.delta.domain.loading import load_geography_catalog, load_scenario_config
 from trace_jepa.scenario.delta.generator import generate_delta_small_from_models
-from trace_jepa.scenario.delta.loading import load_geography_catalog, load_scenario_config
 from trace_jepa.scenario.delta.reconciliation import (
     baseline_v7_clusters,
     evidence_graph_clusters,
 )
-from trace_jepa.scenario.delta.reconciliation_selection import (
+from trace_jepa.scenario.delta.reconciliation.evaluation import evaluate_partitions
+from trace_jepa.scenario.delta.reconciliation.selection import (
     CANONICAL_RECONCILIATION_ALGORITHM,
 )
 from trace_jepa.scenario.delta.validation.statistics import cluster_mean_interval
@@ -37,9 +37,7 @@ def _reference_partition(scenario: object) -> tuple[dict[str, str], set[str]]:
         )
         for item in observations.lineage
     }
-    false_ids = {
-        item.call_id for item in observations.lineage if item.truth_incident_id is None
-    }
+    false_ids = {item.call_id for item in observations.lineage if item.truth_incident_id is None}
     return reference, false_ids
 
 
@@ -82,12 +80,8 @@ def _metric_summary(
     selected = [float(row[f"selected_{metric}"]) for row in rows]
     differences = [float(row[f"difference_{metric}"]) for row in rows]
     return {
-        "baseline": cluster_mean_interval(
-            baseline, protocol_hash, f"{study_id}:baseline:{metric}"
-        ),
-        "selected": cluster_mean_interval(
-            selected, protocol_hash, f"{study_id}:selected:{metric}"
-        ),
+        "baseline": cluster_mean_interval(baseline, protocol_hash, f"{study_id}:baseline:{metric}"),
+        "selected": cluster_mean_interval(selected, protocol_hash, f"{study_id}:selected:{metric}"),
         "paired_difference_selected_minus_baseline": cluster_mean_interval(
             differences,
             protocol_hash,

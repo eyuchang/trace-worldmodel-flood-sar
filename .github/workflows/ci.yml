@@ -10,13 +10,11 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    container:
+      image: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.14"
-          cache: pip
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install development dependencies
         run: |
           python -m pip install --require-hashes -r requirements-delta-python311.lock
@@ -30,41 +28,80 @@ jobs:
       - name: Lint
         run: >-
           python -m ruff check
-          scripts/train_action_predictor.py
+          scripts/build_delta_predictor_fixtures.py
+          scripts/build_delta_small_geography.py
+          scripts/calibrate_delta_v7_truth.py
+          scripts/calibrate_delta_v8.py
+          scripts/check_delta_coverage.py
+          scripts/download_vjepa.py
+          scripts/measure_delta_performance.py
+          scripts/run_delta_vjepa_offline.py
+          scripts/select_delta_v8_reconciliation.py
+          scripts/verify_delta_refactor_equivalence.py
+          scripts/verify_delta_reference_environment.py
+          scripts/write_delta_scientific_manifest.py
           src/trace_jepa/contracts/models.py
           src/trace_jepa/controller.py
+          src/trace_jepa/experimental/revalidation.py
           src/trace_jepa/predictor
           src/trace_jepa/scenario/delta
-          tests/test_delta_small_acceptance.py
-          tests/test_delta_documentation_consistency.py
-          tests/test_delta_small_scientific_integrity.py
-          tests/test_delta_v7_load_and_reconciliation.py
-          tests/test_delta_v7_validation_protocol.py
-          tests/test_delta_v8_scientific_manifest.py
-          tests/test_delta_v8_validation_boundaries.py
+          src/trace_jepa/support
+          tests/delta
+          tests/predictor
           tests/test_experimental_profile_provenance.py
           tests/test_revalidation_guard.py
+      - name: Verify formatting
+        run: >-
+          python -m ruff format --check
+          scripts/build_delta_predictor_fixtures.py
+          scripts/build_delta_small_geography.py
+          scripts/calibrate_delta_v7_truth.py
+          scripts/calibrate_delta_v8.py
+          scripts/check_delta_coverage.py
+          scripts/download_vjepa.py
+          scripts/measure_delta_performance.py
+          scripts/run_delta_vjepa_offline.py
+          scripts/select_delta_v8_reconciliation.py
+          scripts/verify_delta_refactor_equivalence.py
+          scripts/verify_delta_reference_environment.py
+          scripts/write_delta_scientific_manifest.py
+          src/trace_jepa/experimental/revalidation.py
+          src/trace_jepa/predictor
+          src/trace_jepa/scenario/delta
+          src/trace_jepa/support
+          tests/delta
+          tests/predictor
       - name: Type-check Delta and predictor seams
         run: >-
           python -m mypy
           src/trace_jepa/scenario/delta
-          src/trace_jepa/predictor/mlp.py
-          src/trace_jepa/predictor/protocol.py
-          src/trace_jepa/predictor/toy.py
-          src/trace_jepa/predictor/vjepa_adapter.py
-      - name: Test
-        run: python -m pytest
+          src/trace_jepa/predictor
+          src/trace_jepa/experimental/revalidation.py
+          src/trace_jepa/support
+      - name: Test with registered branch coverage
+        run: >-
+          python -m pytest
+          --cov=trace_jepa.scenario.delta
+          --cov=trace_jepa.predictor
+          --cov=trace_jepa.experimental.revalidation
+          --cov=trace_jepa.support
+          --cov-branch
+          --cov-report=json:coverage-delta.json
+      - name: Enforce high-consequence Task 1/2 coverage
+        run: python scripts/check_delta_coverage.py coverage-delta.json
       - name: Verify the complete Delta scientific input freeze
         run: >-
           python -c "from pathlib import Path;
           from trace_jepa.scenario.delta.scientific_manifest import verify_scientific_input_manifest;
           verify_scientific_input_manifest(Path('.'),
-          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json'))"
-      - name: Verify committed Delta book v4 when published
+          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json'))"
+      - name: Verify committed Delta book v5 when published
         shell: bash
         run: |
-          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v4 ]]; then
+          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v5 ]]; then
             trace-jepa-delta-small replay \
-              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v4 \
-              --output "${RUNNER_TEMP}/delta-book-v4-replay"
+              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
+              --output "${RUNNER_TEMP}/delta-book-v5-replay"
           fi
+      - name: Reject whitespace errors
+        run: git diff --check HEAD^

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from trace_jepa.scenario.delta.geography_models import GeographyCatalog
+from trace_jepa.scenario.delta.geography.models import GeographyCatalog
 
 from .base import DeltaModel
 from .config import DeltaScenarioConfig
@@ -14,14 +14,14 @@ from .state import CrossingState, GaugeSample, GroundTruth, GroundTruthV8, Weath
 class GeneratedScenario(DeltaModel):
     config: DeltaScenarioConfig
     geography: GeographyCatalog
-    weather: list[WeatherSample]
-    gauges: list[GaugeSample]
-    crossing_states: list[CrossingState]
+    weather: tuple[WeatherSample, ...]
+    gauges: tuple[GaugeSample, ...]
+    crossing_states: tuple[CrossingState, ...]
     truth: GroundTruth | GroundTruthV8
     observations: ObservationArtifact
     coordination: CoordinationArtifact | None = None
     resources: ResourceArtifact
     prior_profile: PriorProfileArtifact
-    stage_seeds: list[str]
-    generation_order: list[str]
+    stage_seeds: tuple[str, ...]
+    generation_order: tuple[str, ...]
     source_path: Path

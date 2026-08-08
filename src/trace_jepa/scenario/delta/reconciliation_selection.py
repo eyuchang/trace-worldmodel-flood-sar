@@ -1,4 +1,7 @@
-"""Frozen development-only selection for the v8 reconciliation controller."""
+"""One-release compatibility facade for reconciliation selection."""
 
-CANONICAL_RECONCILIATION_ALGORITHM = "evidence-graph-q075"
-SELECTION_REPORT = "data/scenario/delta/calibration/v8_reconciliation_selection_v1.json"
+from trace_jepa.scenario.delta.reconciliation.selection import (
+    CANONICAL_RECONCILIATION_ALGORITHM,
+)
+
+__all__ = ["CANONICAL_RECONCILIATION_ALGORITHM"]

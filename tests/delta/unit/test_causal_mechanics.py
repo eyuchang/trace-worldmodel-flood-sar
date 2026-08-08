@@ -33,7 +33,7 @@ from trace_jepa.scenario.delta.truth_v7 import IncidentCandidate
 from trace_jepa.scenario.delta.truth_v8 import TYPE_INTERCEPTS_V2, form_episode_candidates_v8
 from trace_jepa.util import sha256_file
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small_v3.yaml"
 V8_CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"

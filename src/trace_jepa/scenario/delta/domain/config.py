@@ -84,20 +84,20 @@ class TimelineConfig(DeltaModel):
 
 
 class ExtentConfig(DeltaModel):
-    island_ids: list[str]
-    community_ids: list[str]
-    crossing_ids: list[str]
-    gauge_ids: list[str]
+    island_ids: tuple[str, ...]
+    community_ids: tuple[str, ...]
+    crossing_ids: tuple[str, ...]
+    gauge_ids: tuple[str, ...]
     roster_size: int = Field(gt=0)
 
 
 class CallProcessConfig(DeltaModel):
     model: str
-    hourly_intensity: list[float]
+    hourly_intensity: tuple[float, ...]
     expected_calls_total: float = Field(gt=0.0)
     peak_expected_calls_per_hour: float = Field(gt=0.0)
     latent_expected_incidents: float = Field(default=26.07, gt=0.0)
-    primary_taxonomy: list[str]
+    primary_taxonomy: tuple[str, ...]
 
     @model_validator(mode="after")
     def validate_intensity_contract(self) -> CallProcessConfig:
@@ -155,7 +155,7 @@ class DeltaScenarioConfig(DeltaModel):
     call_process: CallProcessConfig
     demand_capacity: DemandCapacityConfig
     expected: ExpectedConfig
-    exclusions: list[str]
+    exclusions: tuple[str, ...]
 
     @model_validator(mode="after")
     def validate_small_scope(self) -> DeltaScenarioConfig:
@@ -163,10 +163,10 @@ class DeltaScenarioConfig(DeltaModel):
             "scenario_id": "WF-DFLD-01-SMALL",
             "duration_s": 21_600,
             "roster_size": 60,
-            "island_ids": ["ISL-01", "ISL-02"],
-            "community_ids": ["TWN-01"],
-            "crossing_ids": ["XNG-03", "XNG-04"],
-            "gauge_ids": ["RVB", "MRU", "FPT"],
+            "island_ids": ("ISL-01", "ISL-02"),
+            "community_ids": ("TWN-01",),
+            "crossing_ids": ("XNG-03", "XNG-04"),
+            "gauge_ids": ("RVB", "MRU", "FPT"),
         }
         actual_scope = {
             "scenario_id": self.scenario_id,

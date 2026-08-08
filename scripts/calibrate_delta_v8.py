@@ -125,7 +125,7 @@ def main() -> None:
     namespace_hash = _namespace_hash(config)
     physical_by_seed: dict[int, tuple[list[WeatherSample], list[CrossingState]]] = {}
     episodes_by_seed: list[list[EpisodeCandidate]] = []
-    all_one = {incident_type: 1.0 for incident_type in INCIDENT_REQUIREMENTS_V7}
+    all_one = dict.fromkeys(INCIDENT_REQUIREMENTS_V7, 1.0)
     for seed in seeds:
         seeded = config.model_copy(update={"seed": seed})
         weather = generate_weather(seeded)
@@ -197,7 +197,9 @@ def main() -> None:
     ]
     minimum_false_by_hour = [
         max(0.0, target - latent * report_multiplier * 0.995)
-        for target, latent in zip(config.call_process.hourly_intensity, mean_latent_by_hour)
+        for target, latent in zip(
+            config.call_process.hourly_intensity, mean_latent_by_hour, strict=True
+        )
     ]
     minimum_false_total = sum(minimum_false_by_hour)
     if minimum_false_total > probabilities["false_report_mean"]:
@@ -208,7 +210,9 @@ def main() -> None:
         tuple[float, float, float, float, float, float],
         tuple(
             (minimum + residual_false * target / target_total) / probabilities["false_report_mean"]
-            for minimum, target in zip(minimum_false_by_hour, config.call_process.hourly_intensity)
+            for minimum, target in zip(
+                minimum_false_by_hour, config.call_process.hourly_intensity, strict=True
+            )
         ),
     )
     reporting_by_hour = cast(
@@ -223,7 +227,7 @@ def main() -> None:
                 ),
             )
             for hour, (target, latent) in enumerate(
-                zip(config.call_process.hourly_intensity, mean_latent_by_hour)
+                zip(config.call_process.hourly_intensity, mean_latent_by_hour, strict=True)
             )
         ),
     )
@@ -234,7 +238,7 @@ def main() -> None:
     method_counts: Counter[str] = Counter()
     callback_failures = 0
     dropped_calls = 0
-    for seed, truth in zip(seeds, truths):
+    for seed, truth in zip(seeds, truths, strict=True):
         seeded = config.model_copy(update={"seed": seed})
         observations = generate_observations_v8(
             seeded,

@@ -5,11 +5,17 @@ import json
 import os
 import platform
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from trace_jepa.predictor.safe_files import ArtifactLocator, safe_output_file
+from trace_jepa.predictor.safe_files import (
+    ArtifactLocator,
+    atomic_write_bytes,
+    safe_directory,
+    safe_output_file,
+)
 from trace_jepa.util import sha256_file
 
 # These are the checkpoint names linked from the official V-JEPA 2 repository.
@@ -27,6 +33,19 @@ OFFICIAL_VJEPA21_CHECKPOINTS: dict[str, dict[str, str]] = {
 }
 
 
+@dataclass(frozen=True)
+class OfficialVJEPALoadSpec:
+    """Immutable construction and checkpoint inputs for the official encoder."""
+
+    model_name: str = "vjepa2_1_vit_base_384"
+    crop_size: int = 384
+    checkpoint_dir: Path = Path("models/external/vjepa2")
+    hub_repo: str = "facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812"
+    source: str = "github"
+    local_repo: Path | None = None
+    device: str = "cpu"
+
+
 def load_encoder_pin(path: Path, *, trusted_root: Path) -> dict[str, Any]:
     """Load the immutable encoder pin shared by downloader and offline inference."""
     path = ArtifactLocator.from_path(
@@ -35,7 +54,7 @@ def load_encoder_pin(path: Path, *, trusted_root: Path) -> dict[str, Any]:
         maximum_bytes=1_000_000,
         label="V-JEPA encoder pin",
     ).resolve()
-    pin = json.loads(path.read_text(encoding="utf-8"))
+    pin = cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
     if pin.get("manifest_version") != "trace-vjepa-encoder-pin-v1":
         raise ValueError("unexpected V-JEPA encoder-pin schema")
     required = {
@@ -66,11 +85,15 @@ def load_encoder_pin(path: Path, *, trusted_root: Path) -> dict[str, Any]:
 
 def _verified_checkpoint(torch: Any, spec: dict[str, str], checkpoint_dir: Path) -> Path:
     """Download once, verify before deserialization, and reject filesystem indirection."""
-    if checkpoint_dir.is_symlink():
-        raise RuntimeError("V-JEPA checkpoint root must not be a symlink")
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    if not checkpoint_dir.resolve(strict=True).is_dir():
-        raise RuntimeError("V-JEPA checkpoint root must be a directory")
+    try:
+        checkpoint_dir = safe_directory(
+            checkpoint_dir,
+            declared_root=checkpoint_dir,
+            label="V-JEPA checkpoint root",
+        )
+    except ValueError as exc:
+        raise RuntimeError(str(exc)) from exc
     checkpoint_path = checkpoint_dir / spec["file_name"]
     if checkpoint_path.is_symlink():
         raise RuntimeError("V-JEPA checkpoint must not be a symlink")
@@ -113,14 +136,8 @@ def _split_loaded_model(loaded: Any) -> tuple[Any, Any | None]:
 
 
 def load_official_vjepa21(
-    *,
-    model_name: str = "vjepa2_1_vit_base_384",
-    crop_size: int = 384,
-    checkpoint_dir: Path = Path("models/external/vjepa2"),
-    hub_repo: str = "facebookresearch/vjepa2:204698b45b3712590f06245fbfba32d3be539812",
-    source: str = "github",
-    local_repo: Path | None = None,
-    device: str = "cpu",
+    spec: OfficialVJEPALoadSpec | None = None,
+    **legacy_spec: Any,
 ) -> tuple[Any, Any | None, Any, Path]:
     """Load an official V-JEPA 2.1 encoder with a reproducible local checkpoint.
 
@@ -131,42 +148,52 @@ def load_official_vjepa21(
     its presence can be recorded and inspected.
     """
 
+    if spec is not None and legacy_spec:
+        raise TypeError("provide OfficialVJEPALoadSpec or legacy keywords, not both")
+    if spec is None:
+        spec = OfficialVJEPALoadSpec(**legacy_spec)
     try:
         import torch
     except ImportError as exc:  # pragma: no cover - optional dependency
         raise RuntimeError("PyTorch is required. Install the appropriate build first.") from exc
 
-    if model_name not in OFFICIAL_VJEPA21_CHECKPOINTS:
+    if spec.model_name not in OFFICIAL_VJEPA21_CHECKPOINTS:
         supported = ", ".join(sorted(OFFICIAL_VJEPA21_CHECKPOINTS))
-        raise ValueError(f"Unsupported V-JEPA 2.1 model {model_name!r}. Choose one of: {supported}")
+        raise ValueError(
+            f"Unsupported V-JEPA 2.1 model {spec.model_name!r}. Choose one of: {supported}"
+        )
 
-    repo_or_dir = str(local_repo) if source == "local" and local_repo else hub_repo
+    repo_or_dir = (
+        str(spec.local_repo) if spec.source == "local" and spec.local_repo else spec.hub_repo
+    )
     loaded = torch.hub.load(
         repo_or_dir,
-        model_name,
-        source=source,
+        spec.model_name,
+        source=spec.source,
         pretrained=False,
         trust_repo=True,
     )
     encoder, pretraining_predictor = _split_loaded_model(loaded)
 
-    spec = OFFICIAL_VJEPA21_CHECKPOINTS[model_name]
-    checkpoint_path = _verified_checkpoint(torch, spec, checkpoint_dir)
+    checkpoint = OFFICIAL_VJEPA21_CHECKPOINTS[spec.model_name]
+    checkpoint_path = _verified_checkpoint(torch, checkpoint, spec.checkpoint_dir)
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
-    if spec["encoder_key"] not in checkpoint:
+    checkpoint_metadata = OFFICIAL_VJEPA21_CHECKPOINTS[spec.model_name]
+    if checkpoint_metadata["encoder_key"] not in checkpoint:
         raise KeyError(
-            f"Official checkpoint did not contain encoder key {spec['encoder_key']!r}; "
+            "Official checkpoint did not contain encoder key "
+            f"{checkpoint_metadata['encoder_key']!r}; "
             f"available keys: {sorted(checkpoint)}"
         )
-    encoder_state = clean_backbone_state_dict(checkpoint[spec["encoder_key"]])
+    encoder_state = clean_backbone_state_dict(checkpoint[checkpoint_metadata["encoder_key"]])
     encoder.load_state_dict(encoder_state, strict=True)
-    encoder.to(device).eval()
+    encoder.to(spec.device).eval()
 
     processor = torch.hub.load(
         repo_or_dir,
         "vjepa2_preprocessor",
-        source=source,
-        crop_size=crop_size,
+        source=spec.source,
+        crop_size=spec.crop_size,
         pretrained=False,
         trust_repo=True,
     )
@@ -243,12 +270,12 @@ def download_model(
             "action-conditioned predictor. Train the latter on synchronized rescue trajectories."
         ),
     }
-    receipt_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = receipt_path.with_suffix(receipt_path.suffix + ".partial")
-    if temporary.is_symlink() or (temporary.exists() and not temporary.is_file()):
-        raise ValueError("V-JEPA download receipt temporary path is unsafe")
-    temporary.write_text(json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8")
-    os.replace(temporary, receipt_path)
+    atomic_write_bytes(
+        receipt_path,
+        (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        root=receipt_root,
+        label="V-JEPA download receipt",
+    )
     return receipt_path
 
 

@@ -3,6 +3,7 @@
 from trace_jepa.support.files import (
     ArtifactLocator,
     atomic_write_bytes,
+    safe_directory,
     safe_output_file,
     safe_regular_file,
     validate_npz_container,
@@ -11,6 +12,7 @@ from trace_jepa.support.files import (
 __all__ = [
     "ArtifactLocator",
     "atomic_write_bytes",
+    "safe_directory",
     "safe_output_file",
     "safe_regular_file",
     "validate_npz_container",

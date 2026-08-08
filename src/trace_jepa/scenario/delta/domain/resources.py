@@ -3,6 +3,7 @@
 from pydantic import Field
 
 from .base import DeltaModel
+from .types import AvailabilityMode, Capability
 
 
 class PriorProfileArtifact(DeltaModel):
@@ -17,7 +18,7 @@ class ResourceUnit(DeltaModel):
     resource_id: str
     resource_class: str
     base_id: str
-    capabilities: tuple[str, ...]
+    capabilities: tuple[Capability, ...]
     route_id: str
     passenger_capacity: int = Field(ge=0)
     activation_time_s: int = Field(ge=0)
@@ -28,7 +29,7 @@ class ResourceUnit(DeltaModel):
     service_duration_s: int = Field(gt=0)
     service_units: int = Field(gt=0)
     is_available: bool
-    availability_mode: str = "local-from-scenario-start"
+    availability_mode: AvailabilityMode = "local-from-scenario-start"
     origin_base_id: str | None = None
     source_record_ids: tuple[str, ...] = ()
 
@@ -39,4 +40,4 @@ class ResourceArtifact(DeltaModel):
     coordination_domain: str
     resource_profile_id: str = "kappa-0.5-local-v1"
     service_unit_definition: str = "normalized-analytical-capability-load-unit"
-    units: list[ResourceUnit]
+    units: tuple[ResourceUnit, ...]

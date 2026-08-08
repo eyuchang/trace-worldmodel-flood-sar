@@ -58,6 +58,21 @@ class VerifiedQualification:
     artifact_sha256: str
 
 
+@dataclass(frozen=True)
+class QualificationBinding:
+    """Exact predictor, calibration, schema, and action surface being qualified."""
+
+    predictor_version: str
+    model_hash: str
+    calibration_version: str
+    calibration_hash: str
+    encoder_version: str | None
+    encoder_checkpoint_hash: str | None
+    feature_schema_version: str
+    action_schema_version: str
+    supported_action_types: tuple[str, ...]
+
+
 def load_qualification_artifact(path: Path, *, trusted_root: Path) -> VerifiedQualification:
     safe_path = ArtifactLocator.from_path(
         root=trusted_root,
@@ -71,32 +86,23 @@ def load_qualification_artifact(path: Path, *, trusted_root: Path) -> VerifiedQu
 
 def verify_qualification_binding(
     qualification: VerifiedQualification,
-    *,
-    predictor_version: str,
-    model_hash: str,
-    calibration_version: str,
-    calibration_hash: str,
-    encoder_version: str | None,
-    encoder_checkpoint_hash: str | None,
-    feature_schema_version: str,
-    action_schema_version: str,
-    supported_action_types: tuple[str, ...],
+    binding: QualificationBinding,
 ) -> tuple[str, ...]:
     artifact = qualification.artifact
     expected = {
-        "predictor_version": predictor_version,
-        "model_hash": model_hash,
-        "calibration_version": calibration_version,
-        "calibration_hash": calibration_hash,
-        "encoder_version": encoder_version,
-        "encoder_checkpoint_hash": encoder_checkpoint_hash,
-        "feature_schema_version": feature_schema_version,
-        "action_schema_version": action_schema_version,
+        "predictor_version": binding.predictor_version,
+        "model_hash": binding.model_hash,
+        "calibration_version": binding.calibration_version,
+        "calibration_hash": binding.calibration_hash,
+        "encoder_version": binding.encoder_version,
+        "encoder_checkpoint_hash": binding.encoder_checkpoint_hash,
+        "feature_schema_version": binding.feature_schema_version,
+        "action_schema_version": binding.action_schema_version,
     }
     for field_name, value in expected.items():
         if getattr(artifact, field_name) != value:
             raise ValueError(f"qualification artifact {field_name} mismatch")
-    unsupported = set(artifact.qualified_action_types) - set(supported_action_types)
+    unsupported = set(artifact.qualified_action_types) - set(binding.supported_action_types)
     if unsupported:
         raise ValueError("qualification artifact names unsupported action classes")
     return artifact.qualified_action_types

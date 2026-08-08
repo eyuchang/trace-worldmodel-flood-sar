@@ -323,7 +323,7 @@ def test_artifact_locator_rejects_escape_and_intermediate_symlink(tmp_path) -> N
         maximum_bytes=100,
         label="test model",
     )
-    with pytest.raises(ValueError, match="escapes|parent must not be a symlink"):
+    with pytest.raises(ValueError, match=r"escapes|parent must not be a symlink"):
         locator.resolve()
 
 

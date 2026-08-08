@@ -4,6 +4,7 @@ import hashlib
 import json
 import platform
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,12 +12,24 @@ from pydantic import Field
 
 from trace_jepa.predictor.protocol import PredictorProvenance
 from trace_jepa.scenario.delta.domain import DeltaModel, GeneratedScenario
-from trace_jepa.scenario.delta.physical import physical_parameter_table
-from trace_jepa.scenario.delta.population import population_parameter_table
-from trace_jepa.support import canonical_json_bytes, sha256_file
+from trace_jepa.scenario.delta.generation.parameters import population_parameter_table
+from trace_jepa.scenario.delta.generation.physical import physical_parameter_table
+from trace_jepa.support import atomic_write_bytes, canonical_json_bytes, sha256_file
+
+__all__ = [
+    "ArtifactMismatchError",
+    "ArtifactWriteRequest",
+    "ReplayManifest",
+    "ReplayManifestBuilder",
+    "canonical_json_bytes",
+    "sha256_bytes",
+    "sha256_file",
+    "verify_scenario_artifacts",
+    "write_scenario_artifacts",
+]
 
 if TYPE_CHECKING:
-    from trace_jepa.scenario.delta.runner import DeltaRunResult
+    from trace_jepa.scenario.delta.runtime.models import DeltaRunResult
 
 
 class ArtifactDescriptor(DeltaModel):
@@ -54,6 +67,53 @@ class ReplayManifest(DeltaModel):
 
 class ArtifactMismatchError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class ArtifactWriteRequest:
+    """All scientific and execution inputs to one artifact-bundle write."""
+
+    scenario: GeneratedScenario
+    run_result: DeltaRunResult
+    policy_path: Path
+    predictor_provenance: PredictorProvenance
+    geography_path: Path
+    output_root: Path
+    package_root: Path
+    recorded_git_commit: str | None = None
+    validation_report_path: Path | None = None
+
+
+@dataclass(frozen=True)
+class ArtifactSpec:
+    """Declarative name, file, payload, and visibility for one artifact."""
+
+    name: str
+    file_name: str
+    value: object
+    contains_hidden_truth: bool = False
+
+
+class ArtifactWriter:
+    """Write canonical artifacts beneath one validated output root."""
+
+    def __init__(self, output_root: Path) -> None:
+        self.output_root = _validate_output_root(output_root, create=True)
+
+    def write(self, spec: ArtifactSpec) -> ArtifactDescriptor:
+        payload = canonical_json_bytes(spec.value)
+        path = _safe_artifact_path(self.output_root, spec.file_name)
+        atomic_write_bytes(path, payload, root=self.output_root, label=spec.name)
+        return ArtifactDescriptor(
+            name=spec.name,
+            file_name=spec.file_name,
+            sha256=sha256_bytes(payload),
+            byte_length=len(payload),
+            contains_hidden_truth=spec.contains_hidden_truth,
+        )
+
+    def write_all(self, specs: list[ArtifactSpec]) -> list[ArtifactDescriptor]:
+        return [self.write(spec) for spec in specs]
 
 
 def sha256_bytes(payload: bytes) -> str:
@@ -123,25 +183,6 @@ def _validate_output_root(output_root: Path, *, create: bool) -> Path:
     return resolved
 
 
-def _write_artifact(
-    output_root: Path,
-    name: str,
-    file_name: str,
-    value: object,
-    contains_hidden_truth: bool,
-) -> ArtifactDescriptor:
-    payload = canonical_json_bytes(value)
-    path = _safe_artifact_path(output_root, file_name)
-    path.write_bytes(payload)
-    return ArtifactDescriptor(
-        name=name,
-        file_name=file_name,
-        sha256=sha256_bytes(payload),
-        byte_length=len(payload),
-        contains_hidden_truth=contains_hidden_truth,
-    )
-
-
 def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[str, object]:
     hourly_calls = [
         sum(
@@ -209,484 +250,482 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
     }
 
 
-def write_scenario_artifacts(
-    scenario: GeneratedScenario,
-    run_result: DeltaRunResult,
-    policy_path: Path,
-    predictor_provenance: PredictorProvenance,
-    geography_path: Path,
-    output_root: Path,
-    package_root: Path,
-    *,
-    recorded_git_commit: str | None = None,
-    validation_report_path: Path | None = None,
-) -> ReplayManifest:
-    _validate_output_root(output_root, create=True)
-    repository_root = package_root.parents[1]
-    physical_parameters = physical_parameter_table()
-    population_parameters = population_parameter_table(scenario.config.generator_version)
-    is_v8 = scenario.config.generator_version == "delta-small-generator-v8"
-    is_modern = scenario.config.generator_version in {
-        "delta-small-generator-v7",
-        "delta-small-generator-v8",
-    }
-    acceptance_path = (
-        repository_root
-        / "configs/scenarios"
-        / (
+@dataclass(frozen=True)
+class ValidationSummary:
+    payload: dict[str, object]
+    acceptance_path: Path
+    validation_path: Path | None
+
+
+class ValidationSummaryBuilder:
+    """Build the compact replay-bound view of a validation report."""
+
+    def __init__(self, request: ArtifactWriteRequest) -> None:
+        self.request = request
+        self.repository_root = request.package_root.parents[1]
+        version = request.scenario.config.generator_version
+        self.is_v8 = version == "delta-small-generator-v8"
+        self.is_modern = version in {
+            "delta-small-generator-v7",
+            "delta-small-generator-v8",
+        }
+
+    def _schema(self) -> str:
+        if self.is_v8:
+            return "delta-small-validation-summary-v5"
+        return (
+            "delta-small-validation-summary-v3"
+            if self.is_modern
+            else "delta-small-validation-summary-v2"
+        )
+
+    def _acceptance_path(self) -> Path:
+        name = (
             "wf_dfld_01_small_acceptance_v5.yaml"
-            if is_v8
+            if self.is_v8
             else (
                 "wf_dfld_01_small_acceptance_v3.yaml"
-                if is_modern
+                if self.is_modern
                 else "wf_dfld_01_small_acceptance_v2.yaml"
             )
         )
-    )
-    if is_modern and not acceptance_path.is_file():
-        # The implementation freeze intentionally precedes the seed-list
-        # preregistration commit. Keep that interim state explicitly runnable.
-        acceptance_path = (
-            repository_root
-            / "docs/delta"
-            / ("WF_DFLD_01_SMALL_V8_PROTOCOL.md" if is_v8 else "WF_DFLD_01_SMALL_V7_PROTOCOL.md")
-        )
-    validation_path = validation_report_path
-    if validation_path is None and not is_modern:
-        legacy_validation = (
-            repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
-        )
-        validation_path = legacy_validation if legacy_validation.is_file() else None
-    if validation_path is not None:
-        validation_path = validation_path.resolve(strict=True)
-        validation_report = json.loads(validation_path.read_text("utf-8"))
-        validation_summary: dict[str, object] = {
-            "schema_version": (
-                "delta-small-validation-summary-v5"
-                if is_v8
-                else (
-                    "delta-small-validation-summary-v3"
-                    if is_modern
-                    else "delta-small-validation-summary-v2"
-                )
-            ),
-            "status": (
-                "confirmatory-v8-original-executed"
-                if is_v8
-                else ("confirmatory-v6-executed" if is_modern else "confirmatory-v5-executed")
-            ),
-            "source_report_sha256": sha256_file(validation_path),
-            "book_walkthrough": validation_report["book_walkthrough"],
-            "studies": [
-                {
-                    "study_id": study["study_id"],
-                    "seed_count": study["seed_count"],
-                    "call_count": study["call_count"],
-                    **(
-                        {
-                            "peak_finite_strict_concurrent_load_ratio": study[
-                                "peak_finite_strict_concurrent_load_ratio"
-                            ],
-                            "peak_finite_uncapped_compatible_load_ratio": study[
-                                "peak_finite_uncapped_compatible_load_ratio"
-                            ],
-                            "peak_finite_registered_normalized_coverable_load_index": study[
-                                "peak_finite_registered_normalized_coverable_load_index"
-                            ],
-                            "peak_finite_residual_strict_pressure_ratio": study[
-                                "peak_finite_residual_strict_pressure_ratio"
-                            ],
-                            "reconciliation": study["reconciliation"],
-                        }
-                        if is_modern
-                        else {
-                            "peak_gross_load_ratio": study["peak_gross_load_ratio"],
-                            "peak_finite_residual_pressure_ratio": study[
-                                "peak_finite_residual_pressure_ratio"
-                            ],
-                        }
-                    ),
-                    "observation_channel": study["observation_channel"],
-                    "operations": study["operations"],
-                    "registered_gate_evaluation": study["registered_gate_evaluation"],
-                }
-                for study in validation_report["studies"]
-            ],
+        path = self.repository_root / "configs/scenarios" / name
+        if self.is_modern and not path.is_file():
+            protocol = (
+                "WF_DFLD_01_SMALL_V8_PROTOCOL.md"
+                if self.is_v8
+                else "WF_DFLD_01_SMALL_V7_PROTOCOL.md"
+            )
+            return self.repository_root / "docs/delta" / protocol
+        return path
+
+    def _validation_path(self) -> Path | None:
+        if self.request.validation_report_path is not None:
+            return self.request.validation_report_path.resolve(strict=True)
+        if self.is_modern:
+            return None
+        legacy = self.repository_root / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V2.json"
+        return legacy if legacy.is_file() else None
+
+    def _study(self, study: dict[str, object]) -> dict[str, object]:
+        common = {
+            "study_id": study["study_id"],
+            "seed_count": study["seed_count"],
+            "call_count": study["call_count"],
+            "observation_channel": study["observation_channel"],
+            "operations": study["operations"],
+            "registered_gate_evaluation": study["registered_gate_evaluation"],
         }
-    else:
-        validation_summary = {
-            "schema_version": (
-                "delta-small-validation-summary-v5"
-                if is_v8
-                else (
-                    "delta-small-validation-summary-v3"
-                    if is_modern
-                    else "delta-small-validation-summary-v2"
+        metrics = (
+            {
+                name: study[name]
+                for name in (
+                    "peak_finite_strict_concurrent_load_ratio",
+                    "peak_finite_uncapped_compatible_load_ratio",
+                    "peak_finite_registered_normalized_coverable_load_index",
+                    "peak_finite_residual_strict_pressure_ratio",
+                    "reconciliation",
                 )
-            ),
-            "status": (
+            }
+            if self.is_modern
+            else {
+                "peak_gross_load_ratio": study["peak_gross_load_ratio"],
+                "peak_finite_residual_pressure_ratio": study["peak_finite_residual_pressure_ratio"],
+            }
+        )
+        return {**common, **metrics}
+
+    def build(self) -> ValidationSummary:
+        acceptance_path = self._acceptance_path()
+        validation_path = self._validation_path()
+        if validation_path is not None:
+            report = json.loads(validation_path.read_text("utf-8"))
+            payload = {
+                "schema_version": self._schema(),
+                "status": (
+                    "confirmatory-v8-original-executed"
+                    if self.is_v8
+                    else (
+                        "confirmatory-v6-executed" if self.is_modern else "confirmatory-v5-executed"
+                    )
+                ),
+                "source_report_sha256": sha256_file(validation_path),
+                "book_walkthrough": report["book_walkthrough"],
+                "studies": [self._study(study) for study in report["studies"]],
+            }
+        else:
+            status = (
                 (
                     "confirmatory-v8-preregistered-not-yet-executed"
                     if acceptance_path.suffix == ".yaml"
                     else "confirmatory-v8-not-yet-derived"
                 )
-                if is_v8
+                if self.is_v8
                 else (
                     "confirmatory-v6-preregistered-not-yet-executed"
-                    if is_modern
+                    if self.is_modern
                     else "confirmatory-v5-preregistered-not-yet-executed"
                 )
-            ),
-            "acceptance_protocol_sha256": sha256_file(acceptance_path),
-            "studies": [],
+            )
+            payload = {
+                "schema_version": self._schema(),
+                "status": status,
+                "acceptance_protocol_sha256": sha256_file(acceptance_path),
+                "studies": [],
+            }
+        return ValidationSummary(payload, acceptance_path, validation_path)
+
+
+@dataclass(frozen=True)
+class ReplayManifestBuildRequest:
+    """Inputs needed after artifacts have been deterministically materialized."""
+
+    write_request: ArtifactWriteRequest
+    artifacts: list[ArtifactDescriptor]
+    validation: ValidationSummary
+    physical_parameters: dict[str, object]
+    population_parameters: dict[str, object]
+
+
+class ReplayManifestBuilder:
+    """Bind generated artifacts to every replay-relevant scientific input."""
+
+    def __init__(self, request: ReplayManifestBuildRequest) -> None:
+        self.request = request
+        self.write = request.write_request
+        self.scenario = self.write.scenario
+        self.repository_root = self.write.package_root.parents[1]
+        version = self.scenario.config.generator_version
+        self.is_v8 = version == "delta-small-generator-v8"
+        self.is_modern = version in {
+            "delta-small-generator-v7",
+            "delta-small-generator-v8",
         }
+
+    def _input_paths(self) -> dict[str, Path]:
+        geography_manifest = self.write.geography_path.parent / (
+            "build_manifest_v3.json" if self.is_modern else "build_manifest_v2.json"
+        )
+        environment = (
+            self.repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
+            if self.is_modern
+            else self.repository_root / "pyproject.toml"
+        )
+        lock = (
+            self.repository_root / "requirements-delta-python311.lock"
+            if self.is_modern
+            else self.repository_root / "requirements-delta-ci.lock"
+        )
+        return {
+            "geography_manifest": geography_manifest,
+            "environment": environment,
+            "lock": lock,
+            "resource_source": (
+                self.repository_root
+                / "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json"
+            ),
+        }
+
+    def _base_inputs(self, paths: dict[str, Path]) -> list[ProvenanceInput]:
+        provenance = self.write.predictor_provenance
+        physical = self.request.physical_parameters
+        population = self.request.population_parameters
+        return [
+            ProvenanceInput(
+                name="scenario_configuration",
+                identifier=self.scenario.source_path.name,
+                sha256=sha256_file(self.scenario.source_path),
+            ),
+            ProvenanceInput(
+                name="geography_catalog",
+                identifier=self.write.geography_path.name,
+                sha256=sha256_file(self.write.geography_path),
+            ),
+            ProvenanceInput(
+                name="geography_build_manifest",
+                identifier=paths["geography_manifest"].name,
+                sha256=sha256_file(paths["geography_manifest"]),
+            ),
+            ProvenanceInput(
+                name="physical_parameter_table",
+                identifier=str(physical["schema_version"]),
+                sha256=sha256_bytes(canonical_json_bytes(physical)),
+            ),
+            ProvenanceInput(
+                name="truth_observation_resource_parameters",
+                identifier=str(population["schema_version"]),
+                sha256=sha256_bytes(canonical_json_bytes(population)),
+            ),
+            ProvenanceInput(
+                name="predictor_prior",
+                identifier=self.scenario.prior_profile.profile_id,
+                sha256=sha256_bytes(
+                    canonical_json_bytes(self.scenario.prior_profile.model_dump(mode="json"))
+                ),
+            ),
+            ProvenanceInput(
+                name="policy",
+                identifier=self.write.policy_path.name,
+                sha256=sha256_file(self.write.policy_path),
+            ),
+            ProvenanceInput(
+                name="predictor_model",
+                identifier=provenance.predictor_version,
+                sha256=provenance.model_hash,
+            ),
+            ProvenanceInput(
+                name="predictor_calibration",
+                identifier=provenance.calibration_version,
+                sha256=provenance.calibration_hash,
+            ),
+            ProvenanceInput(
+                name="environment_contract",
+                identifier=paths["environment"].name,
+                sha256=sha256_file(paths["environment"]),
+            ),
+            ProvenanceInput(
+                name="dependency_lock",
+                identifier=paths["lock"].name,
+                sha256=sha256_file(paths["lock"]),
+            ),
+            ProvenanceInput(
+                name="registered_acceptance_protocol",
+                identifier=self.request.validation.acceptance_path.name,
+                sha256=sha256_file(self.request.validation.acceptance_path),
+            ),
+            ProvenanceInput(
+                name="automatic_aid_source_extract",
+                identifier=paths["resource_source"].name,
+                sha256=sha256_file(paths["resource_source"]),
+            ),
+        ]
+
+    def _optional_inputs(self) -> list[ProvenanceInput]:
+        inputs: list[ProvenanceInput] = []
+        validation_path = self.request.validation.validation_path
+        if validation_path is not None:
+            inputs.append(
+                ProvenanceInput(
+                    name="registered_validation_report",
+                    identifier=validation_path.name,
+                    sha256=sha256_file(validation_path),
+                )
+            )
+        if self.is_modern:
+            calibration = (
+                self.repository_root
+                / "data/scenario/delta/calibration"
+                / (
+                    "v8_process_coefficients_v1.json"
+                    if self.is_v8
+                    else "v7_process_coefficients_v1.json"
+                )
+            )
+            inputs.append(
+                ProvenanceInput(
+                    name="v8_process_calibration" if self.is_v8 else "v7_process_calibration",
+                    identifier=calibration.name,
+                    sha256=sha256_file(calibration),
+                )
+            )
+        provenance = self.write.predictor_provenance
+        if provenance.encoder_checkpoint_hash is not None:
+            inputs.append(
+                ProvenanceInput(
+                    name="predictor_encoder",
+                    identifier=provenance.encoder_version or "unspecified",
+                    sha256=provenance.encoder_checkpoint_hash,
+                )
+            )
+        return inputs
+
+    def build(self) -> ReplayManifest:
+        paths = self._input_paths()
+        return ReplayManifest(
+            schema_version=(
+                "delta-replay-manifest-v6"
+                if self.is_v8
+                else ("delta-replay-manifest-v4" if self.is_modern else "delta-replay-manifest-v3")
+            ),
+            scenario_id=self.scenario.config.scenario_id,
+            generator_version=self.scenario.config.generator_version,
+            git_commit=(self.write.recorded_git_commit or _git_commit(self.repository_root))
+            if not self.is_modern
+            else None,
+            source_tree_sha256=source_tree_sha256(self.write.package_root),
+            python_implementation=(None if self.is_modern else platform.python_implementation()),
+            python_version=(
+                None if self.is_modern else f"{sys.version_info.major}.{sys.version_info.minor}"
+            ),
+            generation_order=self.scenario.generation_order,
+            stage_seeds=[
+                StageSeedRecord(stage_name=name, seed_sha256=seed_hash)
+                for name, seed_hash in zip(
+                    self.scenario.generation_order, self.scenario.stage_seeds, strict=True
+                )
+            ],
+            inputs=[*self._base_inputs(paths), *self._optional_inputs()],
+            artifacts=self.request.artifacts,
+        )
+
+
+def write_scenario_artifacts(request: ArtifactWriteRequest) -> ReplayManifest:
+    scenario = request.scenario
+    run_result = request.run_result
+    output_root = request.output_root
+    package_root = request.package_root
+    _validate_output_root(output_root, create=True)
+    repository_root = package_root.parents[1]
+    physical_parameters = physical_parameter_table()
+    population_parameters = population_parameter_table(scenario.config.generator_version)
+    is_modern = scenario.config.generator_version in {
+        "delta-small-generator-v7",
+        "delta-small-generator-v8",
+    }
+    validation = ValidationSummaryBuilder(request).build()
+    validation_summary = validation.payload
     resource_source = (
         repository_root / "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json"
     )
     resource_provenance = json.loads(resource_source.read_text("utf-8"))
     truth_payload = scenario.truth.model_dump(mode="json")
     candidate_audit_payload = truth_payload.pop("candidate_audit", None)
-    artifacts = [
-        _write_artifact(
-            output_root,
-            "configuration",
-            "configuration.json",
-            scenario.config.model_dump(mode="json"),
-            False,
+    specs = [
+        ArtifactSpec(
+            "configuration", "configuration.json", scenario.config.model_dump(mode="json")
         ),
-        _write_artifact(
-            output_root,
-            "geography",
-            "geography.json",
-            scenario.geography.model_dump(mode="json"),
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "physical_parameters",
-            "physical_parameters.json",
-            physical_parameters,
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "population_parameters",
-            "population_parameters.json",
-            population_parameters,
-            False,
-        ),
-        _write_artifact(
-            output_root,
+        ArtifactSpec("geography", "geography.json", scenario.geography.model_dump(mode="json")),
+        ArtifactSpec("physical_parameters", "physical_parameters.json", physical_parameters),
+        ArtifactSpec("population_parameters", "population_parameters.json", population_parameters),
+        ArtifactSpec(
             "meteorology",
             "meteorology.json",
             [item.model_dump(mode="json") for item in scenario.weather],
-            False,
         ),
-        _write_artifact(
-            output_root,
+        ArtifactSpec(
             "hydrology",
             "hydrology.json",
             [item.model_dump(mode="json") for item in scenario.gauges],
-            False,
         ),
-        _write_artifact(
-            output_root,
+        ArtifactSpec(
             "crossing_states",
             "crossing_states.json",
             [item.model_dump(mode="json") for item in scenario.crossing_states],
-            False,
         ),
-        _write_artifact(
-            output_root,
-            "ground_truth",
-            "ground_truth.json",
-            truth_payload,
-            True,
-        ),
-        _write_artifact(
-            output_root,
-            "calls",
-            "calls.json",
-            [item.model_dump(mode="json") for item in scenario.observations.calls],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "call_lineage",
-            "call_lineage.json",
-            [item.model_dump(mode="json") for item in scenario.observations.lineage],
-            True,
-        ),
-        _write_artifact(
-            output_root,
-            "resources",
-            "resources.json",
-            scenario.resources.model_dump(mode="json"),
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "resource_provenance",
-            "resource_provenance.json",
-            resource_provenance,
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "predictor_prior",
-            "predictor_prior.json",
-            scenario.prior_profile.model_dump(mode="json"),
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "controller_decisions",
-            "controller_decisions.json",
-            [item.model_dump(mode="json") for item in run_result.decisions],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "evidence_ledger",
-            "evidence_ledger.json",
-            [item.model_dump(mode="json") for item in run_result.evidence],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "predictor_requests",
-            "predictor_requests.json",
-            [item.model_dump(mode="json") for item in run_result.predictor_requests],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "trace_records",
-            "trace_records.json",
-            [item.model_dump(mode="json") for item in run_result.trace_records],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "commitments",
-            "commitments.json",
-            [item.model_dump(mode="json") for item in run_result.commitments],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "outcomes",
-            "outcomes.json",
-            [item.model_dump(mode="json") for item in run_result.outcomes],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "demand_capacity",
-            "demand_capacity.json",
-            [item.model_dump(mode="json") for item in run_result.demand_windows],
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "reconciliation_evaluation",
-            "reconciliation_evaluation.json",
-            run_result.reconciliation_evaluation.model_dump(mode="json"),
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "result_summary",
-            "result_summary.json",
-            _summary(scenario, run_result),
-            False,
-        ),
-        _write_artifact(
-            output_root,
-            "validation_summary",
-            "validation_summary.json",
-            validation_summary,
-            False,
-        ),
+        ArtifactSpec("ground_truth", "ground_truth.json", truth_payload, True),
     ]
     if candidate_audit_payload is not None:
-        ground_truth_index = next(
-            index for index, item in enumerate(artifacts) if item.name == "ground_truth"
-        )
-        artifacts.insert(
-            ground_truth_index + 1,
-            _write_artifact(
-                output_root,
+        specs.append(
+            ArtifactSpec(
                 "incident_candidate_audit",
                 "incident_candidate_audit.json",
                 candidate_audit_payload,
                 True,
+            )
+        )
+    specs.extend(
+        [
+            ArtifactSpec(
+                "calls",
+                "calls.json",
+                [item.model_dump(mode="json") for item in scenario.observations.calls],
             ),
-        )
+            ArtifactSpec(
+                "call_lineage",
+                "call_lineage.json",
+                [item.model_dump(mode="json") for item in scenario.observations.lineage],
+                True,
+            ),
+        ]
+    )
     if scenario.coordination is not None:
-        lineage_index = next(
-            index for index, item in enumerate(artifacts) if item.name == "call_lineage"
-        )
-        artifacts.insert(
-            lineage_index + 1,
-            _write_artifact(
-                output_root,
+        specs.append(
+            ArtifactSpec(
                 "coordination",
                 "coordination.json",
                 scenario.coordination.model_dump(mode="json"),
-                False,
+            )
+        )
+    specs.extend(
+        [
+            ArtifactSpec("resources", "resources.json", scenario.resources.model_dump(mode="json")),
+            ArtifactSpec("resource_provenance", "resource_provenance.json", resource_provenance),
+            ArtifactSpec(
+                "predictor_prior",
+                "predictor_prior.json",
+                scenario.prior_profile.model_dump(mode="json"),
             ),
-        )
+            ArtifactSpec(
+                "controller_decisions",
+                "controller_decisions.json",
+                [item.model_dump(mode="json") for item in run_result.decisions],
+            ),
+        ]
+    )
     if run_result.reconciliation_artifact is not None:
-        decisions_index = next(
-            index for index, item in enumerate(artifacts) if item.name == "controller_decisions"
-        )
-        artifacts.insert(
-            decisions_index + 1,
-            _write_artifact(
-                output_root,
+        specs.append(
+            ArtifactSpec(
                 "controller_reconciliation",
                 "controller_reconciliation.json",
                 run_result.reconciliation_artifact.model_dump(mode="json"),
-                False,
+            )
+        )
+    specs.extend(
+        [
+            ArtifactSpec(
+                "evidence_ledger",
+                "evidence_ledger.json",
+                [item.model_dump(mode="json") for item in run_result.evidence],
             ),
-        )
-    geography_manifest = geography_path.parent / (
-        "build_manifest_v3.json"
-        if scenario.config.generator_version
-        in {"delta-small-generator-v7", "delta-small-generator-v8"}
-        else "build_manifest_v2.json"
-    )
-    environment_contract = (
-        repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json"
-        if is_modern
-        else repository_root / "pyproject.toml"
-    )
-    dependency_lock = (
-        repository_root / "requirements-delta-python311.lock"
-        if is_modern
-        else repository_root / "requirements-delta-ci.lock"
-    )
-    inputs = [
-        ProvenanceInput(
-            name="scenario_configuration",
-            identifier=scenario.source_path.name,
-            sha256=sha256_file(scenario.source_path),
-        ),
-        ProvenanceInput(
-            name="geography_catalog",
-            identifier=geography_path.name,
-            sha256=sha256_file(geography_path),
-        ),
-        ProvenanceInput(
-            name="geography_build_manifest",
-            identifier=geography_manifest.name,
-            sha256=sha256_file(geography_manifest),
-        ),
-        ProvenanceInput(
-            name="physical_parameter_table",
-            identifier=str(physical_parameters["schema_version"]),
-            sha256=sha256_bytes(canonical_json_bytes(physical_parameters)),
-        ),
-        ProvenanceInput(
-            name="truth_observation_resource_parameters",
-            identifier=str(population_parameters["schema_version"]),
-            sha256=sha256_bytes(canonical_json_bytes(population_parameters)),
-        ),
-        ProvenanceInput(
-            name="predictor_prior",
-            identifier=scenario.prior_profile.profile_id,
-            sha256=sha256_bytes(
-                canonical_json_bytes(scenario.prior_profile.model_dump(mode="json"))
+            ArtifactSpec(
+                "predictor_requests",
+                "predictor_requests.json",
+                [item.model_dump(mode="json") for item in run_result.predictor_requests],
             ),
-        ),
-        ProvenanceInput(
-            name="policy", identifier=policy_path.name, sha256=sha256_file(policy_path)
-        ),
-        ProvenanceInput(
-            name="predictor_model",
-            identifier=predictor_provenance.predictor_version,
-            sha256=predictor_provenance.model_hash,
-        ),
-        ProvenanceInput(
-            name="predictor_calibration",
-            identifier=predictor_provenance.calibration_version,
-            sha256=predictor_provenance.calibration_hash,
-        ),
-        ProvenanceInput(
-            name="environment_contract",
-            identifier=environment_contract.name,
-            sha256=sha256_file(environment_contract),
-        ),
-        ProvenanceInput(
-            name="dependency_lock",
-            identifier=dependency_lock.name,
-            sha256=sha256_file(dependency_lock),
-        ),
-        ProvenanceInput(
-            name="registered_acceptance_protocol",
-            identifier=acceptance_path.name,
-            sha256=sha256_file(acceptance_path),
-        ),
-        ProvenanceInput(
-            name="automatic_aid_source_extract",
-            identifier=resource_source.name,
-            sha256=sha256_file(resource_source),
-        ),
-    ]
-    if validation_path is not None:
-        inputs.append(
-            ProvenanceInput(
-                name="registered_validation_report",
-                identifier=validation_path.name,
-                sha256=sha256_file(validation_path),
-            )
-        )
-    if is_modern:
-        calibration_record = (
-            repository_root
-            / "data/scenario/delta/calibration"
-            / ("v8_process_coefficients_v1.json" if is_v8 else "v7_process_coefficients_v1.json")
-        )
-        inputs.append(
-            ProvenanceInput(
-                name="v8_process_calibration" if is_v8 else "v7_process_calibration",
-                identifier=calibration_record.name,
-                sha256=sha256_file(calibration_record),
-            )
-        )
-    if predictor_provenance.encoder_checkpoint_hash is not None:
-        inputs.append(
-            ProvenanceInput(
-                name="predictor_encoder",
-                identifier=predictor_provenance.encoder_version or "unspecified",
-                sha256=predictor_provenance.encoder_checkpoint_hash,
-            )
-        )
-    manifest = ReplayManifest(
-        schema_version=(
-            "delta-replay-manifest-v6"
-            if is_v8
-            else ("delta-replay-manifest-v4" if is_modern else "delta-replay-manifest-v3")
-        ),
-        scenario_id=scenario.config.scenario_id,
-        generator_version=scenario.config.generator_version,
-        git_commit=(recorded_git_commit or _git_commit(repository_root)) if not is_modern else None,
-        source_tree_sha256=source_tree_sha256(package_root),
-        python_implementation=None if is_modern else platform.python_implementation(),
-        python_version=(
-            None if is_modern else f"{sys.version_info.major}.{sys.version_info.minor}"
-        ),
-        generation_order=scenario.generation_order,
-        stage_seeds=[
-            StageSeedRecord(stage_name=name, seed_sha256=seed_hash)
-            for name, seed_hash in zip(scenario.generation_order, scenario.stage_seeds, strict=True)
-        ],
-        inputs=inputs,
-        artifacts=artifacts,
+            ArtifactSpec(
+                "trace_records",
+                "trace_records.json",
+                [item.model_dump(mode="json") for item in run_result.trace_records],
+            ),
+            ArtifactSpec(
+                "commitments",
+                "commitments.json",
+                [item.model_dump(mode="json") for item in run_result.commitments],
+            ),
+            ArtifactSpec(
+                "outcomes",
+                "outcomes.json",
+                [item.model_dump(mode="json") for item in run_result.outcomes],
+            ),
+            ArtifactSpec(
+                "demand_capacity",
+                "demand_capacity.json",
+                [item.model_dump(mode="json") for item in run_result.demand_windows],
+            ),
+            ArtifactSpec(
+                "reconciliation_evaluation",
+                "reconciliation_evaluation.json",
+                run_result.reconciliation_evaluation.model_dump(mode="json"),
+            ),
+            ArtifactSpec("result_summary", "result_summary.json", _summary(scenario, run_result)),
+            ArtifactSpec("validation_summary", "validation_summary.json", validation_summary),
+        ]
     )
-    _safe_artifact_path(output_root, "manifest.json").write_bytes(
-        canonical_json_bytes(manifest.model_dump(mode="json", exclude_none=is_modern))
+    artifacts = ArtifactWriter(output_root).write_all(specs)
+    manifest = ReplayManifestBuilder(
+        ReplayManifestBuildRequest(
+            write_request=request,
+            artifacts=artifacts,
+            validation=validation,
+            physical_parameters=physical_parameters,
+            population_parameters=population_parameters,
+        )
+    ).build()
+    atomic_write_bytes(
+        _safe_artifact_path(output_root, "manifest.json"),
+        canonical_json_bytes(manifest.model_dump(mode="json", exclude_none=is_modern)),
+        root=output_root,
+        label="replay manifest",
     )
     return manifest
 

@@ -7,15 +7,16 @@ from pydantic import Field, model_validator
 from trace_jepa.contracts import Commitment, TraceRecord, WorldModelEvidence
 from trace_jepa.predictor import PredictorRequest
 from trace_jepa.scenario.delta.domain import DeltaModel
-from trace_jepa.scenario.delta.evaluation import ReconciliationEvaluation
+from trace_jepa.scenario.delta.domain.types import DecisionEventType, OutcomeStatus
 from trace_jepa.scenario.delta.reconciliation import ReconciliationArtifact
+from trace_jepa.scenario.delta.reconciliation.evaluation import ReconciliationEvaluation
 
 
 class DeltaDecisionEvent(DeltaModel):
     sequence: int = Field(gt=0)
     call_id: str
     simulation_time_s: int = Field(ge=0)
-    event_type: str
+    event_type: DecisionEventType
     resource_id: str
     reason: str
     visible_evidence_basis: tuple[str, ...] = ()
@@ -117,7 +118,7 @@ class DeltaResourceOutcome(DeltaModel):
     outcome_id: str
     call_id: str
     resource_id: str
-    status: str
+    status: OutcomeStatus
     scheduled_completion_s: int = Field(ge=0)
     observed_completion_s: int | None = Field(default=None, ge=0)
     censoring_s: int = Field(ge=0)
@@ -149,13 +150,13 @@ class DeltaRunResult(DeltaModel):
     scenario_id: str
     predictor_version: str
     calibration_version: str
-    decisions: list[DeltaDecisionEvent]
-    demand_windows: list[DemandWindow]
-    trace_records: list[TraceRecord]
-    evidence: list[WorldModelEvidence]
-    predictor_requests: list[PredictorRequest] = Field(default_factory=list)
-    commitments: list[Commitment]
-    outcomes: list[DeltaResourceOutcome]
+    decisions: tuple[DeltaDecisionEvent, ...]
+    demand_windows: tuple[DemandWindow, ...]
+    trace_records: tuple[TraceRecord, ...]
+    evidence: tuple[WorldModelEvidence, ...]
+    predictor_requests: tuple[PredictorRequest, ...] = ()
+    commitments: tuple[Commitment, ...]
+    outcomes: tuple[DeltaResourceOutcome, ...]
     reconciliation_artifact: ReconciliationArtifact | None = None
     reconciliation_evaluation: ReconciliationEvaluation
     trace_chain_verified: bool

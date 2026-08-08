@@ -26,7 +26,7 @@ from trace_jepa.scenario.delta.population import (
     _latent_hour_rates,
 )
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CONFIG_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
 ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
 HISTORICAL_ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_small_acceptance.yaml"
@@ -52,8 +52,8 @@ def _write_axis_variant(
 def test_small_contract_and_generation_order_are_frozen() -> None:
     scenario = generate_delta_small(CONFIG_PATH, GEOGRAPHY_PATH)
     assert scenario.generation_order == GENERATION_ORDER_V7
-    assert scenario.config.extent.island_ids == ["ISL-01", "ISL-02"]
-    assert scenario.config.extent.crossing_ids == ["XNG-03", "XNG-04"]
+    assert scenario.config.extent.island_ids == ("ISL-01", "ISL-02")
+    assert scenario.config.extent.crossing_ids == ("XNG-03", "XNG-04")
     assert scenario.config.timeline.duration_s == 21_600
     assert scenario.config.extent.roster_size == 60
     assert scenario.config.expected.breaches == 0
