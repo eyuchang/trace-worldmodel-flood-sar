@@ -1,6 +1,6 @@
 # WF-DFLD-01-SMALL v2 delivery report
 
-Date: 2026-08-05 America/Los_Angeles  
+Date: 2026-08-05 America/Los_Angeles
 Branch: `demo-delta-scenario`
 
 ## Outcome
