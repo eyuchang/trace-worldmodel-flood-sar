@@ -74,3 +74,4 @@ def test_development_study_smoke_reports_all_v7_metrics_without_holdout() -> Non
     assert "peak_registered_normalized_coverable_load_index" in study
     assert "adjusted_rand_index" in study["reconciliation"]
     assert study["operations"]["all_trace_artifacts_verified"] is True
+    assert study["operations"]["all_episode_keys_unique"] is True

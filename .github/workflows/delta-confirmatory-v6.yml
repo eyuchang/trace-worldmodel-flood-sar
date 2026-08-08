@@ -11,5 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: >-
-          echo "confirmatory-v6 was superseded before execution by the committed v8 protocol;
+          echo "confirmatory-v6 was superseded-before-execution by the committed v8 protocol;
           no seed is executed by this historical workflow"

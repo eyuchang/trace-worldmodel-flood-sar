@@ -219,6 +219,12 @@ def run_v8_development_validation(
         protocol_hash=protocol_hash,
         study_id="development-v8",
     )
+    study["registered_gate_evaluation"] = {
+        "protocol_role": "development-only-no-confirmatory-gates",
+        "all_episode_keys_unique": bool(
+            cast(dict[str, object], study["operations"])["all_episode_keys_unique"]
+        ),
+    }
     report: dict[str, object] = {
         "schema_version": "delta-statistical-validation-v4",
         "execution_role": "development",
@@ -401,8 +407,16 @@ def run_v8_registered_validation(
             for name in ("allocations", "refusals", "repairs")
         ),
         "all_trace_and_outcome_links_verified": bool(operations["all_trace_artifacts_verified"]),
+        "no_overlapping_incident_episode_violations": bool(operations["all_episode_keys_unique"]),
         "runtime_below_55_seconds": elapsed <= protocol.performance.maximum_generate_run_replay_s,
     }
+    studies[0]["registered_gate_evaluation"] = {
+        "protocol_role": "development-only-no-confirmatory-gates",
+        "all_episode_keys_unique": bool(
+            cast(dict[str, object], studies[0]["operations"])["all_episode_keys_unique"]
+        ),
+    }
+    studies[1]["registered_gate_evaluation"] = confirmatory_gates
     report: dict[str, object] = {
         "schema_version": "delta-statistical-validation-v4",
         "execution_role": study,
@@ -412,6 +426,9 @@ def run_v8_registered_validation(
         "protocol_sha256": protocol_hash,
         "scientific_input_manifest_sha256": sha256_file(scientific_manifest_path),
         "scientific_input_aggregate_sha256": manifest.aggregate_sha256,
+        "scenario_configuration_sha256": sha256_file(config_path),
+        "geography_sha256": sha256_file(geography_path),
+        "policy_sha256": sha256_file(policy_path),
         "environment_contract_sha256": sha256_file(expected["environment"]),
         "dependency_lock_sha256": sha256_file(expected["lock"]),
         "seed_list": confirmatory.seeds,

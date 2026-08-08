@@ -1,0 +1,191 @@
+schema_version: delta-small-acceptance-v8
+registered_utc: "2026-08-08T08:24:12Z"
+book_seed: 20260803
+book_seed_role: descriptive_walkthrough_not_confirmatory
+development_ensemble:
+  first_seed: 20260803
+  seed_count: 100
+v8_confirmatory_registered_utc: "2026-08-08T08:24:12Z"
+v8_confirmatory_ensemble:
+  derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v7|index"
+  protocol_role: untouched_holdout_after_v8_mechanics_coefficients_selection_manifest_environment_and_gates_freeze
+  seeds:
+    - 310550586
+    - 1526422752
+    - 2140687528
+    - 1413777515
+    - 529584690
+    - 1692116858
+    - 1782053049
+    - 889023919
+    - 1335829024
+    - 1226857284
+    - 449408505
+    - 361948398
+    - 786523529
+    - 1275752639
+    - 1176079905
+    - 1169430899
+    - 1918115367
+    - 194348247
+    - 741258920
+    - 453532718
+    - 1438924904
+    - 1370237148
+    - 1048442504
+    - 739409536
+    - 788770722
+    - 1303091827
+    - 44202710
+    - 982503741
+    - 751933295
+    - 1703459996
+    - 1401702348
+    - 187218356
+    - 1710588774
+    - 1575348294
+    - 1953538495
+    - 1397627115
+    - 1962460053
+    - 2140129957
+    - 175252462
+    - 117019044
+    - 753919169
+    - 1199526027
+    - 840624771
+    - 756039453
+    - 1627096105
+    - 869698652
+    - 155135504
+    - 758251022
+    - 1991540113
+    - 71100882
+    - 263223415
+    - 153635385
+    - 489563698
+    - 2142598062
+    - 88367756
+    - 149375433
+    - 2048304538
+    - 1163668437
+    - 604591825
+    - 1920680600
+    - 1664774879
+    - 706196469
+    - 1473733820
+    - 806678570
+    - 1325582742
+    - 1731682711
+    - 280671441
+    - 666483409
+    - 2026092476
+    - 1400024258
+    - 756665248
+    - 1448134827
+    - 791546445
+    - 406983319
+    - 851596763
+    - 580600366
+    - 1028634593
+    - 187504196
+    - 72615837
+    - 729246319
+    - 972452781
+    - 425429121
+    - 712504445
+    - 2027586985
+    - 1496076307
+    - 1564557427
+    - 623738617
+    - 1544507140
+    - 1191372796
+    - 784370563
+    - 1507237797
+    - 839381676
+    - 1101197244
+    - 1524406833
+    - 1188928670
+    - 1150259453
+    - 1862582742
+    - 230796906
+    - 312173252
+    - 1005752806
+registration_erratum: >-
+  The 00:00:00Z registration value in the superseded acceptance-v7 file was an
+  inaccurate administrative placeholder. That historical value remains
+  unmodified. This v8 timestamp records actual file creation; the first pushed
+  Git commit containing this complete protocol is authoritative for proving that
+  confirmatory-v7 was not executed before registration.
+scientific_input_manifest_sha256: 24dea31e8aee2337802c1f16477906c640d34e7626e92113751e329d13605915
+protocol_amendment: >-
+  V8 adds continuous eligibility episodes, a keyed nonunique-description
+  observation channel, development-selected reversible evidence-graph
+  reconciliation, exact outcome censoring, exact model/calibration guard
+  identity, complete predictor context, scientific-input-manifest verification,
+  and explicit validation execution roles. V5/v6 evidence and unexecuted v7
+  preregistration remain immutable history.
+call_process:
+  expected_total_mean: 40.0
+  total_mean_absolute_tolerance: 2.5
+  configured_peak_intensity_per_hour: 12.0
+observation_channel:
+  small_information_quality: 0.9
+  expected_duplicate_fraction: 0.070
+  expected_callback_failure_fraction: 0.101
+  expected_false_levee_fraction: 0.124
+  expected_multi_channel_fraction: 0.044
+  expected_nonreporting_fraction: 0.107
+  expected_revision_fraction: 0.120
+  fraction_absolute_tolerance: 0.04
+  expected_point_estimates:
+    callback_failure: 0.101
+    conflicting_report: 0.060
+    dropped_call: 0.043
+    duplicate: 0.070
+    false_report: 0.124
+    location_cell_sector: 0.181
+    location_gps_or_address_intersection: 0.551
+    location_landmark: 0.269
+    multi_channel: 0.044
+    nonreporting: 0.107
+    revision: 0.120
+  point_absolute_tolerances:
+    callback_failure: 0.04
+    conflicting_report: 0.04
+    dropped_call: 0.03
+    duplicate: 0.04
+    false_report: 0.04
+    location_cell_sector: 0.04
+    location_gps_or_address_intersection: 0.04
+    location_landmark: 0.04
+    multi_channel: 0.03
+    nonreporting: 0.04
+    revision: 0.04
+demand_capacity:
+  target_peak_ratio: null
+  book_seed_minimum: null
+  book_seed_maximum: null
+  confirmatory_median_minimum: null
+  confirmatory_median_maximum: null
+  book_allocation_share_minimum: 0.25
+  book_allocation_share_maximum: 0.75
+  primary_metric: strict_concurrent_load_ratio
+  strict_numerical_gate: null
+  historical_sensitivity_metric: registered_normalized_coverable_load_index
+reconciliation_comparison:
+  selected_algorithm_id: evidence-graph-q075
+  immutable_baseline_algorithm_id: baseline-v7-heuristic
+  primary_endpoint: seed_level_paired_false_merge_rate_difference_selected_minus_baseline
+  recall_noninferiority_margin: -0.05
+  false_merge_claim_rule: upper_95_below_zero
+  recall_claim_rule: lower_95_strictly_above_negative_0_05
+inference:
+  schema_version: delta-seed-cluster-inference-v2
+  seed_cluster_unit: one_complete_seed_run
+  bootstrap_resamples: 10000
+  bootstrap_seed_derivation: "sha256(protocol_hash|metric_name|cluster-bootstrap-v1)"
+  mean_and_fraction_interval: deterministic_cluster_percentile_bootstrap
+  median_interval: exact_binomial_order_statistic
+  call_pooling_as_independent_observations: false
+performance:
+  maximum_generate_run_replay_s: 55.0

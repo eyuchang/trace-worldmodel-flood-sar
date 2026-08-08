@@ -218,6 +218,11 @@ def _seed_row(scenario: GeneratedScenario, result: DeltaRunResult) -> dict[str, 
         }
     )
     reconciliation = result.reconciliation_evaluation
+    accepted_episode_keys = [
+        item.episode_key
+        for item in getattr(scenario.truth, "candidate_audit", [])
+        if item.disposition == "accepted_as_truth_incident"
+    ]
     return {
         "seed": scenario.config.seed,
         "latent_incidents": len(scenario.truth.incidents),
@@ -248,6 +253,7 @@ def _seed_row(scenario: GeneratedScenario, result: DeltaRunResult) -> dict[str, 
         "refusals": result.refused,
         "repairs": result.repaired,
         "trace_artifacts_verified": _trace_artifacts_verify(result),
+        "episode_overlap_violations": len(accepted_episode_keys) - len(set(accepted_episode_keys)),
         "reconciliation": {
             "pairwise_precision": reconciliation.pairwise_precision,
             "pairwise_recall": reconciliation.pairwise_recall,
@@ -358,6 +364,9 @@ def run_v7_study(
             ),
             "all_trace_artifacts_verified": all(
                 bool(row["trace_artifacts_verified"]) for row in rows
+            ),
+            "all_episode_keys_unique": all(
+                int(row["episode_overlap_violations"]) == 0 for row in rows
             ),
         }
     )

@@ -364,6 +364,24 @@ def test_exact_replay_preserves_recorded_source_commit_across_artifact_commits(
     assert (reference / "manifest.json").read_bytes() == (replay / "manifest.json").read_bytes()
 
 
+def test_execution_receipt_captures_ci_identity_without_affecting_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GITHUB_RUN_ID", "31050909894")
+    monkeypatch.setenv("TRACE_DELTA_EXECUTION_ROLE", "development-ci")
+    execution = execute_delta_small(
+        CONFIG_PATH,
+        GEOGRAPHY_PATH,
+        POLICY_PATH,
+        tmp_path / "reference",
+        ToyActionPrefixPredictor(),
+    )
+    assert execution.execution_receipt is not None
+    assert execution.execution_receipt["ci_run_id"] == "31050909894"
+    assert execution.execution_receipt["execution_role"] == "development-ci"
+    assert execution.manifest.git_commit is None
+
+
 def test_manifest_verification_fails_loudly_after_artifact_tampering(
     tmp_path: Path,
 ) -> None:

@@ -295,7 +295,7 @@ Delta documentation:
 - [Scientific-input manifest](data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json)
 - [Process calibration report](data/scenario/delta/calibration/v8_process_coefficients_v1.json)
 - [Reconciliation selection report](data/scenario/delta/calibration/v8_reconciliation_selection_v1.json)
-- V8 acceptance protocol: `configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml` after preregistration
+- [V8 acceptance protocol](configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml)
 - V8 validation report: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V4.json` after the once-only run
 - V8 reference bundle: `data/scenario/delta/reference/wf_dfld_01_small_book_v4` after publication
 - V8 figures: `docs/delta/figures/wf_dfld_01_small_v4` after publication

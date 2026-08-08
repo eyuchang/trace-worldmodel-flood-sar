@@ -167,6 +167,7 @@ def execution_receipt(
     *,
     source_commit: str,
     ci_run_id: str | None = None,
+    execution_role: str | None = None,
 ) -> dict[str, object]:
     verification = inspect_reference_environment(contract_path, lock_path)
     return {
@@ -174,6 +175,7 @@ def execution_receipt(
         "recorded_utc": datetime.now(timezone.utc).isoformat(),
         "source_commit": source_commit,
         "ci_run_id": ci_run_id,
+        "execution_role": execution_role,
         "python_executable": sys.executable,
         **verification.model_dump(mode="json"),
     }

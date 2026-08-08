@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from trace_jepa.predictor import ActionPrefixPredictor
@@ -66,7 +67,8 @@ def execute_delta_small(
             repository_root / "data/scenario/delta/environment/python311_linux_amd64_v1.json",
             repository_root / "requirements-delta-python311.lock",
             source_commit=recorded_git_commit or current_git_commit(repository_root),
-            ci_run_id=ci_run_id,
+            ci_run_id=ci_run_id or os.environ.get("GITHUB_RUN_ID"),
+            execution_role=os.environ.get("TRACE_DELTA_EXECUTION_ROLE"),
         )
         receipt_path = output_root / "execution_receipt.json"
         if receipt_path.is_symlink():
