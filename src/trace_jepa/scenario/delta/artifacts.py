@@ -194,6 +194,12 @@ def _summary(scenario: GeneratedScenario, run_result: DeltaRunResult) -> dict[st
         "refusals": run_result.refused,
         "visible_evidence_repairs": run_result.repaired,
         "commitments": len(run_result.commitments),
+        "completed_within_window": sum(
+            item.status == "completed_within_window" for item in run_result.outcomes
+        ),
+        "active_at_scenario_censoring": sum(
+            item.status == "active_at_scenario_censoring" for item in run_result.outcomes
+        ),
         "trace_chain_verified": run_result.trace_chain_verified,
         "peak_strict_concurrent_load_ratio_milli": (
             run_result.peak_strict_concurrent_load_ratio_milli

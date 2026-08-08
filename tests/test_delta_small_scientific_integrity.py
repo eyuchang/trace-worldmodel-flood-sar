@@ -643,6 +643,14 @@ def test_runtime_and_publication_are_offline_and_deterministic(
     first_manifest = publish_reference_bundle(reference, first_figures)
     second_manifest = publish_reference_bundle(reference, second_figures)
     assert first_manifest == second_manifest
+    assert first_manifest["schema_version"] == "delta-small-publication-bundle-v4"
+    published_names = {item["file_name"] for item in first_manifest["artifacts"]}
+    assert {
+        "delta_small_reconciliation.svg",
+        "delta_small_strict_load.svg",
+        "delta_small_strict_residual_pressure.svg",
+        "delta_small_metric_sensitivity.svg",
+    } <= published_names
     for descriptor in first_manifest["artifacts"]:
         file_name = descriptor["file_name"]
         assert (first_figures / file_name).read_bytes() == (second_figures / file_name).read_bytes()

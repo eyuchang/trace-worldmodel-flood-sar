@@ -1,0 +1,63 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from trace_jepa.scenario.delta.scientific_manifest import (
+    ScientificInputError,
+    build_scientific_input_manifest,
+    verify_scientific_input_manifest,
+    write_scientific_input_manifest,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() -> None:
+    manifest = build_scientific_input_manifest(ROOT)
+    paths = {member.path for member in manifest.members}
+    assert "src/trace_jepa/scenario/delta/runner.py" in paths
+    assert "src/trace_jepa/scenario/delta/reconciliation_v8.py" in paths
+    assert "src/trace_jepa/predictor/toy_qualification_v1.json" in paths
+    assert "src/trace_jepa/experimental/revalidation.py" in paths
+    assert "data/scenario/delta/geography/build_manifest_v3.json" in paths
+    assert any(path.startswith("data/scenario/delta/geography/sources/") for path in paths)
+    assert not any("reference/" in path or "validation/" in path for path in paths)
+
+    output = ROOT / "data/scenario/delta/provenance/test_scientific_manifest.json"
+    try:
+        write_scientific_input_manifest(ROOT, output)
+        assert verify_scientific_input_manifest(ROOT, output) == build_scientific_input_manifest(
+            ROOT
+        )
+    finally:
+        output.unlink(missing_ok=True)
+
+
+def test_manifest_rejects_member_substitution() -> None:
+    output = ROOT / "data/scenario/delta/provenance/test_tampered_manifest.json"
+    try:
+        write_scientific_input_manifest(ROOT, output)
+        payload = json.loads(output.read_text("utf-8"))
+        payload["members"][0]["sha256"] = "0" * 64
+        output.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ScientificInputError, match="changed after freeze"):
+            verify_scientific_input_manifest(ROOT, output)
+    finally:
+        output.unlink(missing_ok=True)
+
+
+def test_manifest_rejects_symlinked_member() -> None:
+    target = ROOT / "data/scenario/delta/provenance/test_symlink_target.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("{}", encoding="utf-8")
+    link = ROOT / "data/scenario/delta/provenance/test_symlink_manifest.json"
+    try:
+        link.symlink_to(target)
+        with pytest.raises(ScientificInputError, match="must not be a symlink"):
+            write_scientific_input_manifest(ROOT, link)
+    finally:
+        link.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)

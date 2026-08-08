@@ -179,11 +179,24 @@ def _timeline_figure(
     hydrology: Any,
     calls: Any,
     resources: Any,
+    ground_truth: Any | None = None,
+    coordination: Any | None = None,
 ) -> bytes:
+    expanded_v8 = ground_truth is not None or coordination is not None
     body = [
         _text(55, 78, "Rain (milli-in/hr)", size=12, weight=700),
         _text(55, 280, "RVB stage (millifeet)", size=12, weight=700),
-        _text(55, 485, "Controller-visible reports", size=12, weight=700),
+        _text(
+            55,
+            470 if expanded_v8 else 485,
+            (
+                "Truth episodes → reports → controller delivery"
+                if expanded_v8
+                else "Controller-visible reports"
+            ),
+            size=12,
+            weight=700,
+        ),
     ]
 
     def x(seconds: float) -> float:
@@ -225,13 +238,30 @@ def _timeline_figure(
         "C-WEL": "#1e8449",
         "C-MIS": "#2e86c1",
     }
+    if ground_truth is not None:
+        for incident in ground_truth["incidents"]:
+            px = x(incident["onset_s"])
+            body.append(f'<circle cx="{px:.1f}" cy="492" r="3" fill="{COLORS["ink"]}"/>')
+    delivery_by_call = (
+        {item["call_id"]: item["available_to_controller_s"] for item in coordination["deliveries"]}
+        if coordination is not None
+        else {}
+    )
     for index, call in enumerate(calls):
         px = x(call["received_s"])
-        py = 520 + (index % 4) * 12
+        py = 515 + (index % 3) * 10 if expanded_v8 else 520 + (index % 4) * 12
         color = taxonomy_colors[call["reported"]["call_type"]]
         body.append(
-            f'<line x1="{px:.1f}" y1="500" x2="{px:.1f}" y2="{py:.1f}" stroke="{color}" stroke-width="2"/>'
+            f'<line x1="{px:.1f}" y1="{502 if expanded_v8 else 500}" '
+            f'x2="{px:.1f}" y2="{py:.1f}" stroke="{color}" stroke-width="2"/>'
         )
+        if call["call_id"] in delivery_by_call:
+            delivery_x = x(delivery_by_call[call["call_id"]])
+            body.append(
+                f'<line x1="{px:.1f}" y1="550" x2="{delivery_x:.1f}" y2="550" '
+                f'stroke="{COLORS["muted"]}" stroke-width="1"/>'
+            )
+            body.append(f'<circle cx="{delivery_x:.1f}" cy="550" r="2" fill="{COLORS["accent"]}"/>')
     automatic_aid_arrival = min(
         unit["available_from_s"]
         for unit in resources["units"]
@@ -247,7 +277,14 @@ def _timeline_figure(
         px = x(hour * 3600)
         body.append(f'<line x1="{px:.1f}" y1="90" x2="{px:.1f}" y2="570" stroke="#e5e7e9"/>')
         body.append(_text(px - 8, 592, f"+{hour}h", size=10))
-    return _svg_document("Hazard, RVB stage, and observed-call timeline", body)
+    return _svg_document(
+        (
+            "Hazard, incident, report, and coordination-delivery timeline"
+            if expanded_v8
+            else "Hazard, RVB stage, and observed-call timeline"
+        ),
+        body,
+    )
 
 
 def _gross_load_figure(windows: Any) -> bytes:
@@ -514,7 +551,7 @@ def _v7_metric_sensitivity_figure(windows: Any) -> bytes:
     return _svg_document("Load-definition sensitivity analysis", body)
 
 
-def _flow_figure(summary: Any, trace_records: Any) -> bytes:
+def _flow_figure(summary: Any, trace_records: Any, reconciliation: Any | None = None) -> bytes:
     body: list[str] = []
     nodes = [
         (40, "Hidden causal truth", f"{summary['latent_incidents']} latent incidents", "#d5f5e3"),
@@ -559,7 +596,14 @@ def _flow_figure(summary: Any, trace_records: Any) -> bytes:
         _text(
             45,
             425,
-            "Repairs use shared callback tokens, report revisions, and spatial/temporal similarity.",
+            (
+                "Confirmed merges use hard evidence or conservative multi-family visible evidence."
+                if reconciliation is not None
+                else (
+                    "Repairs use shared callback tokens, report revisions, and "
+                    "spatial/temporal similarity."
+                )
+            ),
             size=12,
         )
     )
@@ -579,11 +623,55 @@ def _flow_figure(summary: Any, trace_records: Any) -> bytes:
             size=12,
         )
     )
+    if reconciliation is not None:
+        suspected = sum(item["status"] == "suspected" for item in reconciliation["links"])
+        body.append(
+            _text(
+                45,
+                515,
+                f"Ambiguous links remain reversible and separate: {suspected} suspected links.",
+                size=12,
+            )
+        )
     return _svg_document("Ground truth → lossy evidence → beliefs → TRACE decisions", body)
+
+
+def _reconciliation_figure(summary: Any) -> bytes:
+    reconciliation = summary["reconciliation"]
+    metrics = (
+        ("pairwise_precision", "Pairwise precision", COLORS["capacity"]),
+        ("pairwise_recall", "Pairwise recall", COLORS["accent"]),
+        ("pairwise_f1", "Pairwise F1", COLORS["water"]),
+        ("false_merge_rate", "False-merge rate", COLORS["hazard"]),
+    )
+    body = [
+        _text(60, 82, "Descriptive book-seed partition metrics", size=13, weight=700),
+        _text(555, 82, "Holdout comparison is reported separately", size=10),
+    ]
+    for index, (key, label, color) in enumerate(metrics):
+        value = float(reconciliation[key])
+        y = 145 + index * 95
+        body.append(f'<rect x="250" y="{y - 20}" width="600" height="30" fill="#edf2f4"/>')
+        body.append(
+            f'<rect x="250" y="{y - 20}" width="{600 * value:.1f}" height="30" fill="{color}"/>'
+        )
+        body.append(_text(60, y, label, size=12, weight=700))
+        body.append(_text(865, y, f"{value:.3f}", size=12, weight=700))
+    body.append(
+        _text(
+            60,
+            560,
+            "These scores use hidden lineage only after runtime; the controller never receives it.",
+            size=11,
+        )
+    )
+    return _svg_document("Controller reconciliation evaluation", body)
 
 
 def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[str, object]:
     verify_scenario_artifacts(reference_root)
+    if output_root.is_symlink() or output_root.parent.is_symlink():
+        raise ValueError("publication output root and parent must not be symlinks")
     output_root.mkdir(parents=True, exist_ok=True)
     geography = _load_json(reference_root / "geography.json")
     resources = _load_json(reference_root / "resources.json")
@@ -591,17 +679,34 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     meteorology = _load_json(reference_root / "meteorology.json")
     hydrology = _load_json(reference_root / "hydrology.json")
     calls = _load_json(reference_root / "calls.json")
+    ground_truth = _load_json(reference_root / "ground_truth.json")
     windows = _load_json(reference_root / "demand_capacity.json")
     summary = _load_json(reference_root / "result_summary.json")
     validation = _load_json(reference_root / "validation_summary.json")
     trace_records = _load_json(reference_root / "trace_records.json")
-    is_v7 = bool(windows and "strict_concurrent_load_ratio_milli" in windows[0])
+    is_modern = bool(windows and "strict_concurrent_load_ratio_milli" in windows[0])
+    is_v8 = summary.get("schema_version") == "delta-small-machine-result-summary-v4"
+    coordination_path = reference_root / "coordination.json"
+    coordination = _load_json(coordination_path) if is_v8 and coordination_path.is_file() else None
+    reconciliation_path = reference_root / "controller_reconciliation.json"
+    reconciliation = (
+        _load_json(reconciliation_path) if is_v8 and reconciliation_path.is_file() else None
+    )
     figures = {
         "delta_small_topology.svg": _topology_figure(geography, resources, resource_provenance),
-        "delta_small_timeline.svg": _timeline_figure(meteorology, hydrology, calls, resources),
-        "delta_small_trace_walkthrough.svg": _flow_figure(summary, trace_records),
+        "delta_small_timeline.svg": _timeline_figure(
+            meteorology,
+            hydrology,
+            calls,
+            resources,
+            ground_truth if is_v8 else None,
+            coordination,
+        ),
+        "delta_small_trace_walkthrough.svg": _flow_figure(summary, trace_records, reconciliation),
     }
-    if is_v7:
+    if is_v8:
+        figures["delta_small_reconciliation.svg"] = _reconciliation_figure(summary)
+    if is_modern:
         figures.update(
             {
                 "delta_small_strict_load.svg": _v7_load_figure(windows),
@@ -628,9 +733,13 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     result_table = canonical_json_bytes(
         {
             "schema_version": (
-                "delta-small-publication-result-table-v4"
-                if is_v7
-                else "delta-small-publication-result-table-v3"
+                "delta-small-publication-result-table-v5"
+                if is_v8
+                else (
+                    "delta-small-publication-result-table-v4"
+                    if is_modern
+                    else "delta-small-publication-result-table-v3"
+                )
             ),
             "book_walkthrough": summary,
             "registered_validation": validation,
@@ -646,7 +755,13 @@ def publish_reference_bundle(reference_root: Path, output_root: Path) -> dict[st
     )
     manifest: dict[str, object] = {
         "schema_version": (
-            "delta-small-publication-bundle-v3" if is_v7 else "delta-small-publication-bundle-v2"
+            "delta-small-publication-bundle-v4"
+            if is_v8
+            else (
+                "delta-small-publication-bundle-v3"
+                if is_modern
+                else "delta-small-publication-bundle-v2"
+            )
         ),
         "reference_manifest_sha256": sha256_file(reference_root / "manifest.json"),
         "metadata_policy": "deterministic-svg-no-timestamps-no-notebook",

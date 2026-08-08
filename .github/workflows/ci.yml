@@ -40,6 +40,8 @@ jobs:
           tests/test_delta_small_scientific_integrity.py
           tests/test_delta_v7_load_and_reconciliation.py
           tests/test_delta_v7_validation_protocol.py
+          tests/test_delta_v8_scientific_manifest.py
+          tests/test_delta_v8_validation_boundaries.py
           tests/test_experimental_profile_provenance.py
           tests/test_revalidation_guard.py
       - name: Type-check Delta and predictor seams
@@ -52,11 +54,17 @@ jobs:
           src/trace_jepa/predictor/vjepa_adapter.py
       - name: Test
         run: python -m pytest
-      - name: Verify committed Delta book v3 when published
+      - name: Verify the complete Delta scientific input freeze
+        run: >-
+          python -c "from pathlib import Path;
+          from trace_jepa.scenario.delta.scientific_manifest import verify_scientific_input_manifest;
+          verify_scientific_input_manifest(Path('.'),
+          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json'))"
+      - name: Verify committed Delta book v4 when published
         shell: bash
         run: |
-          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v3 ]]; then
+          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v4 ]]; then
             trace-jepa-delta-small replay \
-              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v3 \
-              --output "${RUNNER_TEMP}/delta-book-v3-replay"
+              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v4 \
+              --output "${RUNNER_TEMP}/delta-book-v4-replay"
           fi

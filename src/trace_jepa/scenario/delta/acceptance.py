@@ -24,7 +24,7 @@ class AcceptanceConfirmatoryEnsemble(DeltaModel):
         if not self.derivation.startswith(prefix) or not self.derivation.endswith("|index"):
             raise ValueError("unknown confirmatory seed derivation")
         version = self.derivation.removeprefix(prefix).removesuffix("|index")
-        if version not in {"v1", "v2", "v3", "v4", "v5", "v6"}:
+        if version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7"}:
             raise ValueError("unsupported confirmatory protocol version")
         expected = [
             int.from_bytes(
@@ -99,6 +99,15 @@ class AcceptancePerformance(DeltaModel):
     maximum_generate_run_replay_s: float = Field(gt=0.0)
 
 
+class AcceptanceReconciliationComparison(DeltaModel):
+    selected_algorithm_id: str
+    immutable_baseline_algorithm_id: str
+    primary_endpoint: str
+    recall_noninferiority_margin: float = Field(ge=-0.05, le=-0.05)
+    false_merge_claim_rule: str
+    recall_claim_rule: str
+
+
 class DeltaSmallAcceptanceConfig(DeltaModel):
     schema_version: str
     registered_utc: datetime
@@ -115,8 +124,12 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
     balanced_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
     v7_confirmatory_registered_utc: datetime | None = None
     v7_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    v8_confirmatory_registered_utc: datetime | None = None
+    v8_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
     registration_erratum: str | None = None
     frozen_input_sha256: dict[str, str] = Field(default_factory=dict)
+    scientific_input_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    reconciliation_comparison: AcceptanceReconciliationComparison | None = None
     inference: AcceptanceInference | None = None
     protocol_amendment: str
     call_process: AcceptanceCallProcess
@@ -126,7 +139,32 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
 
     @model_validator(mode="after")
     def validate_protocol_generation(self) -> DeltaSmallAcceptanceConfig:
-        if self.schema_version == "delta-small-acceptance-v7":
+        if self.schema_version == "delta-small-acceptance-v8":
+            if self.v8_confirmatory_registered_utc is None:
+                raise ValueError("acceptance v8 requires a registration timestamp field")
+            if self.v8_confirmatory_ensemble is None:
+                raise ValueError("acceptance v8 requires confirmatory-v7 seeds")
+            if "confirmatory-v7" not in self.v8_confirmatory_ensemble.derivation:
+                raise ValueError("acceptance v8 must use untouched confirmatory-v7 seeds")
+            if self.scientific_input_manifest_sha256 is None:
+                raise ValueError("acceptance v8 must bind the scientific-input manifest")
+            if self.reconciliation_comparison is None:
+                raise ValueError("acceptance v8 requires the paired reconciliation protocol")
+            if self.reconciliation_comparison.selected_algorithm_id != "evidence-graph-q075":
+                raise ValueError("acceptance v8 must bind the development-selected algorithm")
+            if self.registration_erratum is None or self.inference is None:
+                raise ValueError("acceptance v8 requires provenance and inference protocols")
+            if self.inference.call_pooling_as_independent_observations:
+                raise ValueError("acceptance v8 forbids pooling calls as independent samples")
+            if self.demand_capacity.primary_metric != "strict_concurrent_load_ratio":
+                raise ValueError("acceptance v8 requires strict concurrency as the primary metric")
+            if self.demand_capacity.strict_numerical_gate is not None:
+                raise ValueError("acceptance v8 must not impose a strict-load numerical gate")
+            if self.frozen_input_sha256:
+                raise ValueError(
+                    "acceptance v8 uses one complete scientific manifest, not partial input hashes"
+                )
+        elif self.schema_version == "delta-small-acceptance-v7":
             if self.v7_confirmatory_registered_utc is None:
                 raise ValueError("acceptance v7 requires a registration timestamp field")
             if self.v7_confirmatory_ensemble is None:

@@ -9,24 +9,24 @@ from typing import Any, cast
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.pipeline import execute_delta_small, verify_exact_replay
 from trace_jepa.scenario.delta.publication import publish_reference_bundle
-from trace_jepa.scenario.delta.validation import run_registered_validation
+from trace_jepa.scenario.delta.validation_v8 import (
+    run_v8_development_validation,
+    run_v8_registered_validation,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _defaults() -> dict[str, Path]:
     repository_root = Path(__file__).resolve().parents[4]
-    v7_acceptance = repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
     return {
         "config": repository_root / "configs/scenarios/wf_dfld_01_small.yaml",
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": (
-            v7_acceptance
-            if v7_acceptance.is_file()
-            else repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v2.yaml"
-        ),
+        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v4.yaml",
+        "scientific_manifest": repository_root
+        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v1.json",
     }
 
 
@@ -59,11 +59,22 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--reference", type=Path, required=True)
     replay.add_argument("--output", type=Path, required=True)
 
-    validate = commands.add_parser(
-        "validate", help="Execute all registered development and confirmatory seeds."
-    )
+    validate = commands.add_parser("validate", help="Run an explicitly selected validation role.")
     _add_execution_inputs(validate)
+    validate.add_argument(
+        "--study",
+        choices=("development", "original-confirmatory", "replication"),
+        required=True,
+        help="Development is local-safe; original confirmation is remote-only.",
+    )
     validate.add_argument("--acceptance", type=Path, default=_defaults()["acceptance"])
+    validate.add_argument(
+        "--scientific-manifest",
+        type=Path,
+        default=_defaults()["scientific_manifest"],
+    )
+    validate.add_argument("--confirmation-token")
+    validate.add_argument("--original-report", type=Path)
     validate.add_argument("--output", type=Path, required=True)
 
     publish = commands.add_parser(
@@ -115,26 +126,36 @@ def main() -> None:
         output_path = (
             arguments.output
             if arguments.output.suffix == ".json"
-            else arguments.output / "WF_DFLD_01_SMALL_VALIDATION_V3.json"
+            else arguments.output / f"WF_DFLD_01_SMALL_{arguments.study.upper()}.json"
         )
-        report = run_registered_validation(
-            arguments.config,
-            arguments.geography,
-            arguments.policy,
-            arguments.acceptance,
-            output_path,
-        )
-        studies = cast(list[dict[str, Any]], report["studies"])
-        primary = next(study for study in studies if "primary" in str(study["study_id"]))
-        ratio_key = (
-            "peak_strict_concurrent_load_ratio"
-            if "peak_strict_concurrent_load_ratio" in primary
-            else "peak_gross_load_ratio"
-        )
+        if arguments.study == "development":
+            report = run_v8_development_validation(
+                config_path=arguments.config,
+                geography_path=arguments.geography,
+                policy_path=arguments.policy,
+                scientific_manifest_path=arguments.scientific_manifest,
+                output_path=output_path,
+            )
+            seed_count = cast(dict[str, Any], report["study"])["seed_count"]
+        else:
+            report = run_v8_registered_validation(
+                study=arguments.study,
+                config_path=arguments.config,
+                geography_path=arguments.geography,
+                policy_path=arguments.policy,
+                acceptance_path=arguments.acceptance,
+                scientific_manifest_path=arguments.scientific_manifest,
+                output_path=output_path,
+                confirmation_token=arguments.confirmation_token,
+                original_report_path=arguments.original_report,
+            )
+            seed_count = sum(
+                study["seed_count"] for study in cast(list[dict[str, Any]], report["studies"])
+            )
         LOGGER.info(
-            "validation replication completed: seeds=%d primary_median_strict_ratio=%.3f output=%s",
-            sum(study["seed_count"] for study in studies),
-            primary[ratio_key]["estimate"],
+            "validation role=%s completed: seeds=%d output=%s",
+            arguments.study,
+            seed_count,
             output_path,
         )
     elif arguments.command == "publish":

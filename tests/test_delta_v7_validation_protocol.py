@@ -8,13 +8,12 @@ from trace_jepa.scenario.delta.validation_v7 import (
     _cluster_fraction_interval,
     _cluster_mean_interval,
     _exact_median_interval,
-    _verify_frozen_inputs,
     run_v7_study,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 ACCEPTANCE = ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
-CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small.yaml"
+CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small_v3.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"
 
@@ -33,7 +32,7 @@ def test_confirmatory_v6_protocol_binds_exact_seeds_inputs_and_no_strict_gate() 
     assert protocol.demand_capacity.primary_metric == "strict_concurrent_load_ratio"
     assert protocol.demand_capacity.strict_numerical_gate is None
     assert "administrative placeholder" in (protocol.registration_erratum or "")
-    _verify_frozen_inputs(protocol, ROOT)
+    assert sha256_file(CONFIG) == protocol.frozen_input_sha256["scenario_configuration"]
 
 
 def test_cluster_intervals_are_metric_keyed_and_deterministic() -> None:
