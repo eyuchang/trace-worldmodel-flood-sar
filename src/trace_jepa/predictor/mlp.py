@@ -22,7 +22,7 @@ from trace_jepa.predictor.qualification import (
     load_qualification_artifact,
     verify_qualification_binding,
 )
-from trace_jepa.predictor.safe_files import safe_regular_file, validate_npz_container
+from trace_jepa.predictor.safe_files import ArtifactLocator, validate_npz_container
 from trace_jepa.util import sha256_file
 
 
@@ -52,14 +52,8 @@ class NumpyMLPBackend:
     action_names: tuple[str, ...]
 
     @classmethod
-    def load(cls, path: Path) -> tuple[NumpyMLPBackend, dict[str, object]]:
-        path = Path(path)
-        path = safe_regular_file(
-            path,
-            declared_root=path.parent,
-            maximum_bytes=25_000_000,
-            label="MLP checkpoint",
-        )
+    def load(cls, locator: ArtifactLocator) -> tuple[NumpyMLPBackend, dict[str, object]]:
+        path = locator.resolve()
         required = {
             "weight_1",
             "bias_1",
@@ -173,10 +167,19 @@ class MLPActionPrefixPredictor:
         cls,
         path: Path,
         *,
+        model_root: Path,
         calibration_path: Path,
+        calibration_root: Path,
         qualification_path: Path | None = None,
+        qualification_root: Path | None = None,
     ) -> MLPActionPrefixPredictor:
-        backend, metadata = NumpyMLPBackend.load(path)
+        model_locator = ArtifactLocator.from_path(
+            root=model_root,
+            path=path,
+            maximum_bytes=25_000_000,
+            label="MLP checkpoint",
+        )
+        backend, metadata = NumpyMLPBackend.load(model_locator)
         required = {
             "predictor_version",
             "training_snapshot",
@@ -185,13 +188,13 @@ class MLPActionPrefixPredictor:
         }
         if set(metadata) != required:
             raise ValueError("MLP checkpoint provenance is incomplete")
-        calibration_path = Path(calibration_path)
-        calibration_path = safe_regular_file(
-            calibration_path,
-            declared_root=calibration_path.parent,
+        calibration_locator = ArtifactLocator.from_path(
+            root=calibration_root,
+            path=calibration_path,
             maximum_bytes=1_000_000,
             label="MLP calibration artifact",
         )
+        calibration_path = calibration_locator.resolve()
         calibration = MLPCalibrationArtifact.model_validate_json(
             calibration_path.read_text(encoding="utf-8")
         )
@@ -202,11 +205,13 @@ class MLPActionPrefixPredictor:
         ):
             if getattr(calibration, field_name) != str(metadata[field_name]):
                 raise ValueError(f"MLP calibration {field_name} mismatch")
-        qualification = (
-            load_qualification_artifact(qualification_path)
-            if qualification_path is not None
-            else None
-        )
+        if qualification_path is not None and qualification_root is None:
+            raise ValueError("qualification_root is required with qualification_path")
+        qualification = None
+        if qualification_path is not None and qualification_root is not None:
+            qualification = load_qualification_artifact(
+                qualification_path, trusted_root=qualification_root
+            )
         return cls(
             backend=backend,
             predictor_version=str(metadata["predictor_version"]),

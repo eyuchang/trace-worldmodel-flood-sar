@@ -2,7 +2,44 @@ from __future__ import annotations
 
 import stat
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ArtifactLocator:
+    """A bounded artifact name interpreted only beneath a caller-trusted root."""
+
+    root: Path
+    relative_name: Path
+    maximum_bytes: int
+    label: str
+
+    @classmethod
+    def from_path(
+        cls,
+        *,
+        root: Path,
+        path: Path,
+        maximum_bytes: int,
+        label: str,
+    ) -> ArtifactLocator:
+        try:
+            relative = Path(path).absolute().relative_to(Path(root).absolute())
+        except ValueError as exc:
+            raise ValueError(f"{label} is outside its caller-trusted root") from exc
+        return cls(Path(root), relative, maximum_bytes, label)
+
+    def resolve(self) -> Path:
+        relative = Path(self.relative_name)
+        if relative.is_absolute() or not relative.parts or ".." in relative.parts:
+            raise ValueError(f"{self.label} has an unsafe relative name")
+        return safe_regular_file(
+            Path(self.root) / relative,
+            declared_root=self.root,
+            maximum_bytes=self.maximum_bytes,
+            label=self.label,
+        )
 
 
 def safe_regular_file(
@@ -44,6 +81,43 @@ def safe_regular_file(
     if metadata.st_size > maximum_bytes:
         raise ValueError(f"{label} exceeds the maximum expected size")
     return resolved
+
+
+def safe_output_file(
+    path: Path,
+    *,
+    declared_root: Path,
+    label: str,
+) -> Path:
+    """Validate a caller-named output without following any symlink boundary."""
+
+    root = Path(declared_root)
+    if root.is_symlink():
+        raise ValueError(f"{label} root must not be a symlink")
+    try:
+        resolved_root = root.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError(f"{label} root is absent") from exc
+    if not resolved_root.is_dir():
+        raise ValueError(f"{label} root must be a directory")
+    try:
+        relative = Path(path).absolute().relative_to(root.absolute())
+    except ValueError as exc:
+        raise ValueError(f"{label} is outside its caller-trusted root") from exc
+    if not relative.parts or ".." in relative.parts:
+        raise ValueError(f"{label} has an unsafe relative name")
+    cursor = root
+    for component in relative.parts[:-1]:
+        cursor = cursor / component
+        if cursor.is_symlink():
+            raise ValueError(f"{label} parent must not be a symlink")
+    parent = (root / relative).parent.resolve(strict=True)
+    if not parent.is_relative_to(resolved_root):
+        raise ValueError(f"{label} escapes its caller-trusted root")
+    destination = root / relative
+    if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+        raise ValueError(f"{label} must be a safe regular-file destination")
+    return destination
 
 
 def validate_npz_container(

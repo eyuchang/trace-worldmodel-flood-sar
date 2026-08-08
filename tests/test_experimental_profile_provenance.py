@@ -20,6 +20,7 @@ from trace_jepa.experimental import (
 )
 from trace_jepa.predictor import (
     ActionPrefixPredictor,
+    ArtifactLocator,
     CachedVJEPAFeatureProvider,
     CalibratedVJEPAHead,
     MLPActionPrefixPredictor,
@@ -175,7 +176,7 @@ def _write_qualification(
     )
     path = tmp_path / "qualification.json"
     path.write_text(payload.model_dump_json(), encoding="utf-8")
-    return load_qualification_artifact(path)
+    return load_qualification_artifact(path, trusted_root=tmp_path)
 
 
 def test_learned_predictor_cannot_self_assert_qualified_status(tmp_path) -> None:
@@ -249,6 +250,7 @@ def test_mlp_loader_binds_separate_model_and_calibration_artifacts(tmp_path) -> 
             "action_names": action_names,
             "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
         },
+        output_root=tmp_path,
     )
     calibration = MLPCalibrationArtifact(
         schema_version="mlp-calibration-v1",
@@ -263,7 +265,9 @@ def test_mlp_loader_binds_separate_model_and_calibration_artifacts(tmp_path) -> 
 
     predictor = MLPActionPrefixPredictor.from_checkpoint(
         checkpoint,
+        model_root=tmp_path,
         calibration_path=calibration_path,
+        calibration_root=tmp_path,
     )
     provenance = predictor.provenance()
     assert provenance.model_hash == sha256_file(checkpoint)
@@ -285,12 +289,50 @@ def test_mlp_loader_binds_separate_model_and_calibration_artifacts(tmp_path) -> 
             "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
             "unexpected": np.asarray([1]),
         },
+        output_root=tmp_path,
     )
     with pytest.raises(ValueError, match="exact array schema"):
         MLPActionPrefixPredictor.from_checkpoint(
             malformed,
+            model_root=tmp_path,
             calibration_path=calibration_path,
+            calibration_root=tmp_path,
         )
+
+
+def test_artifact_locator_rejects_escape_and_intermediate_symlink(tmp_path) -> None:
+    trusted = tmp_path / "trusted"
+    trusted.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    artifact = outside / "model.npz"
+    artifact.write_bytes(b"fixture")
+    with pytest.raises(ValueError, match="outside its caller-trusted root"):
+        ArtifactLocator.from_path(
+            root=trusted,
+            path=artifact,
+            maximum_bytes=100,
+            label="test model",
+        )
+
+    linked_parent = trusted / "linked"
+    linked_parent.symlink_to(outside, target_is_directory=True)
+    locator = ArtifactLocator(
+        root=trusted,
+        relative_name=Path("linked/model.npz"),
+        maximum_bytes=100,
+        label="test model",
+    )
+    with pytest.raises(ValueError, match="escapes|parent must not be a symlink"):
+        locator.resolve()
+
+
+def test_custom_toy_qualification_requires_a_trusted_root(tmp_path) -> None:
+    qualification = Path(__file__).resolve().parents[1] / (
+        "src/trace_jepa/predictor/toy_qualification_v1.json"
+    )
+    with pytest.raises(ValueError, match="qualification_root is required"):
+        ToyActionPrefixPredictor(qualification)
 
 
 def test_vjepa_qualification_requires_exact_frozen_head_and_encoder(tmp_path) -> None:
@@ -357,9 +399,10 @@ def test_learned_predictor_loaders_reject_symlink_roots_and_extra_head_arrays(
             "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
             "unexpected": np.asarray([1]),
         },
+        output_root=tmp_path,
     )
     with pytest.raises(PredictorInputUnavailable, match="exact array schema"):
-        CalibratedVJEPAHead.load(extra_head)
+        CalibratedVJEPAHead.load(extra_head, trusted_root=tmp_path)
 
 
 def test_world_model_evidence_rejects_mismatched_profile_versions() -> None:
@@ -439,6 +482,7 @@ def _write_vjepa_fixture(tmp_path) -> tuple[CachedVJEPAFeatureProvider, Calibrat
         observation_sha256="a" * 64,
         encoder_version="vjepa2.1-test",
         encoder_checkpoint_hash=encoder_hash,
+        output_root=tmp_path,
     )
     action_names = np.asarray(["dispatch_rescue_boat"])
     structured_dimension = 11 + len(action_names)
@@ -468,7 +512,7 @@ def _write_vjepa_fixture(tmp_path) -> tuple[CachedVJEPAFeatureProvider, Calibrat
             encoder_version="vjepa2.1-test",
             encoder_checkpoint_hash=encoder_hash,
         ),
-        CalibratedVJEPAHead.load(head_path),
+        CalibratedVJEPAHead.load(head_path, trusted_root=tmp_path),
     )
 
 

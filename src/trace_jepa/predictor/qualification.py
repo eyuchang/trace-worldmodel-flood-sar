@@ -9,7 +9,7 @@ from pydantic import Field, model_validator
 
 from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import PredictorModel
-from trace_jepa.predictor.safe_files import safe_regular_file
+from trace_jepa.predictor.safe_files import ArtifactLocator
 from trace_jepa.util import sha256_file
 
 
@@ -58,14 +58,13 @@ class VerifiedQualification:
     artifact_sha256: str
 
 
-def load_qualification_artifact(path: Path) -> VerifiedQualification:
-    path = Path(path)
-    safe_path = safe_regular_file(
-        path,
-        declared_root=path.parent,
+def load_qualification_artifact(path: Path, *, trusted_root: Path) -> VerifiedQualification:
+    safe_path = ArtifactLocator.from_path(
+        root=trusted_root,
+        path=path,
         maximum_bytes=1_000_000,
         label="qualification artifact",
-    )
+    ).resolve()
     artifact = QualificationArtifact.model_validate_json(safe_path.read_text(encoding="utf-8"))
     return VerifiedQualification(artifact=artifact, artifact_sha256=sha256_file(safe_path))
 

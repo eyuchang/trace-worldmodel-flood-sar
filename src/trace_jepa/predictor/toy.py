@@ -35,9 +35,17 @@ class ToyActionPrefixPredictor:
     feature_schema_version = "action-prefix-features-v2"
     action_schema_version = "delta-response-actions-v2"
 
-    def __init__(self, qualification_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        qualification_path: Path | None = None,
+        *,
+        qualification_root: Path | None = None,
+    ) -> None:
         path = qualification_path or Path(__file__).with_name("toy_qualification_v1.json")
-        qualification = load_qualification_artifact(path)
+        root = qualification_root or Path(__file__).parent
+        if qualification_path is not None and qualification_root is None:
+            raise ValueError("qualification_root is required for a custom Toy qualification")
+        qualification = load_qualification_artifact(path, trusted_root=root)
         self.qualified_action_types = verify_qualification_binding(
             qualification,
             predictor_version=self.predictor_version,

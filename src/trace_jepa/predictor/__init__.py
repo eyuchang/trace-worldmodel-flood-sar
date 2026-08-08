@@ -16,6 +16,7 @@ from .qualification import (
     load_qualification_artifact,
     verify_qualification_binding,
 )
+from .safe_files import ArtifactLocator
 from .toy import ToyActionPrefixPredictor
 from .vjepa_adapter import (
     CachedVJEPAFeatureProvider,
@@ -28,6 +29,7 @@ from .vjepa_adapter import (
 
 __all__ = [
     "ActionPrefixPredictor",
+    "ArtifactLocator",
     "CachedVJEPAFeatureProvider",
     "CalibratedVJEPAHead",
     "MLPActionPrefixPredictor",

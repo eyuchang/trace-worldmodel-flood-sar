@@ -44,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("models/manifests/vjepa2_1_vit_base_384.manifest.json"),
     )
+    parser.add_argument("--manifest-root", type=Path, default=Path("models/manifests"))
     parser.add_argument("--head", type=Path)
     parser.add_argument("--result", type=Path)
     parser.add_argument(
@@ -69,7 +70,7 @@ def main() -> None:
     frames = np.load(arguments.frames, allow_pickle=False)
     if frames.ndim != 4 or not np.isfinite(frames).all():
         raise ValueError("frames must be a finite four-dimensional array")
-    manifest = load_encoder_pin(arguments.manifest)
+    manifest = load_encoder_pin(arguments.manifest, trusted_root=arguments.manifest_root)
     checkpoint_metadata = manifest["checkpoint"]
     checkpoint_path = arguments.checkpoint_dir / str(checkpoint_metadata["file_name"])
     encoder = VJEPA2Encoder(checkpoint_dir=arguments.checkpoint_dir)
@@ -87,6 +88,7 @@ def main() -> None:
         observation_sha256=observation_sha256,
         encoder_version=str(manifest["encoder_version"]),
         encoder_checkpoint_hash=str(checkpoint_metadata["sha256"]),
+        output_root=arguments.cache_dir,
     )
     summary: dict[str, object] = {
         "schema_version": "delta-vjepa-offline-execution-v1",
@@ -109,7 +111,7 @@ def main() -> None:
             encoder_version=str(manifest["encoder_version"]),
             encoder_checkpoint_hash=str(checkpoint_metadata["sha256"]),
         )
-        head = CalibratedVJEPAHead.load(arguments.head)
+        head = CalibratedVJEPAHead.load(arguments.head, trusted_root=arguments.checkpoint_dir)
         predictor = VJEPABackedActionPrefixPredictor(
             provider, head, adequacy_status=AdequacyStatus.UNQUALIFIED
         )

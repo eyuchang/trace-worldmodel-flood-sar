@@ -31,6 +31,7 @@ def main() -> None:
         observation_sha256=OBSERVATION_HASH,
         encoder_version=ENCODER_VERSION,
         encoder_checkpoint_hash=ENCODER_HASH,
+        output_root=root,
     )
     structured_dimension = 11 + len(ACTION_NAMES)
     input_dimension = structured_dimension + 3
@@ -55,6 +56,7 @@ def main() -> None:
             "action_names": ACTION_NAMES,
             "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
         },
+        output_root=root,
     )
     manifest = {
         "schema_version": "delta-predictor-ci-fixtures-v1",

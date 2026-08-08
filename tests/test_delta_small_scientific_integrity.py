@@ -71,7 +71,7 @@ def _vjepa() -> VJEPABackedActionPrefixPredictor:
     )
     return VJEPABackedActionPrefixPredictor(
         provider,
-        CalibratedVJEPAHead.load(FIXTURES / "vjepa_ci_head.npz"),
+        CalibratedVJEPAHead.load(FIXTURES / "vjepa_ci_head.npz", trusted_root=FIXTURES),
         adequacy_status=AdequacyStatus.UNQUALIFIED,
     )
 
@@ -442,6 +442,7 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
         observation_sha256="a" * 64,
         encoder_version="test-encoder",
         encoder_checkpoint_hash="b" * 64,
+        output_root=tmp_path,
     )
     (tmp_path / "linked.npz").symlink_to(target)
     provider = CachedVJEPAFeatureProvider(
@@ -514,6 +515,7 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
         observation_sha256="d" * 64,
         encoder_version="test-encoder",
         encoder_checkpoint_hash="b" * 64,
+        output_root=tmp_path,
     )
     with pytest.raises(PredictorInputUnavailable, match="digest mismatch"):
         provider.features(request_for("digest", "e" * 64))
@@ -557,6 +559,7 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
         observation_sha256="f" * 64,
         encoder_version="test-encoder",
         encoder_checkpoint_hash="b" * 64,
+        output_root=tmp_path,
     )
     with pytest.raises(ValueError, match="finite"):
         provider.features(request_for("nonfinite", "f" * 64))

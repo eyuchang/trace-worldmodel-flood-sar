@@ -29,7 +29,7 @@ def build_model(
     torch = modules.torch
     nn = modules.nn
 
-    class ActionPrefixMLP(nn.Module):  # type: ignore[misc, name-defined]
+    class ActionPrefixMLP(nn.Module):  # type: ignore[name-defined]
         def __init__(self) -> None:
             super().__init__()
             self.net = nn.Sequential(

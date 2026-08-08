@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from trace_jepa.predictor.safe_files import ArtifactLocator, safe_output_file
 from trace_jepa.util import sha256_file
 
 # These are the checkpoint names linked from the official V-JEPA 2 repository.
@@ -26,11 +27,14 @@ OFFICIAL_VJEPA21_CHECKPOINTS: dict[str, dict[str, str]] = {
 }
 
 
-def load_encoder_pin(path: Path) -> dict[str, Any]:
+def load_encoder_pin(path: Path, *, trusted_root: Path) -> dict[str, Any]:
     """Load the immutable encoder pin shared by downloader and offline inference."""
-    path = Path(path)
-    if not path.is_file() or path.is_symlink():
-        raise ValueError("V-JEPA encoder pin must be a safe regular file")
+    path = ArtifactLocator.from_path(
+        root=trusted_root,
+        path=path,
+        maximum_bytes=1_000_000,
+        label="V-JEPA encoder pin",
+    ).resolve()
     pin = json.loads(path.read_text(encoding="utf-8"))
     if pin.get("manifest_version") != "trace-vjepa-encoder-pin-v1":
         raise ValueError("unexpected V-JEPA encoder-pin schema")
@@ -62,7 +66,11 @@ def load_encoder_pin(path: Path) -> dict[str, Any]:
 
 def _verified_checkpoint(torch: Any, spec: dict[str, str], checkpoint_dir: Path) -> Path:
     """Download once, verify before deserialization, and reject filesystem indirection."""
+    if checkpoint_dir.is_symlink():
+        raise RuntimeError("V-JEPA checkpoint root must not be a symlink")
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    if not checkpoint_dir.resolve(strict=True).is_dir():
+        raise RuntimeError("V-JEPA checkpoint root must be a directory")
     checkpoint_path = checkpoint_dir / spec["file_name"]
     if checkpoint_path.is_symlink():
         raise RuntimeError("V-JEPA checkpoint must not be a symlink")
@@ -169,14 +177,28 @@ def download_model(
     pin_manifest: Path,
     receipt_path: Path,
     checkpoint_dir: Path = Path("models/external/vjepa2"),
+    *,
+    pin_root: Path,
+    receipt_root: Path,
 ) -> Path:
     pin_manifest = Path(pin_manifest)
     receipt_path = Path(receipt_path)
+    pin_manifest = ArtifactLocator.from_path(
+        root=pin_root,
+        path=pin_manifest,
+        maximum_bytes=1_000_000,
+        label="V-JEPA encoder pin",
+    ).resolve()
+    receipt_path = safe_output_file(
+        receipt_path,
+        declared_root=receipt_root,
+        label="V-JEPA download receipt",
+    )
     if receipt_path.resolve() == pin_manifest.resolve():
         raise ValueError("download receipt must not overwrite the immutable encoder pin")
     if receipt_path.is_symlink() or (receipt_path.exists() and not receipt_path.is_file()):
         raise ValueError("V-JEPA download receipt path is unsafe")
-    pin = load_encoder_pin(pin_manifest)
+    pin = load_encoder_pin(pin_manifest, trusted_root=pin_root)
     checkpoint = pin["checkpoint"]
     assert isinstance(checkpoint, dict)
     model_name = str(pin["hub_entry"])
@@ -237,17 +259,21 @@ def main() -> None:
         type=Path,
         default=Path("models/manifests/vjepa2_1_vit_base_384.manifest.json"),
     )
+    parser.add_argument("--pin-root", type=Path, default=Path("models/manifests"))
     parser.add_argument(
         "--receipt",
         type=Path,
         default=Path("models/receipts/vjepa2_1_vit_base_384.download.json"),
     )
+    parser.add_argument("--receipt-root", type=Path, default=Path("models/receipts"))
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("models/external/vjepa2"))
     args = parser.parse_args()
     path = download_model(
         args.pin_manifest,
         args.receipt,
         args.checkpoint_dir,
+        pin_root=args.pin_root,
+        receipt_root=args.receipt_root,
     )
     print(f"Wrote download receipt: {path}")
 

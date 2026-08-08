@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
+import tempfile
 import zipfile
 from dataclasses import dataclass
 from io import BytesIO
@@ -23,7 +25,11 @@ from trace_jepa.predictor.qualification import (
     VerifiedQualification,
     verify_qualification_binding,
 )
-from trace_jepa.predictor.safe_files import safe_regular_file, validate_npz_container
+from trace_jepa.predictor.safe_files import (
+    ArtifactLocator,
+    safe_output_file,
+    validate_npz_container,
+)
 from trace_jepa.util import sha256_file
 
 
@@ -37,38 +43,43 @@ def _npy_bytes(value: NDArray[Any]) -> bytes:
     return stream.getvalue()
 
 
-def write_deterministic_npz(path: Path, arrays: dict[str, NDArray[Any]]) -> None:
+def write_deterministic_npz(
+    path: Path,
+    arrays: dict[str, NDArray[Any]],
+    *,
+    output_root: Path,
+) -> None:
     """Write byte-stable, pickle-free arrays with fixed ZIP metadata."""
-    path = Path(path)
-    if path.parent.is_symlink():
-        raise ValueError("NPZ output parent must not be a symlink")
+    destination = safe_output_file(path, declared_root=output_root, label="NPZ output")
+    temporary_name: str | None = None
     try:
-        resolved_parent = path.parent.resolve(strict=True)
-    except OSError as exc:
-        raise ValueError("NPZ output parent is absent") from exc
-    if not resolved_parent.is_dir():
-        raise ValueError("NPZ output parent must be a directory")
-    if path.is_symlink() or (path.exists() and not path.is_file()):
-        raise ValueError("NPZ output must be a safe regular file")
-    with (
-        path.open("wb") as destination,
-        zipfile.ZipFile(
-            destination,
-            mode="w",
-            compression=zipfile.ZIP_DEFLATED,
-            compresslevel=9,
-        ) as archive,
-    ):
-        for name, value in sorted(arrays.items()):
-            file_name = name if name.endswith(".npy") else f"{name}.npy"
-            metadata = zipfile.ZipInfo(file_name, date_time=(1980, 1, 1, 0, 0, 0))
-            metadata.compress_type = zipfile.ZIP_DEFLATED
-            metadata.external_attr = 0o600 << 16
-            archive.writestr(
-                metadata,
-                _npy_bytes(value),
-                compress_type=zipfile.ZIP_DEFLATED,
-            )
+        with tempfile.NamedTemporaryFile(
+            mode="w+b", prefix=f".{destination.name}.", dir=destination.parent, delete=False
+        ) as temporary:
+            temporary_name = temporary.name
+            with zipfile.ZipFile(
+                temporary,
+                mode="w",
+                compression=zipfile.ZIP_DEFLATED,
+                compresslevel=9,
+            ) as archive:
+                for name, value in sorted(arrays.items()):
+                    file_name = name if name.endswith(".npy") else f"{name}.npy"
+                    metadata = zipfile.ZipInfo(file_name, date_time=(1980, 1, 1, 0, 0, 0))
+                    metadata.compress_type = zipfile.ZIP_DEFLATED
+                    metadata.external_attr = 0o600 << 16
+                    archive.writestr(
+                        metadata,
+                        _npy_bytes(value),
+                        compress_type=zipfile.ZIP_DEFLATED,
+                    )
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_name, destination)
+        temporary_name = None
+    finally:
+        if temporary_name is not None:
+            Path(temporary_name).unlink(missing_ok=True)
 
 
 def write_deterministic_feature_cache(
@@ -79,6 +90,7 @@ def write_deterministic_feature_cache(
     encoder_version: str,
     encoder_checkpoint_hash: str,
     feature_schema_version: str = "vjepa-frozen-feature-v1",
+    output_root: Path,
 ) -> None:
     """Write a byte-stable, pickle-free V-JEPA feature-cache record."""
     write_deterministic_npz(
@@ -90,6 +102,7 @@ def write_deterministic_feature_cache(
             "feature_schema_version": np.asarray(feature_schema_version),
             "observation_sha256": np.asarray(observation_sha256),
         },
+        output_root=output_root,
     )
 
 
@@ -163,12 +176,12 @@ class CachedVJEPAFeatureProvider:
             "feature_schema_version",
         }
         try:
-            path = safe_regular_file(
-                path,
-                declared_root=self.cache_dir,
+            path = ArtifactLocator.from_path(
+                root=self.cache_dir,
+                path=path,
                 maximum_bytes=100_000_000,
                 label="cached V-JEPA feature",
-            )
+            ).resolve()
             validate_npz_container(
                 path,
                 expected_arrays=required,
@@ -222,8 +235,7 @@ class CalibratedVJEPAHead:
     checkpoint_hash: str
 
     @classmethod
-    def load(cls, path: Path) -> CalibratedVJEPAHead:
-        path = Path(path)
+    def load(cls, path: Path, *, trusted_root: Path) -> CalibratedVJEPAHead:
         required = {
             "weights",
             "bias",
@@ -233,12 +245,12 @@ class CalibratedVJEPAHead:
             "metadata_json",
         }
         try:
-            path = safe_regular_file(
-                path,
-                declared_root=path.parent,
+            path = ArtifactLocator.from_path(
+                root=trusted_root,
+                path=path,
                 maximum_bytes=100_000_000,
                 label="V-JEPA flood head",
-            )
+            ).resolve()
             validate_npz_container(
                 path,
                 expected_arrays=required,
