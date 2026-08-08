@@ -1,0 +1,12 @@
+{
+  "record_type": "confirmatory-ensemble-supersession",
+  "schema_version": "delta-protocol-history-v1",
+  "superseded_acceptance_path": "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml",
+  "superseded_ensemble": "confirmatory-v6",
+  "execution_status": "never-executed",
+  "disposition": "superseded-before-execution",
+  "successor_protocol": "WF-DFLD-01-SMALL-v8",
+  "successor_ensemble": "confirmatory-v7",
+  "reason": "Material development-audit findings required incident-episode, reconciliation, outcome-censoring, predictor-binding, and registered-validation corrections before confirmatory execution.",
+  "immutability_rule": "The superseded acceptance file and seed list remain preserved and must not be executed or relabeled."
+}
