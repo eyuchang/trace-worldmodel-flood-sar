@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable
+from typing import Any
 
 from pydantic import Field
 
@@ -17,25 +18,45 @@ from trace_jepa.experimental.profile import (
 from trace_jepa.util import sha256_value, utc_now
 
 
+class CalibrationIdentity(FrozenModel):
+    calibration_version: str
+    calibration_hash: str
+
+
 class CalibrationAdequacyTable(FrozenModel):
     """Maps claim families to calibration versions that are adequate for them."""
 
     # claim_family -> calibration versions marked adequate for that class
-    adequate_by_family: dict[str, tuple[str, ...]] = Field(default_factory=dict)
+    adequate_by_family: dict[str, tuple[CalibrationIdentity, ...]] = Field(default_factory=dict)
 
-    def is_adequate(self, *, claim_family: str, calibration_version: str) -> bool:
+    def is_adequate(
+        self,
+        *,
+        claim_family: str,
+        calibration_version: str,
+        calibration_hash: str,
+    ) -> bool:
         allowed = self.adequate_by_family.get(claim_family, ())
-        return calibration_version in allowed
+        identity = CalibrationIdentity(
+            calibration_version=calibration_version,
+            calibration_hash=calibration_hash,
+        )
+        return identity in allowed
 
     def with_qualification(
         self,
         *,
         claim_family: str,
         calibration_version: str,
-    ) -> "CalibrationAdequacyTable":
+        calibration_hash: str,
+    ) -> CalibrationAdequacyTable:
         current = list(self.adequate_by_family.get(claim_family, ()))
-        if calibration_version not in current:
-            current.append(calibration_version)
+        identity = CalibrationIdentity(
+            calibration_version=calibration_version,
+            calibration_hash=calibration_hash,
+        )
+        if identity not in current:
+            current.append(identity)
         updated = dict(self.adequate_by_family)
         updated[claim_family] = tuple(current)
         return CalibrationAdequacyTable(adequate_by_family=updated)
@@ -47,6 +68,7 @@ class RevalidationSnapshot(FrozenModel):
     current_predictor_version: str
     current_model_hash: str
     current_calibration_version: str
+    current_calibration_hash: str
     adequacy: CalibrationAdequacyTable
     superseded_versions: tuple[str, ...] = ()
     last_replacement: PredictorVersionReplacement | None = None
@@ -67,12 +89,11 @@ class RevalidationGuard:
     current_predictor_version: str
     current_model_hash: str
     current_calibration_version: str
-    adequacy: CalibrationAdequacyTable = field(
-        default_factory=CalibrationAdequacyTable
-    )
+    current_calibration_hash: str
+    adequacy: CalibrationAdequacyTable = field(default_factory=CalibrationAdequacyTable)
     superseded_versions: set[str] = field(default_factory=set)
     replacements: list[PredictorVersionReplacement] = field(default_factory=list)
-    transition_log: list[dict] = field(default_factory=list)
+    transition_log: list[dict[str, Any]] = field(default_factory=list)
     restored_ordinary_operation_at: float | None = None
     replacement_simulation_time_s: float | None = None
 
@@ -83,23 +104,34 @@ class RevalidationGuard:
         predictor_version: str,
         calibration_version: str,
         model_hash: str | None = None,
+        calibration_hash: str | None = None,
         qualified_families: Iterable[str] = (),
-    ) -> "RevalidationGuard":
+    ) -> RevalidationGuard:
         digest = model_hash or sha256_value(
             {
                 "predictor_version": predictor_version,
                 "calibration_version": calibration_version,
             }
         )
+        calibration_digest = calibration_hash or sha256_value(
+            {"calibration_version": calibration_version}
+        )
         adequacy = CalibrationAdequacyTable(
             adequate_by_family={
-                family: (calibration_version,) for family in qualified_families
+                family: (
+                    CalibrationIdentity(
+                        calibration_version=calibration_version,
+                        calibration_hash=calibration_digest,
+                    ),
+                )
+                for family in qualified_families
             }
         )
         guard = cls(
             current_predictor_version=predictor_version,
             current_model_hash=digest,
             current_calibration_version=calibration_version,
+            current_calibration_hash=calibration_digest,
             adequacy=adequacy,
         )
         guard._log_transition(
@@ -108,6 +140,7 @@ class RevalidationGuard:
                 "predictor_version": predictor_version,
                 "model_hash": digest,
                 "calibration_version": calibration_version,
+                "calibration_hash": calibration_digest,
             },
         )
         return guard
@@ -117,6 +150,7 @@ class RevalidationGuard:
             current_predictor_version=self.current_predictor_version,
             current_model_hash=self.current_model_hash,
             current_calibration_version=self.current_calibration_version,
+            current_calibration_hash=self.current_calibration_hash,
             adequacy=self.adequacy,
             superseded_versions=tuple(sorted(self.superseded_versions)),
             last_replacement=self.replacements[-1] if self.replacements else None,
@@ -128,9 +162,10 @@ class RevalidationGuard:
         new_predictor_version: str,
         new_calibration_version: str,
         new_model_hash: str | None = None,
+        new_calibration_hash: str | None = None,
         simulation_time_s: float,
         initially_unqualified_families: Iterable[str] = (),
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PredictorVersionReplacement:
         new_hash = new_model_hash or sha256_value(
             {
@@ -138,12 +173,18 @@ class RevalidationGuard:
                 "calibration_version": new_calibration_version,
             }
         )
+        new_calibration_digest = new_calibration_hash or sha256_value(
+            {"calibration_version": new_calibration_version}
+        )
         event = PredictorVersionReplacement(
             old_predictor_version=self.current_predictor_version,
             new_predictor_version=new_predictor_version,
             old_model_hash=self.current_model_hash,
             new_model_hash=new_hash,
+            old_calibration_version=self.current_calibration_version,
+            old_calibration_hash=self.current_calibration_hash,
             new_calibration_version=new_calibration_version,
+            new_calibration_hash=new_calibration_digest,
             new_adequacy_status=AdequacyStatus.UNQUALIFIED,
             simulation_time_s=simulation_time_s,
             metadata=metadata or {},
@@ -152,13 +193,18 @@ class RevalidationGuard:
         self.current_predictor_version = new_predictor_version
         self.current_model_hash = new_hash
         self.current_calibration_version = new_calibration_version
+        self.current_calibration_hash = new_calibration_digest
         # Successor starts unqualified for the listed high-consequence families.
         updated = dict(self.adequacy.adequate_by_family)
         for family in initially_unqualified_families:
             allowed = [
-                version
-                for version in updated.get(family, ())
-                if version != new_calibration_version
+                identity
+                for identity in updated.get(family, ())
+                if identity
+                != CalibrationIdentity(
+                    calibration_version=new_calibration_version,
+                    calibration_hash=new_calibration_digest,
+                )
             ]
             updated[family] = tuple(allowed)
         self.adequacy = CalibrationAdequacyTable(adequate_by_family=updated)
@@ -173,12 +219,15 @@ class RevalidationGuard:
         *,
         claim_family: str,
         calibration_version: str | None = None,
+        calibration_hash: str | None = None,
         simulation_time_s: float | None = None,
     ) -> None:
         version = calibration_version or self.current_calibration_version
+        digest = calibration_hash or self.current_calibration_hash
         self.adequacy = self.adequacy.with_qualification(
             claim_family=claim_family,
             calibration_version=version,
+            calibration_hash=digest,
         )
         if simulation_time_s is not None and self.restored_ordinary_operation_at is None:
             self.restored_ordinary_operation_at = simulation_time_s
@@ -187,6 +236,7 @@ class RevalidationGuard:
             {
                 "claim_family": claim_family,
                 "calibration_version": version,
+                "calibration_hash": digest,
                 "simulation_time_s": simulation_time_s,
             },
         )
@@ -198,9 +248,7 @@ class RevalidationGuard:
             return False
         if profile.predictor_version != self.current_predictor_version:
             return False
-        if profile.model_hash is not None and profile.model_hash != self.current_model_hash:
-            return False
-        return True
+        return profile.model_hash is not None and profile.model_hash == self.current_model_hash
 
     def calibration_adequate_for_class(
         self,
@@ -212,9 +260,16 @@ class RevalidationGuard:
             AdequacyStatus.SUPERSEDED,
         }:
             return False
+        if profile.calibration_hash is None:
+            return False
+        if profile.calibration_version != self.current_calibration_version:
+            return False
+        if profile.calibration_hash != self.current_calibration_hash:
+            return False
         return self.adequacy.is_adequate(
             claim_family=profile.claim_family,
             calibration_version=profile.calibration_version,
+            calibration_hash=profile.calibration_hash,
         )
 
     def time_to_restored_ordinary_operation(self) -> float | None:
@@ -225,7 +280,7 @@ class RevalidationGuard:
             return None
         return self.restored_ordinary_operation_at - self.replacement_simulation_time_s
 
-    def _log_transition(self, event_type: str, payload: dict) -> None:
+    def _log_transition(self, event_type: str, payload: dict[str, Any]) -> None:
         self.transition_log.append(
             {
                 "event_type": event_type,

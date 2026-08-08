@@ -19,6 +19,26 @@ class PredictorRouteObservation(PredictorModel):
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     observation_age_s: float = Field(default=0.0, ge=0.0)
     stage_millifeet: int | None = None
+    crossing_sample_time_s: int | None = Field(default=None, ge=0)
+    gauge_id: str | None = None
+    gauge_sample_time_s: int | None = Field(default=None, ge=0)
+    gauge_threshold_status: str | None = None
+
+
+class PredictorResourceTelemetry(PredictorModel):
+    resource_id: str
+    resource_class: str
+    capabilities: tuple[str, ...]
+    service_units: int = Field(gt=0)
+    availability_mode: str
+    origin_base_id: str | None = None
+    staged_base_id: str
+    route_id: str
+    scheduled_available_s: int = Field(ge=0)
+    busy_until_s: int = Field(ge=0)
+    currently_available: bool
+    route_reachable: bool
+    routed_travel_s: int | None = Field(default=None, ge=0)
 
 
 class PredictorVisualFeatureRef(PredictorModel):
@@ -46,6 +66,10 @@ class PredictorContext(PredictorModel):
     rain_milli_inches_per_hour: int = Field(default=0, ge=0)
     wind_milli_knots: int = Field(default=0, ge=0)
     available_resource_units: int = Field(default=0, ge=0)
+    call_observation_age_s: float = Field(default=0.0, ge=0.0)
+    coordination_latency_s: float = Field(default=0.0, ge=0.0)
+    compatible_resources: tuple[PredictorResourceTelemetry, ...] = ()
+    source_call_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     prior_profile: PredictorPriorProfile = PredictorPriorProfile(
         profile_id="delta-prior-high-v1",
         calibration_version="toy-calibration-v1",

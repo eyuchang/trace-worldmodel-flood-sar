@@ -21,6 +21,7 @@ def evidence_with_profile(
     calibration_version: str,
     adequacy_status: AdequacyStatus,
     model_hash: str | None = None,
+    calibration_hash: str | None = "cal-hash-v1",
     **updates,
 ) -> WorldModelEvidence:
     profile = build_experimental_profile(
@@ -29,6 +30,7 @@ def evidence_with_profile(
         claim_family=FAMILY,
         adequacy_status=adequacy_status,
         model_hash=model_hash,
+        calibration_hash=calibration_hash,
     )
     base = {
         "encoder_version": "encoder-v1",
@@ -59,6 +61,7 @@ def guarded_engine() -> tuple[PolicyEngine, RevalidationGuard]:
         predictor_version="predictor-v1",
         calibration_version="cal-v1",
         model_hash="hash-v1",
+        calibration_hash="cal-hash-v1",
         qualified_families=(FAMILY,),
     )
     return PolicyEngine(config, revalidation=guard), guard
@@ -87,6 +90,9 @@ def test_guard_clears_when_version_current_and_calibration_adequate():
         "event_type": "gate_revalidation_check",
         "action_name": "dispatch_rescue_boat",
         "predictor_version": "predictor-v1",
+        "model_hash": "hash-v1",
+        "calibration_version": "cal-v1",
+        "calibration_hash": "cal-hash-v1",
         "claim_family": FAMILY,
         "adequacy_status": "qualified",
         "model_version_current": True,
@@ -101,11 +107,14 @@ def test_guard_holds_high_consequence_on_unqualified_successor():
         new_predictor_version="predictor-v2",
         new_calibration_version="cal-v2",
         new_model_hash="hash-v2",
+        new_calibration_hash="cal-hash-v2",
         simulation_time_s=120.0,
         initially_unqualified_families=(FAMILY,),
     )
     assert event.old_model_hash == "hash-v1"
     assert event.new_model_hash == "hash-v2"
+    assert event.old_calibration_hash == "cal-hash-v1"
+    assert event.new_calibration_hash == "cal-hash-v2"
     assert event.new_adequacy_status == AdequacyStatus.UNQUALIFIED
 
     claim = Claim(layer=ClaimLayer.PREDICTIVE, text="South route is open.")
@@ -114,6 +123,7 @@ def test_guard_holds_high_consequence_on_unqualified_successor():
         calibration_version="cal-v2",
         adequacy_status=AdequacyStatus.UNQUALIFIED,
         model_hash="hash-v2",
+        calibration_hash="cal-hash-v2",
     )
     result = engine.evaluate(
         claim,
@@ -132,6 +142,7 @@ def test_guard_holds_on_superseded_predictor_version():
         new_predictor_version="predictor-v2",
         new_calibration_version="cal-v2",
         new_model_hash="hash-v2",
+        new_calibration_hash="cal-hash-v2",
         simulation_time_s=50.0,
         initially_unqualified_families=(FAMILY,),
     )
@@ -181,6 +192,7 @@ def test_after_qualification_high_consequence_may_clear():
         new_predictor_version="predictor-v2",
         new_calibration_version="cal-v2",
         new_model_hash="hash-v2",
+        new_calibration_hash="cal-hash-v2",
         simulation_time_s=10.0,
         initially_unqualified_families=(FAMILY,),
     )
@@ -193,6 +205,7 @@ def test_after_qualification_high_consequence_may_clear():
         calibration_version="cal-v2",
         adequacy_status=AdequacyStatus.QUALIFIED,
         model_hash="hash-v2",
+        calibration_hash="cal-hash-v2",
     )
     result = engine.evaluate(
         claim,
@@ -210,6 +223,7 @@ def test_rq5_invariant_no_clear_on_bad_version_under_guard():
         new_predictor_version="predictor-v2",
         new_calibration_version="cal-v2",
         new_model_hash="hash-v2",
+        new_calibration_hash="cal-hash-v2",
         simulation_time_s=5.0,
         initially_unqualified_families=(FAMILY,),
     )
@@ -226,6 +240,7 @@ def test_rq5_invariant_no_clear_on_bad_version_under_guard():
             calibration_version="cal-v2",
             adequacy_status=AdequacyStatus.UNQUALIFIED,
             model_hash="hash-v2",
+            calibration_hash="cal-hash-v2",
         ),
     ]
     for item in bad_cases:
@@ -291,3 +306,37 @@ def test_guard_fails_closed_when_qualification_profile_is_missing() -> None:
     assert result.decision == CommitmentDecision.HOLD
     assert "experimental_profile_present" in result.failed_gates
     assert guard.transition_log[-1]["adequacy_status"] == "missing"
+
+
+@pytest.mark.parametrize(
+    ("model_hash", "calibration_hash", "failed_gate"),
+    [
+        (None, "cal-hash-v1", "model_version_current"),
+        ("hash-v1", None, "calibration_adequate_for_class"),
+        ("hash-v1", "cal-hash-mismatch", "calibration_adequate_for_class"),
+    ],
+)
+def test_guard_requires_exact_model_and_calibration_hashes(
+    model_hash: str | None,
+    calibration_hash: str | None,
+    failed_gate: str,
+) -> None:
+    engine, _guard = guarded_engine()
+    item = evidence_with_profile(
+        predictor_version="predictor-v1",
+        calibration_version="cal-v1",
+        adequacy_status=AdequacyStatus.QUALIFIED,
+        model_hash=model_hash,
+        calibration_hash=calibration_hash,
+    )
+    # build_experimental_profile synthesizes a model hash when omitted, which is
+    # still a mismatch to the registered exact hash and therefore fails closed.
+    result = engine.evaluate(
+        Claim(layer=ClaimLayer.PREDICTIVE, text="Exact identity is required."),
+        item,
+        action_name="dispatch_rescue_boat",
+        reversible=False,
+        authority_present=True,
+    )
+    assert result.decision == CommitmentDecision.HOLD
+    assert failed_gate in result.failed_gates

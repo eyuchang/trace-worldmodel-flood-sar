@@ -22,6 +22,7 @@ from trace_jepa.predictor.qualification import (
     load_qualification_artifact,
     verify_qualification_binding,
 )
+from trace_jepa.predictor.safe_files import safe_regular_file, validate_npz_container
 from trace_jepa.util import sha256_file
 
 
@@ -53,18 +54,28 @@ class NumpyMLPBackend:
     @classmethod
     def load(cls, path: Path) -> tuple[NumpyMLPBackend, dict[str, object]]:
         path = Path(path)
-        if not path.is_file() or path.is_symlink():
-            raise ValueError(f"MLP checkpoint is absent: {path.name}")
+        path = safe_regular_file(
+            path,
+            declared_root=path.parent,
+            maximum_bytes=25_000_000,
+            label="MLP checkpoint",
+        )
+        required = {
+            "weight_1",
+            "bias_1",
+            "weight_2",
+            "bias_2",
+            "action_names",
+            "metadata_json",
+        }
+        validate_npz_container(
+            path,
+            expected_arrays=required,
+            maximum_uncompressed_bytes=100_000_000,
+            label="MLP checkpoint",
+        )
         try:
             with np.load(path, allow_pickle=False) as payload:
-                required = {
-                    "weight_1",
-                    "bias_1",
-                    "weight_2",
-                    "bias_2",
-                    "action_names",
-                    "metadata_json",
-                }
                 if set(payload.files) != required:
                     raise ValueError("MLP checkpoint does not satisfy the frozen schema")
                 backend = cls(
@@ -175,8 +186,12 @@ class MLPActionPrefixPredictor:
         if set(metadata) != required:
             raise ValueError("MLP checkpoint provenance is incomplete")
         calibration_path = Path(calibration_path)
-        if not calibration_path.is_file() or calibration_path.is_symlink():
-            raise ValueError("MLP calibration artifact is absent or unsafe")
+        calibration_path = safe_regular_file(
+            calibration_path,
+            declared_root=calibration_path.parent,
+            maximum_bytes=1_000_000,
+            label="MLP calibration artifact",
+        )
         calibration = MLPCalibrationArtifact.model_validate_json(
             calibration_path.read_text(encoding="utf-8")
         )

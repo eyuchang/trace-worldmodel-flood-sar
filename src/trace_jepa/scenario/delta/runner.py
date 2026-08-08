@@ -27,6 +27,7 @@ from trace_jepa.predictor import (
     PredictorObservation,
     PredictorPriorProfile,
     PredictorRequest,
+    PredictorResourceTelemetry,
     PredictorRouteObservation,
     PredictorVisualFeatureRef,
 )
@@ -183,6 +184,7 @@ class DeltaRunResult(DeltaModel):
     demand_windows: list[DemandWindow]
     trace_records: list[TraceRecord]
     evidence: list[WorldModelEvidence]
+    predictor_requests: list[PredictorRequest] = Field(default_factory=list)
     commitments: list[Commitment]
     outcomes: list[DeltaResourceOutcome]
     reconciliation_artifact: ReconciliationArtifact | None = None
@@ -310,16 +312,65 @@ def _prediction_evidence(
     predictor: ActionPrefixPredictor,
     call: CallRecord,
     action: ActionInstance,
-    available_units: int,
+    busy_until: dict[str, int],
     controller_time_s: int,
     visual_feature: PredictorVisualFeatureRef | None = None,
-) -> WorldModelEvidence:
+) -> tuple[WorldModelEvidence, PredictorRequest]:
     route_id = action.route_id
     if route_id is None:
         raise ValueError("Delta actions require an explicit route")
     route_state = _crossing_state(scenario, route_id, controller_time_s)
     weather = _weather(scenario, controller_time_s)
-    observation_age_s = float(controller_time_s - call.received_s)
+    tick = _nearest_tick(scenario, controller_time_s)
+    crossing = next(item for item in scenario.geography.crossings if item.crossing_id == route_id)
+    nearest_gauge = min(
+        scenario.geography.gauges,
+        key=lambda gauge: (
+            (gauge.location.easting_mm - crossing.location.easting_mm) ** 2
+            + (gauge.location.northing_mm - crossing.location.northing_mm) ** 2,
+            gauge.gauge_id,
+        ),
+    )
+    gauge_sample = next(
+        item
+        for item in scenario.gauges
+        if item.gauge_id == nearest_gauge.gauge_id and item.simulation_time_s == tick
+    )
+    call_age_s = float(controller_time_s - call.received_s)
+    crossing_age_s = float(controller_time_s - route_state.simulation_time_s)
+    gauge_age_s = float(controller_time_s - gauge_sample.simulation_time_s)
+    observation_age_s = max(call_age_s, crossing_age_s, gauge_age_s)
+    capability = str(action.parameters["required_capability"])
+    compatible_resources: list[PredictorResourceTelemetry] = []
+    for unit in sorted(scenario.resources.units, key=lambda item: item.resource_id):
+        if capability not in unit.capabilities:
+            continue
+        routed_travel_s = _routed_travel_s(scenario, unit, controller_time_s, route_id)
+        compatible_resources.append(
+            PredictorResourceTelemetry(
+                resource_id=unit.resource_id,
+                resource_class=unit.resource_class,
+                capabilities=unit.capabilities,
+                service_units=unit.service_units,
+                availability_mode=unit.availability_mode,
+                origin_base_id=unit.origin_base_id,
+                staged_base_id=unit.base_id,
+                route_id=route_id,
+                scheduled_available_s=unit.available_from_s,
+                busy_until_s=busy_until[unit.resource_id],
+                currently_available=(
+                    unit.is_available
+                    and unit.available_from_s <= controller_time_s
+                    and busy_until[unit.resource_id] <= controller_time_s
+                    and routed_travel_s is not None
+                ),
+                route_reachable=routed_travel_s is not None,
+                routed_travel_s=routed_travel_s,
+            )
+        )
+    available_units = sum(
+        item.service_units for item in compatible_resources if item.currently_available
+    )
     plan = PlanCandidate(
         plan_id=f"plan-{call.call_id}",
         name=f"Respond to {call.call_id}",
@@ -329,34 +380,42 @@ def _prediction_evidence(
         requires_authority=True,
         metadata={"call_type": call.reported.call_type},
     )
-    prediction = predictor.predict(
-        PredictorRequest(
-            plan=plan,
-            observation=PredictorObservation(
-                routes=[
-                    PredictorRouteObservation(
-                        route_id=route_id,
-                        report=("unknown" if call.quality.call_dropped else route_state.status),
-                        nominal_travel_s=float(route_state.travel_time_s),
-                        confidence=route_state.confidence_milli / 1000.0,
-                        observation_age_s=observation_age_s,
-                    )
-                ],
-                context=PredictorContext(
-                    simulation_time_s=controller_time_s,
-                    rain_milli_inches_per_hour=weather.rain_milli_inches_per_hour,
-                    wind_milli_knots=weather.wind_milli_knots,
-                    available_resource_units=available_units,
-                    prior_profile=PredictorPriorProfile(
-                        profile_id=scenario.prior_profile.profile_id,
-                        calibration_version=scenario.prior_profile.calibration_version,
-                        prior_accuracy_milli=scenario.prior_profile.prior_accuracy_milli,
-                    ),
-                    visual_feature=visual_feature,
+    request = PredictorRequest(
+        plan=plan,
+        observation=PredictorObservation(
+            routes=[
+                PredictorRouteObservation(
+                    route_id=route_id,
+                    report=("unknown" if call.quality.call_dropped else route_state.status),
+                    nominal_travel_s=float(route_state.travel_time_s),
+                    confidence=route_state.confidence_milli / 1000.0,
+                    observation_age_s=crossing_age_s,
+                    stage_millifeet=gauge_sample.stage_millifeet,
+                    crossing_sample_time_s=route_state.simulation_time_s,
+                    gauge_id=nearest_gauge.gauge_id,
+                    gauge_sample_time_s=gauge_sample.simulation_time_s,
+                    gauge_threshold_status=nearest_gauge.threshold_status,
                 ),
+            ],
+            context=PredictorContext(
+                simulation_time_s=controller_time_s,
+                rain_milli_inches_per_hour=weather.rain_milli_inches_per_hour,
+                wind_milli_knots=weather.wind_milli_knots,
+                available_resource_units=available_units,
+                call_observation_age_s=call_age_s,
+                coordination_latency_s=call_age_s,
+                compatible_resources=tuple(compatible_resources),
+                source_call_sha256=sha256_bytes(canonical_json_bytes(call.model_dump(mode="json"))),
+                prior_profile=PredictorPriorProfile(
+                    profile_id=scenario.prior_profile.profile_id,
+                    calibration_version=scenario.prior_profile.calibration_version,
+                    prior_accuracy_milli=scenario.prior_profile.prior_accuracy_milli,
+                ),
+                visual_feature=visual_feature,
             ),
-        )
+        ),
     )
+    prediction = predictor.predict(request)
     stamp = scenario.config.timeline.epoch_utc + timedelta(seconds=controller_time_s)
     provenance = predictor.provenance()
     profile = build_experimental_profile(
@@ -369,19 +428,23 @@ def _prediction_evidence(
         calibration_hash=provenance.calibration_hash,
         notes=(f"prior_profile={scenario.prior_profile.profile_id}",),
     ).model_copy(update={"profile_id": f"profile-{call.call_id}"})
-    return WorldModelEvidence(
+    evidence = WorldModelEvidence(
         evidence_id=f"evidence-{call.call_id}",
         rollout_id=f"rollout-{call.call_id}",
         encoder_version=provenance.encoder_version or "delta-symbolic-observation-v2",
         fusion_version=(
-            "delta-small-controller-context-v3"
-            if scenario.config.generator_version == "delta-small-generator-v7"
-            else "delta-small-controller-context-v2"
+            "delta-small-controller-context-v4"
+            if scenario.config.generator_version == "delta-small-generator-v8"
+            else (
+                "delta-small-controller-context-v3"
+                if scenario.config.generator_version == "delta-small-generator-v7"
+                else "delta-small-controller-context-v2"
+            )
         ),
         predictor_version=provenance.predictor_version,
         semantic_probe_versions=("delta-route-and-resource-probe-v2",),
         training_snapshot=provenance.training_snapshot,
-        observation_window_hash=sha256_bytes(canonical_json_bytes(call.model_dump(mode="json"))),
+        observation_window_hash=sha256_bytes(canonical_json_bytes(request.model_dump(mode="json"))),
         fleet_state_hash=sha256_bytes(
             canonical_json_bytes(
                 {
@@ -394,7 +457,7 @@ def _prediction_evidence(
         action_schema_version=provenance.action_schema_version,
         rollout_horizon=prediction.rollout_horizon,
         predicted_claims=(
-            f"{route_id} and compatible local capacity support the proposed response",
+            f"{route_id} and registered compatible capacity support the proposed response",
         ),
         uncertainty=prediction.uncertainty,
         model_support=prediction.model_support,
@@ -405,6 +468,11 @@ def _prediction_evidence(
             "hazard_score": prediction.hazard_score,
             "route_status": route_state.status,
             "route_confidence_milli": route_state.confidence_milli,
+            "gauge_id": nearest_gauge.gauge_id,
+            "gauge_stage_millifeet": gauge_sample.stage_millifeet,
+            "gauge_threshold_status": nearest_gauge.threshold_status,
+            "crossing_sample_time_s": route_state.simulation_time_s,
+            "gauge_sample_time_s": gauge_sample.simulation_time_s,
         },
         calibration_version=provenance.calibration_version,
         assumptions=prediction.assumptions,
@@ -412,6 +480,7 @@ def _prediction_evidence(
         created_at=stamp,
         experimental_profile=profile,
     )
+    return evidence, request
 
 
 def evaluate_capacity_windows(
@@ -713,6 +782,7 @@ def run_delta_small(
         predictor_version=provenance.predictor_version,
         calibration_version=provenance.calibration_version,
         model_hash=provenance.model_hash,
+        calibration_hash=provenance.calibration_hash,
         qualified_families=qualified_families,
     )
     policy_config = PolicyConfig.from_yaml(policy_path)
@@ -721,6 +791,7 @@ def run_delta_small(
     policy = PolicyEngine(policy_config, revalidation=guard)
     decisions: list[DeltaDecisionEvent] = []
     evidence_items: list[WorldModelEvidence] = []
+    predictor_requests: list[PredictorRequest] = []
     outcomes: list[DeltaResourceOutcome] = []
     busy_until = {unit.resource_id: unit.available_from_s for unit in scenario.resources.units}
     reconciler = (
@@ -784,29 +855,21 @@ def run_delta_small(
                 route_id=route_id,
                 parameters={"call_id": call.call_id, "required_capability": capability},
             )
-            available_units = sum(
-                unit.service_units
-                for unit in scenario.resources.units
-                if capability in unit.capabilities
-                and unit.is_available
-                and unit.available_from_s <= controller_time_s
-                and busy_until[unit.resource_id] <= controller_time_s
-                and _routed_travel_s(scenario, unit, controller_time_s, route_id) is not None
-            )
-            evidence = _prediction_evidence(
+            evidence, predictor_request = _prediction_evidence(
                 scenario,
                 predictor,
                 call,
                 action,
-                available_units,
+                busy_until,
                 controller_time_s,
                 (visual_features or {}).get(call.call_id),
             )
             evidence_items.append(evidence)
+            predictor_requests.append(predictor_request)
             claim = Claim(
                 claim_id=f"claim-{call.call_id}",
                 layer=ClaimLayer.PREDICTIVE,
-                text="A compatible local resource can reach the reported location.",
+                text="Registered compatible capacity can reach the reported location.",
                 grounding={"call_id": call.call_id, "action_type": action_name},
                 confidence=0.82,
                 confidence_semantics="predictor action-prefix probability support",
@@ -940,6 +1003,7 @@ def run_delta_small(
         demand_windows=windows,
         trace_records=trace_records,
         evidence=evidence_items,
+        predictor_requests=predictor_requests,
         commitments=commitments,
         outcomes=outcomes,
         reconciliation_artifact=reconciler.artifact() if reconciler is not None else None,

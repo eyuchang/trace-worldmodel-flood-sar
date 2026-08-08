@@ -58,7 +58,10 @@ class PredictorVersionReplacement(FrozenModel):
     new_predictor_version: str
     old_model_hash: str
     new_model_hash: str
+    old_calibration_version: str
+    old_calibration_hash: str
     new_calibration_version: str
+    new_calibration_hash: str
     new_adequacy_status: AdequacyStatus = AdequacyStatus.UNQUALIFIED
     simulation_time_s: float = Field(ge=0.0)
     recorded_at: datetime = Field(default_factory=utc_now)

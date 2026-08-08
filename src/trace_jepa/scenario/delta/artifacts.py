@@ -432,6 +432,13 @@ def write_scenario_artifacts(
         ),
         _write_artifact(
             output_root,
+            "predictor_requests",
+            "predictor_requests.json",
+            [item.model_dump(mode="json") for item in run_result.predictor_requests],
+            False,
+        ),
+        _write_artifact(
+            output_root,
             "trace_records",
             "trace_records.json",
             [item.model_dump(mode="json") for item in run_result.trace_records],

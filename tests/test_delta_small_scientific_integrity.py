@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import socket
 from itertools import pairwise
@@ -88,6 +89,8 @@ def test_runtime_public_outputs_are_independent_of_hidden_lineage() -> None:
     )
     assert visible.decisions == hidden_deleted.decisions
     assert visible.evidence == hidden_deleted.evidence
+    assert visible.predictor_requests == hidden_deleted.predictor_requests
+    assert visible.reconciliation_artifact == hidden_deleted.reconciliation_artifact
     assert visible.trace_records == hidden_deleted.trace_records
     assert visible.commitments == hidden_deleted.commitments
     assert visible.outcomes == hidden_deleted.outcomes
@@ -96,6 +99,10 @@ def test_runtime_public_outputs_are_independent_of_hidden_lineage() -> None:
         {
             "decisions": [item.model_dump(mode="json") for item in visible.decisions],
             "evidence": [item.model_dump(mode="json") for item in visible.evidence],
+            "predictor_requests": [
+                item.model_dump(mode="json") for item in visible.predictor_requests
+            ],
+            "reconciliation": visible.reconciliation_artifact.model_dump(mode="json"),
             "records": [item.model_dump(mode="json") for item in visible.trace_records],
             "commitments": [item.model_dump(mode="json") for item in visible.commitments],
             "outcomes": [item.model_dump(mode="json") for item in visible.outcomes],
@@ -103,6 +110,61 @@ def test_runtime_public_outputs_are_independent_of_hidden_lineage() -> None:
     )
     for forbidden in (b"INC-", b"PER-", b"STR-", b"truth_incident", b"truth_person"):
         assert forbidden not in public_payload
+
+
+def test_predictor_requests_bind_nearest_gauge_stage_ages_and_resource_telemetry() -> None:
+    scenario = generate_delta_small(CONFIG, GEOGRAPHY)
+    result = run_delta_small(scenario, ToyActionPrefixPredictor(), POLICY)
+    assert (
+        len(result.predictor_requests) == len(result.evidence) == len(scenario.observations.calls)
+    )
+    crossing_by_id = {item.crossing_id: item for item in scenario.geography.crossings}
+    gauge_by_id = {item.gauge_id: item for item in scenario.geography.gauges}
+    gauge_sample_by_key = {
+        (item.gauge_id, item.simulation_time_s): item for item in scenario.gauges
+    }
+    for request, evidence in zip(result.predictor_requests, result.evidence, strict=True):
+        route = request.observation.routes[0]
+        crossing = crossing_by_id[route.route_id]
+        expected_gauge = min(
+            scenario.geography.gauges,
+            key=lambda gauge: (
+                (gauge.location.easting_mm - crossing.location.easting_mm) ** 2
+                + (gauge.location.northing_mm - crossing.location.northing_mm) ** 2,
+                gauge.gauge_id,
+            ),
+        )
+        assert route.gauge_id == expected_gauge.gauge_id
+        assert route.gauge_threshold_status == gauge_by_id[route.gauge_id].threshold_status
+        sample = gauge_sample_by_key[(route.gauge_id, route.gauge_sample_time_s)]
+        assert route.stage_millifeet == sample.stage_millifeet
+        assert route.observation_age_s == (
+            request.observation.context.simulation_time_s - route.crossing_sample_time_s
+        )
+        request_hash = hashlib.sha256(
+            canonical_json_bytes(request.model_dump(mode="json"))
+        ).hexdigest()
+        assert evidence.observation_window_hash == request_hash
+        assert evidence.observation_age_s == max(
+            route.observation_age_s,
+            request.observation.context.call_observation_age_s,
+            request.observation.context.simulation_time_s - route.gauge_sample_time_s,
+        )
+        assert request.observation.context.compatible_resources
+        assert all(
+            request.plan.first_action.parameters["required_capability"] in item.capabilities
+            for item in request.observation.context.compatible_resources
+        )
+        assert all("local capacity" not in claim for claim in evidence.predicted_claims)
+    automatic_aid = [
+        item
+        for request in result.predictor_requests
+        for item in request.observation.context.compatible_resources
+        if item.availability_mode == "preauthorized-automatic-aid-fixed-staging"
+    ]
+    assert automatic_aid
+    assert all(item.origin_base_id == "FAC-RIO-VISTA-55" for item in automatic_aid)
+    assert all(item.staged_base_id == "FAC-FIRE-01" for item in automatic_aid)
 
 
 def test_every_commitment_has_exact_clear_trace_authorization() -> None:
@@ -392,7 +454,7 @@ def test_vjepa_feature_provider_fails_closed_on_unsafe_or_unverifiable_inputs(
             },
         }
     )
-    with pytest.raises(PredictorInputUnavailable, match="absent"):
+    with pytest.raises(PredictorInputUnavailable, match="symlink"):
         provider.features(request)
 
     def request_for(observation_id: str, digest: str) -> PredictorRequest:

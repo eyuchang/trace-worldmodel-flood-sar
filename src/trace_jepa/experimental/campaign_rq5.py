@@ -17,7 +17,6 @@ from trace_jepa.experimental import (
 )
 from trace_jepa.runtime.policy import PolicyConfig, PolicyEngine
 
-
 FAMILY = "high_consequence_rescue"
 
 
@@ -39,6 +38,7 @@ def _evidence(
     calibration_version: str,
     adequacy_status: AdequacyStatus,
     model_hash: str,
+    calibration_hash: str,
 ) -> WorldModelEvidence:
     profile = build_experimental_profile(
         predictor_version=predictor_version,
@@ -46,6 +46,7 @@ def _evidence(
         claim_family=FAMILY,
         adequacy_status=adequacy_status,
         model_hash=model_hash,
+        calibration_hash=calibration_hash,
     )
     return WorldModelEvidence(
         encoder_version="encoder-v1",
@@ -87,6 +88,7 @@ def run_scenario(
         predictor_version="predictor-v1",
         calibration_version="cal-v1",
         model_hash="hash-v1",
+        calibration_hash="cal-hash-v1",
         qualified_families=(FAMILY,),
     )
     engine = _engine(guard_enabled=guard_enabled, guard=guard)
@@ -116,13 +118,15 @@ def run_scenario(
         )
         if bad_version and result.decision == CommitmentDecision.CLEAR:
             measures.high_consequence_clear_on_bad_version += 1
-        if result.decision in {CommitmentDecision.HOLD, CommitmentDecision.ESCALATE}:
-            if any(
-                name in result.failed_gates
-                for name in ("model_version_current", "calibration_adequate_for_class")
-            ):
-                measures.held_or_escalated_pending_revalidation += 1
-                measures.additional_verification_cost += 1.0
+        if result.decision in {
+            CommitmentDecision.HOLD,
+            CommitmentDecision.ESCALATE,
+        } and any(
+            name in result.failed_gates
+            for name in ("model_version_current", "calibration_adequate_for_class")
+        ):
+            measures.held_or_escalated_pending_revalidation += 1
+            measures.additional_verification_cost += 1.0
         return result.decision
 
     # Ordinary pre-change clearance attempt.
@@ -132,6 +136,7 @@ def run_scenario(
             calibration_version="cal-v1",
             adequacy_status=AdequacyStatus.QUALIFIED,
             model_hash="hash-v1",
+            calibration_hash="cal-hash-v1",
         ),
         bad_version=False,
     )
@@ -141,6 +146,7 @@ def run_scenario(
             new_predictor_version="predictor-v2",
             new_calibration_version="cal-v2",
             new_model_hash="hash-v2",
+            new_calibration_hash="cal-hash-v2",
             simulation_time_s=100.0,
             initially_unqualified_families=(FAMILY,),
         )
@@ -151,6 +157,7 @@ def run_scenario(
                 calibration_version="cal-v1",
                 adequacy_status=AdequacyStatus.SUPERSEDED,
                 model_hash="hash-v1",
+                calibration_hash="cal-hash-v1",
             ),
             bad_version=True,
         )
@@ -161,6 +168,7 @@ def run_scenario(
                 calibration_version="cal-v2",
                 adequacy_status=AdequacyStatus.UNQUALIFIED,
                 model_hash="hash-v2",
+                calibration_hash="cal-hash-v2",
             ),
             bad_version=True,
         )
@@ -175,6 +183,7 @@ def run_scenario(
                 calibration_version="cal-v2",
                 adequacy_status=AdequacyStatus.QUALIFIED,
                 model_hash="hash-v2",
+                calibration_hash="cal-hash-v2",
             ),
             bad_version=False,
         )
@@ -223,11 +232,7 @@ def run_rq5_campaign(*, held_out: bool = False, store: Path | None = None) -> di
             }
 
     # Correctness invariant: under the guard, zero CLEARs on bad versions.
-    guarded_cells = [
-        value
-        for key, value in table.items()
-        if key.endswith("gate_with_guard")
-    ]
+    guarded_cells = [value for key, value in table.items() if key.endswith("gate_with_guard")]
     invariant_holds = all(
         cell["high_consequence_clear_on_bad_version"] == 0 for cell in guarded_cells
     )

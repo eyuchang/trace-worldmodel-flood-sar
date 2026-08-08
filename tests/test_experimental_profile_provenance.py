@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -24,6 +25,7 @@ from trace_jepa.predictor import (
     MLPActionPrefixPredictor,
     MLPCalibrationArtifact,
     PredictorContext,
+    PredictorInputUnavailable,
     PredictorObservation,
     PredictorPriorProfile,
     PredictorRequest,
@@ -284,7 +286,7 @@ def test_mlp_loader_binds_separate_model_and_calibration_artifacts(tmp_path) -> 
             "unexpected": np.asarray([1]),
         },
     )
-    with pytest.raises(ValueError, match="frozen schema"):
+    with pytest.raises(ValueError, match="exact array schema"):
         MLPActionPrefixPredictor.from_checkpoint(
             malformed,
             calibration_path=calibration_path,
@@ -317,6 +319,47 @@ def test_vjepa_qualification_requires_exact_frozen_head_and_encoder(tmp_path) ->
     )
     assert predictor.provenance().adequacy_status == AdequacyStatus.QUALIFIED
     assert predictor.provenance().qualified_action_types == ("dispatch_rescue_boat",)
+
+
+def test_learned_predictor_loaders_reject_symlink_roots_and_extra_head_arrays(
+    tmp_path: Path,
+) -> None:
+    real_cache = tmp_path / "real-cache"
+    real_cache.mkdir()
+    cache_link = tmp_path / "cache-link"
+    cache_link.symlink_to(real_cache, target_is_directory=True)
+    with pytest.raises(ValueError, match="root must not be a symlink"):
+        CachedVJEPAFeatureProvider(
+            cache_link,
+            encoder_version="vjepa-test",
+            encoder_checkpoint_hash="e" * 64,
+        )
+
+    metadata = {
+        "predictor_version": "vjepa-head-v1",
+        "calibration_version": "vjepa-cal-v1",
+        "calibration_hash": "4" * 64,
+        "training_snapshot": "training-v1",
+        "encoder_version": "vjepa2.1-test",
+        "encoder_checkpoint_hash": "e" * 64,
+        "feature_schema_version": "action-prefix-features-v2",
+        "action_schema_version": "delta-response-actions-v2",
+    }
+    extra_head = tmp_path / "head-extra.npz"
+    write_deterministic_npz(
+        extra_head,
+        {
+            "weights": np.zeros((14, 7), dtype=np.float64),
+            "bias": np.zeros(7, dtype=np.float64),
+            "feature_mean": np.zeros(14, dtype=np.float64),
+            "feature_std": np.ones(14, dtype=np.float64),
+            "action_names": np.asarray(["dispatch_rescue_boat"]),
+            "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
+            "unexpected": np.asarray([1]),
+        },
+    )
+    with pytest.raises(PredictorInputUnavailable, match="exact array schema"):
+        CalibratedVJEPAHead.load(extra_head)
 
 
 def test_world_model_evidence_rejects_mismatched_profile_versions() -> None:

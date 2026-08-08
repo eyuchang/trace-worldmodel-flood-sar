@@ -95,7 +95,9 @@ class PolicyEngine:
             missing.append("a fresh observation window")
         if claim.layer == ClaimLayer.CAUSAL and "state_sufficiency" not in evidence.assumptions:
             failed.append("causal_identification")
-            missing.append("state-sufficiency or an explicitly model-conditional causal qualification")
+            missing.append(
+                "state-sufficiency or an explicitly model-conditional causal qualification"
+            )
 
         revalidation_failed = self._apply_revalidation_guard(
             evidence,
@@ -189,6 +191,9 @@ class PolicyEngine:
                     "event_type": "gate_revalidation_check",
                     "action_name": action_name,
                     "predictor_version": evidence.predictor_version,
+                    "model_hash": None,
+                    "calibration_version": evidence.calibration_version,
+                    "calibration_hash": None,
                     "claim_family": action_name,
                     "adequacy_status": "missing",
                     "model_version_current": False,
@@ -205,15 +210,16 @@ class PolicyEngine:
             blocked = True
         if not self.revalidation.calibration_adequate_for_class(profile):
             failed.append("calibration_adequate_for_class")
-            missing.append(
-                "calibration qualified for the declared claim family / action class"
-            )
+            missing.append("calibration qualified for the declared claim family / action class")
             blocked = True
         self.revalidation.transition_log.append(
             {
                 "event_type": "gate_revalidation_check",
                 "action_name": action_name,
                 "predictor_version": profile.predictor_version,
+                "model_hash": profile.model_hash,
+                "calibration_version": profile.calibration_version,
+                "calibration_hash": profile.calibration_hash,
                 "claim_family": profile.claim_family,
                 "adequacy_status": profile.adequacy_status.value,
                 "model_version_current": self.revalidation.model_version_current(profile),

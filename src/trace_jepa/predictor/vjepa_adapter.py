@@ -23,6 +23,7 @@ from trace_jepa.predictor.qualification import (
     VerifiedQualification,
     verify_qualification_binding,
 )
+from trace_jepa.predictor.safe_files import safe_regular_file, validate_npz_container
 from trace_jepa.util import sha256_file
 
 
@@ -39,6 +40,14 @@ def _npy_bytes(value: NDArray[Any]) -> bytes:
 def write_deterministic_npz(path: Path, arrays: dict[str, NDArray[Any]]) -> None:
     """Write byte-stable, pickle-free arrays with fixed ZIP metadata."""
     path = Path(path)
+    if path.parent.is_symlink():
+        raise ValueError("NPZ output parent must not be a symlink")
+    try:
+        resolved_parent = path.parent.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError("NPZ output parent is absent") from exc
+    if not resolved_parent.is_dir():
+        raise ValueError("NPZ output parent must be a directory")
     if path.is_symlink() or (path.exists() and not path.is_file()):
         raise ValueError("NPZ output must be a safe regular file")
     with (
@@ -113,7 +122,16 @@ class CachedVJEPAFeatureProvider:
         feature_schema_version: str = "vjepa-frozen-feature-v1",
         maximum_age_s: int = 300,
     ) -> None:
-        self.cache_dir = Path(cache_dir)
+        candidate_root = Path(cache_dir)
+        if candidate_root.is_symlink():
+            raise ValueError("V-JEPA feature-cache root must not be a symlink")
+        try:
+            resolved_root = candidate_root.resolve(strict=True)
+        except OSError as exc:
+            raise ValueError("V-JEPA feature-cache root is absent") from exc
+        if not resolved_root.is_dir():
+            raise ValueError("V-JEPA feature-cache root must be a directory")
+        self.cache_dir = candidate_root
         self.encoder_version = encoder_version
         self.encoder_checkpoint_hash = encoder_checkpoint_hash
         self.feature_schema_version = feature_schema_version
@@ -137,21 +155,32 @@ class CachedVJEPAFeatureProvider:
         if reference.feature_schema_version != self.feature_schema_version:
             raise PredictorInputUnavailable("visual feature schema mismatch")
         path = self.cache_dir / f"{reference.observation_id}.npz"
-        if not path.is_file() or path.is_symlink():
-            raise PredictorInputUnavailable(
-                f"cached V-JEPA feature is absent: {reference.observation_id}"
+        required = {
+            "feature",
+            "observation_sha256",
+            "encoder_version",
+            "encoder_checkpoint_hash",
+            "feature_schema_version",
+        }
+        try:
+            path = safe_regular_file(
+                path,
+                declared_root=self.cache_dir,
+                maximum_bytes=100_000_000,
+                label="cached V-JEPA feature",
             )
+            validate_npz_container(
+                path,
+                expected_arrays=required,
+                maximum_uncompressed_bytes=500_000_000,
+                label="cached V-JEPA feature",
+            )
+        except ValueError as exc:
+            raise PredictorInputUnavailable(str(exc)) from exc
         if sha256_file(path) != reference.feature_cache_sha256:
             raise PredictorInputUnavailable("visual feature-cache digest mismatch")
         try:
             with np.load(path, allow_pickle=False) as payload:
-                required = {
-                    "feature",
-                    "observation_sha256",
-                    "encoder_version",
-                    "encoder_checkpoint_hash",
-                    "feature_schema_version",
-                }
                 if set(payload.files) != required:
                     raise PredictorInputUnavailable(
                         "cached V-JEPA feature does not satisfy the frozen schema"
@@ -195,19 +224,32 @@ class CalibratedVJEPAHead:
     @classmethod
     def load(cls, path: Path) -> CalibratedVJEPAHead:
         path = Path(path)
-        if not path.is_file() or path.is_symlink():
-            raise PredictorInputUnavailable(f"V-JEPA flood head is absent: {path.name}")
+        required = {
+            "weights",
+            "bias",
+            "feature_mean",
+            "feature_std",
+            "action_names",
+            "metadata_json",
+        }
+        try:
+            path = safe_regular_file(
+                path,
+                declared_root=path.parent,
+                maximum_bytes=100_000_000,
+                label="V-JEPA flood head",
+            )
+            validate_npz_container(
+                path,
+                expected_arrays=required,
+                maximum_uncompressed_bytes=500_000_000,
+                label="V-JEPA flood head",
+            )
+        except ValueError as exc:
+            raise PredictorInputUnavailable(str(exc)) from exc
         try:
             with np.load(path, allow_pickle=False) as payload:
-                required = {
-                    "weights",
-                    "bias",
-                    "feature_mean",
-                    "feature_std",
-                    "action_names",
-                    "metadata_json",
-                }
-                if required - set(payload.files):
+                if set(payload.files) != required:
                     raise PredictorInputUnavailable(
                         "V-JEPA flood head does not satisfy the frozen schema"
                     )

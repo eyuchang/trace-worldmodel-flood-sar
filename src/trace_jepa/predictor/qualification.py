@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 
 from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor.protocol import PredictorModel
+from trace_jepa.predictor.safe_files import safe_regular_file
 from trace_jepa.util import sha256_file
 
 
@@ -59,10 +60,14 @@ class VerifiedQualification:
 
 def load_qualification_artifact(path: Path) -> VerifiedQualification:
     path = Path(path)
-    if not path.is_file() or path.is_symlink():
-        raise ValueError(f"qualification artifact is absent or unsafe: {path.name}")
-    artifact = QualificationArtifact.model_validate_json(path.read_text(encoding="utf-8"))
-    return VerifiedQualification(artifact=artifact, artifact_sha256=sha256_file(path))
+    safe_path = safe_regular_file(
+        path,
+        declared_root=path.parent,
+        maximum_bytes=1_000_000,
+        label="qualification artifact",
+    )
+    artifact = QualificationArtifact.model_validate_json(safe_path.read_text(encoding="utf-8"))
+    return VerifiedQualification(artifact=artifact, artifact_sha256=sha256_file(safe_path))
 
 
 def verify_qualification_binding(

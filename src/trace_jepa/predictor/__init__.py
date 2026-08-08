@@ -6,6 +6,7 @@ from .protocol import (
     PredictorPriorProfile,
     PredictorProvenance,
     PredictorRequest,
+    PredictorResourceTelemetry,
     PredictorRouteObservation,
     PredictorVisualFeatureRef,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "PredictorPriorProfile",
     "PredictorProvenance",
     "PredictorRequest",
+    "PredictorResourceTelemetry",
     "PredictorRouteObservation",
     "PredictorVisualFeatureRef",
     "QualificationArtifact",
