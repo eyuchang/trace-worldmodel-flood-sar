@@ -223,8 +223,7 @@ development seeds and cannot load the registered confirmatory ensemble:
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the registered reconstruction report and book bundle have been published, verify the
-committed reference directly:
+Verify the committed reconstruction reference directly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small replay \
@@ -263,17 +262,18 @@ permissions. GitHub discovered 66 files but retained no artifact. This is an
 evidence-export failure, not a scientific-computation failure; the recovery is
 never rerun or relabeled.
 
-At most one separately authorized `artifact-reconstruction-replication` may
-recreate the lost deterministic files under protocol v10. Its exact annotated
-tag is
+The separately authorized `artifact-reconstruction-replication` ran once as
+[GitHub run `31291073813`](https://github.com/eyuchang/trace-worldmodel-flood-sar/actions/runs/31291073813)
+at source commit `42cb7f17e32754feb970e3e3f498f7b0501c05af`. It verified both failed
+runs under the exact annotated tag
 `wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1`.
-It binds both failed runs through GitHub's API, uses unchanged seeds, mechanics,
-coefficients, algorithms, resources, gates, and reference environment, and
-transfers ownership only for the four explicit output paths before upload. It
-is not an original, a recovery, or untouched confirmatory evidence. Branch
-push, reconstruction-tag push, and result-commit push are separately approved
-actions. Subsequent replications require the committed registered-evidence
-report and registry byte-for-byte.
+It used unchanged seeds, mechanics, coefficients,
+algorithms, resources, gates, and reference environment, and retained the
+report, exact replay, book bundle, and publication artifacts. It is
+deterministic artifact-reconstruction evidence—not an original, a recovery, or
+untouched confirmatory evidence. Subsequent replications require the committed
+registered-evidence report and registry byte-for-byte.
+It cannot be described as untouched confirmatory evidence.
 
 The primary v10 operational-load measure is strict one-resource/one-incident
 concurrency. All published peak aggregates are explicitly finite-only and are
@@ -319,9 +319,30 @@ are diagnostics—not confirmatory evidence:
 
 The selected graph also had a +0.023 development difference in false-report
 merge rate (95% interval −0.012 to +0.058). This adverse diagnostic is retained.
-The registered paired criteria still determine whether reconstruction evidence
-supports an improvement, but any such result must be labeled deterministic
-reconstruction evidence, not untouched confirmatory evidence.
+The registered reconstruction reproduced 100 previously consumed confirmatory
+seeds. All non-reconciliation gates passed. The selected graph reduced the
+paired false-merge rate by 0.035 (95% interval −0.064 to −0.007) and met
+the recall noninferiority criterion: its recall difference was −0.035 (95%
+interval −0.047 to −0.023; margin −0.05). The adverse false-report-merge
+difference was +0.040 (95% interval +0.001 to +0.079) and must be reported
+alongside the primary result. These are deterministic reconstruction results,
+not untouched confirmatory evidence.
+
+| Registered reconstruction result | Estimate | 95% interval |
+|---|---:|---:|
+| Observed calls per seed | 39.80 | 38.12–41.49 |
+| Hour-four calls per seed | 12.24 | 11.35–13.18 |
+| Finite strict-load median | 2.00 | 1.833–2.000 |
+| Finite uncapped-load median | 1.50 | 1.250–1.500 |
+| Finite historical normalized-index median | 1.75 | 1.600–2.000 |
+| Selected evidence-graph pairwise precision | 0.815 | 0.787–0.841 |
+| Selected evidence-graph pairwise recall | 0.946 | 0.933–0.958 |
+| Selected evidence-graph pairwise F1 | 0.868 | 0.850–0.885 |
+
+The descriptive book seed realized 28 calls, 8 allocations, 12 refusals, and 8
+visible-evidence repairs. Its finite strict-load peak was 1.333 with zero strict
+unserviceable windows; one of eight committed services remained active at the
+six-hour censoring boundary.
 
 The common predictor seam includes a real content-addressed V-JEPA adapter and a
 separate flood-head loader. Heavyweight official-checkpoint encoding is optional
@@ -388,10 +409,11 @@ Delta documentation:
 - [Development report v6](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json)
 - [Immutable original execution failure](docs/delta/validation/WF_DFLD_01_SMALL_ORIGINAL_EXECUTION_FAILURE_V1.md)
 - [Immutable recovery execution failure](docs/delta/validation/WF_DFLD_01_SMALL_RECOVERY_EXECUTION_FAILURE_V1.md)
-- Artifact-reconstruction report v6: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json` only after authorized reconstruction
-- Registered-evidence registry: `data/scenario/delta/validation/registered_evidence_registry_v1.json` only after the reconstruction report is committed
-- Reference bundle v6: `data/scenario/delta/reference/wf_dfld_01_small_book_v6` after publication
-- Figures v6: `docs/delta/figures/wf_dfld_01_small_v6` after publication
+- [Artifact-reconstruction report v6](docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json)
+- [Registered-evidence registry](data/scenario/delta/validation/registered_evidence_registry_v1.json)
+- [Reference bundle v6](data/scenario/delta/reference/wf_dfld_01_small_book_v6)
+- [Figures and machine-readable result table v6](docs/delta/figures/wf_dfld_01_small_v6)
+- [Registered reconstruction delivery record](docs/delta/validation/WF_DFLD_01_SMALL_REGISTERED_RECONSTRUCTION_V1.md)
 - [Delta package-boundary decision](docs/adr/0001-delta-package-boundaries.md)
 - [Once-only confirmation decision](docs/adr/0002-tag-authorized-original-confirmation.md)
 - [Recovery-replication decision](docs/adr/0003-recovery-replication-after-original-artifact-loss.md)

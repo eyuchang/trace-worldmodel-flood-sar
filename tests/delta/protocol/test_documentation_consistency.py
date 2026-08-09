@@ -8,6 +8,7 @@ from trace_jepa.experimental.profile import AdequacyStatus
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.cli import _defaults, build_parser
 from trace_jepa.scenario.delta.loading import load_acceptance_config, load_scenario_config
+from trace_jepa.scenario.delta.validation.models import verify_registered_evidence_report
 
 ROOT = Path(__file__).resolve().parents[3]
 README = ROOT / "README.md"
@@ -145,6 +146,55 @@ def test_readme_development_values_match_the_canonical_report() -> None:
         f"rate (95% interval {adverse_lower} to "
         f"+{adverse['upper_95']:.3f})"
     ) in normalized_readme
+
+
+def test_published_reconstruction_values_and_registry_match_report() -> None:
+    report_path = ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json"
+    registry_path = ROOT / "data/scenario/delta/validation/registered_evidence_registry_v1.json"
+    report, identity = verify_registered_evidence_report(ROOT, report_path, registry_path)
+    assert identity.execution_role == "artifact-reconstruction-replication"
+    assert identity.workflow_run_id == "31291073813"
+    assert identity.source_commit == "42cb7f17e32754feb970e3e3f498f7b0501c05af"
+
+    study = next(
+        item
+        for item in report["studies"]
+        if item["study_id"] == "confirmatory-v8-artifact-reconstruction"
+    )
+    readme = README.read_text("utf-8")
+    interval_separator = "\N{EN DASH}"
+    call_count = study["call_count"]
+    assert (
+        f"| Observed calls per seed | {call_count['estimate']:.2f} | "
+        f"{call_count['lower_95']:.2f}{interval_separator}{call_count['upper_95']:.2f} |"
+    ) in readme
+    hour_four = call_count["hourly_mean_95"][3]
+    assert (
+        f"| Hour-four calls per seed | {hour_four['estimate']:.2f} | "
+        f"{hour_four['lower_95']:.2f}{interval_separator}{hour_four['upper_95']:.2f} |"
+    ) in readme
+    for label, field_name in (
+        ("Finite strict-load median", "peak_finite_strict_concurrent_load_ratio"),
+        ("Finite uncapped-load median", "peak_finite_uncapped_compatible_load_ratio"),
+        (
+            "Finite historical normalized-index median",
+            "peak_finite_registered_normalized_coverable_load_index",
+        ),
+    ):
+        metric = study[field_name]
+        assert (
+            f"| {label} | {metric['estimate']:.2f} | "
+            f"{metric['lower_95']:.3f}{interval_separator}{metric['upper_95']:.3f} |"
+        ) in readme
+
+    paired = report["paired_reconciliation"]["metrics"]
+    false_merge = paired["false_merge_rate"]["paired_difference_selected_minus_baseline"]
+    recall = paired["pairwise_recall"]["paired_difference_selected_minus_baseline"]
+    adverse = paired["false_report_merge_rate"]["paired_difference_selected_minus_baseline"]
+    assert false_merge["upper_95"] < 0
+    assert recall["lower_95"] > -0.05
+    assert adverse["lower_95"] > 0
+    assert "The adverse false-report-merge difference was +0.040" in " ".join(readme.split())
 
 
 def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None:

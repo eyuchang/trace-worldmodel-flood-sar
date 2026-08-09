@@ -9,9 +9,11 @@ completed all 200 registered seed evaluations but lost its ephemeral report
 after replay failed. Recovery run `31289293944` completed the same registered
 study, book run, byte-identical replay, and publication generation, but
 host-side upload could not read a protected container-root-owned file. GitHub
-retained no artifact from either run. Neither run is retried or relabeled. At
-most one separately authorized artifact-reconstruction replication may recreate
-the deterministic files; it cannot restore untouched-holdout status.
+retained no artifact from either run. Neither run was retried or relabeled. The
+single separately authorized artifact-reconstruction replication, run
+`31291073813`, subsequently retained the deterministic report, exact replay,
+book bundle, and publication artifacts. It cannot restore untouched-holdout
+status and is reported only as deterministic reconstruction evidence.
 
 The supported claim is narrow: typed, versioned predictor evidence can be
 gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
@@ -319,14 +321,15 @@ replay steps succeeded, but upload failed with a host/container ownership
 mismatch after discovering 66 files. GitHub retained zero artifacts. This run
 is immutable adverse evidence and is never rerun.
 
-One artifact reconstruction may be separately authorized by
-`wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1`.
-It verifies both failures through GitHub's API and changes only versioned
-governance plus the exact-output ownership transfer at the CI export boundary.
-It is not original, recovery, or untouched confirmatory evidence. Later
-replication remains disabled until the retained reconstruction report is
-committed in a byte-bound registered-evidence registry. Branch push,
-reconstruction-tag push, and result-commit push require separate approval.
+The one artifact reconstruction was authorized by
+`wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1` and
+executed once as GitHub run `31291073813` at source commit
+`42cb7f17e32754feb970e3e3f498f7b0501c05af`. It verified both failures through
+GitHub's API and changed only versioned governance plus the exact-output
+ownership transfer at the CI export boundary. It is not original, recovery, or
+untouched confirmatory evidence. Its report is byte-bound by
+`data/scenario/delta/validation/registered_evidence_registry_v1.json`; later
+replications cannot substitute another report.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from
@@ -350,6 +353,29 @@ the baseline while satisfying the recall guardrail. Its adverse +0.023 mean
 false-report-merge difference is also retained. None of these development
 diagnostics is a confirmatory result.
 
+The registered reconstruction report is
+`docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json`. On the 100
+previously consumed confirmatory-v8 seeds, mean calls were 39.80 (seed-cluster
+95% interval 38.12–41.49) and hour-four mean calls were 12.24 (11.35–13.18).
+All frozen non-reconciliation gates passed. Finite median strict, uncapped, and
+historical normalized loads were respectively 2.00, 1.50, and 1.75; strict
+load retained no numerical acceptance gate.
+
+The preregistered paired comparison found a selected-minus-baseline
+false-merge difference of −0.035 (95% interval −0.064 to −0.007) and a
+pairwise-recall difference of −0.035 (−0.047 to −0.023), satisfying the
+registered false-merge improvement and −0.05 recall-noninferiority criteria.
+The selected graph nevertheless increased false-report merges by +0.040
+(+0.001 to +0.079). This adverse secondary result is not hidden: the evidence
+graph improves overall false merging while performing worse on the specific
+false-report subset. The result is reconstruction evidence because these seeds
+had already been consumed by the failed original and recovery executions.
+
+The descriptive book seed realized 18 latent incidents, 28 calls, 8
+allocations, 12 refusals, and 8 visible-evidence repairs. Its finite strict-load
+peak was 1.333 with no strict-unserviceable window. Seven commitments completed
+within the window and one remained active at scenario censoring.
+
 ## Reproduction
 
 ```bash
@@ -367,10 +393,14 @@ delta_work_root="$(mktemp -d)"
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the artifact-reconstruction report is retained, committed, and registered,
-an independent replication must name that evidence explicitly:
+The committed reconstruction reference can be verified directly, and any later
+independent replication must name the registered evidence explicitly:
 
 ```bash
+.venv/bin/trace-jepa-delta-small replay \
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v6 \
+  --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
+  --output "$delta_work_root/book-v6-replay"
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
   --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
