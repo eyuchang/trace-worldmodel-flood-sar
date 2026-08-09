@@ -58,14 +58,24 @@ def build_parser() -> argparse.ArgumentParser:
     _add_execution_inputs(replay)
     replay.add_argument("--reference", type=Path, required=True)
     replay.add_argument("--output", type=Path, required=True)
+    replay.add_argument(
+        "--validation-report",
+        type=Path,
+        help="Exact registered report bound by the reference manifest, when present.",
+    )
 
     validate = commands.add_parser("validate", help="Run an explicitly selected validation role.")
     _add_execution_inputs(validate)
     validate.add_argument(
         "--study",
-        choices=("development", "original-confirmatory", "replication"),
+        choices=(
+            "development",
+            "original-confirmatory",
+            "recovery-replication",
+            "replication",
+        ),
         required=True,
-        help="Development is local-safe; original confirmation is remote-only.",
+        help="Development is local-safe; registered confirmation roles are remote-only.",
     )
     validate.add_argument("--acceptance", type=Path, default=_defaults()["acceptance"])
     validate.add_argument(
@@ -74,7 +84,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=_defaults()["scientific_manifest"],
     )
     validate.add_argument("--confirmation-token")
-    validate.add_argument("--original-report", type=Path)
+    evidence = validate.add_mutually_exclusive_group()
+    evidence.add_argument(
+        "--registered-evidence-report",
+        type=Path,
+        help="Committed original or recovery evidence bound by the registry.",
+    )
+    evidence.add_argument(
+        "--original-report",
+        type=Path,
+        help="Deprecated alias for --registered-evidence-report.",
+    )
     validate.add_argument("--output", type=Path, required=True)
 
     publish = commands.add_parser(
@@ -121,6 +141,7 @@ def main() -> None:
             arguments.reference,
             arguments.output,
             predictor,
+            validation_report_path=arguments.validation_report,
         )
         LOGGER.info("replay is byte-identical to %s", arguments.reference)
     elif arguments.command == "validate":
@@ -148,7 +169,9 @@ def main() -> None:
                 scientific_manifest_path=arguments.scientific_manifest,
                 output_path=output_path,
                 confirmation_token=arguments.confirmation_token,
-                original_report_path=arguments.original_report,
+                registered_evidence_report_path=(
+                    arguments.registered_evidence_report or arguments.original_report
+                ),
             )
             seed_count = sum(
                 study["seed_count"] for study in cast(list[dict[str, Any]], report["studies"])

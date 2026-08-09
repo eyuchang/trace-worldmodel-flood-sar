@@ -1,6 +1,6 @@
 # ADR 0002: Tag-authorized, once-only original confirmation
 
-- Status: Accepted; recovery authorization not yet granted
+- Status: Superseded after original artifact loss; see ADR 0003
 - Date: 2026-08-08
 - Scope: confirmatory-v8 original execution
 
@@ -17,7 +17,7 @@ possible only after the original report is committed and registered.
 
 ## Decision
 
-The original workflow is triggered only by the exact annotated recovery tag
+The original workflow was triggered by the exact annotated recovery tag
 `wf-dfld-01-small-confirmatory-v8-original-r2`.
 
 The first authorization tag, `wf-dfld-01-small-confirmatory-v8-original`,
@@ -30,7 +30,7 @@ it verifies the annotated tag object through GitHub's Git data API and requires
 that object to target `github.sha`; it does not alter seeds, coefficients,
 algorithms, gates, or simulator mechanics.
 
-The workflow:
+The workflow was designed to:
 
 1. checks out `github.sha` and verifies through the remote Git data API that the
    annotated authorization tag resolves to it;
@@ -43,11 +43,11 @@ The workflow:
 6. runs the registered development and confirmatory-v8 studies exactly once;
 7. emits source-bound report, book, replay, publication, and execution evidence.
 
-The branch, annotated authorization tag, and result commits are three separate
-external actions, each requiring explicit user approval. After a successful
-original, the trigger is removed or permanently disabled. Replication stays
-disabled until a committed registry binds the canonical original report by path,
-SHA-256, and typed identity.
+Run `31286349320` completed the registered development and confirmatory studies
+but lost its ephemeral report after exact replay omitted the validation-report
+input and artifact upload was skipped. The original trigger is disabled and is
+never reused. ADR 0003 defines a separately labeled recovery replication and a
+neutral registered-evidence registry for any later replication.
 
 ## Consequences
 

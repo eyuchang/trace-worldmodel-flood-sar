@@ -33,6 +33,9 @@ HISTORICAL_ACCEPTANCE_PATH = REPOSITORY_ROOT / "configs/scenarios/wf_dfld_01_sma
 GEOGRAPHY_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 GEOGRAPHY_MANIFEST_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/build_manifest_v3.json"
 POLICY_PATH = REPOSITORY_ROOT / "configs/policies/trace_delta_small_v1.yaml"
+DEVELOPMENT_REPORT_PATH = (
+    REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json"
+)
 
 
 def _write_axis_variant(
@@ -331,6 +334,65 @@ def test_artifacts_are_byte_identical_on_clean_replay(tmp_path: Path) -> None:
     assert execution.execution_receipt is not None
     assert (reference / "execution_receipt.json").is_file()
     assert all(len(item.sha256) == 64 for item in manifest.inputs)
+
+
+def test_replay_requires_and_reuses_explicit_validation_report(tmp_path: Path) -> None:
+    development = json.loads(DEVELOPMENT_REPORT_PATH.read_text("utf-8"))
+    report_path = tmp_path / "registered-validation.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "book_walkthrough": {"seed": 20260803, "role": "test-fixture"},
+                "studies": [development["study"]],
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+    predictor = ToyActionPrefixPredictor()
+    reference = tmp_path / "reference-with-validation"
+    execute_delta_small(
+        CONFIG_PATH,
+        GEOGRAPHY_PATH,
+        POLICY_PATH,
+        reference,
+        predictor,
+        validation_report_path=report_path,
+    )
+
+    with pytest.raises(ArtifactMismatchError, match="explicit validation report"):
+        verify_exact_replay(
+            CONFIG_PATH,
+            GEOGRAPHY_PATH,
+            POLICY_PATH,
+            reference,
+            tmp_path / "missing-validation-replay",
+            predictor,
+        )
+
+    wrong_report = tmp_path / "wrong-validation.json"
+    wrong_report.write_text("{}\n", encoding="utf-8")
+    with pytest.raises(ArtifactMismatchError, match="digest differs"):
+        verify_exact_replay(
+            CONFIG_PATH,
+            GEOGRAPHY_PATH,
+            POLICY_PATH,
+            reference,
+            tmp_path / "wrong-validation-replay",
+            predictor,
+            validation_report_path=wrong_report,
+        )
+
+    verify_exact_replay(
+        CONFIG_PATH,
+        GEOGRAPHY_PATH,
+        POLICY_PATH,
+        reference,
+        tmp_path / "validation-bound-replay",
+        predictor,
+        validation_report_path=report_path,
+    )
 
 
 def test_exact_replay_preserves_recorded_source_commit_across_artifact_commits(

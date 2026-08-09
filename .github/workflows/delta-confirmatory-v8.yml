@@ -1,16 +1,16 @@
-name: Delta confirmatory-v8 original (tag-authorized, once-only)
+name: Delta confirmatory-v8 recovery replication (tag-authorized, once-only)
 
 on:
   push:
     tags:
-      - wf-dfld-01-small-confirmatory-v8-original-r2
+      - wf-dfld-01-small-confirmatory-v8-recovery-replication-v1
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: wf-dfld-01-small-confirmatory-v8-original-r2
+  group: wf-dfld-01-small-confirmatory-v8-recovery-replication-v1
   cancel-in-progress: false
 
 jobs:
@@ -18,8 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      TRACE_DELTA_EXECUTION_ROLE: original-confirmatory
-      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-original-r2
+      TRACE_DELTA_EXECUTION_ROLE: recovery-replication
+      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-recovery-replication-v1
+      TRACE_DELTA_FAILED_ORIGINAL_RUN_ID: "31286349320"
+      TRACE_DELTA_FAILED_ORIGINAL_COMMIT: 991a628828c3fa1400372cb2a6e390cb76cbf47f
+      TRACE_DELTA_FAILED_ORIGINAL_TAG: wf-dfld-01-small-confirmatory-v8-original-r2
       TRACE_DELTA_WORKFLOW_FILE: delta-confirmatory-v8.yml
     steps:
       - name: Check out the immutable tagged commit
@@ -56,7 +59,44 @@ jobs:
             gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.object.sha'
           })" = "${GITHUB_SHA}"
 
-      - name: Refuse any prior successful original for this tag and commit
+      - name: Verify the immutable failed original execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.head_sha'
+          })" = "${TRACE_DELTA_FAILED_ORIGINAL_COMMIT}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.head_branch'
+          })" = "${TRACE_DELTA_FAILED_ORIGINAL_TAG}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.run_attempt'
+          })" = "1"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Execute the original study in the exact reference container") | .conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Upload source-bound original evidence") | .conclusion'
+          })" = "skipped"
+
+      - name: Refuse any prior recovery for this tag and commit
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -64,12 +104,12 @@ jobs:
           set -euo pipefail
           prior="$({
             gh api --paginate \
-              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs?event=push&status=success&per_page=100" \
-              --jq ".workflow_runs[] | select(.head_sha == \"${GITHUB_SHA}\" and .event == \"push\" and .id != ${GITHUB_RUN_ID}) | .id"
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs?event=push&per_page=100" \
+              --jq ".workflow_runs[] | select(.head_sha == \"${GITHUB_SHA}\" and .head_branch == \"${TRACE_DELTA_AUTHORIZATION_TAG}\" and .event == \"push\" and .id != ${GITHUB_RUN_ID}) | .id"
           } | wc -l | tr -d ' ')"
           test "${prior}" = "0"
 
-      - name: Execute the original study in the exact reference container
+      - name: Execute the registered recovery replication in the exact reference container
         shell: bash
         run: |
           set -euo pipefail
@@ -82,6 +122,7 @@ jobs:
             --env GITHUB_WORKFLOW="${GITHUB_WORKFLOW}" \
             --env TRACE_DELTA_AUTHORIZATION_TAG="${TRACE_DELTA_AUTHORIZATION_TAG}" \
             --env TRACE_DELTA_EXECUTION_ROLE="${TRACE_DELTA_EXECUTION_ROLE}" \
+            --env TRACE_DELTA_FAILED_ORIGINAL_RUN_ID="${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
             --env TRACE_DELTA_WORKFLOW_FILE="${TRACE_DELTA_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace" \
             --volume "${RUNNER_TEMP}:/output" \
@@ -96,8 +137,8 @@ jobs:
                 --lock requirements-delta-python311.lock \
                 --require-match
               trace-jepa-delta-small validate \
-                --study original-confirmatory \
-                --confirmation-token EXECUTE-CONFIRMATORY-V8-ORIGINAL-ONCE \
+                --study recovery-replication \
+                --confirmation-token EXECUTE-CONFIRMATORY-V8-RECOVERY-REPLICATION-V1-ONCE \
                 --acceptance configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml \
                 --scientific-manifest data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json \
                 --output /output/WF_DFLD_01_SMALL_VALIDATION_V5.json
@@ -106,20 +147,22 @@ jobs:
                 --output /output/wf_dfld_01_small_book_v5
               trace-jepa-delta-small replay \
                 --reference /output/wf_dfld_01_small_book_v5 \
+                --validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V5.json \
                 --output /output/wf_dfld_01_small_book_v5_replay
               trace-jepa-delta-small publish \
                 --reference /output/wf_dfld_01_small_book_v5 \
                 --output /output/wf_dfld_01_small_book_v5_publication
             '
 
-      - name: Upload source-bound original evidence
+      - name: Upload source-bound recovery evidence
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: delta-confirmatory-v8-${{ github.sha }}-run-${{ github.run_id }}
+          name: delta-confirmatory-v8-recovery-${{ github.sha }}-run-${{ github.run_id }}
           path: |
             ${{ runner.temp }}/WF_DFLD_01_SMALL_VALIDATION_V5.json
             ${{ runner.temp }}/wf_dfld_01_small_book_v5
             ${{ runner.temp }}/wf_dfld_01_small_book_v5_replay
             ${{ runner.temp }}/wf_dfld_01_small_book_v5_publication
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 90

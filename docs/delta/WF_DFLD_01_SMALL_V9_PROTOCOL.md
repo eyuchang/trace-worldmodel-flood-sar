@@ -1,7 +1,8 @@
 # WF-DFLD-01-SMALL v9 pre-push remediation protocol
 
-Status: implementation protocol frozen before any confirmatory-v8 seed is
-derived or evaluated.
+Status: scientific mechanics frozen; original execution completed but its
+ephemeral report was lost after a replay-plumbing failure. One recovery
+replication is preregistered and not yet authorized by tag.
 
 ## Protocol history
 
@@ -45,17 +46,20 @@ summaries, reports, and figures may change after the metric amendment.
 ## Confirmation discipline
 
 After development-only equivalence, tests, documentation, environment, and
-scientific-input closure are frozen, exactly 100 confirmatory-v8 seeds are
+scientific-input closure were frozen, exactly 100 confirmatory-v8 seeds were
 derived from
 `SHA-256("WF-DFLD-01-SMALL|confirmatory-v8|index")` with the established
-unsigned-31-bit reduction. They MUST NOT be evaluated locally.
+unsigned-31-bit reduction. They were evaluated once by original GitHub Actions
+run `31286349320` and MUST NOT be evaluated locally.
 
-The original execution is authorized only by pushing the exact annotated recovery tag
-`wf-dfld-01-small-confirmatory-v8-original-r2` after separate user approval. The
-workflow checks out the tag commit, requires run attempt one, rejects a prior
-successful original run independently of artifact retention, and records its
-complete execution identity. Later runs require a committed original-report
-registry and are labeled replications.
+The original execution was authorized by the annotated tag
+`wf-dfld-01-small-confirmatory-v8-original-r2`. Run `31286349320` checked out
+the registered commit, verified the tag and pinned environment, and completed
+all 100 development and 100 confirmatory seed evaluations. It then failed in
+exact replay because replay did not receive the validation-report input bound by
+the just-generated reference. Artifact upload was skipped, so the ephemeral
+report was not retained. This execution is preserved as adverse original
+evidence and is not rerun or replaced.
 
 The earlier tag without the `-r2` suffix triggered run `31285710374`, which
 failed during authorization preflight because the checkout action replaced the
@@ -64,6 +68,15 @@ upload steps were skipped; no confirmatory seed was accessed. That tag and run
 remain immutable. The recovery workflow verifies the remote annotated tag
 object through GitHub's Git data API and otherwise preserves the scientific
 protocol unchanged.
+
+A single recovery replication may be authorized separately by the tag
+`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. It binds the failed
+original through GitHub's API, uses unchanged seeds and scientific mechanics,
+passes the registered report explicitly to replay, and uploads partial evidence
+after any later failure. It is not a second original and cannot restore
+untouched-holdout status. Later replications remain disabled until the retained
+recovery report is committed in a byte-bound registered-evidence registry. See
+ADR 0003.
 
 ## Claims and exclusions
 

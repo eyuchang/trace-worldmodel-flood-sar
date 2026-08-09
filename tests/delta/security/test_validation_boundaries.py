@@ -7,17 +7,23 @@ from pathlib import Path
 
 import pytest
 
-from trace_jepa.scenario.delta.artifacts import canonical_json_bytes, sha256_file
+from trace_jepa.scenario.delta.artifacts import (
+    canonical_json_bytes,
+    current_git_commit,
+    sha256_file,
+)
 from trace_jepa.scenario.delta.cli import build_parser
 from trace_jepa.scenario.delta.loading import load_acceptance_config
 from trace_jepa.scenario.delta.validation.models import (
-    OriginalReportIdentity,
-    OriginalReportRegistry,
-    verify_registered_original_report,
+    RegisteredEvidenceIdentity,
+    RegisteredEvidenceRegistry,
+    verify_registered_evidence_report,
 )
 from trace_jepa.scenario.delta.validation_v8 import (
     ORIGINAL_CONFIRMATION_TOKEN,
+    RECOVERY_CONFIRMATION_TOKEN,
     _require_original_remote_context,
+    _require_recovery_remote_context,
     canonical_v9_paths,
     run_v8_development_validation,
     verify_registered_v8_inputs,
@@ -120,7 +126,47 @@ def test_original_confirmation_requires_exact_tag_and_first_attempt(
         _require_original_remote_context(ORIGINAL_CONFIRMATION_TOKEN)
 
 
-def test_replication_requires_byte_identical_committed_original_registry(
+def test_recovery_replication_is_inaccessible_outside_dedicated_remote_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    with pytest.raises(ValueError, match="restricted to GitHub Actions"):
+        _require_recovery_remote_context(RECOVERY_CONFIRMATION_TOKEN)
+
+
+def test_recovery_replication_requires_exact_tag_attempt_and_failed_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    environment = {
+        "GITHUB_ACTIONS": "true",
+        "TRACE_DELTA_EXECUTION_ROLE": "recovery-replication",
+        "GITHUB_REF": "refs/tags/wrong",
+        "GITHUB_RUN_ATTEMPT": "1",
+        "TRACE_DELTA_WORKFLOW_FILE": "delta-confirmatory-v8.yml",
+        "TRACE_DELTA_FAILED_ORIGINAL_RUN_ID": "31286349320",
+        "GITHUB_RUN_ID": "456",
+        "GITHUB_SHA": "a" * 40,
+        "GITHUB_WORKFLOW": "Delta confirmatory-v8 recovery replication",
+    }
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+    with pytest.raises(ValueError, match="exact recovery tag"):
+        _require_recovery_remote_context(RECOVERY_CONFIRMATION_TOKEN)
+    monkeypatch.setenv(
+        "GITHUB_REF",
+        "refs/tags/wf-dfld-01-small-confirmatory-v8-recovery-replication-v1",
+    )
+    monkeypatch.setenv("TRACE_DELTA_FAILED_ORIGINAL_RUN_ID", "wrong")
+    with pytest.raises(ValueError, match="registered failed original"):
+        _require_recovery_remote_context(RECOVERY_CONFIRMATION_TOKEN)
+    monkeypatch.setenv("TRACE_DELTA_FAILED_ORIGINAL_RUN_ID", "31286349320")
+    monkeypatch.setenv("GITHUB_SHA", current_git_commit(ROOT))
+    context = _require_recovery_remote_context(RECOVERY_CONFIRMATION_TOKEN)
+    assert context.failed_original_workflow_run_id == "31286349320"
+    assert context.source_commit == current_git_commit(ROOT)
+
+
+def test_replication_requires_byte_identical_committed_evidence_registry(
     tmp_path: Path,
 ) -> None:
     report_path = tmp_path / "evidence/original.json"
@@ -153,16 +199,16 @@ def test_replication_requires_byte_identical_committed_original_registry(
         },
     }
     report_path.write_bytes(canonical_json_bytes(report))
-    identity = OriginalReportIdentity.from_report(report)
+    identity = RegisteredEvidenceIdentity.from_report(report)
     registry_path = tmp_path / "registry.json"
-    registry = OriginalReportRegistry(
-        schema_version="delta-original-report-registry-v1",
+    registry = RegisteredEvidenceRegistry(
+        schema_version="delta-registered-evidence-registry-v1",
         report_path="evidence/original.json",
         report_sha256=sha256_file(report_path),
         identity_sha256=identity.canonical_sha256,
     )
     registry_path.write_bytes(canonical_json_bytes(registry.model_dump(mode="json")))
-    loaded, loaded_identity = verify_registered_original_report(
+    loaded, loaded_identity = verify_registered_evidence_report(
         tmp_path, report_path, registry_path
     )
     assert loaded == report
@@ -172,7 +218,80 @@ def test_replication_requires_byte_identical_committed_original_registry(
     altered["workflow_run_id"] = "124"
     report_path.write_bytes(canonical_json_bytes(altered))
     with pytest.raises(ValueError, match="digest"):
-        verify_registered_original_report(tmp_path, report_path, registry_path)
+        verify_registered_evidence_report(tmp_path, report_path, registry_path)
+
+
+def test_registered_evidence_registry_rejects_traversal(
+    tmp_path: Path,
+) -> None:
+    outside = tmp_path.parent / "outside-recovery-report.json"
+    outside.write_text("{}", encoding="utf-8")
+    registry_path = tmp_path / "registry.json"
+    registry = RegisteredEvidenceRegistry(
+        schema_version="delta-registered-evidence-registry-v1",
+        report_path="../outside-recovery-report.json",
+        report_sha256=sha256_file(outside),
+        identity_sha256="0" * 64,
+    )
+    registry_path.write_bytes(canonical_json_bytes(registry.model_dump(mode="json")))
+    try:
+        with pytest.raises(ValueError, match="unsafe relative name"):
+            verify_registered_evidence_report(tmp_path, outside, registry_path)
+    finally:
+        outside.unlink(missing_ok=True)
+
+
+def test_recovery_report_identity_binds_failed_original_execution() -> None:
+    original = RegisteredEvidenceIdentity(
+        schema_version="delta-statistical-validation-v5",
+        execution_role="original-confirmatory",
+        source_commit="a" * 40,
+        authorization_tag="wf-dfld-01-small-confirmatory-v8-original-r2",
+        workflow_run_id="123",
+        workflow_name="Delta confirmatory-v8 original",
+        workflow_file="delta-confirmatory-v8.yml",
+        protocol_sha256="b" * 64,
+        scientific_input_manifest_sha256="c" * 64,
+        scientific_input_aggregate_sha256="d" * 64,
+        scientific_input_core_aggregate_sha256="e" * 64,
+        environment_contract_sha256="f" * 64,
+        dependency_lock_sha256="1" * 64,
+        scenario_configuration_sha256="2" * 64,
+        geography_sha256="3" * 64,
+        policy_sha256="4" * 64,
+        seed_list=tuple(range(100)),
+        study_ids=("development-v9", "confirmatory-v8-primary"),
+        study_seed_counts=(100, 100),
+        baseline_reconciliation_algorithm="baseline-v7-heuristic",
+        selected_reconciliation_algorithm="evidence-graph-q075",
+    )
+    payload = original.model_dump(mode="json")
+    payload.update(
+        {
+            "execution_role": "recovery-replication",
+            "authorization_tag": ("wf-dfld-01-small-confirmatory-v8-recovery-replication-v1"),
+            "failed_original_workflow_run_id": "31286349320",
+        }
+    )
+    recovery = RegisteredEvidenceIdentity.model_validate(payload)
+    assert recovery.execution_role == "recovery-replication"
+    payload["failed_original_workflow_run_id"] = "wrong"
+    with pytest.raises(ValueError, match="failed original run"):
+        RegisteredEvidenceIdentity.model_validate(payload)
+
+
+def test_recovery_protocol_binds_the_immutable_failed_original_record() -> None:
+    record = json.loads(
+        (ROOT / "data/scenario/delta/validation/original_execution_failure_v1.json").read_text(
+            "utf-8"
+        )
+    )
+    assert record["workflow_run_id"] == "31286349320"
+    assert record["source_commit"] == "991a628828c3fa1400372cb2a6e390cb76cbf47f"
+    assert record["registered_study_completed"] is True
+    assert record["registered_seed_runs"] == 200
+    assert record["confirmatory_result_report_retained"] is False
+    assert record["failure_type"] == "ArtifactMismatchError"
 
 
 def test_confirmatory_v8_preregistration_binds_exact_new_seeds_and_manifest() -> None:
@@ -227,23 +346,66 @@ def test_original_mode_rejects_local_execution_before_studies_start(
     assert not (tmp_path / "must-not-exist.json").exists()
 
 
+def test_recovery_mode_rejects_local_execution_before_studies_start(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    def forbidden_study(**_kwargs: object) -> dict[str, object]:
+        raise AssertionError("registered seed study was reached outside the remote guard")
+
+    monkeypatch.setattr(
+        "trace_jepa.scenario.delta.validation.registered.run_v7_study",
+        forbidden_study,
+    )
+    from trace_jepa.scenario.delta.validation_v8 import run_v8_registered_validation
+
+    with pytest.raises(ValueError, match="restricted to GitHub Actions"):
+        run_v8_registered_validation(
+            study="recovery-replication",
+            config_path=CANONICAL["config"],
+            geography_path=CANONICAL["geography"],
+            policy_path=CANONICAL["policy"],
+            acceptance_path=CANONICAL["acceptance"],
+            scientific_manifest_path=CANONICAL["scientific_manifest"],
+            output_path=tmp_path / "must-not-exist.json",
+            confirmation_token=RECOVERY_CONFIRMATION_TOKEN,
+        )
+    assert not (tmp_path / "must-not-exist.json").exists()
+
+
 def test_remote_workflow_uses_exact_tag_and_expiration_independent_once_only_guard() -> None:
     superseded = (ROOT / ".github/workflows/delta-confirmatory-v6.yml").read_text("utf-8")
     original = (ROOT / ".github/workflows/delta-confirmatory-v8.yml").read_text("utf-8")
     assert "trace-jepa-delta-small validate" not in superseded
     assert "superseded-before-execution" in superseded
     assert "workflow_dispatch" not in original
-    assert "wf-dfld-01-small-confirmatory-v8-original-r2" in original
+    assert "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1" in original
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in original
     assert "git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" in original
     assert "git/tags/${tag_object_sha}" in original
     assert "git cat-file -t" not in original
     assert "actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs" in original
+    assert r".head_branch == \"${TRACE_DELTA_AUTHORIZATION_TAG}\"" in original
+    assert "31286349320" in original
+    assert "Verify the immutable failed original execution" in original
     assert "git config --global --add safe.directory /workspace" in original
     assert "listArtifactsForRepo" not in original
-    assert "--study original-confirmatory" in original
-    assert ORIGINAL_CONFIRMATION_TOKEN in original
+    assert "--study recovery-replication" in original
+    assert RECOVERY_CONFIRMATION_TOKEN in original
+    assert "--validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V5.json" in original
+    assert "if: ${{ always() }}" in original
     assert "wf_dfld_01_small_acceptance_v5.yaml" in original
     assert "v8_scientific_input_manifest_v2.json" in original
     assert "88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d" in original
-    assert "Refuse any prior successful original" in original
+    assert "Refuse any prior recovery" in original
+    assert "status=success" not in original
+
+
+def test_ci_replays_a_published_reference_with_its_bound_validation_report() -> None:
+    workflow = (ROOT / ".github/workflows/ci.yml").read_text("utf-8")
+    assert "wf_dfld_01_small_book_v5" in workflow
+    assert (
+        "--validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json"
+    ) in workflow

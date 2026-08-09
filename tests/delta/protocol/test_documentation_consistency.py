@@ -125,6 +125,25 @@ def test_readme_development_values_match_the_canonical_report() -> None:
         f"{operations['refusals']['estimate']:.2f} / "
         f"{operations['repairs']['estimate']:.2f} |"
     ) in readme
+    paired = report["paired_reconciliation"]["metrics"]
+    for label, metric_name in (
+        ("Selected-minus-baseline false-merge rate", "false_merge_rate"),
+        ("Selected-minus-baseline pairwise recall", "pairwise_recall"),
+    ):
+        metric = paired[metric_name]["paired_difference_selected_minus_baseline"]
+        estimate = f"{metric['estimate']:.3f}".replace("-", "\N{MINUS SIGN}")
+        lower = f"{metric['lower_95']:.3f}".replace("-", "\N{MINUS SIGN}")
+        upper = f"{metric['upper_95']:.3f}".replace("-", "\N{MINUS SIGN}")
+        rendered = f"| {label} | {estimate} | {lower}{interval_separator}{upper} |"
+        assert rendered in readme
+    adverse = paired["false_report_merge_rate"]["paired_difference_selected_minus_baseline"]
+    normalized_readme = " ".join(readme.split())
+    adverse_lower = f"{adverse['lower_95']:.3f}".replace("-", "\N{MINUS SIGN}")
+    assert (
+        f"+{adverse['estimate']:.3f} development difference in false-report merge "
+        f"rate (95% interval {adverse_lower} to "
+        f"+{adverse['upper_95']:.3f})"
+    ) in normalized_readme
 
 
 def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None:
@@ -135,7 +154,11 @@ def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None
     assert "authoritative offline geography" not in joined.lower()
     assert "--study original-confirmatory" not in README.read_text("utf-8")
     assert "confirmatory-v7 execution" not in README.read_text("utf-8")
-    assert "wf-dfld-01-small-confirmatory-v8-original-r2" in README.read_text("utf-8")
+    readme = README.read_text("utf-8")
+    assert "wf-dfld-01-small-confirmatory-v8-original-r2" not in readme
+    assert "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1" in readme
+    assert "recovery replication" in readme.lower()
+    assert "cannot be described as untouched confirmatory evidence" in " ".join(readme.split())
     for block in re.findall(r"```bash\n(.*?)```", joined, flags=re.DOTALL):
         if "trace-jepa-delta-small validate" in block:
             assert "--study" in block
@@ -158,6 +181,17 @@ def test_documented_delta_cli_options_are_current() -> None:
             "--study",
             "replication",
             "--original-report",
+            "legacy-original.json",
+            "--output",
+            "legacy-replication.json",
+        ]
+    )
+    parser.parse_args(
+        [
+            "validate",
+            "--study",
+            "replication",
+            "--registered-evidence-report",
             "original.json",
             "--output",
             "replication.json",

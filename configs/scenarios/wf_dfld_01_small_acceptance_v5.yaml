@@ -8,7 +8,7 @@ development_ensemble:
 v8_confirmatory_registered_utc: "2026-08-08T23:03:15Z"
 v8_confirmatory_ensemble:
   derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v8|index"
-  protocol_role: untouched_holdout_after_protocol_v9_code_metrics_documentation_workflow_manifest_environment_and_gates_freeze
+  protocol_role: originally_untouched_holdout_executed_once_in_failed_original_run_31286349320_recovery_replication_is_explicitly_not_untouched
   seeds:
     - 862642517
     - 581643209
@@ -120,13 +120,18 @@ registration_erratum: >-
   checkout declaration. The first authorization tag triggered GitHub Actions
   run 31285710374, which failed in authorization preflight because checkout
   replaced the local annotated-tag reference with its peeled commit. The study,
-  book, replay, and publication steps were skipped. Recovery uses the new exact
-  tag wf-dfld-01-small-confirmatory-v8-original-r2 and verifies the remote tag
-  object through the Git data API. The seed list is unchanged and has never been
-  executed.
+  book, replay, and publication steps were skipped. The second authorization tag
+  wf-dfld-01-small-confirmatory-v8-original-r2 triggered run 31286349320. That
+  run completed all 100 development and 100 confirmatory seed evaluations and
+  generated its report and book bundle, then failed because replay omitted the
+  explicitly bound validation-report input. Artifact upload was skipped, so the
+  ephemeral report was not retained. The original run is immutable adverse
+  evidence and is not rerun. A separately authorized recovery replication uses
+  the unchanged seed list and scientific mechanics, is labeled as a replication,
+  and cannot restore untouched-holdout status.
 scientific_input_manifest_path: data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json
 scientific_input_manifest_sha256: null
-scientific_input_core_aggregate_sha256: 269175b41960d0f1ae734706078d46b871d000b273b298cbe0e6f2f48c6e8082
+scientific_input_core_aggregate_sha256: 506ca1ff65a3aa87221f19b6c8a9dbdc0db5a56aabc90a9217fb260f4c43e5ac
 protocol_amendment: >-
   Protocol v9 preserves generator-v8 truth, observations, resources, and
   reconciliation while introducing tag-authorized once-only original execution,
@@ -136,6 +141,10 @@ protocol_amendment: >-
   retuned for this registration. The tagged workflow declares its mounted
   checkout as safe before any Git-bound provenance check and verifies the remote
   annotated tag object rather than trusting checkout's rewritten local tag ref.
+  The post-original amendment passes the registered validation report explicitly
+  into replay, uploads partial evidence even after a later failure, and binds the
+  recovery replication to failed original run 31286349320. It changes no seed,
+  coefficient, simulator mechanism, reconciliation threshold, resource, or gate.
 call_process:
   expected_total_mean: 40.0
   total_mean_absolute_tolerance: 2.5

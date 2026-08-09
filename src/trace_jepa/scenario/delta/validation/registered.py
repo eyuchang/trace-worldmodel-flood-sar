@@ -28,12 +28,13 @@ from trace_jepa.scenario.delta.validation.gates import (
 )
 from trace_jepa.scenario.delta.validation.models import (
     DevelopmentValidationRequest,
-    OriginalReportIdentity,
     OriginalWorkflowContext,
+    RecoveryWorkflowContext,
+    RegisteredEvidenceIdentity,
     RegisteredValidationRequest,
     ReplicationBindingRequest,
     StudyBundleRequest,
-    verify_registered_original_report,
+    verify_registered_evidence_report,
 )
 from trace_jepa.scenario.delta.validation.performance import book_and_performance
 from trace_jepa.scenario.delta.validation.reconciliation import (
@@ -41,9 +42,17 @@ from trace_jepa.scenario.delta.validation.reconciliation import (
 )
 from trace_jepa.scenario.delta.validation_v7 import run_v7_study
 
-ValidationStudy = Literal["development", "original-confirmatory", "replication"]
+ValidationStudy = Literal[
+    "development",
+    "original-confirmatory",
+    "recovery-replication",
+    "replication",
+]
 ORIGINAL_CONFIRMATION_TOKEN = "EXECUTE-CONFIRMATORY-V8-ORIGINAL-ONCE"
 ORIGINAL_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-original-r2"
+RECOVERY_CONFIRMATION_TOKEN = "EXECUTE-CONFIRMATORY-V8-RECOVERY-REPLICATION-V1-ONCE"
+RECOVERY_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1"
+FAILED_ORIGINAL_WORKFLOW_RUN_ID = "31286349320"
 ORIGINAL_WORKFLOW_FILE = "delta-confirmatory-v8.yml"
 
 
@@ -65,8 +74,8 @@ def canonical_v9_paths(repository_root: Path) -> dict[str, Path]:
         "environment": repository_root
         / "data/scenario/delta/environment/python311_linux_amd64_v1.json",
         "lock": repository_root / "requirements-delta-python311.lock",
-        "original_registry": repository_root
-        / "data/scenario/delta/validation/original_report_registry_v1.json",
+        "registered_evidence_registry": repository_root
+        / "data/scenario/delta/validation/registered_evidence_registry_v1.json",
     }
 
 
@@ -237,6 +246,45 @@ def _require_original_remote_context(
     )
 
 
+def _require_recovery_remote_context(
+    confirmation_token: str | None,
+) -> RecoveryWorkflowContext:
+    """Admit one remote replication bound to the failed original execution."""
+
+    if confirmation_token != RECOVERY_CONFIRMATION_TOKEN:
+        raise ValueError("recovery replication requires the explicit recovery authorization token")
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        raise ValueError("recovery replication is restricted to GitHub Actions")
+    if os.environ.get("TRACE_DELTA_EXECUTION_ROLE") != "recovery-replication":
+        raise ValueError("recovery replication requires the dedicated workflow role")
+    ref = os.environ.get("GITHUB_REF")
+    if ref != f"refs/tags/{RECOVERY_AUTHORIZATION_TAG}":
+        raise ValueError("recovery replication requires the exact recovery tag")
+    if os.environ.get("GITHUB_RUN_ATTEMPT") != "1":
+        raise ValueError("recovery replication is restricted to workflow run attempt one")
+    workflow_file = os.environ.get("TRACE_DELTA_WORKFLOW_FILE")
+    if workflow_file != ORIGINAL_WORKFLOW_FILE:
+        raise ValueError("recovery replication requires the dedicated workflow file")
+    failed_run_id = os.environ.get("TRACE_DELTA_FAILED_ORIGINAL_RUN_ID")
+    if failed_run_id != FAILED_ORIGINAL_WORKFLOW_RUN_ID:
+        raise ValueError("recovery replication does not bind the registered failed original")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    source_commit = os.environ.get("GITHUB_SHA")
+    workflow_name = os.environ.get("GITHUB_WORKFLOW")
+    if not run_id or not source_commit or not workflow_name:
+        raise ValueError("recovery-replication workflow provenance is incomplete")
+    if current_git_commit(_repository_root()) != source_commit:
+        raise ValueError("checked-out recovery source does not match GITHUB_SHA")
+    return RecoveryWorkflowContext(
+        workflow_run_id=run_id,
+        source_commit=source_commit,
+        authorization_tag=RECOVERY_AUTHORIZATION_TAG,
+        workflow_name=workflow_name,
+        workflow_file=ORIGINAL_WORKFLOW_FILE,
+        failed_original_workflow_run_id=FAILED_ORIGINAL_WORKFLOW_RUN_ID,
+    )
+
+
 def _bound_protocol(
     acceptance_path: Path,
     manifest: ScientificInputManifest,
@@ -252,17 +300,17 @@ def _bound_protocol(
     return protocol, list(confirmatory.seeds)
 
 
-def _validate_replication_original(
+def _validate_replication_evidence(
     request: ReplicationBindingRequest,
     expected_paths: dict[str, Path],
     manifest: ScientificInputManifest,
-) -> OriginalReportIdentity:
-    if request.original_report_path is None:
-        raise ValueError("replication requires --original-report")
-    _, identity = verify_registered_original_report(
+) -> RegisteredEvidenceIdentity:
+    if request.registered_evidence_report_path is None:
+        raise ValueError("replication requires --registered-evidence-report")
+    _, identity = verify_registered_evidence_report(
         _repository_root(),
-        request.original_report_path,
-        expected_paths["original_registry"],
+        request.registered_evidence_report_path,
+        expected_paths["registered_evidence_registry"],
     )
     expected_values: dict[str, object] = {
         "protocol_sha256": request.protocol_hash,
@@ -282,7 +330,7 @@ def _validate_replication_original(
     }
     for field, expected in expected_values.items():
         if getattr(identity, field) != expected:
-            raise ValueError(f"original report identity mismatch: {field}")
+            raise ValueError(f"registered evidence identity mismatch: {field}")
     return identity
 
 
@@ -359,13 +407,15 @@ def _book_summary(
 
 
 def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
-    """Execute one authorized original, or a registry-bound replication."""
+    """Execute an authorized original/recovery, or a registry-bound replication."""
 
-    context = (
-        _require_original_remote_context(request.confirmation_token)
-        if request.study == "original-confirmatory"
-        else None
-    )
+    context: OriginalWorkflowContext | RecoveryWorkflowContext | None
+    if request.study == "original-confirmatory":
+        context = _require_original_remote_context(request.confirmation_token)
+    elif request.study == "recovery-replication":
+        context = _require_recovery_remote_context(request.confirmation_token)
+    else:
+        context = None
     manifest = verify_registered_v9_inputs(
         config_path=request.config_path,
         geography_path=request.geography_path,
@@ -379,11 +429,11 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
     if context is not None:
         require_reference_environment(expected["environment"], expected["lock"])
         source_commit = context.source_commit
-        original_identity = None
+        registered_evidence_identity = None
     else:
-        original_identity = _validate_replication_original(
+        registered_evidence_identity = _validate_replication_evidence(
             ReplicationBindingRequest(
-                original_report_path=request.original_report_path,
+                registered_evidence_report_path=(request.registered_evidence_report_path),
                 protocol_hash=protocol_hash,
                 manifest_path=request.scientific_manifest_path,
                 config_path=request.config_path,
@@ -423,18 +473,31 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
     report: dict[str, object] = {
         "schema_version": "delta-statistical-validation-v5",
         "execution_role": request.study,
-        "execution_policy": "tag-authorized-original-once-then-registry-bound-replication",
+        "execution_policy": {
+            "original-confirmatory": "tag-authorized-original-once",
+            "recovery-replication": (
+                "tag-authorized-recovery-replication-after-original-artifact-loss"
+            ),
+            "replication": "registered-evidence-bound-replication",
+        }[request.study],
         "source_commit": source_commit,
         "authorization_tag": (
             context.authorization_tag
             if context is not None
-            else cast(OriginalReportIdentity, original_identity).authorization_tag
+            else cast(RegisteredEvidenceIdentity, registered_evidence_identity).authorization_tag
         ),
         "workflow_run_id": context.workflow_run_id if context is not None else None,
         "workflow_name": context.workflow_name if context is not None else None,
         "workflow_file": ORIGINAL_WORKFLOW_FILE,
-        "original_identity_sha256": (
-            None if original_identity is None else original_identity.canonical_sha256
+        "failed_original_workflow_run_id": (
+            context.failed_original_workflow_run_id
+            if isinstance(context, RecoveryWorkflowContext)
+            else None
+        ),
+        "registered_evidence_identity_sha256": (
+            None
+            if registered_evidence_identity is None
+            else registered_evidence_identity.canonical_sha256
         ),
         "protocol_sha256": protocol_hash,
         "scientific_input_manifest_sha256": sha256_file(request.scientific_manifest_path),
@@ -473,6 +536,11 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
             "strict-load-has-no-numerical-acceptance-gate",
             "automatic-aid-is-a-frozen-teaching-assumption",
             "adverse-results-must-be-published-without-retuning",
+            *(
+                ["recovery-replication-after-original-report-loss"]
+                if request.study == "recovery-replication"
+                else []
+            ),
         ],
     }
     _write_report(request.output_path, report)

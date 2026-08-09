@@ -215,7 +215,7 @@ delta_work_root="$(mktemp -d)"
 ```
 
 Run the safe development study. This mode can access only the 100 declared
-development seeds and cannot load the untouched holdout:
+development seeds and cannot load the registered confirmatory ensemble:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
@@ -229,36 +229,42 @@ committed reference directly:
 ```bash
 .venv/bin/trace-jepa-delta-small replay \
   --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
+  --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
   --output "$delta_work_root/book-v5-replay"
 ```
 
-Only after the verified original report exists, replicate the registered study
-and regenerate publication artifacts:
+Only after the verified recovery-replication report is committed and registered,
+run any later replication or regenerate publication artifacts:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
+  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
   --output "$delta_work_root/validation-replication.json"
 .venv/bin/trace-jepa-delta-small publish \
   --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
   --output "$delta_work_root/book-v5-figures"
 ```
 
-The original `confirmatory-v8` execution is not exposed as a local command. It
-is authorized only by the exact annotated recovery tag
-`wf-dfld-01-small-confirmatory-v8-original-r2`, after the repaired
-preregistration commit is pushed and separately approved. The workflow verifies the immutable tagged
-commit, complete scientific-input manifest, first run attempt, absence of any
-prior successful original run, and digest-pinned environment. The three
-externally visible steps—branch push, authorization-tag push, and result-commit
-push—each require separate approval. Until the tagged workflow runs, no v9
-confirmatory result is claimed; every authorized later execution is a
-replication and must match the committed original-report registry byte-for-byte.
-The earlier tag without the `-r2` suffix produced GitHub run `31285710374`,
-which stopped in its authorization preflight before the study, book, replay, or
-publication steps; no confirmatory seed was accessed. That tag and failed run
-remain immutable audit evidence and are not reused.
+The original `confirmatory-v8` execution is not exposed as a local command. The
+first tag attempt produced run `31285710374` and stopped in authorization
+preflight before any seed was accessed. The corrected original tag produced run
+`31286349320`: all 100 development and 100 confirmatory seed evaluations and the
+book run completed, but replay omitted the explicitly bound validation report.
+Replay failed and the workflow skipped artifact upload, so the original report
+was not retained. Both failures are immutable audit evidence; neither tag is
+reused, and the completed original is never rerun or relabeled as successful.
+
+One separately authorized `recovery-replication` may be triggered by the exact
+annotated tag
+`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. It is explicitly a
+replication, not a second original or an untouched-holdout execution. It binds
+the failed original run through GitHub's API, uses unchanged seeds, mechanics,
+coefficients, algorithms, resources, and gates, passes the registered report to
+replay, and uploads partial evidence even if a later step fails. Branch push,
+recovery-tag push, and result-commit push remain separately approved actions.
+Subsequent replications require the committed registered-evidence report and
+registry byte-for-byte.
 
 The primary v9 operational-load measure is strict one-resource/one-incident
 concurrency. All published peak aggregates are explicitly finite-only and are
@@ -278,8 +284,10 @@ V8 generator mechanics use a reversible controller-visible evidence graph. Hard
 revision/callback links may confirm a relationship; ambiguous soft evidence is
 retained as `suspected` without merging or suppressing dispatch. The canonical
 `evidence-graph-q075` rule was selected on development seeds only. Its paired
-comparison with the immutable old heuristic is preregistered for the untouched
-holdout; no improvement claim is made before that comparison succeeds.
+comparison with the immutable old heuristic was preregistered before the
+original execution. Because the original report was lost, a retained comparison
+can now come only from the separately labeled recovery replication; it cannot
+be described as untouched confirmatory evidence.
 
 ### Development-only evidence
 
@@ -290,20 +298,21 @@ are diagnostics—not confirmatory evidence:
 
 | Development diagnostic | Estimate | 95% interval or range |
 |---|---:|---:|
-| Observed calls per seed | 40.01 | 38.27–41.76 |
-| Hour-four calls per seed | 11.84 | 11.03–12.64 |
+| Observed calls per seed | 40.01 | 38.30–41.76 |
+| Hour-four calls per seed | 11.84 | 11.02–12.65 |
 | Finite strict-load median | 2.00 | 2.00–2.00 |
 | Finite uncapped-load median | 1.50 | 1.50–1.50 |
 | Finite historical normalized-index median | 1.80 | 1.60–2.00 |
 | Strict unserviceable windows per seed | 0.11 | 0.05–0.17 |
-| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.69–9.60 / 17.72–19.52 / 11.40–13.13 |
+| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.69–9.59 / 17.73–19.54 / 11.40–13.09 |
 | Selected-minus-baseline false-merge rate | −0.040 | −0.071–−0.009 |
 | Selected-minus-baseline pairwise recall | −0.024 | −0.039–−0.009 |
 
 The selected graph also had a +0.023 development difference in false-report
-merge rate (95% interval −0.011 to +0.057). This adverse diagnostic is retained;
-the untouched paired confirmatory comparison remains the only basis for a later
-improvement claim.
+merge rate (95% interval −0.011 to +0.058). This adverse diagnostic is retained.
+The registered paired criteria still determine whether the recovery evidence
+supports an improvement, but any such result must be labeled recovery evidence,
+not untouched confirmatory evidence.
 
 The common predictor seam includes a real content-addressed V-JEPA adapter and a
 separate flood-head loader. Heavyweight official-checkpoint encoding is optional
@@ -367,12 +376,14 @@ Delta documentation:
 - [Reconciliation selection report](data/scenario/delta/calibration/v8_reconciliation_selection_v1.json)
 - Acceptance v9: `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` after preregistration
 - [Development report v5](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json)
-- Original validation report v5: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json` after the once-only run
-- Original-report registry: `data/scenario/delta/validation/original_report_registry_v1.json` only after the original report is committed
+- [Immutable original execution failure](docs/delta/validation/WF_DFLD_01_SMALL_ORIGINAL_EXECUTION_FAILURE_V1.md)
+- Recovery-replication report v5: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json` only after recovery
+- Registered-evidence registry: `data/scenario/delta/validation/registered_evidence_registry_v1.json` only after the recovery report is committed
 - Reference bundle v5: `data/scenario/delta/reference/wf_dfld_01_small_book_v5` after publication
 - Figures v5: `docs/delta/figures/wf_dfld_01_small_v5` after publication
 - [Delta package-boundary decision](docs/adr/0001-delta-package-boundaries.md)
 - [Once-only confirmation decision](docs/adr/0002-tag-authorized-original-confirmation.md)
+- [Recovery-replication decision](docs/adr/0003-recovery-replication-after-original-artifact-loss.md)
 - [Refactor equivalence report](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_EQUIVALENCE.json)
 - [Pinned-container performance comparison](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_PERFORMANCE.json)
 

@@ -2,8 +2,10 @@
 
 from trace_jepa.scenario.delta.validation.registered import (
     ORIGINAL_CONFIRMATION_TOKEN,
+    RECOVERY_CONFIRMATION_TOKEN,
     ValidationStudy,
     _require_original_remote_context,
+    _require_recovery_remote_context,
     canonical_v8_paths,
     canonical_v9_paths,
     run_v8_development_validation,
@@ -16,8 +18,10 @@ from trace_jepa.scenario.delta.validation.registered import (
 
 __all__ = [
     "ORIGINAL_CONFIRMATION_TOKEN",
+    "RECOVERY_CONFIRMATION_TOKEN",
     "ValidationStudy",
     "_require_original_remote_context",
+    "_require_recovery_remote_context",
     "canonical_v8_paths",
     "canonical_v9_paths",
     "run_v8_development_validation",

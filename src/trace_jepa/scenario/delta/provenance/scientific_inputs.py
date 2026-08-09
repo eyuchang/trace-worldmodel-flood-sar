@@ -66,6 +66,7 @@ _EXPLICIT_CORE_INPUTS = (
     "data/scenario/delta/geography/build_manifest_v3.json",
     "data/scenario/delta/geography/delta_small_geography_v3.yaml",
     "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json",
+    "data/scenario/delta/validation/original_execution_failure_v1.json",
     "models/manifests/vjepa2_1_vit_base_384.manifest.json",
     "pyproject.toml",
     "requirements-delta-python311.in",

@@ -11,6 +11,7 @@ from trace_jepa.scenario.delta.artifacts import (
     ReplayManifest,
     canonical_json_bytes,
     current_git_commit,
+    sha256_file,
     source_tree_sha256,
     verify_scenario_artifacts,
     write_scenario_artifacts,
@@ -31,6 +32,38 @@ class DeltaExecution:
         self.manifest = manifest
         self.run_result = run_result
         self.execution_receipt = receipt
+
+
+def _bound_replay_validation_report(
+    reference_manifest: ReplayManifest,
+    supplied_path: Path | None,
+) -> Path | None:
+    """Verify the explicit validation input bound by a reference manifest."""
+
+    registered = next(
+        (item for item in reference_manifest.inputs if item.name == "registered_validation_report"),
+        None,
+    )
+    if registered is None:
+        if supplied_path is not None:
+            raise ArtifactMismatchError("reference does not bind a registered validation report")
+        return None
+    if supplied_path is None:
+        raise ArtifactMismatchError(
+            "reference binds a registered validation report; replay requires the "
+            "explicit validation report"
+        )
+    if supplied_path.is_symlink():
+        raise ArtifactMismatchError("replay validation report must not be a symlink")
+    try:
+        resolved = supplied_path.resolve(strict=True)
+    except OSError as exc:
+        raise ArtifactMismatchError("replay validation report is absent") from exc
+    if not resolved.is_file():
+        raise ArtifactMismatchError("replay validation report must be a regular file")
+    if sha256_file(resolved) != registered.sha256:
+        raise ArtifactMismatchError("replay validation report digest differs from reference")
+    return resolved
 
 
 def execute_delta_small(
@@ -97,6 +130,8 @@ def verify_exact_replay(
     reference_root: Path,
     replay_root: Path,
     predictor: ActionPrefixPredictor,
+    *,
+    validation_report_path: Path | None = None,
 ) -> None:
     reference_manifest = verify_scenario_artifacts(reference_root)
     package_root = Path(__file__).resolve().parents[2]
@@ -119,6 +154,9 @@ def verify_exact_replay(
             recorded_commit = str(receipt_payload["source_commit"])
         except (OSError, ValueError, KeyError, TypeError) as exc:
             raise ArtifactMismatchError("modern reference execution receipt is invalid") from exc
+    validation_report_path = _bound_replay_validation_report(
+        reference_manifest, validation_report_path
+    )
     replay = execute_delta_small(
         config_path,
         geography_path,
@@ -126,6 +164,7 @@ def verify_exact_replay(
         replay_root,
         predictor,
         recorded_git_commit=recorded_commit,
+        validation_report_path=validation_report_path,
     )
     if reference_manifest != replay.manifest:
         raise ArtifactMismatchError("replay manifest differs from the reference manifest")

@@ -6,10 +6,12 @@ WF-DFLD-01-SMALL generator v8 is the runnable Tasks 1 and 2 teaching simulator.
 Protocol v9 preserves the v8 scientific mechanics while correcting experiment
 authorization, complete-input freezing, finite-metric labels, replication
 identity, and package architecture. The v7 and v8 registrations were superseded
-before execution. Protocol v9 is frozen before the new `confirmatory-v8` seed
-ensemble is derived. The original report and book-v5 publication bundle remain
-absent until the preregistration commit and exact annotated authorization tag
-are separately approved and pushed.
+before execution. The new `confirmatory-v8` ensemble was frozen and evaluated
+once by original GitHub Actions run `31286349320`. That run completed all 200
+registered seed evaluations but lost its ephemeral report after exact replay
+failed and artifact upload was skipped. The original is never rerun. One
+separately authorized recovery replication may reconstruct the deterministic
+report and publication bundle, but cannot restore untouched-holdout status.
 
 The supported claim is narrow: typed, versioned predictor evidence can be
 gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
@@ -225,8 +227,11 @@ rate relative to the immutable old heuristic while losing no more than 0.05
 absolute recall. The selection report, including the adverse increase in
 development false-report merge rate, is
 `data/scenario/delta/calibration/v8_reconciliation_selection_v1.json`.
-Confirmatory claims require a paired seed-cluster interval whose false-merge
-difference is wholly below zero and recall difference is wholly above −0.05.
+The registered paired endpoint requires a seed-cluster interval whose
+false-merge difference is wholly below zero and recall difference is wholly
+above −0.05. Because the retained report can now come only from a recovery
+replication, it must be labeled recovery evidence rather than an untouched
+confirmatory claim.
 
 The old conditional score appears only in immutable historical reports and is
 not described as complete reconciliation accuracy.
@@ -284,27 +289,35 @@ every member digest and rejects path substitution before loading input.
 
 ## Statistical protocol
 
-The 100 development seeds are the only seeds used for debugging, coefficient
+The 100 development seeds were the only seeds used for debugging, coefficient
 calibration, and reconciliation-algorithm selection. Only after the generator-v8
 mechanics and protocol-v9 code,
 documentation, scientific-input manifest, coefficients, algorithm ID,
-endpoints, and gates are frozen is the untouched holdout derived from
+endpoints, and gates were frozen was the holdout derived from
 `SHA-256("WF-DFLD-01-SMALL|confirmatory-v8|index")` with the unsigned 31-bit
 reduction. Its exact 100 seeds are materialized once in
 `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` at preregistration.
 
-No confirmatory-v8 seed may run locally or before the preregistration branch
-push. Original confirmation is restricted to the exact annotated recovery tag
-`wf-dfld-01-small-confirmatory-v8-original-r2`, the dedicated remote workflow, and
-the canonical container. Branch push, authorization-tag push, and result-commit
-push require separate approval. The earliest successful authorized workflow is
-the original; replication is disabled until a byte-bound original-report
-registry is committed.
+No confirmatory-v8 seed may run locally. Original run `31286349320` was
+authorized by the exact annotated tag
+`wf-dfld-01-small-confirmatory-v8-original-r2`, the dedicated remote workflow,
+and the canonical container. It completed all registered seed evaluations but
+lost its ephemeral report after the replay command omitted the explicitly bound
+validation report. That failed original remains immutable adverse evidence.
 
 The first authorization tag (without the `-r2` suffix) triggered run
 `31285710374`, which failed in tag verification before the registered validator
 or any confirmatory seed was reached. It is preserved as failed-before-execution
 audit evidence and is never reused.
+
+One recovery replication may be authorized by the separately approved tag
+`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. It verifies the
+failed original through GitHub's API, uses the unchanged registered seeds and
+scientific mechanics, and uploads partial evidence after any failure. It is not
+a second original or an untouched-holdout execution. Later replication remains
+disabled until the retained recovery report is committed in a byte-bound
+registered-evidence registry. Branch push, recovery-tag push, and result-commit
+push require separate approval.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from
@@ -345,13 +358,13 @@ delta_work_root="$(mktemp -d)"
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the original remote confirmatory report is published, an independent
-replication must name it explicitly:
+After the recovery-replication report is retained, committed, and registered,
+an independent replication must name that evidence explicitly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --original-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
+  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
   --output "$delta_work_root/validation-replication.json"
 ```
 
