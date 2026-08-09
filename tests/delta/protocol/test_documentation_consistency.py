@@ -135,7 +135,7 @@ def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None
     assert "authoritative offline geography" not in joined.lower()
     assert "--study original-confirmatory" not in README.read_text("utf-8")
     assert "confirmatory-v7 execution" not in README.read_text("utf-8")
-    assert "wf-dfld-01-small-confirmatory-v8-original" in README.read_text("utf-8")
+    assert "wf-dfld-01-small-confirmatory-v8-original-r2" in README.read_text("utf-8")
     for block in re.findall(r"```bash\n(.*?)```", joined, flags=re.DOTALL):
         if "trace-jepa-delta-small validate" in block:
             assert "--study" in block

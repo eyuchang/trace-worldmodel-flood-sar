@@ -50,12 +50,20 @@ derived from
 `SHA-256("WF-DFLD-01-SMALL|confirmatory-v8|index")` with the established
 unsigned-31-bit reduction. They MUST NOT be evaluated locally.
 
-The original execution is authorized only by pushing the exact annotated tag
-`wf-dfld-01-small-confirmatory-v8-original` after separate user approval. The
+The original execution is authorized only by pushing the exact annotated recovery tag
+`wf-dfld-01-small-confirmatory-v8-original-r2` after separate user approval. The
 workflow checks out the tag commit, requires run attempt one, rejects a prior
 successful original run independently of artifact retention, and records its
 complete execution identity. Later runs require a committed original-report
 registry and are labeled replications.
+
+The earlier tag without the `-r2` suffix triggered run `31285710374`, which
+failed during authorization preflight because the checkout action replaced the
+local annotated-tag ref with its peeled commit. The study, book, replay, and
+upload steps were skipped; no confirmatory seed was accessed. That tag and run
+remain immutable. The recovery workflow verifies the remote annotated tag
+object through GitHub's Git data API and otherwise preserves the scientific
+protocol unchanged.
 
 ## Claims and exclusions
 

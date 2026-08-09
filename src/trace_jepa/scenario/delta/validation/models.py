@@ -18,7 +18,7 @@ class OriginalReportIdentity(DeltaModel):
     schema_version: Literal["delta-statistical-validation-v5"]
     execution_role: Literal["original-confirmatory"]
     source_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
-    authorization_tag: Literal["wf-dfld-01-small-confirmatory-v8-original"]
+    authorization_tag: Literal["wf-dfld-01-small-confirmatory-v8-original-r2"]
     workflow_run_id: str = Field(min_length=1)
     workflow_name: str = Field(min_length=1)
     workflow_file: Literal["delta-confirmatory-v8.yml"]
@@ -119,7 +119,7 @@ class OriginalWorkflowContext(DeltaModel):
 
     workflow_run_id: str = Field(min_length=1)
     source_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
-    authorization_tag: Literal["wf-dfld-01-small-confirmatory-v8-original"]
+    authorization_tag: Literal["wf-dfld-01-small-confirmatory-v8-original-r2"]
     workflow_name: str = Field(min_length=1)
     workflow_file: Literal["delta-confirmatory-v8.yml"]
 

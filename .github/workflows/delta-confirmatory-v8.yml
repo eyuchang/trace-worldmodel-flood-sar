@@ -3,14 +3,14 @@ name: Delta confirmatory-v8 original (tag-authorized, once-only)
 on:
   push:
     tags:
-      - wf-dfld-01-small-confirmatory-v8-original
+      - wf-dfld-01-small-confirmatory-v8-original-r2
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: wf-dfld-01-small-confirmatory-v8-original
+  group: wf-dfld-01-small-confirmatory-v8-original-r2
   cancel-in-progress: false
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 45
     env:
       TRACE_DELTA_EXECUTION_ROLE: original-confirmatory
-      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-original
+      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-original-r2
       TRACE_DELTA_WORKFLOW_FILE: delta-confirmatory-v8.yml
     steps:
       - name: Check out the immutable tagged commit
@@ -28,14 +28,33 @@ jobs:
           fetch-depth: 0
 
       - name: Verify tag, commit, and first-attempt authorization
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}"
           test "${GITHUB_RUN_ATTEMPT}" = "1"
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
-          test "$(git cat-file -t "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}")" = "tag"
-          test "$(git rev-list -n 1 "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}")" = "${GITHUB_SHA}"
+          tag_object_sha="$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" \
+              --jq '.object.sha'
+          })"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" \
+              --jq '.object.type'
+          })" = "tag"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.tag'
+          })" = "${TRACE_DELTA_AUTHORIZATION_TAG}"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.object.type'
+          })" = "commit"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.object.sha'
+          })" = "${GITHUB_SHA}"
 
       - name: Refuse any prior successful original for this tag and commit
         env:

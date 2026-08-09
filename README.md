@@ -246,15 +246,19 @@ and regenerate publication artifacts:
 ```
 
 The original `confirmatory-v8` execution is not exposed as a local command. It
-is authorized only by the exact annotated tag
-`wf-dfld-01-small-confirmatory-v8-original`, after the preregistration commit is
-pushed and separately approved. The workflow verifies the immutable tagged
+is authorized only by the exact annotated recovery tag
+`wf-dfld-01-small-confirmatory-v8-original-r2`, after the repaired
+preregistration commit is pushed and separately approved. The workflow verifies the immutable tagged
 commit, complete scientific-input manifest, first run attempt, absence of any
 prior successful original run, and digest-pinned environment. The three
 externally visible steps—branch push, authorization-tag push, and result-commit
 push—each require separate approval. Until the tagged workflow runs, no v9
 confirmatory result is claimed; every authorized later execution is a
 replication and must match the committed original-report registry byte-for-byte.
+The earlier tag without the `-r2` suffix produced GitHub run `31285710374`,
+which stopped in its authorization preflight before the study, book, replay, or
+publication steps; no confirmatory seed was accessed. That tag and failed run
+remain immutable audit evidence and are not reused.
 
 The primary v9 operational-load measure is strict one-resource/one-incident
 concurrency. All published peak aggregates are explicitly finite-only and are
@@ -286,18 +290,18 @@ are diagnostics—not confirmatory evidence:
 
 | Development diagnostic | Estimate | 95% interval or range |
 |---|---:|---:|
-| Observed calls per seed | 40.01 | 38.27–41.72 |
-| Hour-four calls per seed | 11.84 | 11.01–12.66 |
+| Observed calls per seed | 40.01 | 38.27–41.76 |
+| Hour-four calls per seed | 11.84 | 11.03–12.64 |
 | Finite strict-load median | 2.00 | 2.00–2.00 |
 | Finite uncapped-load median | 1.50 | 1.50–1.50 |
 | Finite historical normalized-index median | 1.80 | 1.60–2.00 |
-| Strict unserviceable windows per seed | 0.11 | 0.05–0.18 |
-| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.68–9.60 / 17.70–19.55 / 11.37–13.11 |
+| Strict unserviceable windows per seed | 0.11 | 0.05–0.17 |
+| Allocations / refusals / repairs per seed | 9.15 / 18.62 / 12.24 | 8.69–9.60 / 17.72–19.52 / 11.40–13.13 |
 | Selected-minus-baseline false-merge rate | −0.040 | −0.071–−0.009 |
 | Selected-minus-baseline pairwise recall | −0.024 | −0.039–−0.009 |
 
 The selected graph also had a +0.023 development difference in false-report
-merge rate (95% interval −0.011 to +0.058). This adverse diagnostic is retained;
+merge rate (95% interval −0.011 to +0.057). This adverse diagnostic is retained;
 the untouched paired confirmatory comparison remains the only basis for a later
 improvement claim.
 

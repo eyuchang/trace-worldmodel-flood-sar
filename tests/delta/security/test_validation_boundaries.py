@@ -114,7 +114,7 @@ def test_original_confirmation_requires_exact_tag_and_first_attempt(
         monkeypatch.setenv(name, value)
     with pytest.raises(ValueError, match="exact authorization tag"):
         _require_original_remote_context(ORIGINAL_CONFIRMATION_TOKEN)
-    monkeypatch.setenv("GITHUB_REF", "refs/tags/wf-dfld-01-small-confirmatory-v8-original")
+    monkeypatch.setenv("GITHUB_REF", "refs/tags/wf-dfld-01-small-confirmatory-v8-original-r2")
     monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "2")
     with pytest.raises(ValueError, match="attempt one"):
         _require_original_remote_context(ORIGINAL_CONFIRMATION_TOKEN)
@@ -129,7 +129,7 @@ def test_replication_requires_byte_identical_committed_original_registry(
         "schema_version": "delta-statistical-validation-v5",
         "execution_role": "original-confirmatory",
         "source_commit": "a" * 40,
-        "authorization_tag": "wf-dfld-01-small-confirmatory-v8-original",
+        "authorization_tag": "wf-dfld-01-small-confirmatory-v8-original-r2",
         "workflow_run_id": "123",
         "workflow_name": "Delta confirmatory-v8 original",
         "workflow_file": "delta-confirmatory-v8.yml",
@@ -233,8 +233,11 @@ def test_remote_workflow_uses_exact_tag_and_expiration_independent_once_only_gua
     assert "trace-jepa-delta-small validate" not in superseded
     assert "superseded-before-execution" in superseded
     assert "workflow_dispatch" not in original
-    assert "wf-dfld-01-small-confirmatory-v8-original" in original
+    assert "wf-dfld-01-small-confirmatory-v8-original-r2" in original
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in original
+    assert "git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" in original
+    assert "git/tags/${tag_object_sha}" in original
+    assert "git cat-file -t" not in original
     assert "actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs" in original
     assert "git config --global --add safe.directory /workspace" in original
     assert "listArtifactsForRepo" not in original

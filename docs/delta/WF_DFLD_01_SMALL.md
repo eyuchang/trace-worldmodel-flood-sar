@@ -294,12 +294,17 @@ reduction. Its exact 100 seeds are materialized once in
 `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` at preregistration.
 
 No confirmatory-v8 seed may run locally or before the preregistration branch
-push. Original confirmation is restricted to the exact annotated tag
-`wf-dfld-01-small-confirmatory-v8-original`, the dedicated remote workflow, and
+push. Original confirmation is restricted to the exact annotated recovery tag
+`wf-dfld-01-small-confirmatory-v8-original-r2`, the dedicated remote workflow, and
 the canonical container. Branch push, authorization-tag push, and result-commit
 push require separate approval. The earliest successful authorized workflow is
 the original; replication is disabled until a byte-bound original-report
 registry is committed.
+
+The first authorization tag (without the `-r2` suffix) triggered run
+`31285710374`, which failed in tag verification before the registered validator
+or any confirmatory seed was reached. It is preserved as failed-before-execution
+audit evidence and is never reused.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from

@@ -1,6 +1,6 @@
 # ADR 0002: Tag-authorized, once-only original confirmation
 
-- Status: Accepted, not yet authorized
+- Status: Accepted; recovery authorization not yet granted
 - Date: 2026-08-08
 - Scope: confirmatory-v8 original execution
 
@@ -17,12 +17,23 @@ possible only after the original report is committed and registered.
 
 ## Decision
 
-The original workflow is triggered only by the exact annotated tag
-`wf-dfld-01-small-confirmatory-v8-original`.
+The original workflow is triggered only by the exact annotated recovery tag
+`wf-dfld-01-small-confirmatory-v8-original-r2`.
+
+The first authorization tag, `wf-dfld-01-small-confirmatory-v8-original`,
+triggered GitHub Actions run `31285710374`. The checkout action peeled the
+annotated tag and rewrote its local tag ref to the commit, causing the local
+tag-object assertion to fail. The registered study, book, replay, and upload
+steps were all skipped, so no confirmatory seed was accessed. The failed run
+and tag remain immutable. The recovery changes only authorization verification:
+it verifies the annotated tag object through GitHub's Git data API and requires
+that object to target `github.sha`; it does not alter seeds, coefficients,
+algorithms, gates, or simulator mechanics.
 
 The workflow:
 
-1. checks out `github.sha` and verifies that the annotated tag resolves to it;
+1. checks out `github.sha` and verifies through the remote Git data API that the
+   annotated authorization tag resolves to it;
 2. refuses any run attempt other than attempt one;
 3. queries workflow-run history for a prior successful run with the same tag and
    source commit, independent of artifact retention;
@@ -42,7 +53,10 @@ SHA-256, and typed identity.
 
 - The holdout cannot be selected by a user-supplied commit input.
 - Expiring artifacts do not weaken once-only detection.
-- A failed original remains the original and must be published without retuning.
+- A failure after registered study execution begins remains original evidence
+  and must be published without retuning. A preflight failure before any seed
+  access may be superseded only by an explicit, documented recovery tag that
+  preserves the scientific inputs and holdout.
 - Deleting and recreating the authorization tag is insufficient to authorize a
   second original because workflow history is checked.
 - GitHub administrators could still rewrite repository history or workflow-run

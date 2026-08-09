@@ -43,7 +43,7 @@ from trace_jepa.scenario.delta.validation_v7 import run_v7_study
 
 ValidationStudy = Literal["development", "original-confirmatory", "replication"]
 ORIGINAL_CONFIRMATION_TOKEN = "EXECUTE-CONFIRMATORY-V8-ORIGINAL-ONCE"
-ORIGINAL_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-original"
+ORIGINAL_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-original-r2"
 ORIGINAL_WORKFLOW_FILE = "delta-confirmatory-v8.yml"
 
 
