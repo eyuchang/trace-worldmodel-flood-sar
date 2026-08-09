@@ -29,12 +29,12 @@ class ScientificInputManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: str = "delta-scientific-input-manifest-v2"
-    scope: str = "WF-DFLD-01-SMALL-v9"
+    schema_version: str = "delta-scientific-input-manifest-v3"
+    scope: str = "WF-DFLD-01-SMALL-v10-artifact-reconstruction"
     members: list[ScientificInputMember] = Field(min_length=1)
     core_aggregate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     aggregate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    acceptance_member_path: str = "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
+    acceptance_member_path: str = "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml"
     exclusions: tuple[str, ...] = (
         "generated reports",
         "reference bundles",
@@ -50,15 +50,17 @@ class ScientificInputManifest(BaseModel):
         if paths != sorted(paths) or len(paths) != len(set(paths)):
             raise ValueError("scientific-input members must be unique and sorted")
         if self.acceptance_member_path not in paths:
-            raise ValueError("scientific-input manifest must include acceptance v9")
+            raise ValueError("scientific-input manifest must include acceptance v10")
         return self
 
 
 _EXPLICIT_CORE_INPUTS = (
+    ".github/workflows/delta-artifact-reconstruction-v8.yml",
     ".github/workflows/delta-confirmatory-v8.yml",
     "configs/models/vjepa2_1_base.yaml",
     "configs/policies/trace_delta_small_v1.yaml",
     "configs/scenarios/wf_dfld_01_small.yaml",
+    "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
     "data/scenario/delta/calibration/v7_process_coefficients_v1.json",
     "data/scenario/delta/calibration/v8_process_coefficients_v1.json",
     "data/scenario/delta/calibration/v8_reconciliation_selection_v1.json",
@@ -67,6 +69,7 @@ _EXPLICIT_CORE_INPUTS = (
     "data/scenario/delta/geography/delta_small_geography_v3.yaml",
     "data/scenario/delta/resources/rio_vista_fire_source_extract_v1.json",
     "data/scenario/delta/validation/original_execution_failure_v1.json",
+    "data/scenario/delta/validation/recovery_execution_failure_v1.json",
     "models/manifests/vjepa2_1_vit_base_384.manifest.json",
     "pyproject.toml",
     "requirements-delta-python311.in",
@@ -106,7 +109,7 @@ def scientific_input_paths(
 
     paths = {repository_root / relative for relative in _EXPLICIT_CORE_INPUTS}
     if include_acceptance:
-        paths.add(repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml")
+        paths.add(repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml")
     paths.update((repository_root / "src/trace_jepa").rglob("*.py"))
     paths.update((repository_root / "scripts").glob("*.py"))
     paths.update((repository_root / "data/scenario/delta/geography/sources").glob("*"))
@@ -134,7 +137,7 @@ def build_scientific_input_manifest(repository_root: Path) -> ScientificInputMan
         )
         for path in scientific_input_paths(repository_root)
     ]
-    acceptance_path = "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
+    acceptance_path = "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml"
     core_members = [member for member in members if member.path != acceptance_path]
     return ScientificInputManifest(
         members=members,

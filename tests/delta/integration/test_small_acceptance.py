@@ -34,7 +34,7 @@ GEOGRAPHY_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/delta_small_ge
 GEOGRAPHY_MANIFEST_PATH = REPOSITORY_ROOT / "data/scenario/delta/geography/build_manifest_v3.json"
 POLICY_PATH = REPOSITORY_ROOT / "configs/policies/trace_delta_small_v1.yaml"
 DEVELOPMENT_REPORT_PATH = (
-    REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json"
+    REPOSITORY_ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json"
 )
 
 

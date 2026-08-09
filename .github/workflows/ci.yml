@@ -96,15 +96,15 @@ jobs:
           python -c "from pathlib import Path;
           from trace_jepa.scenario.delta.scientific_manifest import verify_scientific_input_manifest;
           verify_scientific_input_manifest(Path('.'),
-          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json'))"
-      - name: Verify committed Delta book v5 when published
+          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json'))"
+      - name: Verify committed Delta book v6 when published
         shell: bash
         run: |
-          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v5 ]]; then
+          if [[ -d data/scenario/delta/reference/wf_dfld_01_small_book_v6 ]]; then
             trace-jepa-delta-small replay \
-              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
-              --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
-              --output "${RUNNER_TEMP}/delta-book-v5-replay"
+              --reference data/scenario/delta/reference/wf_dfld_01_small_book_v6 \
+              --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
+              --output "${RUNNER_TEMP}/delta-book-v6-replay"
           fi
       - name: Reject whitespace errors across the complete branch diff
         shell: bash

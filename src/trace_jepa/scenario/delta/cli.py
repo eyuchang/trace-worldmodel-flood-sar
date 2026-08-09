@@ -9,9 +9,9 @@ from typing import Any, cast
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.scenario.delta.pipeline import execute_delta_small, verify_exact_replay
 from trace_jepa.scenario.delta.publication import publish_reference_bundle
-from trace_jepa.scenario.delta.validation_v8 import (
-    run_v8_development_validation,
-    run_v8_registered_validation,
+from trace_jepa.scenario.delta.validation import (
+    run_v10_development_validation,
+    run_v10_registered_validation,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ def _defaults() -> dict[str, Path]:
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
+        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml",
         "scientific_manifest": repository_root
-        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json",
+        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json",
     }
 
 
@@ -72,6 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
             "development",
             "original-confirmatory",
             "recovery-replication",
+            "artifact-reconstruction-replication",
             "replication",
         ),
         required=True,
@@ -151,7 +152,7 @@ def main() -> None:
             else arguments.output / f"WF_DFLD_01_SMALL_{arguments.study.upper()}.json"
         )
         if arguments.study == "development":
-            report = run_v8_development_validation(
+            report = run_v10_development_validation(
                 config_path=arguments.config,
                 geography_path=arguments.geography,
                 policy_path=arguments.policy,
@@ -160,7 +161,7 @@ def main() -> None:
             )
             seed_count = cast(dict[str, Any], report["study"])["seed_count"]
         else:
-            report = run_v8_registered_validation(
+            report = run_v10_registered_validation(
                 study=arguments.study,
                 config_path=arguments.config,
                 geography_path=arguments.geography,

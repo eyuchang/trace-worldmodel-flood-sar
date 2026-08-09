@@ -272,7 +272,7 @@ class ValidationSummaryBuilder:
 
     def _schema(self) -> str:
         if self.is_v8:
-            return "delta-small-validation-summary-v5"
+            return "delta-small-validation-summary-v6"
         return (
             "delta-small-validation-summary-v3"
             if self.is_modern
@@ -281,7 +281,7 @@ class ValidationSummaryBuilder:
 
     def _acceptance_path(self) -> Path:
         name = (
-            "wf_dfld_01_small_acceptance_v5.yaml"
+            "wf_dfld_01_small_acceptance_v6.yaml"
             if self.is_v8
             else (
                 "wf_dfld_01_small_acceptance_v3.yaml"

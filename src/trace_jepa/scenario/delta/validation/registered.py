@@ -29,6 +29,7 @@ from trace_jepa.scenario.delta.validation.gates import (
 from trace_jepa.scenario.delta.validation.models import (
     DevelopmentValidationRequest,
     OriginalWorkflowContext,
+    ReconstructionWorkflowContext,
     RecoveryWorkflowContext,
     RegisteredEvidenceIdentity,
     RegisteredValidationRequest,
@@ -46,31 +47,40 @@ ValidationStudy = Literal[
     "development",
     "original-confirmatory",
     "recovery-replication",
+    "artifact-reconstruction-replication",
     "replication",
 ]
 ORIGINAL_CONFIRMATION_TOKEN = "EXECUTE-CONFIRMATORY-V8-ORIGINAL-ONCE"
 ORIGINAL_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-original-r2"
 RECOVERY_CONFIRMATION_TOKEN = "EXECUTE-CONFIRMATORY-V8-RECOVERY-REPLICATION-V1-ONCE"
 RECOVERY_AUTHORIZATION_TAG = "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1"
+RECONSTRUCTION_CONFIRMATION_TOKEN = (
+    "EXECUTE-CONFIRMATORY-V8-ARTIFACT-RECONSTRUCTION-REPLICATION-V1-ONCE"
+)
+RECONSTRUCTION_AUTHORIZATION_TAG = (
+    "wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1"
+)
 FAILED_ORIGINAL_WORKFLOW_RUN_ID = "31286349320"
+FAILED_RECOVERY_WORKFLOW_RUN_ID = "31289293944"
 ORIGINAL_WORKFLOW_FILE = "delta-confirmatory-v8.yml"
+RECONSTRUCTION_WORKFLOW_FILE = "delta-artifact-reconstruction-v8.yml"
 
 
 def _repository_root() -> Path:
     return Path(__file__).resolve().parents[5]
 
 
-def canonical_v9_paths(repository_root: Path) -> dict[str, Path]:
-    """Return the only inputs admitted to a v9 registered execution."""
+def canonical_v10_paths(repository_root: Path) -> dict[str, Path]:
+    """Return the only inputs admitted to a v10 registered execution."""
 
     return {
         "config": repository_root / "configs/scenarios/wf_dfld_01_small.yaml",
         "geography": repository_root
         / "data/scenario/delta/geography/delta_small_geography_v3.yaml",
         "policy": repository_root / "configs/policies/trace_delta_small_v1.yaml",
-        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml",
+        "acceptance": repository_root / "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml",
         "scientific_manifest": repository_root
-        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json",
+        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json",
         "environment": repository_root
         / "data/scenario/delta/environment/python311_linux_amd64_v1.json",
         "lock": repository_root / "requirements-delta-python311.lock",
@@ -80,7 +90,8 @@ def canonical_v9_paths(repository_root: Path) -> dict[str, Path]:
 
 
 # One-release API compatibility; values intentionally point to the current protocol.
-canonical_v8_paths = canonical_v9_paths
+canonical_v9_paths = canonical_v10_paths
+canonical_v8_paths = canonical_v10_paths
 
 
 def _canonical_file(label: str, supplied: Path, expected: Path) -> Path:
@@ -93,7 +104,7 @@ def _canonical_file(label: str, supplied: Path, expected: Path) -> Path:
     return resolved_supplied
 
 
-def verify_registered_v9_inputs(
+def verify_registered_v10_inputs(
     *,
     config_path: Path,
     geography_path: Path,
@@ -104,7 +115,7 @@ def verify_registered_v9_inputs(
     """Reject path substitution and verify every frozen scientific input."""
 
     root = _repository_root()
-    expected = canonical_v9_paths(root)
+    expected = canonical_v10_paths(root)
     _canonical_file("scenario configuration", config_path, expected["config"])
     _canonical_file("geography catalog", geography_path, expected["geography"])
     _canonical_file("policy", policy_path, expected["policy"])
@@ -118,7 +129,8 @@ def verify_registered_v9_inputs(
     return verify_scientific_input_manifest(root, scientific_manifest_path)
 
 
-verify_registered_v8_inputs = verify_registered_v9_inputs
+verify_registered_v9_inputs = verify_registered_v10_inputs
+verify_registered_v8_inputs = verify_registered_v10_inputs
 
 
 def _write_report(output_path: Path, report: dict[str, object]) -> None:
@@ -132,13 +144,13 @@ def _run_development(request: DevelopmentValidationRequest) -> dict[str, object]
     """Run only the already-inspected development ensemble."""
 
     root = _repository_root()
-    expected = canonical_v9_paths(root)
+    expected = canonical_v10_paths(root)
     _canonical_file("scenario configuration", request.config_path, expected["config"])
     _canonical_file("geography catalog", request.geography_path, expected["geography"])
     _canonical_file("policy", request.policy_path, expected["policy"])
     manifest: ScientificInputManifest | None = None
     if request.scientific_manifest_path.is_file():
-        manifest = verify_registered_v9_inputs(
+        manifest = verify_registered_v10_inputs(
             config_path=request.config_path,
             geography_path=request.geography_path,
             policy_path=request.policy_path,
@@ -155,10 +167,10 @@ def _run_development(request: DevelopmentValidationRequest) -> dict[str, object]
         raise ValueError("development scientific-input path was substituted")
     config = load_scenario_config(request.config_path)
     if config.generator_version != "delta-small-generator-v8":
-        raise ValueError("development-v9 requires generator v8")
+        raise ValueError("development-v10 requires generator v8")
     seeds = list(range(20260803, 20260903))
     study = run_v7_study(
-        study_id="development-v9",
+        study_id="development-v10",
         seeds=seeds,
         config_path=request.config_path,
         geography_path=request.geography_path,
@@ -170,7 +182,7 @@ def _run_development(request: DevelopmentValidationRequest) -> dict[str, object]
         config_path=request.config_path,
         geography_path=request.geography_path,
         protocol_hash=protocol_hash,
-        study_id="development-v9",
+        study_id="development-v10",
     )
     study["registered_gate_evaluation"] = {
         "protocol_role": "development-only-no-confirmatory-gates",
@@ -179,7 +191,7 @@ def _run_development(request: DevelopmentValidationRequest) -> dict[str, object]
         ),
     }
     report: dict[str, object] = {
-        "schema_version": "delta-statistical-validation-v5",
+        "schema_version": "delta-statistical-validation-v6",
         "execution_role": "development",
         "confirmatory_seeds_accessed": False,
         "scientific_input_manifest_sha256": manifest_hash,
@@ -202,13 +214,14 @@ def _run_development(request: DevelopmentValidationRequest) -> dict[str, object]
     return report
 
 
-def run_v9_development_validation(**kwargs: object) -> dict[str, object]:
+def run_v10_development_validation(**kwargs: object) -> dict[str, object]:
     """Compatibility facade that validates a typed development request."""
 
     return _run_development(DevelopmentValidationRequest.model_validate(kwargs))
 
 
-run_v8_development_validation = run_v9_development_validation
+run_v9_development_validation = run_v10_development_validation
+run_v8_development_validation = run_v10_development_validation
 
 
 def _require_original_remote_context(
@@ -285,18 +298,62 @@ def _require_recovery_remote_context(
     )
 
 
+def _require_reconstruction_remote_context(
+    confirmation_token: str | None,
+) -> ReconstructionWorkflowContext:
+    """Admit one reconstruction bound to both immutable evidence-retention failures."""
+
+    if confirmation_token != RECONSTRUCTION_CONFIRMATION_TOKEN:
+        raise ValueError("artifact reconstruction requires its explicit authorization token")
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        raise ValueError("artifact reconstruction is restricted to GitHub Actions")
+    execution_role = os.environ.get("TRACE_DELTA_EXECUTION_ROLE")
+    if execution_role != "artifact-reconstruction-replication":
+        raise ValueError("artifact reconstruction requires the dedicated workflow role")
+    ref = os.environ.get("GITHUB_REF")
+    if ref != f"refs/tags/{RECONSTRUCTION_AUTHORIZATION_TAG}":
+        raise ValueError("artifact reconstruction requires the exact authorization tag")
+    if os.environ.get("GITHUB_RUN_ATTEMPT") != "1":
+        raise ValueError("artifact reconstruction is restricted to workflow run attempt one")
+    workflow_file = os.environ.get("TRACE_DELTA_WORKFLOW_FILE")
+    if workflow_file != RECONSTRUCTION_WORKFLOW_FILE:
+        raise ValueError("artifact reconstruction requires the dedicated workflow file")
+    failed_original_run = os.environ.get("TRACE_DELTA_FAILED_ORIGINAL_RUN_ID")
+    if failed_original_run != FAILED_ORIGINAL_WORKFLOW_RUN_ID:
+        raise ValueError("artifact reconstruction does not bind the failed original")
+    failed_recovery_run = os.environ.get("TRACE_DELTA_FAILED_RECOVERY_RUN_ID")
+    if failed_recovery_run != FAILED_RECOVERY_WORKFLOW_RUN_ID:
+        raise ValueError("artifact reconstruction does not bind the failed recovery")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    source_commit = os.environ.get("GITHUB_SHA")
+    workflow_name = os.environ.get("GITHUB_WORKFLOW")
+    if not run_id or not source_commit or not workflow_name:
+        raise ValueError("artifact-reconstruction workflow provenance is incomplete")
+    if current_git_commit(_repository_root()) != source_commit:
+        raise ValueError("checked-out reconstruction source does not match GITHUB_SHA")
+    return ReconstructionWorkflowContext(
+        workflow_run_id=run_id,
+        source_commit=source_commit,
+        authorization_tag=RECONSTRUCTION_AUTHORIZATION_TAG,
+        workflow_name=workflow_name,
+        workflow_file=RECONSTRUCTION_WORKFLOW_FILE,
+        failed_original_workflow_run_id=FAILED_ORIGINAL_WORKFLOW_RUN_ID,
+        failed_recovery_workflow_run_id=FAILED_RECOVERY_WORKFLOW_RUN_ID,
+    )
+
+
 def _bound_protocol(
     acceptance_path: Path,
     manifest: ScientificInputManifest,
 ) -> tuple[DeltaSmallAcceptanceConfig, list[int]]:
     protocol = load_acceptance_config(acceptance_path)
-    if protocol.schema_version != "delta-small-acceptance-v9":
-        raise ValueError("registered v9 validation requires acceptance v9")
+    if protocol.schema_version != "delta-small-acceptance-v10":
+        raise ValueError("registered v10 validation requires acceptance v10")
     if protocol.scientific_input_core_aggregate_sha256 != manifest.core_aggregate_sha256:
         raise ValueError("acceptance protocol does not bind the scientific-input core")
     confirmatory = protocol.v8_confirmatory_ensemble
     if confirmatory is None or len(confirmatory.seeds) != 100:
-        raise ValueError("acceptance v9 requires exactly 100 confirmatory-v8 seeds")
+        raise ValueError("acceptance v10 requires exactly 100 confirmatory-v8 seeds")
     return protocol, list(confirmatory.seeds)
 
 
@@ -323,7 +380,7 @@ def _validate_replication_evidence(
         "geography_sha256": sha256_file(request.geography_path),
         "policy_sha256": sha256_file(request.policy_path),
         "seed_list": request.confirmatory_seeds,
-        "study_ids": ("development-v9", "confirmatory-v8-primary"),
+        "study_ids": ("development-v10", "confirmatory-v8-artifact-reconstruction"),
         "study_seed_counts": (100, 100),
         "baseline_reconciliation_algorithm": "baseline-v7-heuristic",
         "selected_reconciliation_algorithm": "evidence-graph-q075",
@@ -345,7 +402,7 @@ def _study_bundle(
     )
     studies = [
         run_v7_study(
-            study_id="development-v9",
+            study_id="development-v10",
             seeds=development_seeds,
             config_path=request.config_path,
             geography_path=request.geography_path,
@@ -353,7 +410,7 @@ def _study_bundle(
             protocol_hash=request.protocol_hash,
         ),
         run_v7_study(
-            study_id="confirmatory-v8-primary",
+            study_id="confirmatory-v8-artifact-reconstruction",
             seeds=list(request.confirmatory_seeds),
             config_path=request.config_path,
             geography_path=request.geography_path,
@@ -366,7 +423,7 @@ def _study_bundle(
         config_path=request.config_path,
         geography_path=request.geography_path,
         protocol_hash=request.protocol_hash,
-        study_id="confirmatory-v8-primary",
+        study_id="confirmatory-v8-artifact-reconstruction",
     )
     return studies, paired
 
@@ -407,16 +464,20 @@ def _book_summary(
 
 
 def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
-    """Execute an authorized original/recovery, or a registry-bound replication."""
+    """Execute an authorized remote role or a registry-bound replication."""
 
-    context: OriginalWorkflowContext | RecoveryWorkflowContext | None
+    context: (
+        OriginalWorkflowContext | RecoveryWorkflowContext | ReconstructionWorkflowContext | None
+    )
     if request.study == "original-confirmatory":
         context = _require_original_remote_context(request.confirmation_token)
     elif request.study == "recovery-replication":
         context = _require_recovery_remote_context(request.confirmation_token)
+    elif request.study == "artifact-reconstruction-replication":
+        context = _require_reconstruction_remote_context(request.confirmation_token)
     else:
         context = None
-    manifest = verify_registered_v9_inputs(
+    manifest = verify_registered_v10_inputs(
         config_path=request.config_path,
         geography_path=request.geography_path,
         policy_path=request.policy_path,
@@ -424,7 +485,7 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
         scientific_manifest_path=request.scientific_manifest_path,
     )
     protocol, confirmatory_seeds = _bound_protocol(request.acceptance_path, manifest)
-    expected = canonical_v9_paths(_repository_root())
+    expected = canonical_v10_paths(_repository_root())
     protocol_hash = sha256_file(request.acceptance_path)
     if context is not None:
         require_reference_environment(expected["environment"], expected["lock"])
@@ -471,12 +532,15 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
     studies[1]["registered_gate_evaluation"] = confirmatory_gate_values
 
     report: dict[str, object] = {
-        "schema_version": "delta-statistical-validation-v5",
+        "schema_version": "delta-statistical-validation-v6",
         "execution_role": request.study,
         "execution_policy": {
             "original-confirmatory": "tag-authorized-original-once",
             "recovery-replication": (
                 "tag-authorized-recovery-replication-after-original-artifact-loss"
+            ),
+            "artifact-reconstruction-replication": (
+                "tag-authorized-deterministic-reconstruction-after-two-artifact-losses"
             ),
             "replication": "registered-evidence-bound-replication",
         }[request.study],
@@ -488,10 +552,19 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
         ),
         "workflow_run_id": context.workflow_run_id if context is not None else None,
         "workflow_name": context.workflow_name if context is not None else None,
-        "workflow_file": ORIGINAL_WORKFLOW_FILE,
+        "workflow_file": (
+            context.workflow_file
+            if context is not None
+            else cast(RegisteredEvidenceIdentity, registered_evidence_identity).workflow_file
+        ),
         "failed_original_workflow_run_id": (
             context.failed_original_workflow_run_id
-            if isinstance(context, RecoveryWorkflowContext)
+            if isinstance(context, (RecoveryWorkflowContext, ReconstructionWorkflowContext))
+            else None
+        ),
+        "failed_recovery_workflow_run_id": (
+            context.failed_recovery_workflow_run_id
+            if isinstance(context, ReconstructionWorkflowContext)
             else None
         ),
         "registered_evidence_identity_sha256": (
@@ -541,16 +614,25 @@ def _run_registered(request: RegisteredValidationRequest) -> dict[str, object]:
                 if request.study == "recovery-replication"
                 else []
             ),
+            *(
+                [
+                    "artifact-reconstruction-after-original-and-recovery-report-loss",
+                    "confirmatory-seeds-previously-consumed-not-untouched",
+                ]
+                if request.study == "artifact-reconstruction-replication"
+                else []
+            ),
         ],
     }
     _write_report(request.output_path, report)
     return report
 
 
-def run_v9_registered_validation(**kwargs: object) -> dict[str, object]:
+def run_v10_registered_validation(**kwargs: object) -> dict[str, object]:
     """Compatibility facade that validates a typed registered request."""
 
     return _run_registered(RegisteredValidationRequest.model_validate(kwargs))
 
 
-run_v8_registered_validation = run_v9_registered_validation
+run_v9_registered_validation = run_v10_registered_validation
+run_v8_registered_validation = run_v10_registered_validation

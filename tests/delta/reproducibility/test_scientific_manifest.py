@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() -> None:
-    acceptance = ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml"
+    acceptance = ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml"
     if not acceptance.is_file():
         paths = {
             path.relative_to(ROOT).as_posix()
@@ -35,6 +35,8 @@ def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() ->
     assert "src/trace_jepa/predictor/toy_qualification_v1.json" in paths
     assert "src/trace_jepa/experimental/revalidation.py" in paths
     assert "data/scenario/delta/geography/build_manifest_v3.json" in paths
+    assert ".github/workflows/delta-artifact-reconstruction-v8.yml" in paths
+    assert "data/scenario/delta/validation/recovery_execution_failure_v1.json" in paths
     assert any(path.startswith("data/scenario/delta/geography/sources/") for path in paths)
     assert not any(
         path.startswith(("data/scenario/delta/reference/", "docs/delta/validation/"))
@@ -52,7 +54,7 @@ def test_manifest_covers_runtime_predictor_trace_data_and_geography_sources() ->
 
 
 def test_manifest_rejects_member_substitution() -> None:
-    if not (ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml").is_file():
+    if not (ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml").is_file():
         pytest.skip("complete manifest is created only by the preregistration commit")
     output = ROOT / "data/scenario/delta/provenance/test_tampered_manifest.json"
     try:

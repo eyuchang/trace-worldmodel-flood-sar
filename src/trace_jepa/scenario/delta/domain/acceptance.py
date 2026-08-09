@@ -126,6 +126,7 @@ class DeltaSmallAcceptanceConfig(DeltaModel):
     v7_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
     v8_confirmatory_registered_utc: datetime | None = None
     v8_confirmatory_ensemble: AcceptanceConfirmatoryEnsemble | None = None
+    artifact_reconstruction_registered_utc: datetime | None = None
     registration_erratum: str | None = None
     frozen_input_sha256: dict[str, str] = Field(default_factory=dict)
     scientific_input_manifest_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
@@ -189,6 +190,28 @@ def _validate_v9(config: DeltaSmallAcceptanceConfig) -> None:
         raise ValueError("acceptance v9 forbids historical ratio targets")
 
 
+def _validate_v10(config: DeltaSmallAcceptanceConfig) -> None:
+    if config.artifact_reconstruction_registered_utc is None:
+        raise ValueError("acceptance v10 requires an artifact-reconstruction timestamp")
+    ensemble = config.v8_confirmatory_ensemble
+    if ensemble is None or "confirmatory-v8" not in ensemble.derivation:
+        raise ValueError("acceptance v10 must preserve the consumed confirmatory-v8 seeds")
+    if "artifact_reconstruction_is_explicitly_not_untouched" not in ensemble.protocol_role:
+        raise ValueError("acceptance v10 must label reconstruction evidence as non-untouched")
+    expected_manifest = "data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json"
+    if config.scientific_input_manifest_path != expected_manifest:
+        raise ValueError("acceptance v10 must name scientific manifest v3")
+    if config.scientific_input_core_aggregate_sha256 is None:
+        raise ValueError("acceptance v10 must bind the self-reference-free core aggregate")
+    if config.scientific_input_manifest_sha256 is not None:
+        raise ValueError("acceptance v10 cannot contain its enclosing manifest hash")
+    if config.registration_erratum is None:
+        raise ValueError("acceptance v10 must preserve both failed execution records")
+    _validate_modern_common(config, "v10")
+    if any(value is not None for value in _legacy_ratio_gates(config)):
+        raise ValueError("acceptance v10 forbids historical ratio targets")
+
+
 def _validate_v8(config: DeltaSmallAcceptanceConfig) -> None:
     if config.v8_confirmatory_registered_utc is None:
         raise ValueError("acceptance v8 requires a registration timestamp field")
@@ -247,6 +270,7 @@ def _validate_v5(config: DeltaSmallAcceptanceConfig) -> None:
 
 def _validate_protocol(config: DeltaSmallAcceptanceConfig) -> None:
     validators = {
+        "delta-small-acceptance-v10": _validate_v10,
         "delta-small-acceptance-v9": _validate_v9,
         "delta-small-acceptance-v8": _validate_v8,
         "delta-small-acceptance-v7": _validate_v7,

@@ -114,7 +114,7 @@ qualified or used by the canonical walkthrough.
 - Primary workbench: D0.5 browser interface
 - Geography: OpenStreetMap-derived road and waterway graphs
 - Experimental evaluation layer: **RQ5 revalidation-guard protocol** (optional; off by default in the teaching gate)
-- Delta research surface: **WF-DFLD-01-SMALL generator v8 / protocol v9**, headless and deterministic
+- Delta research surface: **WF-DFLD-01-SMALL generator v8 / protocol v10**, headless and deterministic
 - Delta canonical predictor: transparent Toy teaching fixture
 - Delta learned-predictor status: MLP and V-JEPA are **unqualified**
 
@@ -223,27 +223,27 @@ development seeds and cannot load the registered confirmatory ensemble:
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the write-once v9 report and book bundle have been published, verify the
+After the registered reconstruction report and book bundle have been published, verify the
 committed reference directly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small replay \
-  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
-  --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
-  --output "$delta_work_root/book-v5-replay"
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v6 \
+  --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
+  --output "$delta_work_root/book-v6-replay"
 ```
 
-Only after the verified recovery-replication report is committed and registered,
+Only after the verified artifact-reconstruction report is committed and registered,
 run any later replication or regenerate publication artifacts:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
+  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
   --output "$delta_work_root/validation-replication.json"
 .venv/bin/trace-jepa-delta-small publish \
-  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v5 \
-  --output "$delta_work_root/book-v5-figures"
+  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v6 \
+  --output "$delta_work_root/book-v6-figures"
 ```
 
 The original `confirmatory-v8` execution is not exposed as a local command. The
@@ -255,18 +255,27 @@ Replay failed and the workflow skipped artifact upload, so the original report
 was not retained. Both failures are immutable audit evidence; neither tag is
 reused, and the completed original is never rerun or relabeled as successful.
 
-One separately authorized `recovery-replication` may be triggered by the exact
-annotated tag
-`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. It is explicitly a
-replication, not a second original or an untouched-holdout execution. It binds
-the failed original run through GitHub's API, uses unchanged seeds, mechanics,
-coefficients, algorithms, resources, and gates, passes the registered report to
-replay, and uploads partial evidence even if a later step fails. Branch push,
-recovery-tag push, and result-commit push remain separately approved actions.
-Subsequent replications require the committed registered-evidence report and
-registry byte-for-byte.
+The separately authorized recovery tag produced run `31289293944`. Its pinned
+container completed all 200 registered seed evaluations, the book run,
+byte-identical replay, and publication generation. Host-side upload then failed
+because a container-root-owned hidden-lineage file retained owner-only
+permissions. GitHub discovered 66 files but retained no artifact. This is an
+evidence-export failure, not a scientific-computation failure; the recovery is
+never rerun or relabeled.
 
-The primary v9 operational-load measure is strict one-resource/one-incident
+At most one separately authorized `artifact-reconstruction-replication` may
+recreate the lost deterministic files under protocol v10. Its exact annotated
+tag is
+`wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1`.
+It binds both failed runs through GitHub's API, uses unchanged seeds, mechanics,
+coefficients, algorithms, resources, gates, and reference environment, and
+transfers ownership only for the four explicit output paths before upload. It
+is not an original, a recovery, or untouched confirmatory evidence. Branch
+push, reconstruction-tag push, and result-commit push are separately approved
+actions. Subsequent replications require the committed registered-evidence
+report and registry byte-for-byte.
+
+The primary v10 operational-load measure is strict one-resource/one-incident
 concurrency. All published peak aggregates are explicitly finite-only and are
 reported beside their corresponding unserviceable-window counts. The serialized
 fields are `peak_finite_strict_concurrent_load_ratio_milli`,
@@ -275,7 +284,7 @@ fields are `peak_finite_strict_concurrent_load_ratio_milli`,
 `peak_finite_residual_strict_pressure_ratio_milli`. The v6 value of 1.5 is
 retained only as the historical
 `registered_normalized_coverable_load_index`; it is not relabeled as conventional
-demand/capacity. V9 reports strict, uncapped compatible-service-unit, and
+demand/capacity. V10 reports strict, uncapped compatible-service-unit, and
 historical normalized measures together and has no post-hoc strict-ratio gate.
 Services scheduled beyond the six-hour window remain busy and are reported as
 `active_at_scenario_censoring`, never as completed.
@@ -285,21 +294,21 @@ revision/callback links may confirm a relationship; ambiguous soft evidence is
 retained as `suspected` without merging or suppressing dispatch. The canonical
 `evidence-graph-q075` rule was selected on development seeds only. Its paired
 comparison with the immutable old heuristic was preregistered before the
-original execution. Because the original report was lost, a retained comparison
-can now come only from the separately labeled recovery replication; it cannot
-be described as untouched confirmatory evidence.
+original execution. Because neither executed report was retained, a retained
+comparison can now come only from the separately labeled artifact-reconstruction
+replication; it cannot be described as untouched confirmatory evidence.
 
 ### Development-only evidence
 
 The frozen 100-seed development study is
-[recorded here](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json).
+[recorded here](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json).
 These seeds were used for calibration and algorithm selection, so the results
 are diagnostics—not confirmatory evidence:
 
 | Development diagnostic | Estimate | 95% interval or range |
 |---|---:|---:|
-| Observed calls per seed | 40.01 | 38.30–41.76 |
-| Hour-four calls per seed | 11.84 | 11.02–12.65 |
+| Observed calls per seed | 40.01 | 38.28–41.74 |
+| Hour-four calls per seed | 11.84 | 11.04–12.65 |
 | Finite strict-load median | 2.00 | 2.00–2.00 |
 | Finite uncapped-load median | 1.50 | 1.50–1.50 |
 | Finite historical normalized-index median | 1.80 | 1.60–2.00 |
@@ -309,10 +318,10 @@ are diagnostics—not confirmatory evidence:
 | Selected-minus-baseline pairwise recall | −0.024 | −0.039–−0.009 |
 
 The selected graph also had a +0.023 development difference in false-report
-merge rate (95% interval −0.011 to +0.058). This adverse diagnostic is retained.
-The registered paired criteria still determine whether the recovery evidence
-supports an improvement, but any such result must be labeled recovery evidence,
-not untouched confirmatory evidence.
+merge rate (95% interval −0.012 to +0.058). This adverse diagnostic is retained.
+The registered paired criteria still determine whether reconstruction evidence
+supports an improvement, but any such result must be labeled deterministic
+reconstruction evidence, not untouched confirmatory evidence.
 
 The common predictor seam includes a real content-addressed V-JEPA adapter and a
 separate flood-head loader. Heavyweight official-checkpoint encoding is optional
@@ -362,7 +371,8 @@ artifact, MLP and V-JEPA evidence fails closed and high-consequence actions HOLD
 
 Delta documentation:
 
-- [Frozen generator-v8 / protocol-v9 methodology](docs/delta/WF_DFLD_01_SMALL.md)
+- [Frozen generator-v8 / protocol-v10 methodology](docs/delta/WF_DFLD_01_SMALL.md)
+- [Protocol v10 artifact-reconstruction preregistration](docs/delta/WF_DFLD_01_SMALL_V10_PROTOCOL.md)
 - [V9 pre-push remediation protocol](docs/delta/WF_DFLD_01_SMALL_V9_PROTOCOL.md)
 - [V8 remediation protocol](docs/delta/WF_DFLD_01_SMALL_V8_PROTOCOL.md)
 - [Superseded unexecuted v7 protocol](docs/delta/WF_DFLD_01_SMALL_V7_PROTOCOL.md)
@@ -371,23 +381,25 @@ Delta documentation:
 - [Observation, reconciliation, and capacity protocol](docs/delta/OBSERVATION_AND_CAPACITY_PROTOCOL.md)
 - [Predictor qualification table](docs/delta/PREDICTOR_QUALIFICATION.md)
 - [V2 amendment and retained history](docs/delta/WF_DFLD_01_SMALL_V2_AMENDMENT.md)
-- Scientific-input manifest v2: `data/scenario/delta/provenance/v8_scientific_input_manifest_v2.json` after preregistration
+- Scientific-input manifest v3: `data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json` after preregistration
 - [Process calibration report](data/scenario/delta/calibration/v8_process_coefficients_v1.json)
 - [Reconciliation selection report](data/scenario/delta/calibration/v8_reconciliation_selection_v1.json)
-- Acceptance v9: `configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` after preregistration
-- [Development report v5](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json)
+- Acceptance v10: `configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml` after preregistration
+- [Development report v6](docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json)
 - [Immutable original execution failure](docs/delta/validation/WF_DFLD_01_SMALL_ORIGINAL_EXECUTION_FAILURE_V1.md)
-- Recovery-replication report v5: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json` only after recovery
-- Registered-evidence registry: `data/scenario/delta/validation/registered_evidence_registry_v1.json` only after the recovery report is committed
-- Reference bundle v5: `data/scenario/delta/reference/wf_dfld_01_small_book_v5` after publication
-- Figures v5: `docs/delta/figures/wf_dfld_01_small_v5` after publication
+- [Immutable recovery execution failure](docs/delta/validation/WF_DFLD_01_SMALL_RECOVERY_EXECUTION_FAILURE_V1.md)
+- Artifact-reconstruction report v6: `docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json` only after authorized reconstruction
+- Registered-evidence registry: `data/scenario/delta/validation/registered_evidence_registry_v1.json` only after the reconstruction report is committed
+- Reference bundle v6: `data/scenario/delta/reference/wf_dfld_01_small_book_v6` after publication
+- Figures v6: `docs/delta/figures/wf_dfld_01_small_v6` after publication
 - [Delta package-boundary decision](docs/adr/0001-delta-package-boundaries.md)
 - [Once-only confirmation decision](docs/adr/0002-tag-authorized-original-confirmation.md)
 - [Recovery-replication decision](docs/adr/0003-recovery-replication-after-original-artifact-loss.md)
+- [Artifact-reconstruction decision](docs/adr/0004-artifact-reconstruction-after-recovery-upload-failure.md)
 - [Refactor equivalence report](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_EQUIVALENCE.json)
 - [Pinned-container performance comparison](docs/delta/validation/WF_DFLD_01_SMALL_REFACTOR_PERFORMANCE.json)
 
-Every post-holdout numerical statement must be generated from the v5 book
+Every post-holdout numerical statement must be generated from the v6 book
 bundle's machine-readable publication table. Small uses a synthetic,
 nonrepresentative cohort; simulation-grade geography; reduced-order uncalibrated
 hydrology; and a frozen preauthorized-automatic-aid teaching assumption. It is

@@ -78,6 +78,13 @@ untouched-holdout status. Later replications remain disabled until the retained
 recovery report is committed in a byte-bound registered-evidence registry. See
 ADR 0003.
 
+Post-execution addendum: recovery run `31289293944` completed the registered
+study, book run, byte-identical replay, and publication generation. Its upload
+then failed because a protected container-root-owned file was unreadable to the
+host uploader; GitHub retained zero artifacts. The recovery is not rerun.
+Protocol v10 and ADR 0004 govern any separately authorized deterministic
+artifact reconstruction.
+
 ## Claims and exclusions
 
 Supported claims concern deterministic generation, causal axis isolation,

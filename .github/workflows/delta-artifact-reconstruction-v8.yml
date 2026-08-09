@@ -1,0 +1,237 @@
+name: Delta confirmatory-v8 artifact reconstruction (tag-authorized, once-only)
+
+on:
+  push:
+    tags:
+      - wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TRACE_DELTA_EXECUTION_ROLE: artifact-reconstruction-replication
+      TRACE_DELTA_AUTHORIZATION_TAG: wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1
+      TRACE_DELTA_FAILED_ORIGINAL_RUN_ID: "31286349320"
+      TRACE_DELTA_FAILED_ORIGINAL_COMMIT: 991a628828c3fa1400372cb2a6e390cb76cbf47f
+      TRACE_DELTA_FAILED_ORIGINAL_TAG: wf-dfld-01-small-confirmatory-v8-original-r2
+      TRACE_DELTA_FAILED_RECOVERY_RUN_ID: "31289293944"
+      TRACE_DELTA_FAILED_RECOVERY_COMMIT: 6f83ea5b6fc54a0b28b65174e02ed40bec38b339
+      TRACE_DELTA_FAILED_RECOVERY_TAG: wf-dfld-01-small-confirmatory-v8-recovery-replication-v1
+      TRACE_DELTA_WORKFLOW_FILE: delta-artifact-reconstruction-v8.yml
+    steps:
+      - name: Check out the immutable tagged commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag, commit, and first-attempt authorization
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/tags/${TRACE_DELTA_AUTHORIZATION_TAG}"
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          tag_object_sha="$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" \
+              --jq '.object.sha'
+          })"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TRACE_DELTA_AUTHORIZATION_TAG}" \
+              --jq '.object.type'
+          })" = "tag"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.tag'
+          })" = "${TRACE_DELTA_AUTHORIZATION_TAG}"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.object.type'
+          })" = "commit"
+          test "$({
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" --jq '.object.sha'
+          })" = "${GITHUB_SHA}"
+
+      - name: Verify the immutable failed original execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.head_sha'
+          })" = "${TRACE_DELTA_FAILED_ORIGINAL_COMMIT}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.head_branch'
+          })" = "${TRACE_DELTA_FAILED_ORIGINAL_TAG}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+              --jq '.run_attempt'
+          })" = "1"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Execute the original study in the exact reference container") | .conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Upload source-bound original evidence") | .conclusion'
+          })" = "skipped"
+
+      - name: Verify the immutable failed recovery execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}" \
+              --jq '.conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}" \
+              --jq '.head_sha'
+          })" = "${TRACE_DELTA_FAILED_RECOVERY_COMMIT}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}" \
+              --jq '.head_branch'
+          })" = "${TRACE_DELTA_FAILED_RECOVERY_TAG}"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}" \
+              --jq '.run_attempt'
+          })" = "1"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Execute the registered recovery replication in the exact reference container") | .conclusion'
+          })" = "success"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.name == "validate") | .steps[] | select(.name == "Upload source-bound recovery evidence") | .conclusion'
+          })" = "failure"
+          test "$({
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}/artifacts" \
+              --jq '.total_count'
+          })" = "0"
+
+      - name: Refuse any prior reconstruction for this tag and commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          prior="$({
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_DELTA_WORKFLOW_FILE}/runs?event=push&per_page=100" \
+              --jq ".workflow_runs[] | select(.head_sha == \"${GITHUB_SHA}\" and .head_branch == \"${TRACE_DELTA_AUTHORIZATION_TAG}\" and .event == \"push\" and .id != ${GITHUB_RUN_ID}) | .id"
+          } | wc -l | tr -d ' ')"
+          test "${prior}" = "0"
+
+      - name: Reconstruct the registered evidence in the exact reference container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_WORKFLOW="${GITHUB_WORKFLOW}" \
+            --env TRACE_DELTA_AUTHORIZATION_TAG="${TRACE_DELTA_AUTHORIZATION_TAG}" \
+            --env TRACE_DELTA_EXECUTION_ROLE="${TRACE_DELTA_EXECUTION_ROLE}" \
+            --env TRACE_DELTA_FAILED_ORIGINAL_RUN_ID="${TRACE_DELTA_FAILED_ORIGINAL_RUN_ID}" \
+            --env TRACE_DELTA_FAILED_RECOVERY_RUN_ID="${TRACE_DELTA_FAILED_RECOVERY_RUN_ID}" \
+            --env TRACE_DELTA_WORKFLOW_FILE="${TRACE_DELTA_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --volume "${RUNNER_TEMP}:/output" \
+            --workdir /workspace \
+            docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d \
+            sh -ec '
+              git config --global --add safe.directory /workspace
+              python -m pip install --require-hashes -r requirements-delta-python311.lock
+              python -m pip install -e . --no-deps
+              python scripts/verify_delta_reference_environment.py \
+                --contract data/scenario/delta/environment/python311_linux_amd64_v1.json \
+                --lock requirements-delta-python311.lock \
+                --require-match
+              trace-jepa-delta-small validate \
+                --study artifact-reconstruction-replication \
+                --confirmation-token EXECUTE-CONFIRMATORY-V8-ARTIFACT-RECONSTRUCTION-REPLICATION-V1-ONCE \
+                --acceptance configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml \
+                --scientific-manifest data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json \
+                --output /output/WF_DFLD_01_SMALL_VALIDATION_V6.json
+              trace-jepa-delta-small run \
+                --validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V6.json \
+                --output /output/wf_dfld_01_small_book_v6
+              trace-jepa-delta-small replay \
+                --reference /output/wf_dfld_01_small_book_v6 \
+                --validation-report /output/WF_DFLD_01_SMALL_VALIDATION_V6.json \
+                --output /output/wf_dfld_01_small_book_v6_replay
+              trace-jepa-delta-small publish \
+                --reference /output/wf_dfld_01_small_book_v6 \
+                --output /output/wf_dfld_01_small_book_v6_publication
+            '
+
+      - name: Transfer exact output ownership to the host uploader
+        id: prepare_outputs
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          paths=(
+            "${RUNNER_TEMP}/WF_DFLD_01_SMALL_VALIDATION_V6.json"
+            "${RUNNER_TEMP}/wf_dfld_01_small_book_v6"
+            "${RUNNER_TEMP}/wf_dfld_01_small_book_v6_replay"
+            "${RUNNER_TEMP}/wf_dfld_01_small_book_v6_publication"
+          )
+          for path in "${paths[@]}"; do
+            if [[ ! -e "${path}" ]]; then
+              continue
+            fi
+            if [[ -L "${path}" ]] || sudo find -P "${path}" -xdev -type l -print -quit | grep -q .; then
+              echo "refusing symlinked reconstruction output: ${path}" >&2
+              exit 1
+            fi
+            sudo chown -R -- "$(id -u):$(id -g)" "${path}"
+          done
+
+      - name: Upload source-bound reconstruction evidence
+        if: ${{ always() && steps.prepare_outputs.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: delta-confirmatory-v8-artifact-reconstruction-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/WF_DFLD_01_SMALL_VALIDATION_V6.json
+            ${{ runner.temp }}/wf_dfld_01_small_book_v6
+            ${{ runner.temp }}/wf_dfld_01_small_book_v6_replay
+            ${{ runner.temp }}/wf_dfld_01_small_book_v6_publication
+          if-no-files-found: warn
+          retention-days: 90

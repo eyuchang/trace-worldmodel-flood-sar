@@ -1,17 +1,17 @@
-# WF-DFLD-01-SMALL generator-v8 / protocol-v9 methodology
+# WF-DFLD-01-SMALL generator-v8 / protocol-v10 methodology
 
 ## Status and supported claim
 
 WF-DFLD-01-SMALL generator v8 is the runnable Tasks 1 and 2 teaching simulator.
-Protocol v9 preserves the v8 scientific mechanics while correcting experiment
-authorization, complete-input freezing, finite-metric labels, replication
-identity, and package architecture. The v7 and v8 registrations were superseded
-before execution. The new `confirmatory-v8` ensemble was frozen and evaluated
-once by original GitHub Actions run `31286349320`. That run completed all 200
-registered seed evaluations but lost its ephemeral report after exact replay
-failed and artifact upload was skipped. The original is never rerun. One
-separately authorized recovery replication may reconstruct the deterministic
-report and publication bundle, but cannot restore untouched-holdout status.
+Protocol v10 preserves every v8 scientific mechanic while versioning evidence
+reconstruction after two retention failures. Original run `31286349320`
+completed all 200 registered seed evaluations but lost its ephemeral report
+after replay failed. Recovery run `31289293944` completed the same registered
+study, book run, byte-identical replay, and publication generation, but
+host-side upload could not read a protected container-root-owned file. GitHub
+retained no artifact from either run. Neither run is retried or relabeled. At
+most one separately authorized artifact-reconstruction replication may recreate
+the deterministic files; it cannot restore untouched-holdout status.
 
 The supported claim is narrow: typed, versioned predictor evidence can be
 gated, revised, committed, persisted, evaluated, and replayed through TRACE in a
@@ -33,7 +33,7 @@ Delta UI—remain excluded.
 | Coordination | `delta-coordination-v1` |
 | Reconciliation | `delta-reconciliation-v3`; selected `evidence-graph-q075` |
 | Capacity | `delta-demand-capacity-v5` |
-| Acceptance / validation | `delta-small-acceptance-v9` / `delta-statistical-validation-v5` |
+| Acceptance / validation | `delta-small-acceptance-v10` / `delta-statistical-validation-v6` |
 | Replay | `delta-replay-manifest-v6` plus a separate execution receipt |
 | Book seed | `20260803`, descriptive walkthrough only |
 | Time | 2026-01-15 12:00–18:00 PST; five-minute physical ticks |
@@ -229,9 +229,9 @@ development false-report merge rate, is
 `data/scenario/delta/calibration/v8_reconciliation_selection_v1.json`.
 The registered paired endpoint requires a seed-cluster interval whose
 false-merge difference is wholly below zero and recall difference is wholly
-above −0.05. Because the retained report can now come only from a recovery
-replication, it must be labeled recovery evidence rather than an untouched
-confirmatory claim.
+above −0.05. Because the retained report can now come only from an artifact
+reconstruction, it must be labeled deterministic reconstruction evidence rather
+than an untouched confirmatory claim.
 
 The old conditional score appears only in immutable historical reports and is
 not described as complete reconciliation accuracy.
@@ -296,7 +296,10 @@ documentation, scientific-input manifest, coefficients, algorithm ID,
 endpoints, and gates were frozen was the holdout derived from
 `SHA-256("WF-DFLD-01-SMALL|confirmatory-v8|index")` with the unsigned 31-bit
 reduction. Its exact 100 seeds are materialized once in
-`configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` at preregistration.
+`configs/scenarios/wf_dfld_01_small_acceptance_v5.yaml` at the original
+preregistration. Protocol v10 preserves the exact list in
+`configs/scenarios/wf_dfld_01_small_acceptance_v6.yaml`; it does not derive a
+replacement holdout.
 
 No confirmatory-v8 seed may run locally. Original run `31286349320` was
 authorized by the exact annotated tag
@@ -310,14 +313,20 @@ The first authorization tag (without the `-r2` suffix) triggered run
 or any confirmatory seed was reached. It is preserved as failed-before-execution
 audit evidence and is never reused.
 
-One recovery replication may be authorized by the separately approved tag
-`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. It verifies the
-failed original through GitHub's API, uses the unchanged registered seeds and
-scientific mechanics, and uploads partial evidence after any failure. It is not
-a second original or an untouched-holdout execution. Later replication remains
-disabled until the retained recovery report is committed in a byte-bound
-registered-evidence registry. Branch push, recovery-tag push, and result-commit
-push require separate approval.
+Recovery run `31289293944` was authorized by the separately approved tag
+`wf-dfld-01-small-confirmatory-v8-recovery-replication-v1`. All computation and
+replay steps succeeded, but upload failed with a host/container ownership
+mismatch after discovering 66 files. GitHub retained zero artifacts. This run
+is immutable adverse evidence and is never rerun.
+
+One artifact reconstruction may be separately authorized by
+`wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1`.
+It verifies both failures through GitHub's API and changes only versioned
+governance plus the exact-output ownership transfer at the CI export boundary.
+It is not original, recovery, or untouched confirmatory evidence. Later
+replication remains disabled until the retained reconstruction report is
+committed in a byte-bound registered-evidence registry. Branch push,
+reconstruction-tag push, and result-commit push require separate approval.
 
 Inference treats one complete seed as the cluster. Means and fractions use a
 deterministic 10,000-resample cluster bootstrap whose randomness derives from
@@ -333,7 +342,7 @@ load values are reported, but strict load has no numerical gate. Any holdout
 failure must be published without tuning or seed replacement.
 
 The frozen development-only report is
-`docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json`. It records 40.01
+`docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json`. It records 40.01
 mean calls, an hour-four mean of 11.84 whose 95% interval contains 12, a 2.0
 finite strict-load median, and nonzero allocation, refusal, and repair means.
 The selected evidence graph reduced development false-merge rate relative to
@@ -358,13 +367,13 @@ delta_work_root="$(mktemp -d)"
   --output "$delta_work_root/development-validation.json"
 ```
 
-After the recovery-replication report is retained, committed, and registered,
+After the artifact-reconstruction report is retained, committed, and registered,
 an independent replication must name that evidence explicitly:
 
 ```bash
 .venv/bin/trace-jepa-delta-small validate \
   --study replication \
-  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json \
+  --registered-evidence-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json \
   --output "$delta_work_root/validation-replication.json"
 ```
 

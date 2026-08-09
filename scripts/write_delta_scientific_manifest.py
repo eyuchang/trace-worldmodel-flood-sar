@@ -7,7 +7,7 @@ from trace_jepa.scenario.delta.scientific_manifest import write_scientific_input
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Freeze the v8 Delta scientific input manifest.")
+    parser = argparse.ArgumentParser(description="Freeze the Delta artifact-reconstruction inputs.")
     parser.add_argument("--repository", type=Path, default=Path.cwd())
     parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args()

@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 README = ROOT / "README.md"
 DELTA_DOCS = (
     ROOT / "docs/delta/WF_DFLD_01_SMALL.md",
+    ROOT / "docs/delta/WF_DFLD_01_SMALL_V10_PROTOCOL.md",
     ROOT / "docs/delta/GEOGRAPHY_DATA_CARD.md",
     ROOT / "docs/delta/HYDROLOGY_MODEL_CARD.md",
     ROOT / "docs/delta/OBSERVATION_AND_CAPACITY_PROTOCOL.md",
@@ -29,7 +30,7 @@ def test_readme_relative_markdown_links_resolve() -> None:
         assert (ROOT / relative).exists(), f"README link does not resolve: {target}"
 
 
-def test_readme_matches_v9_default_contract_and_environment() -> None:
+def test_readme_matches_v10_default_contract_and_environment() -> None:
     payload = README.read_text("utf-8")
     defaults = _defaults()
     assert all(defaults[name].is_file() for name in ("config", "geography", "policy"))
@@ -40,7 +41,7 @@ def test_readme_matches_v9_default_contract_and_environment() -> None:
     assert config.generator_version == "delta-small-generator-v8"
     if defaults["acceptance"].is_file():
         acceptance = load_acceptance_config(defaults["acceptance"])
-        assert acceptance.schema_version == "delta-small-acceptance-v9"
+        assert acceptance.schema_version == "delta-small-acceptance-v10"
         assert defaults["scientific_manifest"].is_file()
     else:
         assert not defaults["scientific_manifest"].is_file()
@@ -99,7 +100,7 @@ def test_readme_historical_1_5_label_is_supported_by_immutable_table() -> None:
 
 def test_readme_development_values_match_the_canonical_report() -> None:
     report = json.loads(
-        (ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V5.json").read_text("utf-8")
+        (ROOT / "docs/delta/validation/WF_DFLD_01_SMALL_DEVELOPMENT_V6.json").read_text("utf-8")
     )
     study = report["study"]
     readme = README.read_text("utf-8")
@@ -156,8 +157,9 @@ def test_documented_delta_commands_cannot_accidentally_execute_holdout() -> None
     assert "confirmatory-v7 execution" not in README.read_text("utf-8")
     readme = README.read_text("utf-8")
     assert "wf-dfld-01-small-confirmatory-v8-original-r2" not in readme
-    assert "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1" in readme
-    assert "recovery replication" in readme.lower()
+    assert "wf-dfld-01-small-confirmatory-v8-recovery-replication-v1" not in readme
+    assert "wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1" in readme
+    assert "artifact-reconstruction-replication" in readme.lower()
     assert "cannot be described as untouched confirmatory evidence" in " ".join(readme.split())
     for block in re.findall(r"```bash\n(.*?)```", joined, flags=re.DOTALL):
         if "trace-jepa-delta-small validate" in block:

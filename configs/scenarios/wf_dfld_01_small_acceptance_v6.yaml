@@ -1,0 +1,201 @@
+schema_version: delta-small-acceptance-v10
+registered_utc: "2026-08-09T02:04:34Z"
+book_seed: 20260803
+book_seed_role: descriptive_walkthrough_not_confirmatory
+development_ensemble:
+  first_seed: 20260803
+  seed_count: 100
+v8_confirmatory_registered_utc: "2026-08-08T23:03:15Z"
+artifact_reconstruction_registered_utc: "2026-08-09T02:04:34Z"
+v8_confirmatory_ensemble:
+  derivation: "sha256-u31:WF-DFLD-01-SMALL|confirmatory-v8|index"
+  protocol_role: originally_untouched_holdout_consumed_by_failed_original_run_31286349320_and_recomputed_by_failed_recovery_run_31289293944_artifact_reconstruction_is_explicitly_not_untouched
+  seeds:
+    - 862642517
+    - 581643209
+    - 1869293120
+    - 991015013
+    - 989349487
+    - 489527482
+    - 2000983836
+    - 896289482
+    - 88977071
+    - 1180257983
+    - 1092737945
+    - 2073556924
+    - 429995168
+    - 647981800
+    - 1964059051
+    - 1349830739
+    - 626738276
+    - 257855056
+    - 199561504
+    - 433473498
+    - 832421259
+    - 218123854
+    - 1744561794
+    - 1871875373
+    - 702990586
+    - 1197807965
+    - 1876209507
+    - 43171586
+    - 546566439
+    - 728724058
+    - 965826185
+    - 2081733301
+    - 1747464610
+    - 1769668961
+    - 1651785442
+    - 1089586207
+    - 448036094
+    - 1086488219
+    - 672285966
+    - 135836430
+    - 606873811
+    - 1590105925
+    - 500811382
+    - 836826404
+    - 1409763104
+    - 1462952736
+    - 330959393
+    - 1542683096
+    - 1666989933
+    - 644600408
+    - 1972220661
+    - 2031975337
+    - 1610025772
+    - 1878455571
+    - 1657103719
+    - 628909416
+    - 162569815
+    - 1224669203
+    - 529685989
+    - 1384143550
+    - 1095170531
+    - 1316237752
+    - 1037427018
+    - 1002180205
+    - 302790880
+    - 1582498223
+    - 1047612770
+    - 99072281
+    - 1845333776
+    - 661488207
+    - 1682221610
+    - 1358198531
+    - 1593665361
+    - 1252558239
+    - 155396780
+    - 2087178701
+    - 2068844219
+    - 655112713
+    - 1725578515
+    - 862371920
+    - 495818300
+    - 510633852
+    - 1253847078
+    - 1316510719
+    - 652059849
+    - 102054914
+    - 344841277
+    - 545233242
+    - 1669605917
+    - 2058986271
+    - 1160362344
+    - 2110063562
+    - 1780205742
+    - 397940678
+    - 897709946
+    - 262904895
+    - 1296231620
+    - 1551144531
+    - 1467974894
+    - 1092977872
+registration_erratum: >-
+  Acceptance v9, scientific manifest v2, and both executed workflows remain
+  immutable protocol history. Original run 31286349320 completed all registered
+  seed evaluations but lost its ephemeral report after replay omitted the bound
+  validation input. Recovery run 31289293944 completed all 200 registered seed
+  evaluations, the book run, byte-identical replay, and publication generation,
+  but host-side artifact upload could not read a container-root-owned hidden
+  lineage file. GitHub retained zero artifacts. Neither run is rerun or relabeled.
+  Protocol v10 authorizes at most one deterministic artifact-reconstruction
+  replication using unchanged scientific mechanics and the already-consumed
+  confirmatory-v8 seeds. It is explicitly not original, recovery, or untouched
+  confirmatory evidence.
+scientific_input_manifest_path: data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json
+scientific_input_manifest_sha256: null
+scientific_input_core_aggregate_sha256: 3337810e69d9fa575fc4acd50e182cea076321c1db0933a5abef6a7830918527
+protocol_amendment: >-
+  Protocol v10 preserves generator-v8 truth, observations, resources,
+  reconciliation, seeds, coefficients, gates, policy, and reference environment.
+  It adds exact provenance for recovery run 31289293944, a separately tagged
+  artifact-reconstruction role, and a workflow-local ownership transfer for only
+  the four generated output paths before host-side upload. Restrictive atomic
+  write permissions remain unchanged. No scientific result was observed from a
+  retained report, and no simulator or evaluation parameter was retuned.
+call_process:
+  expected_total_mean: 40.0
+  total_mean_absolute_tolerance: 2.5
+  configured_peak_intensity_per_hour: 12.0
+observation_channel:
+  small_information_quality: 0.9
+  expected_duplicate_fraction: 0.070
+  expected_callback_failure_fraction: 0.101
+  expected_false_levee_fraction: 0.124
+  expected_multi_channel_fraction: 0.044
+  expected_nonreporting_fraction: 0.107
+  expected_revision_fraction: 0.120
+  fraction_absolute_tolerance: 0.04
+  expected_point_estimates:
+    callback_failure: 0.101
+    conflicting_report: 0.060
+    dropped_call: 0.043
+    duplicate: 0.070
+    false_report: 0.124
+    location_cell_sector: 0.181
+    location_gps_or_address_intersection: 0.551
+    location_landmark: 0.269
+    multi_channel: 0.044
+    nonreporting: 0.107
+    revision: 0.120
+  point_absolute_tolerances:
+    callback_failure: 0.04
+    conflicting_report: 0.04
+    dropped_call: 0.03
+    duplicate: 0.04
+    false_report: 0.04
+    location_cell_sector: 0.04
+    location_gps_or_address_intersection: 0.04
+    location_landmark: 0.04
+    multi_channel: 0.03
+    nonreporting: 0.04
+    revision: 0.04
+demand_capacity:
+  target_peak_ratio: null
+  book_seed_minimum: null
+  book_seed_maximum: null
+  confirmatory_median_minimum: null
+  confirmatory_median_maximum: null
+  book_allocation_share_minimum: 0.25
+  book_allocation_share_maximum: 0.75
+  primary_metric: strict_concurrent_load_ratio
+  strict_numerical_gate: null
+  historical_sensitivity_metric: registered_normalized_coverable_load_index
+reconciliation_comparison:
+  selected_algorithm_id: evidence-graph-q075
+  immutable_baseline_algorithm_id: baseline-v7-heuristic
+  primary_endpoint: seed_level_paired_false_merge_rate_difference_selected_minus_baseline
+  recall_noninferiority_margin: -0.05
+  false_merge_claim_rule: upper_95_below_zero
+  recall_claim_rule: lower_95_strictly_above_negative_0_05
+inference:
+  schema_version: delta-seed-cluster-inference-v2
+  seed_cluster_unit: one_complete_seed_run
+  bootstrap_resamples: 10000
+  bootstrap_seed_derivation: "sha256(protocol_hash|metric_name|cluster-bootstrap-v1)"
+  mean_and_fraction_interval: deterministic_cluster_percentile_bootstrap
+  median_interval: exact_binomial_order_statistic
+  call_pooling_as_independent_observations: false
+performance:
+  maximum_generate_run_replay_s: 55.0

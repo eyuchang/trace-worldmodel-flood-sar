@@ -21,16 +21,18 @@ from trace_jepa.scenario.delta.validation.models import (
 )
 from trace_jepa.scenario.delta.validation_v8 import (
     ORIGINAL_CONFIRMATION_TOKEN,
+    RECONSTRUCTION_CONFIRMATION_TOKEN,
     RECOVERY_CONFIRMATION_TOKEN,
     _require_original_remote_context,
+    _require_reconstruction_remote_context,
     _require_recovery_remote_context,
-    canonical_v9_paths,
-    run_v8_development_validation,
-    verify_registered_v8_inputs,
+    canonical_v10_paths,
+    run_v10_development_validation,
+    verify_registered_v10_inputs,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
-CANONICAL = canonical_v9_paths(ROOT)
+CANONICAL = canonical_v10_paths(ROOT)
 
 
 def test_validate_requires_an_explicit_study_role(tmp_path: Path) -> None:
@@ -44,7 +46,7 @@ def test_registered_validation_rejects_substituted_config_before_loading(
     alternate = tmp_path / "same-bytes-different-path.yaml"
     shutil.copyfile(CANONICAL["config"], alternate)
     with pytest.raises(ValueError, match="path was substituted"):
-        verify_registered_v8_inputs(
+        verify_registered_v10_inputs(
             config_path=alternate,
             geography_path=CANONICAL["geography"],
             policy_path=CANONICAL["policy"],
@@ -75,7 +77,7 @@ def test_development_mode_uses_only_declared_development_seeds(
         "trace_jepa.scenario.delta.validation.registered.paired_reconciliation_report",
         fake_paired,
     )
-    report = run_v8_development_validation(
+    report = run_v10_development_validation(
         config_path=CANONICAL["config"],
         geography_path=CANONICAL["geography"],
         policy_path=CANONICAL["policy"],
@@ -164,6 +166,37 @@ def test_recovery_replication_requires_exact_tag_attempt_and_failed_run(
     context = _require_recovery_remote_context(RECOVERY_CONFIRMATION_TOKEN)
     assert context.failed_original_workflow_run_id == "31286349320"
     assert context.source_commit == current_git_commit(ROOT)
+
+
+def test_artifact_reconstruction_requires_both_failed_runs_and_exact_remote_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    with pytest.raises(ValueError, match="restricted to GitHub Actions"):
+        _require_reconstruction_remote_context(RECONSTRUCTION_CONFIRMATION_TOKEN)
+
+    environment = {
+        "GITHUB_ACTIONS": "true",
+        "TRACE_DELTA_EXECUTION_ROLE": "artifact-reconstruction-replication",
+        "GITHUB_REF": (
+            "refs/tags/wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1"
+        ),
+        "GITHUB_RUN_ATTEMPT": "1",
+        "TRACE_DELTA_WORKFLOW_FILE": "delta-artifact-reconstruction-v8.yml",
+        "TRACE_DELTA_FAILED_ORIGINAL_RUN_ID": "31286349320",
+        "TRACE_DELTA_FAILED_RECOVERY_RUN_ID": "wrong",
+        "GITHUB_RUN_ID": "789",
+        "GITHUB_SHA": current_git_commit(ROOT),
+        "GITHUB_WORKFLOW": "Delta confirmatory-v8 artifact reconstruction",
+    }
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+    with pytest.raises(ValueError, match="failed recovery"):
+        _require_reconstruction_remote_context(RECONSTRUCTION_CONFIRMATION_TOKEN)
+    monkeypatch.setenv("TRACE_DELTA_FAILED_RECOVERY_RUN_ID", "31289293944")
+    context = _require_reconstruction_remote_context(RECONSTRUCTION_CONFIRMATION_TOKEN)
+    assert context.failed_original_workflow_run_id == "31286349320"
+    assert context.failed_recovery_workflow_run_id == "31289293944"
 
 
 def test_replication_requires_byte_identical_committed_evidence_registry(
@@ -280,6 +313,45 @@ def test_recovery_report_identity_binds_failed_original_execution() -> None:
         RegisteredEvidenceIdentity.model_validate(payload)
 
 
+def test_reconstruction_report_identity_binds_both_failed_executions() -> None:
+    payload = {
+        "schema_version": "delta-statistical-validation-v6",
+        "execution_role": "artifact-reconstruction-replication",
+        "source_commit": "a" * 40,
+        "authorization_tag": (
+            "wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1"
+        ),
+        "failed_original_workflow_run_id": "31286349320",
+        "failed_recovery_workflow_run_id": "31289293944",
+        "workflow_run_id": "789",
+        "workflow_name": "Delta confirmatory-v8 artifact reconstruction",
+        "workflow_file": "delta-artifact-reconstruction-v8.yml",
+        "protocol_sha256": "b" * 64,
+        "scientific_input_manifest_sha256": "c" * 64,
+        "scientific_input_aggregate_sha256": "d" * 64,
+        "scientific_input_core_aggregate_sha256": "e" * 64,
+        "environment_contract_sha256": "f" * 64,
+        "dependency_lock_sha256": "1" * 64,
+        "scenario_configuration_sha256": "2" * 64,
+        "geography_sha256": "3" * 64,
+        "policy_sha256": "4" * 64,
+        "seed_list": tuple(range(100)),
+        "study_ids": ("development-v10", "confirmatory-v8-artifact-reconstruction"),
+        "study_seed_counts": (100, 100),
+        "baseline_reconciliation_algorithm": "baseline-v7-heuristic",
+        "selected_reconciliation_algorithm": "evidence-graph-q075",
+    }
+    identity = RegisteredEvidenceIdentity.model_validate(payload)
+    assert identity.failed_recovery_workflow_run_id == "31289293944"
+    payload["workflow_file"] = "delta-confirmatory-v8.yml"
+    with pytest.raises(ValueError, match="wrong workflow file"):
+        RegisteredEvidenceIdentity.model_validate(payload)
+    payload["workflow_file"] = "delta-artifact-reconstruction-v8.yml"
+    payload["failed_recovery_workflow_run_id"] = "wrong"
+    with pytest.raises(ValueError, match="failed recovery run"):
+        RegisteredEvidenceIdentity.model_validate(payload)
+
+
 def test_recovery_protocol_binds_the_immutable_failed_original_record() -> None:
     record = json.loads(
         (ROOT / "data/scenario/delta/validation/original_execution_failure_v1.json").read_text(
@@ -294,11 +366,26 @@ def test_recovery_protocol_binds_the_immutable_failed_original_record() -> None:
     assert record["failure_type"] == "ArtifactMismatchError"
 
 
+def test_reconstruction_protocol_binds_the_immutable_failed_recovery_record() -> None:
+    record = json.loads(
+        (ROOT / "data/scenario/delta/validation/recovery_execution_failure_v1.json").read_text(
+            "utf-8"
+        )
+    )
+    assert record["workflow_run_id"] == "31289293944"
+    assert record["source_commit"] == "6f83ea5b6fc54a0b28b65174e02ed40bec38b339"
+    assert record["registered_study_completed"] is True
+    assert record["registered_seed_runs"] == 200
+    assert record["exact_replay_completed"] is True
+    assert record["registered_result_report_retained"] is False
+    assert record["artifact_count_retained"] == 0
+
+
 def test_confirmatory_v8_preregistration_binds_exact_new_seeds_and_manifest() -> None:
     if not CANONICAL["acceptance"].is_file():
         pytest.skip("confirmatory-v8 is intentionally not derived before the final freeze")
     protocol = load_acceptance_config(CANONICAL["acceptance"])
-    assert protocol.schema_version == "delta-small-acceptance-v9"
+    assert protocol.schema_version == "delta-small-acceptance-v10"
     assert protocol.v8_confirmatory_ensemble is not None
     expected = [
         int.from_bytes(
@@ -375,6 +462,35 @@ def test_recovery_mode_rejects_local_execution_before_studies_start(
     assert not (tmp_path / "must-not-exist.json").exists()
 
 
+def test_artifact_reconstruction_rejects_local_execution_before_studies_start(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    def forbidden_study(**_kwargs: object) -> dict[str, object]:
+        raise AssertionError("registered seed study was reached outside the remote guard")
+
+    monkeypatch.setattr(
+        "trace_jepa.scenario.delta.validation.registered.run_v7_study",
+        forbidden_study,
+    )
+    from trace_jepa.scenario.delta.validation import run_v10_registered_validation
+
+    with pytest.raises(ValueError, match="restricted to GitHub Actions"):
+        run_v10_registered_validation(
+            study="artifact-reconstruction-replication",
+            config_path=CANONICAL["config"],
+            geography_path=CANONICAL["geography"],
+            policy_path=CANONICAL["policy"],
+            acceptance_path=CANONICAL["acceptance"],
+            scientific_manifest_path=CANONICAL["scientific_manifest"],
+            output_path=tmp_path / "must-not-exist.json",
+            confirmation_token=RECONSTRUCTION_CONFIRMATION_TOKEN,
+        )
+    assert not (tmp_path / "must-not-exist.json").exists()
+
+
 def test_remote_workflow_uses_exact_tag_and_expiration_independent_once_only_guard() -> None:
     superseded = (ROOT / ".github/workflows/delta-confirmatory-v6.yml").read_text("utf-8")
     original = (ROOT / ".github/workflows/delta-confirmatory-v8.yml").read_text("utf-8")
@@ -403,9 +519,31 @@ def test_remote_workflow_uses_exact_tag_and_expiration_independent_once_only_gua
     assert "status=success" not in original
 
 
+def test_reconstruction_workflow_binds_failures_and_safely_exports_exact_outputs() -> None:
+    workflow = (ROOT / ".github/workflows/delta-artifact-reconstruction-v8.yml").read_text("utf-8")
+    tag = "wf-dfld-01-small-confirmatory-v8-artifact-reconstruction-replication-v1"
+    assert tag in workflow
+    assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in workflow
+    assert "31286349320" in workflow
+    assert "31289293944" in workflow
+    assert "Verify the immutable failed original execution" in workflow
+    assert "Verify the immutable failed recovery execution" in workflow
+    assert "Refuse any prior reconstruction" in workflow
+    assert "--study artifact-reconstruction-replication" in workflow
+    assert RECONSTRUCTION_CONFIRMATION_TOKEN in workflow
+    assert "wf_dfld_01_small_acceptance_v6.yaml" in workflow
+    assert "v8_scientific_input_manifest_v3.json" in workflow
+    assert "WF_DFLD_01_SMALL_VALIDATION_V6.json" in workflow
+    assert "wf_dfld_01_small_book_v6" in workflow
+    assert "sudo find -P" in workflow
+    assert 'sudo chown -R -- "$(id -u):$(id -g)" "${path}"' in workflow
+    assert "steps.prepare_outputs.outcome == 'success'" in workflow
+    assert "listArtifactsForRepo" not in workflow
+
+
 def test_ci_replays_a_published_reference_with_its_bound_validation_report() -> None:
     workflow = (ROOT / ".github/workflows/ci.yml").read_text("utf-8")
-    assert "wf_dfld_01_small_book_v5" in workflow
+    assert "wf_dfld_01_small_book_v6" in workflow
     assert (
-        "--validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V5.json"
+        "--validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json"
     ) in workflow
