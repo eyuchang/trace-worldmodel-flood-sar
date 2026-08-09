@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+<title>Controller reconciliation evaluation</title>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="36.0" y="40.0" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#17202a">Controller reconciliation evaluation</text>
+<text x="60.0" y="82.0" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#17202a">Descriptive book-seed partition metrics</text>
+<text x="555.0" y="82.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">Holdout comparison is reported separately</text>
+<rect x="250" y="125" width="600" height="30" fill="#edf2f4"/>
+<rect x="250" y="125" width="600.0" height="30" fill="#21618c"/>
+<text x="60.0" y="145.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">Pairwise precision</text>
+<text x="865.0" y="145.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">1.000</text>
+<rect x="250" y="220" width="600" height="30" fill="#edf2f4"/>
+<rect x="250" y="220" width="600.0" height="30" fill="#6c3483"/>
+<text x="60.0" y="240.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">Pairwise recall</text>
+<text x="865.0" y="240.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">1.000</text>
+<rect x="250" y="315" width="600" height="30" fill="#edf2f4"/>
+<rect x="250" y="315" width="600.0" height="30" fill="#9ecae1"/>
+<text x="60.0" y="335.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">Pairwise F1</text>
+<text x="865.0" y="335.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">1.000</text>
+<rect x="250" y="410" width="600" height="30" fill="#edf2f4"/>
+<rect x="250" y="410" width="0.0" height="30" fill="#c0392b"/>
+<text x="60.0" y="430.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">False-merge rate</text>
+<text x="865.0" y="430.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">0.000</text>
+<text x="60.0" y="560.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">These scores use hidden lineage only after runtime; the controller never receives it.</text>
+<text x="36.0" y="622.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">WF-DFLD-01-SMALL · simulation-grade teaching artifact · not for navigation</text>
+</svg>

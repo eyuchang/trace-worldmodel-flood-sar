@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+<title>Strict concurrent incident load</title>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="36.0" y="40.0" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#17202a">Strict concurrent incident load</text>
+<text x="64.0" y="82.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">Service units</text>
+<text x="515.0" y="82.0" font-family="Arial, sans-serif" font-size="9" font-weight="400" fill="#17202a">Primary: one resource can cover at most one incident</text>
+<polyline points="80.0,540.0 114.2,540.0 148.3,540.0 182.5,376.0 216.7,376.0 250.8,294.0 285.0,540.0 319.2,540.0 353.3,294.0 387.5,130.0 421.7,212.0 455.8,458.0 490.0,458.0 524.2,294.0 558.3,294.0 592.5,376.0 626.7,212.0 660.8,376.0 695.0,376.0 729.2,376.0 763.3,376.0 797.5,294.0 831.7,376.0 865.8,540.0" fill="none" stroke="#a93226" stroke-width="3"/>
+<line x1="80" y1="105" x2="105" y2="105" stroke="#a93226" stroke-width="3"/>
+<text x="112.0" y="109.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">active truth demand</text>
+<polyline points="80.0,540.0 114.2,540.0 148.3,540.0 182.5,376.0 216.7,376.0 250.8,294.0 285.0,540.0 319.2,540.0 353.3,294.0 387.5,130.0 421.7,294.0 455.8,458.0 490.0,458.0 524.2,294.0 558.3,294.0 592.5,376.0 626.7,294.0 660.8,376.0 695.0,376.0 729.2,376.0 763.3,376.0 797.5,294.0 831.7,376.0 865.8,540.0" fill="none" stroke="#21618c" stroke-width="3"/>
+<line x1="80" y1="125" x2="105" y2="125" stroke="#21618c" stroke-width="3"/>
+<text x="112.0" y="129.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">strict matched capacity</text>
+<text x="72.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+0h</text>
+<text x="208.7" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+1h</text>
+<text x="345.3" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+2h</text>
+<text x="482.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+3h</text>
+<text x="618.7" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+4h</text>
+<text x="755.3" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+5h</text>
+<text x="892.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+6h</text>
+<text x="36.0" y="622.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">WF-DFLD-01-SMALL · simulation-grade teaching artifact · not for navigation</text>
+</svg>

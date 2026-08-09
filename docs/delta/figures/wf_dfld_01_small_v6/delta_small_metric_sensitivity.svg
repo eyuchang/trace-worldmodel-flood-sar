@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+<title>Load-definition sensitivity analysis</title>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="36.0" y="40.0" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#17202a">Load-definition sensitivity analysis</text>
+<text x="64.0" y="82.0" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#17202a">Load ratio</text>
+<text x="590.0" y="82.0" font-family="Arial, sans-serif" font-size="9" font-weight="400" fill="#17202a">Definitions are reported, not interchangeable</text>
+<polyline points="80.0,540.0 114.2,540.0 148.3,540.0 182.5,262.4 216.7,262.4 250.8,262.4 285.0,540.0 319.2,540.0 353.3,262.4 387.5,262.4 421.7,170.0 455.8,262.4 490.0,262.4 524.2,262.4 558.3,262.4 592.5,262.4 626.7,170.0 660.8,262.4 695.0,262.4 729.2,262.4 763.3,262.4 797.5,262.4 831.7,262.4 865.8,540.0" fill="none" stroke="#a93226" stroke-width="3"/>
+<line x1="80" y1="105" x2="105" y2="105" stroke="#a93226" stroke-width="3"/>
+<text x="112.0" y="109.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">strict concurrency</text>
+<polyline points="80.0,540.0 114.2,540.0 148.3,540.0 182.5,262.4 216.7,262.4 250.8,331.8 285.0,540.0 319.2,540.0 353.3,435.9 387.5,366.5 421.7,262.4 455.8,470.6 490.0,470.6 524.2,435.9 558.3,435.9 592.5,401.2 626.7,262.4 660.8,401.2 695.0,401.2 729.2,401.2 763.3,401.2 797.5,435.9 831.7,401.2 865.8,540.0" fill="none" stroke="#21618c" stroke-width="3"/>
+<line x1="80" y1="125" x2="105" y2="125" stroke="#21618c" stroke-width="3"/>
+<text x="112.0" y="129.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">uncapped compatible units</text>
+<polyline points="80.0,540.0 114.2,540.0 148.3,540.0 182.5,262.4 216.7,262.4 250.8,262.4 285.0,540.0 319.2,540.0 353.3,262.4 387.5,262.4 421.7,170.0 455.8,262.4 490.0,262.4 524.2,262.4 558.3,262.4 592.5,262.4 626.7,170.0 660.8,262.4 695.0,262.4 729.2,262.4 763.3,262.4 797.5,262.4 831.7,262.4 865.8,540.0" fill="none" stroke="#6c3483" stroke-width="3"/>
+<line x1="80" y1="145" x2="105" y2="145" stroke="#6c3483" stroke-width="3"/>
+<text x="112.0" y="149.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">historical normalized index</text>
+<text x="72.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+0h</text>
+<text x="208.7" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+1h</text>
+<text x="345.3" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+2h</text>
+<text x="482.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+3h</text>
+<text x="618.7" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+4h</text>
+<text x="755.3" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+5h</text>
+<text x="892.0" y="575.0" font-family="Arial, sans-serif" font-size="10" font-weight="400" fill="#17202a">+6h</text>
+<text x="36.0" y="622.0" font-family="Arial, sans-serif" font-size="11" font-weight="400" fill="#17202a">WF-DFLD-01-SMALL · simulation-grade teaching artifact · not for navigation</text>
+</svg>
