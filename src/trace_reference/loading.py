@@ -10,11 +10,13 @@ import yaml
 from trace_jepa.support import ArtifactLocator
 
 from .models import (
+    ReferenceGaugeResearchRegistry,
     ReferenceGovernanceRegistry,
     ReferenceScenarioConfig,
     ReferenceSmallBaselineRegistry,
     ReferenceSourceRequirements,
     ReferenceSourceResearchRegistry,
+    ReferenceTopologyDesignRegistry,
 )
 
 MAXIMUM_REFERENCE_INPUT_BYTES = 2_000_000
@@ -86,6 +88,30 @@ def load_reference_source_research(
     except ValueError as exc:
         raise ReferenceConfigurationError(
             "Reference source research registry violates its schema"
+        ) from exc
+
+
+def load_reference_gauge_research(
+    root: Path, relative_name: Path
+) -> ReferenceGaugeResearchRegistry:
+    payload = _load_yaml(root, relative_name, "Reference gauge identity research")
+    try:
+        return ReferenceGaugeResearchRegistry.model_validate(payload)
+    except ValueError as exc:
+        raise ReferenceConfigurationError(
+            "Reference gauge identity research violates its schema"
+        ) from exc
+
+
+def load_reference_topology_design(
+    root: Path, relative_name: Path
+) -> ReferenceTopologyDesignRegistry:
+    payload = _load_yaml(root, relative_name, "Reference topology design inventory")
+    try:
+        return ReferenceTopologyDesignRegistry.model_validate(payload)
+    except ValueError as exc:
+        raise ReferenceConfigurationError(
+            "Reference topology design inventory violates its schema"
         ) from exc
 
 

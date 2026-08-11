@@ -283,6 +283,98 @@ class ReferenceSourceResearchRegistry(DeltaModel):
         return self
 
 
+class ReferenceGaugeIdentity(DeltaModel):
+    """One official CDEC identity check; never an operative threshold by itself."""
+
+    station_id: str = Field(pattern=r"^[A-Z0-9]{3}$")
+    official_name: str = Field(min_length=3)
+    latitude_e6: int = Field(ge=-90_000_000, le=90_000_000)
+    longitude_e6: int = Field(ge=-180_000_000, le=180_000_000)
+    station_elevation_ft: int
+    metadata_url: str = Field(pattern=r"^https://cdec\.water\.ca\.gov/")
+    identity_status: Literal["matches-specification", "corrects-specification"]
+    specification_name: str = Field(min_length=3)
+    threshold_status: Literal["unavailable-non-operative"]
+    runtime_inclusion: Literal["none"]
+    notes: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_identity_disposition(self) -> ReferenceGaugeIdentity:
+        names_match = self.official_name.casefold() == self.specification_name.casefold()
+        if names_match != (self.identity_status == "matches-specification"):
+            raise ValueError("gauge identity disposition disagrees with compared names")
+        return self
+
+
+class ReferenceGaugeResearchRegistry(DeltaModel):
+    """Field-level CDEC identity research kept outside runtime inputs."""
+
+    registry_version: Literal["delta-reference-gauge-identity-research-v1"]
+    scientific_status: Literal["research-draft-no-runtime-inputs"]
+    verified_date: date
+    gauges: tuple[ReferenceGaugeIdentity, ...] = Field(min_length=7, max_length=7)
+
+    @model_validator(mode="after")
+    def validate_reference_gauge_set(self) -> ReferenceGaugeResearchRegistry:
+        expected = ("FPT", "RVB", "SJJ", "ANH", "MRU", "OLD", "MSD")
+        actual = tuple(gauge.station_id for gauge in self.gauges)
+        if actual != expected:
+            raise ValueError("Reference gauge research must retain the specified order")
+        if any(gauge.runtime_inclusion != "none" for gauge in self.gauges):
+            raise ValueError("gauge research cannot become an implicit runtime input")
+        if any(gauge.threshold_status != "unavailable-non-operative" for gauge in self.gauges):
+            raise ValueError("metadata identity checks cannot silently activate thresholds")
+        return self
+
+
+class ReferenceTopologyEntity(DeltaModel):
+    """One specification identity awaiting authoritative geometry and graph binding."""
+
+    entity_id: str = Field(pattern=r"^(ISL|TWN|XNG)-[0-9]{2}$")
+    entity_type: Literal["island", "community", "crossing"]
+    design_name: str = Field(min_length=3)
+    source_requirement_ids: tuple[str, ...] = Field(min_length=1)
+    geometry_status: Literal["unbound"]
+    graph_status: Literal["unbound"]
+    runtime_inclusion: Literal["none"]
+    notes: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_identifier_type(self) -> ReferenceTopologyEntity:
+        expected_prefix = {"island": "ISL", "community": "TWN", "crossing": "XNG"}[
+            self.entity_type
+        ]
+        if not self.entity_id.startswith(f"{expected_prefix}-"):
+            raise ValueError("topology entity type disagrees with its identifier")
+        if any(
+            not source_id.startswith("REF-SRC-") for source_id in self.source_requirement_ids
+        ):
+            raise ValueError("topology source references must use Reference source identifiers")
+        return self
+
+
+class ReferenceTopologyDesignRegistry(DeltaModel):
+    """Design inventory only; no coordinates, geometries, or routes are approved."""
+
+    registry_version: Literal["delta-reference-topology-design-v1"]
+    scientific_status: Literal["design-inventory-no-runtime-geometry"]
+    entities: tuple[ReferenceTopologyEntity, ...] = Field(min_length=22, max_length=22)
+
+    @model_validator(mode="after")
+    def validate_complete_design_inventory(self) -> ReferenceTopologyDesignRegistry:
+        expected = (
+            *(f"ISL-{index:02d}" for index in range(1, 9)),
+            *(f"TWN-{index:02d}" for index in range(1, 5)),
+            *(f"XNG-{index:02d}" for index in range(1, 11)),
+        )
+        actual = tuple(entity.entity_id for entity in self.entities)
+        if actual != expected:
+            raise ValueError("Reference topology design inventory is incomplete or unordered")
+        if any(entity.runtime_inclusion != "none" for entity in self.entities):
+            raise ValueError("unbound topology cannot become an implicit runtime input")
+        return self
+
+
 class SmallBaselineFile(DeltaModel):
     relative_path: str = Field(pattern=r"^[a-zA-Z0-9_./-]+$")
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")

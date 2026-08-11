@@ -11,9 +11,11 @@ from trace_reference import (
     REFERENCE_PROTOCOL,
     derive_study_seed,
     load_reference_config,
+    load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
     load_reference_source_research,
+    load_reference_topology_design,
     verify_small_baseline,
 )
 from trace_reference.loading import ReferenceConfigurationError
@@ -25,6 +27,10 @@ CONFIG = Path("configs/scenarios/wf_dfld_01_reference_development.yaml")
 GOVERNANCE = Path("configs/governance/wf_dfld_01_reference_governance_v1.yaml")
 SOURCES = Path("data/scenario/delta/reference/sources/requirements_v1.yaml")
 SOURCE_RESEARCH = Path("data/scenario/delta/reference/sources/source_research_v1.yaml")
+GAUGE_RESEARCH = Path(
+    "data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml"
+)
+TOPOLOGY_DESIGN = Path("data/scenario/delta/reference/topology_design_v1.yaml")
 BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 
 
@@ -100,9 +106,12 @@ def test_reference_source_research_cannot_become_implicit_runtime_data() -> None
         if candidate.research_status == "verified-official-locator"
     ]
     assert {candidate.source_id for candidate in verified} == {
+        "REF-SRC-02",
         "REF-SRC-03",
         "REF-SRC-04",
         "REF-SRC-05",
+        "REF-SRC-06",
+        "REF-SRC-07",
     }
     assert all(candidate.runtime_inclusion == "none" for candidate in registry.candidates)
     assert all(
@@ -110,6 +119,31 @@ def test_reference_source_research_cannot_become_implicit_runtime_data() -> None
         for candidate in registry.candidates
         if candidate.source_id != "REF-SRC-05"
     )
+
+
+def test_reference_gauge_identity_research_corrects_spec_without_thresholds() -> None:
+    registry = load_reference_gauge_research(ROOT, GAUGE_RESEARCH)
+    identities = {gauge.station_id: gauge for gauge in registry.gauges}
+    assert identities["MRU"].official_name == "Middle River at Undine Road"
+    assert identities["MSD"].official_name == "San Joaquin River at Mossdale Bridge"
+    assert identities["MRU"].identity_status == "corrects-specification"
+    assert identities["MSD"].identity_status == "corrects-specification"
+    assert all(
+        gauge.threshold_status == "unavailable-non-operative"
+        for gauge in registry.gauges
+    )
+    assert all(gauge.runtime_inclusion == "none" for gauge in registry.gauges)
+
+
+def test_reference_topology_design_is_complete_but_not_runtime_geometry() -> None:
+    registry = load_reference_topology_design(ROOT, TOPOLOGY_DESIGN)
+    assert len(registry.entities) == 22
+    assert tuple(entity.entity_id for entity in registry.entities[:8]) == tuple(
+        f"ISL-{index:02d}" for index in range(1, 9)
+    )
+    assert all(entity.geometry_status == "unbound" for entity in registry.entities)
+    assert all(entity.graph_status == "unbound" for entity in registry.entities)
+    assert all(entity.runtime_inclusion == "none" for entity in registry.entities)
 
 
 def test_delivered_small_baseline_verifies_and_tampering_fails(tmp_path: Path) -> None:

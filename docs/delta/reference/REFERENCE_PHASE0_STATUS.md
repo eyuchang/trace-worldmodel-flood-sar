@@ -20,8 +20,13 @@ Scientific status: design draft; development only
   confirmatory namespace or seed derivation path.
 - Added four configurable logical evidence-authority roles, each explicitly
   provisional and non-legal.
-- Added nine source requirements plus a separate research ledger. Three official
+- Added nine source requirements plus a separate research ledger. Six official
   locators have been verified; no candidate is an implicit runtime input.
+- Added a complete 22-entity Reference topology design inventory. Every entity
+  remains explicitly unbound to geometry and graph edges pending field-level QA.
+- Verified all seven supplied CDEC station IDs against current official metadata.
+  `MRU` and `MSD` are misnamed in the supplied specification, and no threshold
+  has been activated from metadata alone.
 - Defined the Reference event-machine, route, capacity, resource/crew, recovery,
   streaming, and dependency boundaries needed for implementation at scale.
 
@@ -37,18 +42,12 @@ Scientific status: design draft; development only
 
 ## Decisions required before scientific freeze
 
-1. Historical calibration versus transparent reduced-order synthetic anchoring.
-2. Whether 96 hours excludes the 48-hour burn-in.
-3. Whether approximately 2,900 reports excludes burn-in and what 95/hour means.
-4. The four logical-authority roles and whether they model evidence delivery,
-   approval, or both.
-5. The definition and evidentiary status of the conflicting inherited 4:1 value.
-6. Reference's manuscript role and whether faults are headline or stress-study
-   evidence.
-7. Primary policy comparison, endpoints, margins, costs, multiplicity, and
-   sample-size rule.
-8. Whether base Reference should validate before a separately governed LEAP
-   study.
+The raw correspondence, meeting transcript, and supplied specification have now
+been re-audited. Most items have a well-supported recommended interpretation;
+the inherited 4:1 value remains internally contradictory. The complete
+classification and recommendations are stored outside the repository at
+`/Users/jaylanroy/Desktop/TRACE/WF_DFLD_01_REFERENCE_DECISION_RECOMMENDATIONS.md`
+for Jay's approval.
 
 Until those decisions are recorded, implementation may advance only through
 reversible architecture, source, topology, security, and development tooling.

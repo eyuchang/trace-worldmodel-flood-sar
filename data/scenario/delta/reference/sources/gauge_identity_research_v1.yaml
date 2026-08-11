@@ -1,0 +1,95 @@
+registry_version: delta-reference-gauge-identity-research-v1
+scientific_status: research-draft-no-runtime-inputs
+verified_date: 2026-08-11
+gauges:
+  - station_id: FPT
+    official_name: Sacramento River at Freeport
+    latitude_e6: 38456112
+    longitude_e6: -121500300
+    station_elevation_ft: 0
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=FPT
+    identity_status: matches-specification
+    specification_name: Sacramento River at Freeport
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - Identity and coordinate are transcribed from the official CDEC metadata page.
+      - The metadata check does not establish an operative monitor or flood threshold.
+  - station_id: RVB
+    official_name: Sacramento River at Rio Vista Bridge
+    latitude_e6: 38159737
+    longitude_e6: -121686355
+    station_elevation_ft: 0
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=RVB
+    identity_status: matches-specification
+    specification_name: Sacramento River at Rio Vista Bridge
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - Identity and coordinate are transcribed from the official CDEC metadata page.
+      - Any threshold used later requires a separate current authoritative source and datum check.
+  - station_id: SJJ
+    official_name: San Joaquin River at Jersey Point (USGS)
+    latitude_e6: 38052000
+    longitude_e6: -121689000
+    station_elevation_ft: 10
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=SJJ
+    identity_status: matches-specification
+    specification_name: San Joaquin River at Jersey Point (USGS)
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - Identity and coordinate are transcribed from the official CDEC metadata page.
+      - CDEC labels the station as a USGS station; sensor ownership and datum remain to be checked.
+  - station_id: ANH
+    official_name: San Joaquin River at Antioch
+    latitude_e6: 38017830
+    longitude_e6: -121802963
+    station_elevation_ft: 10
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=ANH
+    identity_status: matches-specification
+    specification_name: San Joaquin River at Antioch
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - Identity and coordinate are transcribed from the official CDEC metadata page.
+      - CDEC states that its displayed data are preliminary and identifies WDL for quality-controlled data.
+  - station_id: MRU
+    official_name: Middle River at Undine Road
+    latitude_e6: 37833900
+    longitude_e6: -121386000
+    station_elevation_ft: 0
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=MRU
+    identity_status: corrects-specification
+    specification_name: Middle River at Union Point
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - The specification name is incorrect; the official CDEC name is Middle River at Undine Road.
+      - CDEC records a historical stage correction and points to WDL for quality-controlled data.
+  - station_id: OLD
+    official_name: Old River near Tracy
+    latitude_e6: 37804810
+    longitude_e6: -121449562
+    station_elevation_ft: 5
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=OLD
+    identity_status: matches-specification
+    specification_name: Old River near Tracy
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - Identity and coordinate are transcribed from the official CDEC metadata page.
+      - CDEC points to WDL for quality-controlled flow, velocity, and stage data.
+  - station_id: MSD
+    official_name: San Joaquin River at Mossdale Bridge
+    latitude_e6: 37786000
+    longitude_e6: -121306000
+    station_elevation_ft: 31
+    metadata_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=MSD
+    identity_status: corrects-specification
+    specification_name: Mokelumne River at Staten
+    threshold_status: unavailable-non-operative
+    runtime_inclusion: none
+    notes:
+      - The specification identity is incorrect; MSD is San Joaquin River at Mossdale Bridge.
+      - A Mokelumne-at-Staten gauge, if needed, must receive a separately verified station identifier.

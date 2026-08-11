@@ -3,27 +3,29 @@ scientific_status: research-draft-no-runtime-inputs
 candidates:
   - source_id: REF-SRC-01
     research_status: unresolved
-    agency: Sacramento County or responsible reclamation district
+    agency: Sacramento County, responsible reclamation district, or California State Water Resources Control Board
     dataset_title: Island and reclamation-district footprints
-    landing_page_url: https://data.saccounty.gov/
+    landing_page_url: https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/
     machine_readable_url: null
     verified_date: null
     redistribution_status: not-assessed
     runtime_inclusion: none
     limitations:
       - No exact county or district feature collection has yet passed identity and license review.
-      - The catalog locator is retained only to support later source discovery.
+      - The official Water Board map identifies Andrus Island as RD 317, while the supplied specification names RD 407; no district identity may be frozen until this conflict is resolved from primary legal or agency records.
+      - The map is a discovery and cross-check source, not an approved operational footprint.
   - source_id: REF-SRC-02
-    research_status: unresolved
+    research_status: verified-official-locator
     agency: California Department of Water Resources
-    dataset_title: Delta levees and Local Maintenance Areas
-    landing_page_url: https://data.cnra.ca.gov/
-    machine_readable_url: null
-    verified_date: null
+    dataset_title: i03 Local Maintenance Areas Flood Protection
+    landing_page_url: https://catalog.data.gov/dataset/i03-local-maintenance-areas-flood-protection-681bf
+    machine_readable_url: https://utility.arcgis.com/usrsvcs/servers/abe344a6df9e4e97a7604f1a56300743/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/MapServer
+    verified_date: 2026-08-11
     redistribution_status: not-assessed
     runtime_inclusion: none
     limitations:
-      - No exact feature service or archive has yet passed version and redistribution review.
+      - DWR warns that boundary accuracy is highly variable and may trace poorly located historic Swamp Land Survey boundaries.
+      - The service still requires a content snapshot, field crosswalk, digest, schema check, and redistribution review before use.
   - source_id: REF-SRC-03
     research_status: verified-official-locator
     agency: United States Census Bureau
@@ -61,27 +63,31 @@ candidates:
       - The live service changes as 3DHP replaces legacy NHD data and therefore must be snapshotted.
       - USGS warns that the service is not intended for site-specific regulatory determinations.
   - source_id: REF-SRC-06
-    research_status: unresolved
+    research_status: verified-official-locator
     agency: California Department of Water Resources
-    dataset_title: Bay-Delta digital elevation model v4.3 or approved successor
-    landing_page_url: https://data.cnra.ca.gov/
-    machine_readable_url: null
-    verified_date: null
+    dataset_title: San Francisco Bay and Sacramento-San Joaquin Delta DEM for Modeling, Version 4.3
+    landing_page_url: https://data.cnra.ca.gov/dataset/san-francisco-bay-and-sacramento-san-joaquin-delta-dem-for-modeling-version-4-3
+    machine_readable_url: https://data.cnra.ca.gov/dataset/f902e012-7d8d-429c-8a1a-2bf5b4312532/resource/d10040a8-4880-4f0e-90e7-86f57556bd9d/download/dem_delta_10m_20250312.zip
+    verified_date: 2026-08-11
     redistribution_status: not-assessed
     runtime_inclusion: none
     limitations:
-      - The exact archive, raster member, vertical datum, and redistribution terms remain unverified.
+      - The catalog declares NAD83 UTM Zone 10N horizontal coordinates and NAVD88 meter elevations; these fields still require verification against the downloaded raster metadata.
+      - The archive, exact raster member, archive/member digests, nodata handling, size, and redistribution terms remain unverified.
+      - No large archive has been downloaded or made a runtime input.
   - source_id: REF-SRC-07
-    research_status: unresolved
+    research_status: verified-official-locator
     agency: California Data Exchange Center
-    dataset_title: Reference gauge station metadata
-    landing_page_url: https://cdec.water.ca.gov/
-    machine_readable_url: null
-    verified_date: null
+    dataset_title: Reference gauge station metadata pages
+    landing_page_url: https://cdec.water.ca.gov/dynamicapp/staSearch
+    machine_readable_url: https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=FPT
+    verified_date: 2026-08-11
     redistribution_status: not-assessed
     runtime_inclusion: none
     limitations:
-      - Station identities and operative threshold semantics must be verified field by field.
+      - Field-level identity results are recorded separately in gauge_identity_research_v1.yaml.
+      - The supplied specification misnames MRU and MSD; the official metadata identities must replace those labels before runtime freeze.
+      - No operative threshold was established by this identity check; every threshold remains unavailable and non-operative.
   - source_id: REF-SRC-08
     research_status: unresolved
     agency: Responsible city, county, state, or federal agencies

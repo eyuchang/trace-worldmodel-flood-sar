@@ -9,9 +9,11 @@ modify or silently re-freeze Small artifacts.
 from .baseline import verify_small_baseline
 from .loading import (
     load_reference_config,
+    load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
     load_reference_source_research,
+    load_reference_topology_design,
 )
 from .models import ReferenceScenarioConfig
 from .protocol import REFERENCE_PROTOCOL
@@ -22,8 +24,10 @@ __all__ = [
     "ReferenceScenarioConfig",
     "derive_study_seed",
     "load_reference_config",
+    "load_reference_gauge_research",
     "load_reference_governance",
     "load_reference_source_requirements",
     "load_reference_source_research",
+    "load_reference_topology_design",
     "verify_small_baseline",
 ]
