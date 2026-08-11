@@ -1,0 +1,81 @@
+status: design-draft-development-only
+scenario_id: WF-DFLD-01-REFERENCE
+scenario_schema_version: trace-delta-reference-scenario-v1
+generator_version: delta-reference-generator-v1
+randomness_namespace_version: delta-reference-randomness-v1
+protocol_document_sha256: 03c407ceb1b87041e36f0c58c352840e94bab6cec73a1f69eacd80173e77a552
+small_baseline_registry: data/scenario/delta/reference_protocol/small_baseline_v1.json
+
+timeline:
+  evaluation_start_iso8601: "2026-01-17T04:00:00-08:00"
+  timezone: America/Los_Angeles
+  onset_clock: predawn_weekend
+  burn_in_start_s: -172800
+  evaluation_start_s: 0
+  evaluation_end_s: 345600
+  output_tick_s: 300
+  decision_tick_s: 60
+  capacity_evaluation_tick_s: 900
+
+axes:
+  sigma: 1.0
+  kappa: 1.0
+  mu: 1.0
+  iota: 0.7
+  phi: 4
+  pi: 0.7
+  epsilon_profile: reference-exposure-v1
+  delta: 0.2
+
+extent:
+  islands: [ISL-01, ISL-02, ISL-03, ISL-04, ISL-05, ISL-06, ISL-07, ISL-08]
+  communities: [TWN-01, TWN-02, TWN-03, TWN-04]
+  crossings: [XNG-01, XNG-02, XNG-03, XNG-04, XNG-05, XNG-06, XNG-07, XNG-08, XNG-09, XNG-10]
+  synthetic_people: 1400
+  scripted_breaches: 1
+
+process_targets:
+  expected_public_reports_evaluation: 2900
+  expected_peak_public_reports_per_hour: 95
+  breach_time_s: 187200
+  intended_peak_load_regime: approximately_4_to_1_development_target_only
+
+canonical_predictor:
+  implementation: toy
+  qualification: exact_teaching_fixture_only
+
+fault_profiles:
+  baseline: reference-nominal-v1
+  integration_acceptance: reference-faulted-v1
+
+generation_order:
+  - geography
+  - meteorology
+  - hydrology_breach_access
+  - exposure_truth_incidents
+  - public_observations
+  - resources_and_telemetry
+  - coordination_delivery
+  - predictor_prior
+  - fault_overlay
+  - trace_execution_recovery
+  - offline_evaluation
+
+study_namespaces:
+  development:
+    namespace: "WF-DFLD-01-REFERENCE|development-v1|index"
+    materialized: false
+  selection:
+    namespace: "WF-DFLD-01-REFERENCE|selection-v1|index"
+    materialized: false
+  validation:
+    namespace: "WF-DFLD-01-REFERENCE|validation-v1|index"
+    materialized: false
+
+exclusions:
+  - confirmatory_seed_materialization
+  - cascade_breach
+  - independent_runtime_federation
+  - learned_predictor_effectiveness_claim
+  - operational_readiness_claim
+  - historical_hydrodynamic_reconstruction

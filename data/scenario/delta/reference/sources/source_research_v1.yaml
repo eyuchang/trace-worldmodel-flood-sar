@@ -1,0 +1,108 @@
+registry_version: delta-reference-source-research-v1
+scientific_status: research-draft-no-runtime-inputs
+candidates:
+  - source_id: REF-SRC-01
+    research_status: unresolved
+    agency: Sacramento County or responsible reclamation district
+    dataset_title: Island and reclamation-district footprints
+    landing_page_url: https://data.saccounty.gov/
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - No exact county or district feature collection has yet passed identity and license review.
+      - The catalog locator is retained only to support later source discovery.
+  - source_id: REF-SRC-02
+    research_status: unresolved
+    agency: California Department of Water Resources
+    dataset_title: Delta levees and Local Maintenance Areas
+    landing_page_url: https://data.cnra.ca.gov/
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - No exact feature service or archive has yet passed version and redistribution review.
+  - source_id: REF-SRC-03
+    research_status: verified-official-locator
+    agency: United States Census Bureau
+    dataset_title: 2025 TIGER/Line California places
+    landing_page_url: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html
+    machine_readable_url: https://www2.census.gov/geo/tiger/TIGER2025/PLACE/tl_2025_06_place.zip
+    verified_date: 2026-08-11
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - Boundaries and names are as of 2025-01-01; the file contains no demographic data.
+      - The archive must still pass digest, schema, CRS, and redistribution review.
+  - source_id: REF-SRC-04
+    research_status: verified-official-locator
+    agency: California Department of Transportation
+    dataset_title: State Highway Bridges
+    landing_page_url: https://dot.ca.gov/caltrans-open-data-inventory
+    machine_readable_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0
+    verified_date: 2026-08-11
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - The service describes bridge inventory data dated 2024-03-12.
+      - Crossing identities and network connectivity require separate field-level verification.
+  - source_id: REF-SRC-05
+    research_status: verified-official-locator
+    agency: United States Geological Survey
+    dataset_title: 3D Hydrography Program national service
+    landing_page_url: https://www.usgs.gov/3d-hydrography-program/access-3dhp-data-products
+    machine_readable_url: https://hydro.nationalmap.gov/arcgis/rest/services/3DHP_all/MapServer
+    verified_date: 2026-08-11
+    redistribution_status: open-nonproprietary
+    runtime_inclusion: none
+    limitations:
+      - The live service changes as 3DHP replaces legacy NHD data and therefore must be snapshotted.
+      - USGS warns that the service is not intended for site-specific regulatory determinations.
+  - source_id: REF-SRC-06
+    research_status: unresolved
+    agency: California Department of Water Resources
+    dataset_title: Bay-Delta digital elevation model v4.3 or approved successor
+    landing_page_url: https://data.cnra.ca.gov/
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - The exact archive, raster member, vertical datum, and redistribution terms remain unverified.
+  - source_id: REF-SRC-07
+    research_status: unresolved
+    agency: California Data Exchange Center
+    dataset_title: Reference gauge station metadata
+    landing_page_url: https://cdec.water.ca.gov/
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - Station identities and operative threshold semantics must be verified field by field.
+  - source_id: REF-SRC-08
+    research_status: unresolved
+    agency: Responsible city, county, state, or federal agencies
+    dataset_title: Reference operational-facility locators
+    landing_page_url: null
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - Facilities, location precision, and operative status require separate official records.
+      - No current staffing or availability will be inferred from facility existence.
+  - source_id: REF-SRC-09
+    research_status: unresolved
+    agency: OpenStreetMap contributors
+    dataset_title: Secondary topology aid
+    landing_page_url: https://www.openstreetmap.org/
+    machine_readable_url: null
+    verified_date: null
+    redistribution_status: not-assessed
+    runtime_inclusion: none
+    limitations:
+      - This source is secondary only and cannot replace an authoritative operational field silently.
+      - Query, snapshot date, attribution, and ODbL obligations remain to be frozen.

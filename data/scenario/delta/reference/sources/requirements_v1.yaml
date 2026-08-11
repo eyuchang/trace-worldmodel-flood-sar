@@ -1,0 +1,57 @@
+registry_version: delta-reference-source-requirements-v1
+runtime_network_access: forbidden
+requirements:
+  - source_id: REF-SRC-01
+    source_class: island_and_district_footprints
+    preferred_authority: county_or_reclamation_district_government
+    required_fields: [geometry, source_feature_id, district_association, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-02
+    source_class: state_levee_and_maintenance_crosscheck
+    preferred_authority: california_department_of_water_resources
+    required_fields: [levee_geometry, maintenance_area, source_feature_id, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-03
+    source_class: community_administrative_geometry
+    preferred_authority: united_states_census_bureau
+    required_fields: [place_geometry, geographic_identifier, vintage, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-04
+    source_class: crossing_and_state_highway_network
+    preferred_authority: california_department_of_transportation
+    required_fields: [crossing_geometry, facility_identifier, network_topology, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-05
+    source_class: hydrography
+    preferred_authority: united_states_geological_survey
+    required_fields: [waterway_geometry, feature_identifier, dataset_version, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-06
+    source_class: elevation_summary
+    preferred_authority: california_department_of_water_resources
+    required_fields: [raster_member, horizontal_crs, vertical_datum, nodata, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-07
+    source_class: gauge_metadata
+    preferred_authority: california_data_exchange_center
+    required_fields: [station_identity, units, threshold_status, retrieval_time]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-08
+    source_class: operational_facilities
+    preferred_authority: responsible_city_county_state_or_federal_agency
+    required_fields: [facility_identity, location_precision, operative_status, source_date]
+    retrieval_status: not-retrieved
+    license_status: not-assessed
+  - source_id: REF-SRC-09
+    source_class: secondary_topology_aid
+    preferred_authority: openstreetmap_only_when_primary_topology_is_insufficient
+    required_fields: [feature_identifier, retrieval_query, secondary_status, license]
+    retrieval_status: not-retrieved
+    license_status: not-assessed

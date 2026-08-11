@@ -1,0 +1,27 @@
+{
+  "files": [
+    {
+      "maximum_bytes": 100000,
+      "relative_path": "configs/scenarios/wf_dfld_01_small.yaml",
+      "sha256": "9daf9b649ec3f6b9ba803e8b375af9adb37aeddff87291bc2d075cd994374543"
+    },
+    {
+      "maximum_bytes": 100000,
+      "relative_path": "data/scenario/delta/reference/wf_dfld_01_small_book_v6/manifest.json",
+      "sha256": "f52ae922a6a91a35816714286430a2bf701f5319c25a5cc01294fcc145dbb8c8"
+    },
+    {
+      "maximum_bytes": 100000,
+      "relative_path": "docs/delta/validation/WF_DFLD_01_SMALL_REGISTERED_RECONSTRUCTION_V1.md",
+      "sha256": "65038dda912aa80f3376a1aa03f1ac08ce8fec378262df9985dbf91e5ad5c23f"
+    },
+    {
+      "maximum_bytes": 100000,
+      "relative_path": "data/scenario/delta/validation/registered_evidence_registry_v1.json",
+      "sha256": "14898c9d4e6dec8c5bd05798d73aa5431c47f0ae2e1101c58961aca55d01ce98"
+    }
+  ],
+  "registry_version": "delta-reference-small-baseline-v1",
+  "source_branch": "demo-delta-scenario",
+  "source_commit": "3f912bdf3fbacb679063da9ed2ce15a2330b91ab"
+}

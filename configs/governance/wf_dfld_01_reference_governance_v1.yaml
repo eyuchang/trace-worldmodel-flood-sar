@@ -1,0 +1,26 @@
+registry_version: delta-reference-governance-v1
+scientific_status: design-draft-not-legal-command-model
+limitation: >-
+  These are logical evidence-partition roles for a synthetic integration test;
+  they do not represent legal authority, incident command, or live agency practice.
+authorities:
+  - authority_id: AUTH-01
+    role_name: Sacramento operational-area dispatch
+    status: provisional-simulation-role
+    source_entities: [community_dispatch_sources, local_fire_rescue_sources]
+    evidence_scope: [public_reports, local_resource_telemetry, local_access]
+  - authority_id: AUTH-02
+    role_name: Delta reclamation and flood-fight coordination
+    status: provisional-simulation-role
+    source_entities: [reclamation_district_sources, levee_patrol_sources]
+    evidence_scope: [levee_condition, breach_evidence, flood_fight_requests]
+  - authority_id: AUTH-03
+    role_name: State flood and access coordination
+    status: provisional-simulation-role
+    source_entities: [state_flood_sources, state_transport_sources]
+    evidence_scope: [gauge_context, crossing_state, regional_access]
+  - authority_id: AUTH-04
+    role_name: Regional water and air rescue coordination
+    status: provisional-simulation-role
+    source_entities: [regional_water_rescue_sources, aviation_rescue_sources]
+    evidence_scope: [specialist_resource_telemetry, aviation_operability, staging]
