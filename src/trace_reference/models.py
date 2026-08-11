@@ -106,9 +106,7 @@ class ReferenceProcessTargets(DeltaModel):
     expected_public_reports_evaluation: int = Field(gt=0)
     expected_peak_public_reports_per_hour: int = Field(gt=0)
     breach_time_s: int = Field(gt=0)
-    intended_peak_load_regime: Literal[
-        "approximately_4_to_1_development_target_only"
-    ]
+    intended_peak_load_regime: Literal["approximately_4_to_1_development_target_only"]
 
     @model_validator(mode="after")
     def validate_process_design_targets(self) -> ReferenceProcessTargets:
@@ -132,7 +130,9 @@ class ReferenceFaultProfiles(DeltaModel):
 
 
 class ReferenceStudyNamespace(DeltaModel):
-    namespace: str = Field(pattern=r"^WF-DFLD-01-REFERENCE\|(development|selection|validation)-v1\|index$")
+    namespace: str = Field(
+        pattern=r"^WF-DFLD-01-REFERENCE\|(development|selection|validation)-v1\|index$"
+    )
     materialized: Literal[False]
 
 
@@ -249,7 +249,12 @@ class ReferenceSourceCandidate(DeltaModel):
     landing_page_url: str | None = Field(default=None, pattern=r"^https://")
     machine_readable_url: str | None = Field(default=None, pattern=r"^https://")
     verified_date: date | None = None
-    redistribution_status: Literal["not-assessed", "open-nonproprietary"]
+    redistribution_status: Literal[
+        "not-assessed",
+        "united-states-public-domain",
+        "public-use-no-restrictions",
+        "clipped-government-snapshot-with-attribution",
+    ]
     runtime_inclusion: Literal["none"]
     limitations: tuple[str, ...] = Field(min_length=1)
 
@@ -259,8 +264,8 @@ class ReferenceSourceCandidate(DeltaModel):
             self.landing_page_url is None or self.verified_date is None
         ):
             raise ValueError("verified source candidates require a landing page and date")
-        if self.redistribution_status == "open-nonproprietary" and (
-            self.research_status != "verified-official-locator"
+        if self.redistribution_status != "not-assessed" and self.research_status != (
+            "verified-official-locator"
         ):
             raise ValueError("redistribution status cannot be inferred for unresolved sources")
         return self
@@ -341,14 +346,10 @@ class ReferenceTopologyEntity(DeltaModel):
 
     @model_validator(mode="after")
     def validate_identifier_type(self) -> ReferenceTopologyEntity:
-        expected_prefix = {"island": "ISL", "community": "TWN", "crossing": "XNG"}[
-            self.entity_type
-        ]
+        expected_prefix = {"island": "ISL", "community": "TWN", "crossing": "XNG"}[self.entity_type]
         if not self.entity_id.startswith(f"{expected_prefix}-"):
             raise ValueError("topology entity type disagrees with its identifier")
-        if any(
-            not source_id.startswith("REF-SRC-") for source_id in self.source_requirement_ids
-        ):
+        if any(not source_id.startswith("REF-SRC-") for source_id in self.source_requirement_ids):
             raise ValueError("topology source references must use Reference source identifiers")
         return self
 

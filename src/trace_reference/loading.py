@@ -18,6 +18,7 @@ from .models import (
     ReferenceSourceResearchRegistry,
     ReferenceTopologyDesignRegistry,
 )
+from .research_models import ReferenceEntitySourceCrosswalk
 
 MAXIMUM_REFERENCE_INPUT_BYTES = 2_000_000
 
@@ -58,7 +59,9 @@ def load_reference_config(root: Path, relative_name: Path) -> ReferenceScenarioC
     try:
         return ReferenceScenarioConfig.model_validate(payload)
     except ValueError as exc:
-        raise ReferenceConfigurationError("Reference configuration violates its design contract") from exc
+        raise ReferenceConfigurationError(
+            "Reference configuration violates its design contract"
+        ) from exc
 
 
 def load_reference_governance(root: Path, relative_name: Path) -> ReferenceGovernanceRegistry:
@@ -66,7 +69,9 @@ def load_reference_governance(root: Path, relative_name: Path) -> ReferenceGover
     try:
         return ReferenceGovernanceRegistry.model_validate(payload)
     except ValueError as exc:
-        raise ReferenceConfigurationError("Reference governance registry violates its schema") from exc
+        raise ReferenceConfigurationError(
+            "Reference governance registry violates its schema"
+        ) from exc
 
 
 def load_reference_source_requirements(
@@ -76,7 +81,9 @@ def load_reference_source_requirements(
     try:
         return ReferenceSourceRequirements.model_validate(payload)
     except ValueError as exc:
-        raise ReferenceConfigurationError("Reference source requirements violate their schema") from exc
+        raise ReferenceConfigurationError(
+            "Reference source requirements violate their schema"
+        ) from exc
 
 
 def load_reference_source_research(
@@ -115,11 +122,23 @@ def load_reference_topology_design(
         ) from exc
 
 
-def load_small_baseline_registry(
+def load_reference_entity_source_crosswalk(
     root: Path, relative_name: Path
-) -> ReferenceSmallBaselineRegistry:
+) -> ReferenceEntitySourceCrosswalk:
+    payload = _load_yaml(root, relative_name, "Reference entity/source crosswalk")
+    try:
+        return ReferenceEntitySourceCrosswalk.model_validate(payload)
+    except ValueError as exc:
+        raise ReferenceConfigurationError(
+            "Reference entity/source crosswalk violates its schema"
+        ) from exc
+
+
+def load_small_baseline_registry(root: Path, relative_name: Path) -> ReferenceSmallBaselineRegistry:
     payload = _load_json(root, relative_name, "Reference Small baseline registry")
     try:
         return ReferenceSmallBaselineRegistry.model_validate(payload)
     except ValueError as exc:
-        raise ReferenceConfigurationError("Reference Small baseline registry violates its schema") from exc
+        raise ReferenceConfigurationError(
+            "Reference Small baseline registry violates its schema"
+        ) from exc

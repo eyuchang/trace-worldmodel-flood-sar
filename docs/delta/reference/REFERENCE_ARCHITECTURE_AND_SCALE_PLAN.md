@@ -36,6 +36,15 @@ remain unchanged. A future freeze will define a complete Reference inventory.
 | `evaluation` | joins public/runtime artifacts to hidden truth after execution | online controller path |
 | `provenance` | canonical artifacts, manifests, replay, execution receipts | ambient files or network state |
 
+The future non-LEAP controller-visible handoff consumes only frozen public
+geography and route beliefs, public source identities, and their canonical
+digests. It must not expose source-file paths, raw upstream bytes, hidden route
+truth, future crossing state, or evaluator joins. Source inspection receipts
+therefore remain build-time provenance and cannot enter the controller snapshot
+as evidence until a separately frozen transformation produces a public evidence
+record. This keeps the base Reference boundary compatible with later deliberation
+work without adding any search, scoring, or LEAP behavior now.
+
 ## Deterministic event machine
 
 The runtime will process a totally ordered queue. An event key is
@@ -87,6 +96,16 @@ Person trajectories remain change-point sequences rather than materialized
 five-minute samples. Large line-oriented artifacts are streamed through
 canonical writers. One-seed profiling precedes any performance freeze; current
 15-minute and 2-GiB limits are provisional engineering targets only.
+
+The reversible Phase 0 characterization computes 1,728 physical output ticks,
+5,760 decision ticks, 384 capacity windows, and 2,419,200 person-position rows
+for a naive fully materialized trajectory table. The minimum queue-load proxy is
+10,772 keys after adding the inherited 2,900-report design target. This is an
+engineering lower bound, not a simulated workload or an acceptance result: it
+omits dynamically created coordination, resource, provider, recovery, and
+commitment events. Run `python -m trace_reference.benchmark_cli` to measure the
+deterministic ordering proxy locally. The printed wall time is descriptive and
+is not committed as scientific evidence.
 
 ## Scientific separation
 

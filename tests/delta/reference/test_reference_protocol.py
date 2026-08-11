@@ -11,6 +11,7 @@ from trace_reference import (
     REFERENCE_PROTOCOL,
     derive_study_seed,
     load_reference_config,
+    load_reference_entity_source_crosswalk,
     load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
@@ -27,10 +28,9 @@ CONFIG = Path("configs/scenarios/wf_dfld_01_reference_development.yaml")
 GOVERNANCE = Path("configs/governance/wf_dfld_01_reference_governance_v1.yaml")
 SOURCES = Path("data/scenario/delta/reference/sources/requirements_v1.yaml")
 SOURCE_RESEARCH = Path("data/scenario/delta/reference/sources/source_research_v1.yaml")
-GAUGE_RESEARCH = Path(
-    "data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml"
-)
+GAUGE_RESEARCH = Path("data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml")
 TOPOLOGY_DESIGN = Path("data/scenario/delta/reference/topology_design_v1.yaml")
+ENTITY_CROSSWALK = Path("data/scenario/delta/reference/sources/entity_source_crosswalk_v1.yaml")
 BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 
 
@@ -106,6 +106,7 @@ def test_reference_source_research_cannot_become_implicit_runtime_data() -> None
         if candidate.research_status == "verified-official-locator"
     ]
     assert {candidate.source_id for candidate in verified} == {
+        "REF-SRC-01",
         "REF-SRC-02",
         "REF-SRC-03",
         "REF-SRC-04",
@@ -114,10 +115,16 @@ def test_reference_source_research_cannot_become_implicit_runtime_data() -> None
         "REF-SRC-07",
     }
     assert all(candidate.runtime_inclusion == "none" for candidate in registry.candidates)
+    redistribution = {
+        candidate.source_id: candidate.redistribution_status for candidate in registry.candidates
+    }
+    assert redistribution["REF-SRC-01"] == ("clipped-government-snapshot-with-attribution")
+    assert redistribution["REF-SRC-03"] == "united-states-public-domain"
+    assert redistribution["REF-SRC-04"] == "public-use-no-restrictions"
+    assert redistribution["REF-SRC-05"] == "united-states-public-domain"
     assert all(
-        candidate.redistribution_status == "not-assessed"
-        for candidate in registry.candidates
-        if candidate.source_id != "REF-SRC-05"
+        redistribution[source_id] == "not-assessed"
+        for source_id in ("REF-SRC-02", "REF-SRC-06", "REF-SRC-07", "REF-SRC-08", "REF-SRC-09")
     )
 
 
@@ -128,10 +135,7 @@ def test_reference_gauge_identity_research_corrects_spec_without_thresholds() ->
     assert identities["MSD"].official_name == "San Joaquin River at Mossdale Bridge"
     assert identities["MRU"].identity_status == "corrects-specification"
     assert identities["MSD"].identity_status == "corrects-specification"
-    assert all(
-        gauge.threshold_status == "unavailable-non-operative"
-        for gauge in registry.gauges
-    )
+    assert all(gauge.threshold_status == "unavailable-non-operative" for gauge in registry.gauges)
     assert all(gauge.runtime_inclusion == "none" for gauge in registry.gauges)
 
 
@@ -144,6 +148,35 @@ def test_reference_topology_design_is_complete_but_not_runtime_geometry() -> Non
     assert all(entity.geometry_status == "unbound" for entity in registry.entities)
     assert all(entity.graph_status == "unbound" for entity in registry.entities)
     assert all(entity.runtime_inclusion == "none" for entity in registry.entities)
+
+
+def test_reference_entity_crosswalk_records_corrections_without_binding_runtime() -> None:
+    registry = load_reference_entity_source_crosswalk(ROOT, ENTITY_CROSSWALK)
+    requirements = load_reference_source_requirements(ROOT, SOURCES)
+    topology = load_reference_topology_design(ROOT, TOPOLOGY_DESIGN)
+    entries = {entry.entity_id: entry for entry in registry.entries}
+    assert len(entries) == 22
+    assert entries["ISL-01"].research_status == (
+        "multiple-official-records-require-spatial-crosswalk"
+    )
+    assert entries["ISL-01"].official_identifiers == (
+        "RD 317 Lower Andrus Island",
+        "RD 407 Andrus Island",
+        "RD 556 Upper Andrus Island",
+    )
+    assert entries["XNG-03"].research_status == "official-record-corrects-design"
+    assert "movable lift" in entries["XNG-03"].official_identifiers
+    assert entries["XNG-08"].research_status == "official-record-corrects-design"
+    assert entries["XNG-10"].research_status == (
+        "official-record-raises-current-status-question"
+    )
+    requirement_ids = {item.source_id for item in requirements.requirements}
+    assert all(set(entry.source_requirement_ids) <= requirement_ids for entry in registry.entries)
+    assert tuple(entry.design_name for entry in registry.entries) == tuple(
+        entity.design_name for entity in topology.entities
+    )
+    assert all(entry.binding_status == "unbound" for entry in registry.entries)
+    assert all(entry.runtime_inclusion == "none" for entry in registry.entries)
 
 
 def test_delivered_small_baseline_verifies_and_tampering_fails(tmp_path: Path) -> None:

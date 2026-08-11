@@ -1,0 +1,252 @@
+registry_version: delta-reference-entity-source-crosswalk-v1
+scientific_status: research-draft-no-runtime-bindings
+verified_date: '2026-08-11'
+entries:
+  - entity_id: ISL-01
+    design_name: Andrus Island
+    research_status: multiple-official-records-require-spatial-crosswalk
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 317 Lower Andrus Island, RD 407 Andrus Island, RD 556 Upper Andrus Island]
+    official_point: null
+    evidence_locators:
+      - https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/
+      - https://landuse.saccounty.gov/gp/sa/
+      - https://waterresources.saccounty.gov/us/en/stormready/hazards/mitigation-plan/2021.html
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings:
+      - Official records describe Lower Andrus, Andrus, and Upper Andrus as separate reclamation districts rather than one island-wide district.
+      - The Brannan-Andrus Levee Maintenance District annex associates RDs 317, 407, and 2067 with the combined maintenance district.
+      - The specification's RD 407 west-levee segment requires a spatial segment-to-district crosswalk before it can be represented as fact.
+  - entity_id: ISL-02
+    design_name: Brannan Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 2067 Brannan Island]
+    official_point: null
+    evidence_locators: [https://landuse.saccounty.gov/gp/sa/, https://waterresources.saccounty.gov/us/en/stormready/hazards/mitigation-plan/2021.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Sacramento County records identify Brannan Island as RD 2067; geometry and levee-segment ownership remain unbound.]
+  - entity_id: ISL-03
+    design_name: Twitchell Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 1601 Twitchell Island]
+    official_point: null
+    evidence_locators: [https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The State Water Board legal-Delta index identifies Twitchell Island as RD 1601.]
+  - entity_id: ISL-04
+    design_name: Sherman Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 341 Sherman Island]
+    official_point: null
+    evidence_locators: [https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The State Water Board legal-Delta index identifies Sherman Island as RD 341.]
+  - entity_id: ISL-05
+    design_name: Tyler Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 563 Tyler Island]
+    official_point: null
+    evidence_locators: [https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The State Water Board legal-Delta index identifies Tyler Island as RD 563.]
+  - entity_id: ISL-06
+    design_name: Grand Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 3 Grand Island]
+    official_point: null
+    evidence_locators: [https://landuse.saccounty.gov/gp/sa/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Sacramento County identifies Grand Island as RD 3.]
+  - entity_id: ISL-07
+    design_name: Staten Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 38 Staten Island]
+    official_point: null
+    evidence_locators: [https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The State Water Board legal-Delta index identifies Staten Island as RD 38.]
+  - entity_id: ISL-08
+    design_name: Bouldin Island
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-01, REF-SRC-02]
+    official_identifiers: [RD 756 Bouldin Island]
+    official_point: null
+    evidence_locators: [https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The State Water Board legal-Delta index identifies Bouldin Island as RD 756.]
+  - entity_id: TWN-01
+    design_name: Isleton
+    research_status: source-identified-binding-pending
+    source_requirement_ids: [REF-SRC-03]
+    official_identifiers: []
+    official_point: null
+    evidence_locators: [https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The 2025 TIGER/Line place archive is identified, but its feature and administrative-boundary semantics have not been bound to Reference exposure.]
+  - entity_id: TWN-02
+    design_name: Walnut Grove
+    research_status: source-identified-binding-pending
+    source_requirement_ids: [REF-SRC-03]
+    official_identifiers: []
+    official_point: null
+    evidence_locators: [https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Census place or CDP identity and the intended synthetic exposure footprint require field-level review.]
+  - entity_id: TWN-03
+    design_name: Locke
+    research_status: source-identified-binding-pending
+    source_requirement_ids: [REF-SRC-03]
+    official_identifiers: []
+    official_point: null
+    evidence_locators: [https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Census place or CDP identity and the intended synthetic exposure footprint require field-level review.]
+  - entity_id: TWN-04
+    design_name: Ryde
+    research_status: source-identified-binding-pending
+    source_requirement_ids: [REF-SRC-03]
+    official_identifiers: []
+    official_point: null
+    evidence_locators: [https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Administrative geometry availability is not yet verified; no centroid or footprint may be inferred.]
+  - entity_id: XNG-01
+    design_name: Rio Vista Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 23 0024, Caltrans OBJECTID 2061, State Route 12, movable lift]
+    official_point: {latitude_e6: 38160150, longitude_e6: -121686553, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Caltrans inventory supports the Rio Vista movable-lift identity; graph endpoints and current operability remain unbound.]
+  - entity_id: XNG-02
+    design_name: Antioch Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 28 0009, Caltrans OBJECTID 2717, State Route 160, fixed stringer or multi-beam]
+    official_point: {latitude_e6: 38016800, longitude_e6: -121751478, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Caltrans inventory supports a fixed bridge identity; graph endpoints and high-clearance semantics require separate review.]
+  - entity_id: XNG-03
+    design_name: Threemile Slough Bridge
+    research_status: official-record-corrects-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 24 0121, Caltrans OBJECTID 2286, State Route 160, movable lift]
+    official_point: {latitude_e6: 38105131, longitude_e6: -121701564, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The supplied specification labels XNG-03 fixed, but the current Caltrans inventory classifies it as a movable lift bridge.]
+  - entity_id: XNG-04
+    design_name: Isleton Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 24 0051, Caltrans OBJECTID 2255, State Route 160, movable bascule]
+    official_point: {latitude_e6: 38171622, longitude_e6: -121592975, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Caltrans inventory supports the Isleton bascule identity; the specification's spur wording and graph endpoints remain to be reconciled.]
+  - entity_id: XNG-05
+    design_name: Walnut Grove Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Sacramento County operated movable bridge]
+    official_point: null
+    evidence_locators: [https://sacdot.saccounty.gov/us/en/roadway-services/bridge-operations.html]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Sacramento County lists Walnut Grove among its operated movable bridges; an exact bridge identifier and point remain unbound.]
+  - entity_id: XNG-06
+    design_name: Paintersville Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 24 0053, Caltrans OBJECTID 2257, State Route 160, movable bascule]
+    official_point: {latitude_e6: 38318708, longitude_e6: -121578733, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Caltrans inventory supports the Paintersville bascule identity; its point lies north of the specification's provisional latitude bound and requires an extent decision.]
+  - entity_id: XNG-07
+    design_name: Bethel Island Bridge
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Contra Costa County owned and maintained bridge over Dutch Slough]
+    official_point: null
+    evidence_locators: [https://www.contracosta.ca.gov/DocumentCenter/View/70680/Development-Program-Report---Bethel-Island-AOB-PDF]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [A current County development report confirms that the Bethel Island bridge replacement project was completed; the specification's sole-road-access claim still requires a separate topology check, and the crossing remains only a candidate boundary connector.]
+  - entity_id: XNG-08
+    design_name: Real McCoy Ferry
+    research_status: official-record-corrects-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans Real McCoy II, State Route 84, free-running hydraulic propulsion]
+    official_point: null
+    evidence_locators: [https://dot.ca.gov/caltrans-near-me/district-4/d4-projects/d4-solano-delta-ferry]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The supplied specification calls Real McCoy a cable ferry, but Caltrans identifies hydraulic propulsion and distinguishes it from the cable-drawn J-Mack.]
+  - entity_id: XNG-09
+    design_name: J-Mack Ferry
+    research_status: official-record-supports-design
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [Caltrans bridge 23 0037, Caltrans OBJECTID 2070, State Route 220, cable-drawn ferry]
+    official_point: {latitude_e6: 38236415, longitude_e6: -121604039, precision_status: inventory-point-not-survey-control}
+    evidence_locators: [https://dot.ca.gov/caltrans-near-me/district-4/d4-projects/d4-solano-delta-ferry, https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [Caltrans identifies the J-Mack as a cable-drawn State Route 220 ferry between Grand Island and East Ryer Island.]
+  - entity_id: XNG-10
+    design_name: Woodward Island Ferry
+    research_status: official-record-raises-current-status-question
+    source_requirement_ids: [REF-SRC-04]
+    official_identifiers: [San Joaquin County Woodward Island Bridge replacement project]
+    official_point: null
+    evidence_locators: [https://ceqanet.lci.ca.gov/2016012065/4]
+    binding_status: unbound
+    runtime_inclusion: none
+    redistribution_disposition: factual-metadata-only-no-source-bytes-committed
+    findings: [The official 2017 project record approves decommissioning the ferry and constructing a seven-span bridge; it does not by itself establish completion, so current crossing type and operability require county confirmation.]

@@ -9,6 +9,7 @@ modify or silently re-freeze Small artifacts.
 from .baseline import verify_small_baseline
 from .loading import (
     load_reference_config,
+    load_reference_entity_source_crosswalk,
     load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
@@ -24,6 +25,7 @@ __all__ = [
     "ReferenceScenarioConfig",
     "derive_study_seed",
     "load_reference_config",
+    "load_reference_entity_source_crosswalk",
     "load_reference_gauge_research",
     "load_reference_governance",
     "load_reference_source_requirements",

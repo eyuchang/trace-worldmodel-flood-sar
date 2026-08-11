@@ -20,15 +20,23 @@ Scientific status: design draft; development only
   confirmatory namespace or seed derivation path.
 - Added four configurable logical evidence-authority roles, each explicitly
   provisional and non-legal.
-- Added nine source requirements plus a separate research ledger. Six official
+- Added nine source requirements plus a separate research ledger. Seven official
   locators have been verified; no candidate is an implicit runtime input.
 - Added a complete 22-entity Reference topology design inventory. Every entity
   remains explicitly unbound to geometry and graph edges pending field-level QA.
+- Added a typed 22-entity official-source crosswalk. It brackets the segmented
+  Andrus district records, records two crossing corrections, and flags the
+  unresolved current status of Woodward without binding any source fact into
+  runtime topology.
 - Verified all seven supplied CDEC station IDs against current official metadata.
   `MRU` and `MSD` are misnamed in the supplied specification, and no threshold
   has been activated from metadata alone.
 - Defined the Reference event-machine, route, capacity, resource/crew, recovery,
   streaming, and dependency boundaries needed for implementation at scale.
+- Added a network-free source-inspection seam with digest, schema, archive,
+  symlink, traversal, size, and atomic-receipt protections.
+- Characterized the draft workload grids and deterministic event-ordering proxy;
+  the timings remain local engineering diagnostics with no acceptance status.
 
 ## Intentionally not done
 

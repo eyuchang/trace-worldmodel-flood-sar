@@ -2,18 +2,20 @@ registry_version: delta-reference-source-research-v1
 scientific_status: research-draft-no-runtime-inputs
 candidates:
   - source_id: REF-SRC-01
-    research_status: unresolved
-    agency: Sacramento County, responsible reclamation district, or California State Water Resources Control Board
-    dataset_title: Island and reclamation-district footprints
-    landing_page_url: https://www.waterboards.ca.gov/water_issues/programs/delta_watermaster/delta_map/
-    machine_readable_url: null
-    verified_date: null
-    redistribution_status: not-assessed
+    research_status: verified-official-locator
+    agency: Sacramento County and California State Water Resources Control Board
+    dataset_title: Sacramento County drainage districts with legal-Delta identity cross-check
+    landing_page_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7
+    machine_readable_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7/query
+    verified_date: 2026-08-11
+    redistribution_status: clipped-government-snapshot-with-attribution
     runtime_inclusion: none
     limitations:
-      - No exact county or district feature collection has yet passed identity and license review.
-      - The official Water Board map identifies Andrus Island as RD 317, while the supplied specification names RD 407; no district identity may be frozen until this conflict is resolved from primary legal or agency records.
-      - The map is a discovery and cross-check source, not an approved operational footprint.
+      - Sacramento County distinguishes Lower Andrus Island RD 317, Andrus Island RD 407, Upper Andrus Island RD 556, and Brannan Island RD 2067.
+      - The State Water Board's island-level index uses Andrus Island RD 317; this is a coarser identity than the county segmentation, not sufficient evidence that RD 407 is absent.
+      - The exact west-levee segment in the specification must remain unbound until county geometry and responsible-district records are spatially reconciled.
+      - The verified service still requires a Reference-specific query, snapshot digest, schema check, and redistribution review before use.
+      - The prior Small source review supports an attributed clipped government snapshot; a broader Reference extraction still requires its own field and attribution manifest.
   - source_id: REF-SRC-02
     research_status: verified-official-locator
     agency: California Department of Water Resources
@@ -33,11 +35,11 @@ candidates:
     landing_page_url: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2025.html
     machine_readable_url: https://www2.census.gov/geo/tiger/TIGER2025/PLACE/tl_2025_06_place.zip
     verified_date: 2026-08-11
-    redistribution_status: not-assessed
+    redistribution_status: united-states-public-domain
     runtime_inclusion: none
     limitations:
       - Boundaries and names are as of 2025-01-01; the file contains no demographic data.
-      - The archive must still pass digest, schema, CRS, and redistribution review.
+      - Census data are public domain, but the archive must still pass digest, schema, CRS, feature-selection, and attribution review.
   - source_id: REF-SRC-04
     research_status: verified-official-locator
     agency: California Department of Transportation
@@ -45,11 +47,16 @@ candidates:
     landing_page_url: https://dot.ca.gov/caltrans-open-data-inventory
     machine_readable_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0
     verified_date: 2026-08-11
-    redistribution_status: not-assessed
+    redistribution_status: public-use-no-restrictions
     runtime_inclusion: none
     limitations:
       - The service describes bridge inventory data dated 2024-03-12.
-      - Crossing identities and network connectivity require separate field-level verification.
+      - The Caltrans open-data record states no restrictions on public use; this disposition does not apply to separate county records or third-party basemaps.
+      - Caltrans identifies XNG-03 as a movable lift bridge, contrary to the specification's fixed-bridge label.
+      - Caltrans identifies Real McCoy II as hydraulically propelled rather than cable-drawn, and identifies J-Mack as cable-drawn.
+      - County-operated crossings require records from their responsible county rather than inference from the state inventory.
+      - The official Woodward Island project record approves ferry decommissioning and bridge construction; it does not by itself prove project completion, so current status still requires county confirmation.
+      - Crossing identities, exact endpoints, and network connectivity remain non-operative pending field-level binding.
   - source_id: REF-SRC-05
     research_status: verified-official-locator
     agency: United States Geological Survey
@@ -57,7 +64,7 @@ candidates:
     landing_page_url: https://www.usgs.gov/3d-hydrography-program/access-3dhp-data-products
     machine_readable_url: https://hydro.nationalmap.gov/arcgis/rest/services/3DHP_all/MapServer
     verified_date: 2026-08-11
-    redistribution_status: open-nonproprietary
+    redistribution_status: united-states-public-domain
     runtime_inclusion: none
     limitations:
       - The live service changes as 3DHP replaces legacy NHD data and therefore must be snapshotted.
