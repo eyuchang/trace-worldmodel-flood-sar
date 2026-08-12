@@ -1,7 +1,7 @@
 # WF-DFLD-01-REFERENCE geography and provenance amendment v2
 
-Date: 2026-08-12  
-Status: approved scientific decisions unchanged; corrective development amendment  
+Date: 2026-08-12
+Status: approved scientific decisions unchanged; corrective development amendment
 Scope: geography, provenance, licensing, and public-delivery lineage only
 
 ## Immutable protocol bindings
@@ -41,14 +41,24 @@ physical coefficients, estimands, or validation policy.
 ## Public-delivery requirement
 
 The local branch contains prior research commits that included a County snapshot.
-Deleting it in a descendant commit does not remove those ancestor Git objects.
-No public push may use this local lineage unless Sacramento County supplies
-explicit redistribution permission covering those bytes. In the absence of such
-permission, delivery must create a sanitized branch from a known-safe base and
-apply only reviewed, redistributable changes. A pre-push object/history scan must
-prove that the County snapshot digest
-`af9c9cb9ea6a79ae569ee156c1e5753df468697fe14cf9a2e3f7f15a97eaaca0`
-and its path are absent from every reachable object.
+The delivered Small lineage also contains a separate clip of the same County
+dataset at SHA-256
+`803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710`.
+Deleting either snapshot in a descendant commit does not remove ancestor Git
+objects or the catalogs, bundles, and topology figures derived from those bytes.
+No public push may use either lineage unless Sacramento County supplies explicit
+redistribution permission covering the raw and derived material.
+
+Without permission, delivery must begin from safe commit
+`b185a7f65bb429c3bea03bace277a49e31263233`, immediately before County data first
+entered Small at commit `18128df916c40e7a2505710db98365d20147ae4d`.
+The sanitized branch must reconstitute Small and Reference from reviewed
+redistributable DWR-derived fixtures, regenerate every source-bound Small/Reference
+catalog, manifest, reference bundle, and spatial figure, and record the resulting
+scientific amendment rather than calling the outputs byte-identical replications.
+A pre-push object/history scan must prove that both County snapshot paths, their
+raw digests, and every registered derived path/digest are absent from all reachable
+objects. The current local research history remains immutable and unpushed.
 
 ## Scientific consequence
 

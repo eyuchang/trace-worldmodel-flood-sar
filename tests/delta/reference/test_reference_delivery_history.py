@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import hashlib
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from trace_reference.delivery_history import (
+    DEFAULT_PROHIBITED_INVENTORY,
     PROHIBITED_PATH,
+    PROHIBITED_SMALL_SOURCE_PATH,
+    ProhibitedDeliveryInventory,
     verify_delivery_history,
 )
 
@@ -41,5 +45,40 @@ def test_delivery_history_rejects_prohibited_path_even_after_deletion(tmp_path: 
     target.unlink()
     _git(repo, "add", "-u")
     _git(repo, "commit", "--quiet", "-m", "delete")
-    with pytest.raises(ValueError, match="prohibited County source path"):
+    with pytest.raises(ValueError, match="prohibited County-derived path"):
         verify_delivery_history(repo, "HEAD")
+
+
+def test_delivery_history_rejects_delivered_small_county_path(tmp_path: Path) -> None:
+    repo = _repository(tmp_path)
+    target = repo / PROHIBITED_SMALL_SOURCE_PATH
+    target.parent.mkdir(parents=True)
+    target.write_text("Small County fixture\n", encoding="utf-8")
+    _git(repo, "add", PROHIBITED_SMALL_SOURCE_PATH)
+    _git(repo, "commit", "--quiet", "-m", "unsafe Small source")
+    with pytest.raises(ValueError, match="prohibited County-derived path"):
+        verify_delivery_history(repo, "HEAD")
+
+
+def test_delivery_history_rejects_renamed_derived_blob_by_digest(tmp_path: Path) -> None:
+    repo = _repository(tmp_path)
+    derived_bytes = b"synthetic County-derived geometry fixture\n"
+    (repo / "renamed-safe-looking.json").write_bytes(derived_bytes)
+    _git(repo, "add", "renamed-safe-looking.json")
+    _git(repo, "commit", "--quiet", "-m", "renamed unsafe derived file")
+    inventory = ProhibitedDeliveryInventory(
+        exact_paths=(),
+        path_prefixes=(),
+        blob_sha256=(hashlib.sha256(derived_bytes).hexdigest(),),
+    )
+    with pytest.raises(ValueError, match="prohibited County-derived blob"):
+        verify_delivery_history(repo, "HEAD", inventory=inventory)
+
+
+def test_default_inventory_covers_small_and_reference_raw_and_derived_evidence() -> None:
+    assert PROHIBITED_PATH in DEFAULT_PROHIBITED_INVENTORY.exact_paths
+    assert PROHIBITED_SMALL_SOURCE_PATH in DEFAULT_PROHIBITED_INVENTORY.exact_paths
+    assert "803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710" in (
+        DEFAULT_PROHIBITED_INVENTORY.blob_sha256
+    )
+    assert any("small_book" in prefix for prefix in DEFAULT_PROHIBITED_INVENTORY.path_prefixes)

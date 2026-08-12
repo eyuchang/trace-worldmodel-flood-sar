@@ -206,7 +206,7 @@ class ReferenceScenarioConfig(DeltaModel):
         ):
             raise ValueError("Reference configuration does not bind the approved amendment")
         if self.geography_amendment_sha256 != (
-            "489dbee8e296d1b55ffd4ec4f5628462251f26ffad1fabaff27ef70bb0c6a630"
+            "c4c908436ce18b89dbc5e01486fc7119c7bef5fd4b2b2604ebd9aa2ce70be225"
         ):
             raise ValueError("Reference configuration does not bind geography amendment v2")
         if self.axes.kappa != 1.0:
