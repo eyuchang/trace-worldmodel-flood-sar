@@ -47,6 +47,7 @@ def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> Non
     assert config.geography_amendment_sha256 == REFERENCE_PROTOCOL.geography_amendment_sha256
     assert REFERENCE_PROTOCOL.geography == "delta-reference-geography-v3"
     assert REFERENCE_PROTOCOL.coordination == "delta-reference-coordination-v2"
+    assert REFERENCE_PROTOCOL.demand_capacity == "delta-reference-demand-capacity-v1"
     assert sha256_file(ROOT / PROTOCOL_DRAFT) == config.protocol_document_sha256
     assert sha256_file(ROOT / GEOGRAPHY_AMENDMENT) == config.geography_amendment_sha256
     assert config.timeline.burn_in_start_s == -172_800
