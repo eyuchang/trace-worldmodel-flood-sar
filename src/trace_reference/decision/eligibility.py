@@ -155,23 +155,33 @@ def _bundle(
     classification: ProposalEligibility,
     snapshot: ControllerVisibleSnapshot,
 ) -> ResponseBundle:
+    reversible: bool | None
     if isinstance(proposal, EvidenceAcquisitionOffer):
         kind = ResponseBundleKind.ACQUIRE_THEN_REASSESS
         action = None
         acquisition = proposal
         consequence = "low"
+        reversible = None
+        authority_requirement = None
+        authority_evidence_ids: tuple[str, ...] = ()
         deadline = proposal.latest_useful_delivery_s
     elif isinstance(proposal, SafeAlternativeProposal):
         kind = ResponseBundleKind.SAFE_ALTERNATIVE
         action = proposal.action
         acquisition = None
         consequence = proposal.consequence_class
+        reversible = proposal.reversible
+        authority_requirement = proposal.authority_requirement
+        authority_evidence_ids = proposal.current_authority_evidence_ids
         deadline = proposal.action.execution_not_after_s
     else:
         kind = ResponseBundleKind.ACT_NOW
         action = proposal.action
         acquisition = None
         consequence = proposal.consequence_class
+        reversible = proposal.reversible
+        authority_requirement = proposal.authority_requirement
+        authority_evidence_ids = proposal.current_authority_evidence_ids
         deadline = proposal.action.execution_not_after_s
     body = {
         "schema_version": "delta-reference-response-bundle-v1",
@@ -185,6 +195,9 @@ def _bundle(
         "acquisition": acquisition.model_dump(mode="json") if acquisition is not None else None,
         "deadline_s": deadline,
         "consequence_class": consequence,
+        "reversible": reversible,
+        "authority_requirement": authority_requirement,
+        "current_authority_evidence_ids": authority_evidence_ids,
         "fallback_disposition": CommitmentDecision.HOLD.value,
     }
     return ResponseBundle(**body, bundle_digest=decision_digest(body))

@@ -37,6 +37,7 @@ from .domain import (
     PhysicalActionProposal,
     ProposalRequest,
     ProposalSet,
+    PublicAuthorityEvidence,
     PublicModelState,
     ReferenceActionSpec,
     ReferenceTraceAssessment,
@@ -44,6 +45,7 @@ from .domain import (
     ResponseBundleCatalog,
     SafeAlternativeProposal,
 )
+from .evidence_binding import PredictorEvidenceBinding, bind_predictor_evidence
 
 __all__ = [
     "AcquisitionOutcomeInput",
@@ -63,10 +65,12 @@ __all__ = [
     "EvidenceAcquisitionExecutor",
     "EvidenceAcquisitionOffer",
     "PhysicalActionProposal",
+    "PredictorEvidenceBinding",
     "ProposalRequest",
     "ProposalSet",
     "ProviderReceipt",
     "ProviderReceiptInput",
+    "PublicAuthorityEvidence",
     "PublicModelState",
     "ReferenceActionSpec",
     "ReferenceCommitmentEnvelope",
@@ -79,6 +83,7 @@ __all__ = [
     "ResponseBundleCatalog",
     "SafeAlternativeProposal",
     "ServiceOutcomeInput",
+    "bind_predictor_evidence",
     "build_commitment_envelope",
     "build_compensation_record",
     "build_cost_delta",

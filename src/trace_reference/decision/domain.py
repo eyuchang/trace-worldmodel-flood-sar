@@ -49,6 +49,13 @@ class PublicOutcomeBelief(DeltaModel):
     observed_at_s: int = Field(ge=-172_800, le=345_600)
 
 
+class PublicAuthorityEvidence(DeltaModel):
+    """Controller-visible evidence originating from one synthetic logical role."""
+
+    authority_id: Literal["AUTH-01", "AUTH-02", "AUTH-03", "AUTH-04"]
+    coordination_delivery_ids: tuple[str, ...] = Field(min_length=1)
+
+
 class ControllerVisibleSnapshot(DeltaModel):
     """Explicit allowlist projection; it cannot recursively contain hidden runtime state."""
 
@@ -63,6 +70,7 @@ class ControllerVisibleSnapshot(DeltaModel):
     environment_beliefs: tuple[PublicEnvironmentBelief, ...]
     resource_beliefs: tuple[PublicResourceBelief, ...]
     delivered_coordination_ids: tuple[str, ...]
+    authority_evidence: tuple[PublicAuthorityEvidence, ...]
     active_commitments: tuple[PublicCommitmentBelief, ...]
     known_outcomes: tuple[PublicOutcomeBelief, ...]
     predictor_version: str
@@ -88,6 +96,10 @@ class ControllerVisibleSnapshot(DeltaModel):
             raise ValueError("Reference resource beliefs must be canonically ordered")
         if self.delivered_coordination_ids != tuple(sorted(set(self.delivered_coordination_ids))):
             raise ValueError("Reference coordination identifiers must be unique and ordered")
+        if self.authority_evidence != tuple(
+            sorted(self.authority_evidence, key=lambda item: item.authority_id)
+        ):
+            raise ValueError("Reference authority evidence must be canonically ordered")
         return self
 
 
@@ -267,6 +279,9 @@ class ResponseBundle(DeltaModel):
     acquisition: EvidenceAcquisitionOffer | None
     deadline_s: int = Field(ge=-172_800, le=345_600)
     consequence_class: Literal["low", "moderate", "high"]
+    reversible: bool | None
+    authority_requirement: str | None
+    current_authority_evidence_ids: tuple[str, ...]
     fallback_disposition: CommitmentDecision
     bundle_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
@@ -279,6 +294,8 @@ class ResponseBundle(DeltaModel):
             raise ValueError("Reference response bundle must contain exactly one payload")
         if self.fallback_disposition == CommitmentDecision.CLEAR:
             raise ValueError("Reference fallback disposition cannot itself authorize action")
+        if acquisition_kind != (self.reversible is None):
+            raise ValueError("Reference acquisition bundle cannot declare action reversibility")
         return self
 
 

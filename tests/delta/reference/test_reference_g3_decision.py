@@ -1,12 +1,30 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from trace_jepa.contracts import CommitmentDecision, WorldModelEvidence
-from trace_jepa.predictor import ToyActionPrefixPredictor
+from trace_jepa.contracts import (
+    ActionInstance,
+    Claim,
+    ClaimLayer,
+    CommitmentDecision,
+    PlanCandidate,
+    WorldModelEvidence,
+)
+from trace_jepa.experimental import RevalidationGuard, build_experimental_profile
+from trace_jepa.predictor import (
+    PredictorContext,
+    PredictorObservation,
+    PredictorPriorProfile,
+    PredictorRequest,
+    PredictorRouteObservation,
+    ToyActionPrefixPredictor,
+)
+from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
+from trace_jepa.support import canonical_json_bytes, sha256_bytes
 from trace_reference import load_reference_resource_parameters
 from trace_reference.decision.acquisition import (
     EvidenceAcquisitionExecutor,
@@ -38,6 +56,10 @@ from trace_reference.decision.eligibility import (
     build_response_bundle_catalog,
     classify_reference_proposals,
 )
+from trace_reference.decision.evidence_binding import (
+    PredictorEvidenceBinding,
+    bind_predictor_evidence,
+)
 from trace_reference.decision.proposals import propose_reference_actions
 from trace_reference.decision.selector import BaseReferenceSelector
 from trace_reference.decision.visibility import (
@@ -55,6 +77,15 @@ from trace_reference.domain.resources import (
     ReferenceResourceTelemetry,
 )
 from trace_reference.generation import generate_reference_resources
+from trace_reference.runtime import (
+    ProposalAssessmentInput,
+    ReferenceCommitmentLog,
+    ReferenceEventLog,
+    ReferenceEvidenceLedger,
+    ReferenceTraceGateway,
+    ReferenceTraceRepository,
+    SelectedCommitmentInput,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -196,6 +227,147 @@ def _catalog(decision_fixture, *, hold_primary: bool = False):
     )
     eligibility = classify_reference_proposals(snapshot, proposals, assessments)
     return proposals, eligibility, build_response_bundle_catalog(snapshot, proposals, eligibility)
+
+
+def _core_action_for_test(proposal) -> ActionInstance:
+    action = proposal.action
+    return ActionInstance(
+        action_id=action.action_id,
+        action_type=action.action_class,
+        actor_id=action.actor_resource_id or "reference-unassigned-resource",
+        origin=action.origin_node_id,
+        destination=action.destination_public_id,
+        route_id=action.route_id,
+        parameters={
+            "required_capability": action.required_capability,
+            "reference_action_digest": action.action_digest,
+            "actor_crew_id": action.actor_crew_id,
+        },
+    )
+
+
+def _bound_proposals(decision_fixture, *, observation_age_s: float = 60.0):
+    _, _, proposals = decision_fixture
+    predictor = ToyActionPrefixPredictor()
+    requests = {}
+    evidences = {}
+    bindings = {}
+    created_at = datetime(2026, 1, 17, 4, 16, 40, tzinfo=UTC)
+    for proposal in (*proposals.physical_actions, *proposals.safe_alternatives):
+        action = _core_action_for_test(proposal)
+        plan = PlanCandidate(
+            plan_id=f"plan-{proposal.action.action_digest[:20]}",
+            name="Reference G3 closure fixture",
+            actions=(action,),
+            utility=1.0,
+            reversible_first_action=proposal.reversible,
+            requires_authority=True,
+        )
+        request = PredictorRequest(
+            plan=plan,
+            observation=PredictorObservation(
+                routes=[
+                    PredictorRouteObservation(
+                        route_id="reference-public-route-v1",
+                        report="open",
+                        nominal_travel_s=900,
+                        confidence=0.95,
+                        observation_age_s=observation_age_s,
+                        crossing_sample_time_s=900,
+                    )
+                ],
+                context=PredictorContext(
+                    simulation_time_s=1_000,
+                    available_resource_units=2,
+                    call_observation_age_s=observation_age_s,
+                    coordination_latency_s=100,
+                    prior_profile=PredictorPriorProfile(
+                        profile_id="reference-prior-pi-0p7-v1",
+                        calibration_version=predictor.calibration_version,
+                        prior_accuracy_milli=700,
+                    ),
+                ),
+            ),
+        )
+        prediction = predictor.predict(request)
+        provenance = predictor.provenance()
+        request_digest = sha256_bytes(canonical_json_bytes(request.model_dump(mode="json")))
+        profile = build_experimental_profile(
+            predictor_version=provenance.predictor_version,
+            calibration_version=provenance.calibration_version,
+            claim_family=action.action_type,
+            adequacy_status=provenance.adequacy_status,
+            prediction_timestamp=created_at,
+            model_hash=provenance.model_hash,
+            calibration_hash=provenance.calibration_hash,
+        ).model_copy(update={"profile_id": f"profile-{proposal.action.action_digest[:20]}"})
+        evidence = WorldModelEvidence(
+            evidence_id=f"reference-evidence-{proposal.action.action_digest[:20]}",
+            rollout_id=f"reference-rollout-{proposal.action.action_digest[:20]}",
+            encoder_version="reference-symbolic-observation-v1",
+            fusion_version="reference-controller-context-v1",
+            predictor_version=provenance.predictor_version,
+            semantic_probe_versions=("reference-route-resource-probe-v1",),
+            training_snapshot=provenance.training_snapshot,
+            observation_window_hash=request_digest,
+            fleet_state_hash="5" * 64,
+            candidate_plan_id=plan.plan_id,
+            action_schema_version=provenance.action_schema_version,
+            rollout_horizon=prediction.rollout_horizon,
+            predicted_claims=("registered route and compatible capacity support response",),
+            uncertainty=prediction.uncertainty,
+            model_support=prediction.model_support,
+            out_of_distribution_score=prediction.out_of_distribution_score,
+            rollout_consistency=1.0 - prediction.uncertainty,
+            reachability_evidence={"route_status": "open", "sample_time_s": 900},
+            calibration_version=provenance.calibration_version,
+            assumptions=prediction.assumptions,
+            observation_age_s=observation_age_s,
+            created_at=created_at,
+            experimental_profile=profile,
+        )
+        evidence_digest = sha256_bytes(canonical_json_bytes(evidence.model_dump(mode="json")))
+        bindings[proposal.action.action_digest] = PredictorEvidenceBinding(
+            action_digest=proposal.action.action_digest,
+            predictor_request_digest=request_digest,
+            predictor_evidence_digest=evidence_digest,
+        )
+        requests[proposal.action.action_digest] = request
+        evidences[proposal.action.action_digest] = evidence
+    return bind_predictor_evidence(proposals, bindings), requests, evidences
+
+
+def _trace_gateway(tmp_path: Path) -> ReferenceTraceGateway:
+    predictor = ToyActionPrefixPredictor()
+    provenance = predictor.provenance()
+    guard = RevalidationGuard.bootstrap(
+        predictor_version=provenance.predictor_version,
+        calibration_version=provenance.calibration_version,
+        model_hash=provenance.model_hash,
+        calibration_hash=provenance.calibration_hash,
+        qualified_families=provenance.qualified_action_types,
+    )
+    policy = PolicyEngine(
+        PolicyConfig(
+            policy_version="trace-reference-g3-fixture-v1",
+            min_model_support=0.60,
+            max_ood_score=0.35,
+            max_uncertainty=0.30,
+            max_rollout_horizon=8,
+            max_observation_age_s=120,
+            require_authority_for=provenance.supported_action_types,
+            enable_revalidation_guard=True,
+            high_consequence_actions=provenance.supported_action_types,
+        ),
+        revalidation=guard,
+    )
+    runtime = TraceRuntime(
+        repository=ReferenceTraceRepository(tmp_path),
+        ledger=ReferenceEvidenceLedger(tmp_path),
+        commitments=ReferenceCommitmentLog(tmp_path),
+        policy=policy,
+    )
+    return ReferenceTraceGateway(runtime, ReferenceEventLog())
 
 
 def test_g3_public_snapshot_is_allowlisted_deterministic_and_hidden_free(
@@ -560,3 +732,147 @@ def test_g3_service_outcomes_preserve_completion_beyond_censoring() -> None:
     )
     assert outcome.scheduled_completion_s == 348_600
     assert outcome.observed_completion_s is None
+
+
+def test_g3_exact_trace_closure_reassesses_consumes_and_commits(
+    decision_fixture,
+    tmp_path: Path,
+) -> None:
+    snapshot, _, _ = decision_fixture
+    proposals, requests, evidences = _bound_proposals(decision_fixture)
+    assessments = {
+        item.proposal_digest: _assessment(item.proposal_digest, CommitmentDecision.CLEAR)
+        for item in (*proposals.physical_actions, *proposals.safe_alternatives)
+    }
+    eligibility = classify_reference_proposals(snapshot, proposals, assessments)
+    catalog = build_response_bundle_catalog(snapshot, proposals, eligibility)
+    selection = BaseReferenceSelector().select(
+        BaseSelectionRequest(
+            catalog_digest=catalog.catalog_digest,
+            public_snapshot_digest=snapshot.snapshot_digest,
+            trace_prefix_digest=snapshot.trace_prefix_digest,
+            at_s=snapshot.at_s,
+        ),
+        catalog,
+    )
+    bundle = next(
+        item for item in catalog.bundles if item.bundle_id == selection.selected_bundle_id
+    )
+    proposal = next(
+        item
+        for item in (*proposals.physical_actions, *proposals.safe_alternatives)
+        if item.proposal_digest == bundle.proposal_digest
+    )
+    claim = Claim(
+        claim_id="reference-claim-g3-closure",
+        layer=ClaimLayer.PREDICTIVE,
+        text="The registered route and compatible resource support response.",
+        grounding={"public_incident_id": proposal.action.destination_public_id},
+        confidence=0.82,
+        confidence_semantics="transparent Toy action-prefix fixture",
+        created_at=datetime(2026, 1, 17, 4, 16, 40, tzinfo=UTC),
+    )
+    gateway = _trace_gateway(tmp_path)
+    closure = gateway.commit_selected(
+        SelectedCommitmentInput(
+            bundle=bundle,
+            catalog=catalog,
+            selection=selection,
+            proposal=proposal,
+            assessment_input=ProposalAssessmentInput(
+                proposal=proposal,
+                snapshot=snapshot,
+                predictor_request=requests[proposal.action.action_digest],
+                evidence=evidences[proposal.action.action_digest],
+                claim=claim,
+                at_s=1_001,
+                created_at=datetime(2026, 1, 17, 4, 16, 41, tzinfo=UTC),
+                lineage_key="reference-g3-closure-lineage",
+            ),
+            consumer_action_id="reference-consumer-g3-closure",
+        )
+    )
+    assert closure.commitment is not None
+    assert closure.commitment_envelope is not None
+    assert closure.commitment.authorizing_record_id == closure.consumed_record.record_id
+    assert closure.commitment.authorizing_record_version == closure.consumed_record.record_version
+    assert (
+        closure.commitment_envelope.authorizing_trace_record_version
+        == closure.consumed_record.record_version
+    )
+    assert gateway.runtime.repository.verify_chain()
+    assert gateway.runtime.commitments.verify_chain()
+    replay = gateway.event_log.replay()
+    assert len(replay.public_mission_artifacts["trace_decision_recorded"]) == 2
+    assert len(replay.public_mission_artifacts["commitment_created"]) == 1
+
+
+def test_g3_post_selection_staleness_holds_without_commitment(
+    decision_fixture,
+    tmp_path: Path,
+) -> None:
+    snapshot, _, _ = decision_fixture
+    proposals, requests, evidences = _bound_proposals(
+        decision_fixture,
+        observation_age_s=121,
+    )
+    assessments = {
+        item.proposal_digest: _assessment(item.proposal_digest, CommitmentDecision.CLEAR)
+        for item in (*proposals.physical_actions, *proposals.safe_alternatives)
+    }
+    eligibility = classify_reference_proposals(snapshot, proposals, assessments)
+    catalog = build_response_bundle_catalog(snapshot, proposals, eligibility)
+    selection = BaseReferenceSelector().select(
+        BaseSelectionRequest(
+            catalog_digest=catalog.catalog_digest,
+            public_snapshot_digest=snapshot.snapshot_digest,
+            trace_prefix_digest=snapshot.trace_prefix_digest,
+            at_s=snapshot.at_s,
+        ),
+        catalog,
+    )
+    bundle = next(
+        item for item in catalog.bundles if item.bundle_id == selection.selected_bundle_id
+    )
+    proposal = next(
+        item
+        for item in (*proposals.physical_actions, *proposals.safe_alternatives)
+        if item.proposal_digest == bundle.proposal_digest
+    )
+    gateway = _trace_gateway(tmp_path)
+    closure = gateway.commit_selected(
+        SelectedCommitmentInput(
+            bundle=bundle,
+            catalog=catalog,
+            selection=selection,
+            proposal=proposal,
+            assessment_input=ProposalAssessmentInput(
+                proposal=proposal,
+                snapshot=snapshot,
+                predictor_request=requests[proposal.action.action_digest],
+                evidence=evidences[proposal.action.action_digest],
+                claim=Claim(
+                    claim_id="reference-claim-g3-stale",
+                    layer=ClaimLayer.PREDICTIVE,
+                    text="The registered route and compatible resource support response.",
+                    created_at=datetime(2026, 1, 17, 4, 16, 40, tzinfo=UTC),
+                ),
+                at_s=1_001,
+                created_at=datetime(2026, 1, 17, 4, 16, 41, tzinfo=UTC),
+                lineage_key="reference-g3-stale-lineage",
+            ),
+            consumer_action_id="reference-consumer-g3-stale",
+        )
+    )
+    assert closure.assessment.commitment_decision == CommitmentDecision.HOLD
+    assert closure.commitment is None
+    assert closure.commitment_envelope is None
+    assert gateway.runtime.commitments.all() == []
+
+
+def test_g3_predictor_binding_requires_complete_exact_action_coverage(
+    decision_fixture,
+) -> None:
+    _, _, proposals = decision_fixture
+    with pytest.raises(ValueError, match="cover every action exactly"):
+        bind_predictor_evidence(proposals, {})

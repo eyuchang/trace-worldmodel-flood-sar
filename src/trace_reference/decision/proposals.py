@@ -90,6 +90,14 @@ def _physical_proposals(
         canonical_by_equivalence.setdefault(key, item)
     proposals = []
     for item in canonical_by_equivalence.values():
+        authority_evidence = next(
+            (
+                evidence.coordination_delivery_ids
+                for evidence in snapshot.authority_evidence
+                if evidence.authority_id == item.owning_authority_id
+            ),
+            (),
+        )
         action = _action(
             request,
             parts=_ActionParts(
@@ -112,7 +120,7 @@ def _physical_proposals(
             "consequence_class": consequence,
             "reversible": reversible,
             "authority_requirement": item.owning_authority_id,
-            "current_authority_evidence_ids": snapshot.delivered_coordination_ids,
+            "current_authority_evidence_ids": authority_evidence,
             "required_claim_ids": (f"claim-{request.target_public_incident_id}",),
             "dependency_ids": (),
             "predictor_request_digest": request_digest,
@@ -139,6 +147,14 @@ def _safe_alternatives(
     )
     if candidate is None:
         return ()
+    authority_evidence = next(
+        (
+            evidence.coordination_delivery_ids
+            for evidence in snapshot.authority_evidence
+            if evidence.authority_id == candidate.owning_authority_id
+        ),
+        (),
+    )
     action = _action(
         request,
         parts=_ActionParts(
@@ -161,7 +177,7 @@ def _safe_alternatives(
         "consequence_class": "low",
         "reversible": True,
         "authority_requirement": candidate.owning_authority_id,
-        "current_authority_evidence_ids": snapshot.delivered_coordination_ids,
+        "current_authority_evidence_ids": authority_evidence,
         "required_claim_ids": (f"claim-{request.target_public_incident_id}",),
         "dependency_ids": (),
         "predictor_request_digest": request_digest,

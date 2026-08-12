@@ -15,6 +15,7 @@ from trace_reference.domain.resources import (
 from .canonical import decision_digest
 from .domain import (
     ControllerVisibleSnapshot,
+    PublicAuthorityEvidence,
     PublicCommitmentBelief,
     PublicEnvironmentBelief,
     PublicOutcomeBelief,
@@ -89,6 +90,9 @@ def build_controller_visible_snapshot(
     delivered_telemetry_ids = frozenset(
         item.evidence_id for item in delivered if item.evidence_kind == "resource-telemetry"
     )
+    by_source_authority: dict[str, list[str]] = {}
+    for item in delivered:
+        by_source_authority.setdefault(item.source_authority_id, []).append(item.delivery_id)
     body = {
         "schema_version": "delta-reference-public-snapshot-v1",
         "scenario_id": "WF-DFLD-01-REFERENCE",
@@ -112,6 +116,13 @@ def build_controller_visible_snapshot(
             )
         ],
         "delivered_coordination_ids": sorted(item.delivery_id for item in delivered),
+        "authority_evidence": [
+            PublicAuthorityEvidence(
+                authority_id=authority_id,
+                coordination_delivery_ids=tuple(sorted(delivery_ids)),
+            ).model_dump(mode="json")
+            for authority_id, delivery_ids in sorted(by_source_authority.items())
+        ],
         "active_commitments": [
             item.model_dump(mode="json")
             for item in sorted(request.active_commitments, key=lambda item: item.commitment_id)
