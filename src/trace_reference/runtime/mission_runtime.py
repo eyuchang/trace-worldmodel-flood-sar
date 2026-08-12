@@ -13,6 +13,9 @@ from typing import cast
 
 from trace_jepa.support import canonical_json_bytes
 from trace_reference.decision import (
+    AcquisitionOutcomeReceipt,
+    AcquisitionRequestReceipt,
+    ReferencePhysicalEvidence,
     ReferenceServiceOutcome,
     ServiceOutcomeInput,
     build_service_outcome,
@@ -23,6 +26,7 @@ from trace_reference.domain import (
     ReferenceEvent,
     ReferenceEventType,
     ReferenceMissionDecision,
+    ReferenceRawReport,
     ReferenceReportEnvelope,
     ReferenceResourceTelemetry,
     ReferenceScenarioArtifacts,
@@ -32,8 +36,13 @@ from trace_reference.domain.observations import ReferenceAuthorityId
 from trace_reference.reconciliation import (
     ReferenceEvidenceGraph,
     ReferenceReconciliationArtifact,
+    ReferenceReconciliationStep,
 )
 
+from .acquisition_provider import (
+    ReferenceRouteProviderInput,
+    build_reference_route_provider_receipt,
+)
 from .decision_engine import ReferenceDecisionEngine, ReferenceDecisionInput
 from .event_store import ReferenceEventLog, verify_reference_event
 
@@ -42,6 +51,7 @@ _EVALUATION_END_S = 345_600
 
 class _InputKind(str, Enum):
     PHYSICAL = "physical"
+    PROVIDER = "provider"
     OUTCOME = "outcome"
     REPORT = "report"
     TELEMETRY = "telemetry"
@@ -63,6 +73,15 @@ class _ScheduledInput:
 class _PendingOutcome:
     outcome: ReferenceServiceOutcome
     resource_id: str
+
+
+@dataclass(frozen=True)
+class _PendingAcquisition:
+    request: AcquisitionRequestReceipt
+    report: ReferenceRawReport
+    envelope: ReferenceReportEnvelope
+    reconciliation: ReferenceReconciliationStep
+    original_decision: ReferenceMissionDecision
 
 
 @dataclass(frozen=True)
@@ -211,6 +230,8 @@ class ReferenceMissionRuntime:
     def _process(self, scheduled: _ScheduledInput) -> None:
         if scheduled.kind == _InputKind.PHYSICAL:
             self._append_physical(scheduled.payload)
+        elif scheduled.kind == _InputKind.PROVIDER:
+            self._complete_acquisition(scheduled.payload, scheduled.at_s)
         elif scheduled.kind == _InputKind.OUTCOME:
             self._record_outcome(scheduled.payload, scheduled.at_s)
         elif scheduled.kind == _InputKind.REPORT:
@@ -320,6 +341,8 @@ class ReferenceMissionRuntime:
         self._decisions.append(execution.result)
         if execution.commitment is not None:
             self._schedule_outcome(execution)
+        elif execution.acquisition_request is not None:
+            self._schedule_acquisition(execution, report, envelope, step)
 
     @staticmethod
     def _seconds(value: int) -> timedelta:
@@ -426,6 +449,126 @@ class ReferenceMissionRuntime:
                 _PendingOutcome(outcome, belief.resource_id),
             ),
         )
+
+    def _schedule_acquisition(
+        self,
+        execution: ReferenceDecisionExecution,
+        report: ReferenceRawReport,
+        envelope: ReferenceReportEnvelope,
+        reconciliation: ReferenceReconciliationStep,
+    ) -> None:
+        request = execution.acquisition_request
+        if request is None:
+            raise RuntimeError("Reference acquisition decision lacks its request")
+        if request.expected_delivery_s > _EVALUATION_END_S:
+            return
+        heapq.heappush(
+            self._pending_outcomes,
+            _ScheduledInput(
+                request.expected_delivery_s,
+                10,
+                request.request_id,
+                _InputKind.PROVIDER,
+                _PendingAcquisition(
+                    request,
+                    report,
+                    envelope,
+                    reconciliation,
+                    execution.result,
+                ),
+            ),
+        )
+
+    def _complete_acquisition(self, value: object, at_s: int) -> None:
+        if not isinstance(value, _PendingAcquisition):
+            raise TypeError("Reference provider queue payload has the wrong type")
+        receipt = build_reference_route_provider_receipt(
+            ReferenceRouteProviderInput(
+                request=value.request,
+                report=value.report,
+                route_service=self.engine.dependencies.route_service,
+                resources=self.scenario.resources,
+            )
+        )
+        if receipt.delivered_at_s != at_s:
+            raise RuntimeError("Reference provider receipt missed its scheduled delivery")
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.PROVIDER_RECEIPT_RECORDED,
+            artifact_id=receipt.receipt_id,
+            artifact_schema_version=receipt.schema_version,
+            artifact=receipt.model_dump(mode="json"),
+        )
+        outcome, evidence = self.engine.dependencies.acquisition_executor.ingest(receipt)
+        self._record_acquisition_outcome(outcome, at_s)
+        if evidence is None:
+            return
+        self._validate_acquired_targets(value.request, evidence)
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED,
+            artifact_id=evidence.evidence_id,
+            artifact_schema_version=evidence.schema_version,
+            artifact=evidence.model_dump(mode="json"),
+        )
+        reassessment = self.engine.execute(
+            ReferenceDecisionInput(
+                report=value.report,
+                envelope=value.envelope,
+                controller_authority_id=value.original_decision.controller_authority_id,
+                reconciliation=value.reconciliation,
+                active_commitments=self._active_beliefs(),
+                known_outcomes=tuple(self._known_outcomes),
+                at_s=at_s,
+                created_at=(
+                    self.scenario.config.timeline.evaluation_start_iso8601
+                    + self._seconds(at_s)
+                ),
+                reassessment_of_decision_id=value.original_decision.decision_id,
+                acquisition_outcome=outcome,
+                physical_evidence=evidence,
+            )
+        )
+        self._decisions.append(reassessment.result)
+        if reassessment.commitment is not None:
+            self._schedule_outcome(reassessment)
+        if reassessment.acquisition_request is not None:
+            raise RuntimeError("Reference post-acquisition reassessment requested another acquisition")
+
+    def _record_acquisition_outcome(
+        self,
+        outcome: AcquisitionOutcomeReceipt,
+        at_s: int,
+    ) -> None:
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.ACQUISITION_OUTCOME_RECORDED,
+            artifact_id=f"acquisition-outcome-{outcome.provider_receipt_id}",
+            artifact_schema_version=outcome.schema_version,
+            artifact=outcome.model_dump(mode="json"),
+        )
+
+    @staticmethod
+    def _validate_acquired_targets(
+        request: AcquisitionRequestReceipt,
+        evidence: ReferencePhysicalEvidence,
+    ) -> None:
+        from trace_reference.decision import ReferenceRouteVerificationPayload
+
+        payload = ReferenceRouteVerificationPayload.model_validate_json(evidence.payload_json)
+        if payload.request_id != request.request_id:
+            raise ValueError("Reference provider evidence names another acquisition request")
+        if payload.call_id != request.target_call_id:
+            raise ValueError("Reference provider evidence names another public report")
+        if payload.route_catalog_digest_at_request != request.route_catalog_digest:
+            raise ValueError("Reference provider evidence names another requested route catalog")
+        requested = tuple(zip(request.target_resource_ids, request.target_route_plan_ids, strict=True))
+        observed = tuple(
+            (item.requested_resource_id, item.requested_route_plan_id)
+            for item in payload.observations
+        )
+        if observed != tuple(sorted(requested)):
+            raise ValueError("Reference provider evidence does not cover the exact requested routes")
 
     def _record_outcome(self, value: object, at_s: int) -> None:
         if not isinstance(value, _PendingOutcome):

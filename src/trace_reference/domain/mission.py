@@ -22,7 +22,7 @@ from trace_reference.reconciliation import ReferenceReconciliationStep
 
 
 class ReferenceMissionDecision(DeltaModel):
-    schema_version: Literal["delta-reference-mission-decision-v1"]
+    schema_version: Literal["delta-reference-mission-decision-v2"]
     decision_id: str
     call_id: str = Field(pattern=r"^RC-[0-9a-f]{16}$")
     controller_authority_id: Literal["AUTH-01", "AUTH-02", "AUTH-03", "AUTH-04"]
@@ -37,6 +37,7 @@ class ReferenceMissionDecision(DeltaModel):
     acquisition_request_id: str | None
     reason: str = Field(min_length=8)
     manifest_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reassessment_of_decision_id: str | None = None
     decision_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @model_validator(mode="after")

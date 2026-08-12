@@ -7,13 +7,18 @@ from datetime import datetime
 
 from trace_jepa.predictor import ActionPrefixPredictor
 from trace_reference.decision import (
+    AcquisitionOutcomeReceipt,
     CostDeltaInput,
     DecisionManifestInput,
     EvidenceAcquisitionExecutor,
     build_cost_delta,
     build_decision_manifest,
 )
-from trace_reference.decision.canonical import decision_digest
+from trace_reference.decision.acquisition import (
+    ReferencePhysicalEvidence,
+    ReferenceRouteVerificationPayload,
+)
+from trace_reference.decision.canonical import decision_digest, verify_model_digest
 from trace_reference.decision.domain import (
     BaseSelectionRequest,
     ControllerVisibleSnapshot,
@@ -100,6 +105,9 @@ class ReferenceDecisionInput:
     known_outcomes: tuple[PublicOutcomeBelief, ...]
     at_s: int
     created_at: datetime
+    reassessment_of_decision_id: str | None = None
+    acquisition_outcome: AcquisitionOutcomeReceipt | None = None
+    physical_evidence: ReferencePhysicalEvidence | None = None
 
 
 class ReferenceDecisionEngine:
@@ -110,10 +118,15 @@ class ReferenceDecisionEngine:
 
     def execute(self, values: ReferenceDecisionInput) -> ReferenceDecisionExecution:
         self._validate_input(values)
+        decision_id = (
+            f"reference-reassessment-{values.physical_evidence.evidence_id}"
+            if values.physical_evidence is not None
+            else f"reference-decision-{values.envelope.envelope_id}"
+        )
         snapshot = build_controller_visible_snapshot(
             SnapshotInput(
                 mission_id="reference-mission-development-v1",
-                decision_id=f"reference-decision-{values.envelope.envelope_id}",
+                decision_id=decision_id,
                 controller_authority_id=values.controller_authority_id,
                 at_s=values.at_s,
                 evidence_prefix_digest=self.dependencies.evidence_ledger.prefix_digest,
@@ -136,8 +149,10 @@ class ReferenceDecisionEngine:
             self.dependencies.scenario.resources.public_catalog,
             at_s=values.at_s,
         )
+        if values.physical_evidence is not None:
+            self._validate_physical_evidence(values, routes)
         request = ProposalRequest(
-            schema_version="delta-reference-proposal-request-v1",
+            schema_version="delta-reference-proposal-request-v2",
             decision_id=snapshot.decision_id,
             public_snapshot_digest=snapshot.snapshot_digest,
             target_public_incident_id=values.reconciliation.belief_cluster_id,
@@ -146,6 +161,7 @@ class ReferenceDecisionEngine:
             decision_deadline_s=min(345_600, values.at_s + 3_600),
             policy_version=self.dependencies.policy_version,
             proposal_namespace="reference-public-proposal-grammar-v1",
+            acquisition_allowed=values.physical_evidence is None,
         )
         unbound = propose_reference_actions(request, snapshot)
         packages = self._predict(
@@ -267,6 +283,11 @@ class ReferenceDecisionEngine:
                 acquisition_request_digest=(
                     acquisition_request.request_digest if acquisition_request is not None else None
                 ),
+                acquisition_outcome_digest=(
+                    values.acquisition_outcome.outcome_digest
+                    if values.acquisition_outcome is not None
+                    else None
+                ),
                 post_delay_trace_record_id=trace_record_id,
                 post_delay_trace_record_version=trace_record_version,
                 commitment_envelope_digest=(
@@ -275,7 +296,7 @@ class ReferenceDecisionEngine:
             )
         )
         body = {
-            "schema_version": "delta-reference-mission-decision-v1",
+            "schema_version": "delta-reference-mission-decision-v2",
             "decision_id": snapshot.decision_id,
             "call_id": values.report.call_id,
             "controller_authority_id": values.controller_authority_id,
@@ -292,6 +313,7 @@ class ReferenceDecisionEngine:
             ),
             "reason": reason,
             "manifest_digest": manifest.manifest_digest,
+            "reassessment_of_decision_id": values.reassessment_of_decision_id,
         }
         result = ReferenceMissionDecision(**body, decision_digest=decision_digest(body))
         self.dependencies.event_log.append_public_artifact(
@@ -341,6 +363,7 @@ class ReferenceDecisionEngine:
                     at_s=values.at_s,
                     coordination_latency_s=coordination_latency,
                     created_at=values.created_at,
+                    physical_evidence=values.physical_evidence,
                 )
             )
             packages[proposal.action.action_digest] = package
@@ -400,7 +423,8 @@ class ReferenceDecisionEngine:
     def _validate_input(self, values: ReferenceDecisionInput) -> None:
         from trace_reference.generation import verify_reference_envelope
 
-        if values.at_s != values.envelope.delivered_at_s:
+        reassessing = values.physical_evidence is not None
+        if not reassessing and values.at_s != values.envelope.delivered_at_s:
             raise ValueError("Reference initial decision must occur at authenticated delivery")
         if values.at_s < 0:
             raise ValueError("Reference response decisions begin at evaluation T0")
@@ -419,3 +443,42 @@ class ReferenceDecisionEngine:
             raise ValueError("Reference reconciliation authority disagrees with decision authority")
         if not verify_reference_envelope(values.report, values.envelope):
             raise ValueError("Reference report envelope authentication failed")
+        if reassessing != (values.acquisition_outcome is not None):
+            raise ValueError("Reference acquisition reassessment requires an exact outcome")
+        if reassessing != (values.reassessment_of_decision_id is not None):
+            raise ValueError("Reference acquisition reassessment requires its prior decision")
+        if (
+            values.physical_evidence is not None
+            and values.physical_evidence.delivered_at_s != values.at_s
+        ):
+            raise ValueError("Reference acquisition reassessment must occur at evidence delivery")
+
+    def _validate_physical_evidence(
+        self,
+        values: ReferenceDecisionInput,
+        routes: ReferencePublicRouteCatalog,
+    ) -> None:
+        evidence = values.physical_evidence
+        outcome = values.acquisition_outcome
+        if evidence is None or outcome is None:
+            raise RuntimeError("Reference physical evidence closure is incomplete")
+        if not verify_model_digest(evidence, digest_field="evidence_digest"):
+            raise ValueError("Reference physical evidence digest is invalid")
+        if not verify_model_digest(outcome, digest_field="outcome_digest"):
+            raise ValueError("Reference acquisition outcome digest is invalid")
+        if outcome.evidence_id != evidence.evidence_id:
+            raise ValueError("Reference acquisition outcome names another evidence item")
+        payload = ReferenceRouteVerificationPayload.model_validate_json(evidence.payload_json)
+        if payload.request_id != evidence.request_id or payload.call_id != values.report.call_id:
+            raise ValueError("Reference route evidence names another request or public report")
+        route_by_resource = {item.resource_id: item for item in routes.routes}
+        for observation in payload.observations:
+            route = route_by_resource.get(observation.requested_resource_id)
+            if route is None:
+                raise ValueError("Reference route evidence names an absent public resource")
+            if route.route_plan_id != observation.observed_route_plan_id:
+                raise ValueError("Reference route evidence names another observed route")
+            if route.route_plan_digest != observation.observed_route_plan_digest:
+                raise ValueError("Reference route evidence route digest is invalid")
+            if route.status.value != observation.observed_status:
+                raise ValueError("Reference route evidence status disagrees with public state")

@@ -34,7 +34,7 @@ AcquisitionResult: TypeAlias = tuple[
 
 
 class AcquisitionRequestReceipt(DeltaModel):
-    schema_version: Literal["delta-reference-acquisition-request-v1"]
+    schema_version: Literal["delta-reference-acquisition-request-v2"]
     request_id: str
     idempotency_key: str
     decision_id: str
@@ -46,12 +46,57 @@ class AcquisitionRequestReceipt(DeltaModel):
     provider_id: str
     channel_id: str
     evidence_schema_version: str
+    target_call_id: str = Field(pattern=r"^RC-[0-9a-f]{16}$")
+    target_resource_ids: tuple[str, ...] = Field(min_length=1)
+    target_route_plan_ids: tuple[str, ...] = Field(min_length=1)
+    route_catalog_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     requested_at_s: int = Field(ge=-172_800, le=345_600)
     expected_latency_s: int = Field(ge=1, le=43_200)
     expected_delivery_s: int = Field(ge=-172_800, le=388_800)
     latest_useful_delivery_s: int = Field(ge=-172_800, le=345_600)
     expected_physical_cost: CostAmount
     request_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_route_targets(self) -> AcquisitionRequestReceipt:
+        if len(self.target_resource_ids) != len(self.target_route_plan_ids):
+            raise ValueError("Reference acquisition request route targets do not align")
+        if len(set(self.target_resource_ids)) != len(self.target_resource_ids):
+            raise ValueError("Reference acquisition request resource targets repeat")
+        if len(set(self.target_route_plan_ids)) != len(self.target_route_plan_ids):
+            raise ValueError("Reference acquisition request route targets repeat")
+        return self
+
+
+class ReferenceRouteVerificationObservation(DeltaModel):
+    requested_resource_id: str = Field(pattern=r"^RR-[0-9a-f]{16}$")
+    requested_route_plan_id: str = Field(pattern=r"^REF-ROUTE-[0-9a-f]{20}$")
+    observed_route_plan_id: str = Field(pattern=r"^REF-ROUTE-[0-9a-f]{20}$")
+    observed_route_plan_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    observed_status: Literal["open", "blocked", "unknown", "unavailable"]
+    observed_at_s: int = Field(ge=-172_800, le=388_800)
+    observation_semantics: Literal[
+        "synthetic-direct-route-observation-not-operational-status"
+    ]
+
+
+class ReferenceRouteVerificationPayload(DeltaModel):
+    schema_version: Literal["reference-route-evidence-v1"]
+    request_id: str
+    call_id: str = Field(pattern=r"^RC-[0-9a-f]{16}$")
+    route_catalog_digest_at_request: str = Field(pattern=r"^[0-9a-f]{64}$")
+    observations: tuple[ReferenceRouteVerificationObservation, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_observations(self) -> ReferenceRouteVerificationPayload:
+        resource_ids = tuple(item.requested_resource_id for item in self.observations)
+        if len(set(resource_ids)) != len(resource_ids):
+            raise ValueError("Reference route verification repeats a physical resource")
+        if self.observations != tuple(
+            sorted(self.observations, key=lambda item: item.requested_resource_id)
+        ):
+            raise ValueError("Reference route verification observations must be ordered")
+        return self
 
 
 class ProviderReceipt(DeltaModel):
@@ -208,7 +253,7 @@ class EvidenceAcquisitionExecutor:
                 raise ValueError("Reference acquisition request ID was reused by another bundle")
             return existing
         body = {
-            "schema_version": "delta-reference-acquisition-request-v1",
+            "schema_version": "delta-reference-acquisition-request-v2",
             "request_id": request_id,
             "idempotency_key": f"acq-idempotency-{bundle.bundle_digest[:24]}",
             "decision_id": bundle.decision_id,
@@ -220,6 +265,10 @@ class EvidenceAcquisitionExecutor:
             "provider_id": offer.provider_id,
             "channel_id": offer.channel_id,
             "evidence_schema_version": offer.evidence_schema_version,
+            "target_call_id": offer.target_call_id,
+            "target_resource_ids": offer.target_resource_ids,
+            "target_route_plan_ids": offer.target_route_plan_ids,
+            "route_catalog_digest": offer.route_catalog_digest,
             "requested_at_s": offer.requested_at_s,
             "expected_latency_s": offer.expected_latency_s,
             "expected_delivery_s": offer.requested_at_s + offer.expected_latency_s,

@@ -9,7 +9,7 @@ import pytest
 from trace_jepa.experimental import RevalidationGuard
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
-from trace_reference.decision import EvidenceAcquisitionExecutor
+from trace_reference.decision import AcquisitionRequestReceipt, EvidenceAcquisitionExecutor
 from trace_reference.domain import ReferenceEventType
 from trace_reference.generation import generate_reference_scenario
 from trace_reference.runtime import (
@@ -19,10 +19,12 @@ from trace_reference.runtime import (
     ReferenceEventLog,
     ReferenceEvidenceLedger,
     ReferenceMissionRuntime,
+    ReferenceRouteProviderInput,
     ReferenceRouteService,
     ReferenceScenarioIndex,
     ReferenceTraceGateway,
     ReferenceTraceRepository,
+    build_reference_route_provider_receipt,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -123,8 +125,6 @@ def test_reference_mission_runtime_merges_public_streams_and_executes_initial_de
     public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
     for forbidden in ("truth_incident_id", "truth_person_id", "candidate_digest"):
         assert forbidden not in public_json
-
-
 def test_reference_mission_runtime_does_not_decide_twice_for_one_local_cluster(
     scenario,
     tmp_path: Path,
@@ -180,6 +180,18 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
     assert allocations
     assert result.complete
     assert len(result.outcomes) == len(allocations)
+    acquisition_decisions = tuple(
+        item for item in result.decisions if item.disposition == "acquisition-requested"
+    )
+    reassessments = tuple(
+        item for item in result.decisions if item.reassessment_of_decision_id is not None
+    )
+    assert acquisition_decisions
+    assert len(reassessments) == len(acquisition_decisions)
+    assert all(item.disposition != "acquisition-requested" for item in reassessments)
+    assert {item.reassessment_of_decision_id for item in reassessments} == {
+        item.decision_id for item in acquisition_decisions
+    }
     assert any(item.status == "active_at_scenario_censoring" for item in result.outcomes)
     assert all(
         (
@@ -193,3 +205,45 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
     assert len(replay.public_mission_artifacts[ReferenceEventType.OUTCOME_RECORDED.value]) == len(
         result.outcomes
     )
+    assert len(
+        replay.public_mission_artifacts[ReferenceEventType.PROVIDER_RECEIPT_RECORDED.value]
+    ) == len(acquisition_decisions)
+    assert len(
+        replay.public_mission_artifacts[
+            ReferenceEventType.ACQUISITION_OUTCOME_RECORDED.value
+        ]
+    ) == len(acquisition_decisions)
+    assert len(
+        replay.public_mission_artifacts[ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED.value]
+    ) == len(acquisition_decisions)
+    decision_artifacts = replay.public_mission_artifacts[
+        ReferenceEventType.DECISION_MANIFEST_RECORDED.value
+    ]
+    for reassessment in reassessments:
+        artifact = json.loads(decision_artifacts[reassessment.decision_id])
+        assert artifact["manifest"]["acquisition_outcome_digest"] is not None
+        assert artifact["decision"]["reassessment_of_decision_id"] is not None
+    public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
+    for forbidden in ("truth_incident_id", "truth_person_id", "candidate_digest"):
+        assert forbidden not in public_json
+    request_json = next(
+        iter(
+            replay.public_mission_artifacts[
+                ReferenceEventType.ACQUISITION_REQUESTED.value
+            ].values()
+        )
+    )
+    request = AcquisitionRequestReceipt.model_validate_json(request_json)
+    tampered = request.model_copy(update={"route_catalog_digest": "0" * 64})
+    report = next(
+        item for item in scenario.observations.raw.reports if item.call_id == request.target_call_id
+    )
+    with pytest.raises(ValueError, match="request digest"):
+        build_reference_route_provider_receipt(
+            ReferenceRouteProviderInput(
+                request=tampered,
+                report=report,
+                route_service=runtime.engine.dependencies.route_service,
+                resources=scenario.resources,
+            )
+        )

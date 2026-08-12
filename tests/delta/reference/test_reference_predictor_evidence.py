@@ -96,7 +96,7 @@ def predictor_fixture() -> _PredictorFixture:
             at_s=at_s,
         )
         request = ProposalRequest(
-            schema_version="delta-reference-proposal-request-v1",
+            schema_version="delta-reference-proposal-request-v2",
             decision_id=snapshot.decision_id,
             public_snapshot_digest=snapshot.snapshot_digest,
             target_public_incident_id=f"public-cluster-{report.call_id}",

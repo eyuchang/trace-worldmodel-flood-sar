@@ -27,6 +27,8 @@ class ReferenceEventType(str, Enum):
     OUTCOME_RECORDED = "outcome_recorded"
     COMPENSATION_RECORDED = "compensation_recorded"
     PROVIDER_RECEIPT_RECORDED = "provider_receipt_recorded"
+    PHYSICAL_EVIDENCE_RECORDED = "physical_evidence_recorded"
+    ACQUISITION_OUTCOME_RECORDED = "acquisition_outcome_recorded"
     ACQUISITION_REQUESTED = "acquisition_requested"
     DECISION_MANIFEST_RECORDED = "decision_manifest_recorded"
 

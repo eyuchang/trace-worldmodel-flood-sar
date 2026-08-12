@@ -217,6 +217,13 @@ def _acquisition_offers(
     request: ProposalRequest,
     snapshot: ControllerVisibleSnapshot,
 ) -> tuple[EvidenceAcquisitionOffer, ...]:
+    uncertain_routes = tuple(
+        item
+        for item in request.route_catalog.routes
+        if item.status == ReferenceRouteStatus.UNKNOWN
+    )
+    if not uncertain_routes:
+        return ()
     provider_available = any(
         "reconnaissance" in item.capabilities and item.reported_state == "available-staged"
         for item in snapshot.resource_beliefs
@@ -236,11 +243,16 @@ def _acquisition_offers(
         }
     )
     body = {
+        "schema_version": "delta-reference-evidence-acquisition-offer-v2",
         "proposal_id": _id("proposal-acquire", request.decision_id),
         "proposal_kind": "evidence-acquisition",
         "offer_id": _id("offer", request.decision_id, "route-verification"),
         "channel_id": "reference-physical-route-verification-v1",
         "target_claim_ids": (f"claim-{request.target_public_incident_id}",),
+        "target_call_id": request.route_catalog.call_id,
+        "target_resource_ids": tuple(item.resource_id for item in uncertain_routes),
+        "target_route_plan_ids": tuple(item.route_plan_id for item in uncertain_routes),
+        "route_catalog_digest": request.route_catalog.route_catalog_digest,
         "evidence_schema_version": "reference-route-evidence-v1",
         "clear_probability_micros": 780_000,
         "required_clear_probability_micros": 700_000,
@@ -253,7 +265,7 @@ def _acquisition_offers(
         "provider_available": provider_available,
         "authority_present": bool(snapshot.delivered_coordination_ids),
         "minimum_interval_clear": True,
-        "no_pending_request": True,
+        "no_pending_request": request.acquisition_allowed,
         "provenance_digest": provenance,
     }
     return (EvidenceAcquisitionOffer(**body, proposal_digest=decision_digest(body)),)

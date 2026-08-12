@@ -238,7 +238,7 @@ def decision_fixture():
         ReferenceScenarioIndex.from_physical(geography, gauge_context, physical)
     ).build_catalog(report, resources.public_catalog, at_s=1_000)
     request = ProposalRequest(
-        schema_version="delta-reference-proposal-request-v1",
+        schema_version="delta-reference-proposal-request-v2",
         decision_id=snapshot.decision_id,
         public_snapshot_digest=snapshot.snapshot_digest,
         target_public_incident_id="public-belief-cluster-001",

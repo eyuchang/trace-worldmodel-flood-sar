@@ -24,6 +24,7 @@ from trace_jepa.predictor import (
     PredictorRouteObservation,
 )
 from trace_jepa.support import canonical_json_bytes
+from trace_reference.decision.acquisition import ReferencePhysicalEvidence
 from trace_reference.decision.canonical import verify_model_digest
 from trace_reference.decision.domain import (
     ControllerVisibleSnapshot,
@@ -55,6 +56,7 @@ class ReferencePredictorEvidenceInput:
     at_s: int
     coordination_latency_s: int
     created_at: datetime
+    physical_evidence: ReferencePhysicalEvidence | None = None
 
 
 @dataclass(frozen=True)
@@ -161,6 +163,11 @@ def build_reference_predictor_evidence(
         metadata={
             "public_snapshot_digest": values.snapshot.snapshot_digest,
             "route_catalog_digest": values.route_catalog.route_catalog_digest,
+            "physical_evidence_digest": (
+                values.physical_evidence.evidence_digest
+                if values.physical_evidence is not None
+                else None
+            ),
         },
     )
     request = PredictorRequest(
@@ -226,7 +233,14 @@ def build_reference_predictor_evidence(
         encoder_version="reference-symbolic-observation-v1",
         fusion_version="reference-controller-context-v1",
         predictor_version=provenance.predictor_version,
-        semantic_probe_versions=("reference-route-resource-probe-v1",),
+        semantic_probe_versions=(
+            "reference-route-resource-probe-v1",
+            *(
+                ("reference-direct-route-observation-v1",)
+                if values.physical_evidence is not None
+                else ()
+            ),
+        ),
         training_snapshot=provenance.training_snapshot,
         observation_window_hash=request_digest,
         fleet_state_hash=_digest(
@@ -256,6 +270,11 @@ def build_reference_predictor_evidence(
             "stage_millifeet": gauge.stage_milli_ft,
             "gauge_sample_time_s": physical.at_s,
             "gauge_threshold_status": gauge.threshold_status,
+            "physical_evidence_digest": (
+                values.physical_evidence.evidence_digest
+                if values.physical_evidence is not None
+                else None
+            ),
         },
         calibration_version=provenance.calibration_version,
         assumptions=prediction.assumptions,

@@ -137,7 +137,7 @@ class ReferenceActionSpec(DeltaModel):
 
 
 class ProposalRequest(DeltaModel):
-    schema_version: Literal["delta-reference-proposal-request-v1"]
+    schema_version: Literal["delta-reference-proposal-request-v2"]
     decision_id: str
     public_snapshot_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     target_public_incident_id: str
@@ -146,6 +146,7 @@ class ProposalRequest(DeltaModel):
     decision_deadline_s: int = Field(ge=-172_800, le=345_600)
     policy_version: str
     proposal_namespace: Literal["reference-public-proposal-grammar-v1"]
+    acquisition_allowed: bool = True
 
     @model_validator(mode="after")
     def validate_target_routes(self) -> ProposalRequest:
@@ -177,11 +178,16 @@ class CostAmount(DeltaModel):
 
 
 class EvidenceAcquisitionOffer(DeltaModel):
+    schema_version: Literal["delta-reference-evidence-acquisition-offer-v2"]
     proposal_id: str
     proposal_kind: Literal["evidence-acquisition"]
     offer_id: str
     channel_id: str
     target_claim_ids: tuple[str, ...] = Field(min_length=1)
+    target_call_id: str = Field(pattern=r"^RC-[0-9a-f]{16}$")
+    target_resource_ids: tuple[str, ...] = Field(min_length=1)
+    target_route_plan_ids: tuple[str, ...] = Field(min_length=1)
+    route_catalog_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     evidence_schema_version: str
     clear_probability_micros: int = Field(ge=0, le=1_000_000)
     required_clear_probability_micros: int = Field(ge=0, le=1_000_000)
@@ -197,6 +203,16 @@ class EvidenceAcquisitionOffer(DeltaModel):
     no_pending_request: bool
     provenance_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     proposal_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_route_targets(self) -> EvidenceAcquisitionOffer:
+        if len(self.target_resource_ids) != len(self.target_route_plan_ids):
+            raise ValueError("Reference acquisition route target arrays must align")
+        if len(set(self.target_resource_ids)) != len(self.target_resource_ids):
+            raise ValueError("Reference acquisition resource targets must be unique")
+        if len(set(self.target_route_plan_ids)) != len(self.target_route_plan_ids):
+            raise ValueError("Reference acquisition route targets must be unique")
+        return self
 
 
 class SafeAlternativeProposal(DeltaModel):

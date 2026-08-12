@@ -1,5 +1,9 @@
 """Event-sourced runtime services for Reference."""
 
+from .acquisition_provider import (
+    ReferenceRouteProviderInput,
+    build_reference_route_provider_receipt,
+)
 from .decision_engine import (
     ReferenceDecisionEngine,
     ReferenceDecisionEngineDependencies,
@@ -43,6 +47,7 @@ __all__ = [
     "ReferencePredictorEvidenceInput",
     "ReferencePredictorEvidencePackage",
     "ReferencePublicPhysicalView",
+    "ReferenceRouteProviderInput",
     "ReferenceRouteService",
     "ReferenceScenarioIndex",
     "ReferenceTraceGateway",
@@ -50,5 +55,6 @@ __all__ = [
     "ReferenceWorldState",
     "SelectedCommitmentInput",
     "build_reference_predictor_evidence",
+    "build_reference_route_provider_receipt",
     "core_action_from_proposal",
 ]

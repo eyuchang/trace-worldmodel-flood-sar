@@ -8,6 +8,8 @@ from .acquisition import (
     ProviderReceipt,
     ProviderReceiptInput,
     ReferencePhysicalEvidence,
+    ReferenceRouteVerificationObservation,
+    ReferenceRouteVerificationPayload,
     sign_provider_receipt,
     verify_provider_receipt,
 )
@@ -77,6 +79,8 @@ __all__ = [
     "ReferenceCompensationRecord",
     "ReferenceDecisionManifest",
     "ReferencePhysicalEvidence",
+    "ReferenceRouteVerificationObservation",
+    "ReferenceRouteVerificationPayload",
     "ReferenceServiceOutcome",
     "ReferenceTraceAssessment",
     "ResponseBundle",
