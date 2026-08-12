@@ -48,6 +48,7 @@ _DIRECT_INPUTS = (
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V1.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V2.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md",
     "pyproject.toml",
     "requirements-delta-python311.in",

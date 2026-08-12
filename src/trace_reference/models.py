@@ -103,6 +103,9 @@ class ReferenceExtentConfig(DeltaModel):
 
 
 class ReferenceProcessTargets(DeltaModel):
+    expected_truth_incidents_evaluation_lower: int = Field(gt=0)
+    expected_truth_incidents_evaluation_midpoint: int = Field(gt=0)
+    expected_truth_incidents_evaluation_upper: int = Field(gt=0)
     expected_public_reports_evaluation: int = Field(gt=0)
     breach_phase_public_report_intensity_per_hour: int = Field(gt=0)
     breach_phase_start_s: int = Field(gt=0)
@@ -112,6 +115,12 @@ class ReferenceProcessTargets(DeltaModel):
 
     @model_validator(mode="after")
     def validate_process_design_targets(self) -> ReferenceProcessTargets:
+        if (
+            self.expected_truth_incidents_evaluation_lower,
+            self.expected_truth_incidents_evaluation_midpoint,
+            self.expected_truth_incidents_evaluation_upper,
+        ) != (1_800, 2_000, 2_200):
+            raise ValueError("Reference latent-workload design band must remain 1,800--2,200")
         if self.expected_public_reports_evaluation != 2_900:
             raise ValueError("Reference report-volume target must remain 2,900 in expectation")
         if self.breach_phase_public_report_intensity_per_hour != 95:
@@ -175,13 +184,13 @@ class ReferenceScenarioConfig(DeltaModel):
 
     status: Literal["approved-decisions-development-only"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    scenario_schema_version: Literal["trace-delta-reference-scenario-v1"]
+    scenario_schema_version: Literal["trace-delta-reference-scenario-v2"]
     generator_version: Literal["delta-reference-generator-v1"]
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     geography_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    approved_decision_set: Literal["reference-scientific-decisions-v1"]
+    approved_decision_set: Literal["reference-scientific-decisions-v2"]
     small_baseline_registry: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
     timeline: ReferenceTimelineConfig
     axes: ReferenceAxisConfig
@@ -203,9 +212,9 @@ class ReferenceScenarioConfig(DeltaModel):
         ):
             raise ValueError("Reference configuration does not bind the reviewed draft")
         if self.protocol_amendment_sha256 != (
-            "6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"
+            "7065bc5930ec2f8ecf550198e92fab0cf0258685d237c9c57153ef0ba1965650"
         ):
-            raise ValueError("Reference configuration does not bind the approved amendment")
+            raise ValueError("Reference configuration does not bind approved amendment v2")
         if self.geography_amendment_sha256 != (
             "c4c908436ce18b89dbc5e01486fc7119c7bef5fd4b2b2604ebd9aa2ce70be225"
         ):

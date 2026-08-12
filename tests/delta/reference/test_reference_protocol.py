@@ -37,22 +37,29 @@ FAULT_SCHEDULE = Path("data/scenario/delta/reference_protocol/reference_fault_sc
 BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 PROTOCOL_DRAFT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md")
 GEOGRAPHY_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md")
+PROTOCOL_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V2.md")
 
 
 def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> None:
     config = load_reference_config(ROOT, CONFIG)
     assert config.status == "approved-decisions-development-only"
-    assert config.approved_decision_set == "reference-scientific-decisions-v1"
+    assert config.approved_decision_set == "reference-scientific-decisions-v2"
     assert config.protocol_amendment_sha256 == REFERENCE_PROTOCOL.protocol_amendment_sha256
     assert config.geography_amendment_sha256 == REFERENCE_PROTOCOL.geography_amendment_sha256
     assert REFERENCE_PROTOCOL.geography == "delta-reference-geography-v3"
     assert REFERENCE_PROTOCOL.coordination == "delta-reference-coordination-v2"
     assert REFERENCE_PROTOCOL.demand_capacity == "delta-reference-demand-capacity-v1"
     assert sha256_file(ROOT / PROTOCOL_DRAFT) == config.protocol_document_sha256
+    assert sha256_file(ROOT / PROTOCOL_AMENDMENT) == config.protocol_amendment_sha256
     assert sha256_file(ROOT / GEOGRAPHY_AMENDMENT) == config.geography_amendment_sha256
     assert config.timeline.burn_in_start_s == -172_800
     assert config.timeline.evaluation_end_s == 345_600
     assert config.process_targets.breach_time_s == 187_200
+    assert (
+        config.process_targets.expected_truth_incidents_evaluation_lower,
+        config.process_targets.expected_truth_incidents_evaluation_midpoint,
+        config.process_targets.expected_truth_incidents_evaluation_upper,
+    ) == (1_800, 2_000, 2_200)
     assert config.process_targets.breach_phase_public_report_intensity_per_hour == 95
     assert (
         config.process_targets.breach_phase_start_s,
