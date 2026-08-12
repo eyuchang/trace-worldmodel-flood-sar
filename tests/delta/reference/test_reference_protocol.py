@@ -37,13 +37,13 @@ FAULT_SCHEDULE = Path("data/scenario/delta/reference_protocol/reference_fault_sc
 BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 PROTOCOL_DRAFT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md")
 GEOGRAPHY_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md")
-PROTOCOL_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V2.md")
+PROTOCOL_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V3.md")
 
 
 def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> None:
     config = load_reference_config(ROOT, CONFIG)
     assert config.status == "approved-decisions-development-only"
-    assert config.approved_decision_set == "reference-scientific-decisions-v2"
+    assert config.approved_decision_set == "reference-scientific-decisions-v3"
     assert config.protocol_amendment_sha256 == REFERENCE_PROTOCOL.protocol_amendment_sha256
     assert config.geography_amendment_sha256 == REFERENCE_PROTOCOL.geography_amendment_sha256
     assert REFERENCE_PROTOCOL.geography == "delta-reference-geography-v3"
