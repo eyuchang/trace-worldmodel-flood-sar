@@ -22,6 +22,9 @@ FAILED_BENCHMARK = Path(
 FAILED_BENCHMARK_V2 = Path(
     "data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_failed_v2.json"
 )
+PASSING_BENCHMARK_V3 = Path(
+    "data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_v3.json"
+)
 
 
 def test_truth_fit_protocol_freezes_spent_development_scope() -> None:
@@ -54,6 +57,15 @@ def test_failed_benchmark_is_preserved_as_adverse_evidence() -> None:
     assert optimized_receipt.observed_episode_count == receipt.observed_episode_count
     assert optimized_receipt.observed_interval_count == receipt.observed_interval_count
     assert not optimized_receipt.within_registered_bounds
+
+
+def test_separately_instrumented_benchmark_authorizes_the_fit() -> None:
+    receipt = load_reference_truth_fit_benchmark(ROOT, PASSING_BENCHMARK_V3)
+
+    assert receipt.measurement_method == "separate-wall-and-tracemalloc-v2"
+    assert receipt.wall_time_margin_micros == 1_100_000
+    assert receipt.projected_full_fit_ms == 230_582
+    assert receipt.within_registered_bounds
 
 
 def test_truth_fit_benchmark_is_digest_bound_and_tamper_evident(tmp_path: Path) -> None:

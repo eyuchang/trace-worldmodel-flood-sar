@@ -101,3 +101,11 @@ allocation tracing, a distinct repeated seed measures traced peak memory, and
 the wall-time projection receives a fixed 10% upward margin. This separation
 does not change generation, sufficient statistics, resource bounds, seeds, or
 the pass threshold.
+
+Benchmark v3 passed before the full fit was launched. Its five-seed wall-clock
+measurement was 10,481 ms; with the frozen 10% margin, the projected 100-seed
+fit was 230,582 ms (3.84 minutes). The independent traced-memory repetition
+peaked at 19,878,193 bytes, and projected disk remained 67,108,864 bytes. The
+five seeds again produced exactly 66,396 eligible episodes and 58,998 retained
+intervals. The passing receipt is preserved as
+`reference_truth_fit_benchmark_v3.json`.
