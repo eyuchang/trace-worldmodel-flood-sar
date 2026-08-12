@@ -1,0 +1,55 @@
+parameter_version: delta-reference-physical-v1
+scientific_status: reduced-order-teaching-model-not-hydrodynamic-forecast
+output_tick_s: 300
+m2_period_s: 44700
+perigean_spring_center_s: 237600
+evaluation_rainfall_target_milli_in: 9800
+meteorology_phases:
+  - {phase_id: MET-01, start_s: -172800, end_s: -86400, nominal_rain_milli_in_per_hour: 20, wind_milli_knots: 8000, ceiling_ft: 10000, air_operability: normal}
+  - {phase_id: MET-02, start_s: -86400, end_s: -21600, nominal_rain_milli_in_per_hour: 150, wind_milli_knots: 22000, ceiling_ft: 2000, air_operability: reduced}
+  - {phase_id: MET-03, start_s: -21600, end_s: 0, nominal_rain_milli_in_per_hour: 350, wind_milli_knots: 35000, ceiling_ft: 800, air_operability: grounded}
+  - {phase_id: MET-04, start_s: 0, end_s: 43200, nominal_rain_milli_in_per_hour: 50, wind_milli_knots: 18000, ceiling_ft: 3000, air_operability: normal}
+  - {phase_id: MET-05, start_s: 43200, end_s: 108000, nominal_rain_milli_in_per_hour: 280, wind_milli_knots: 30000, ceiling_ft: 1200, air_operability: reduced}
+  - {phase_id: MET-06, start_s: 108000, end_s: 151200, nominal_rain_milli_in_per_hour: 450, wind_milli_knots: 40000, ceiling_ft: 500, air_operability: grounded}
+  - {phase_id: MET-07, start_s: 151200, end_s: 216000, nominal_rain_milli_in_per_hour: 30, wind_milli_knots: 15000, ceiling_ft: 10000, air_operability: normal}
+  - {phase_id: MET-08, start_s: 216000, end_s: 280800, nominal_rain_milli_in_per_hour: 200, wind_milli_knots: 25000, ceiling_ft: 1500, air_operability: reduced}
+  - {phase_id: MET-09, start_s: 280800, end_s: 345600, nominal_rain_milli_in_per_hour: 0, wind_milli_knots: 12000, ceiling_ft: 10000, air_operability: normal}
+gauges:
+  - {gauge_id: FPT, official_name: Sacramento River at Freeport, baseline_milli_ft: 4000, tide_amplitude_milli_ft: 2400, tide_phase_milliradians: 0, runoff_lag_s: 64800, runoff_gain_milli_ft_per_inch: 7200, release_gain_milli_ft: 900, threshold_status: unavailable-non-operative}
+  - {gauge_id: RVB, official_name: Sacramento River at Rio Vista Bridge, baseline_milli_ft: 3200, tide_amplitude_milli_ft: 3000, tide_phase_milliradians: 320, runoff_lag_s: 64800, runoff_gain_milli_ft_per_inch: 7800, release_gain_milli_ft: 700, threshold_status: unavailable-non-operative}
+  - {gauge_id: SJJ, official_name: San Joaquin River at Jersey Point, baseline_milli_ft: 3000, tide_amplitude_milli_ft: 3400, tide_phase_milliradians: 780, runoff_lag_s: 93600, runoff_gain_milli_ft_per_inch: 6800, release_gain_milli_ft: 150, threshold_status: unavailable-non-operative}
+  - {gauge_id: ANH, official_name: San Joaquin River at Antioch, baseline_milli_ft: 3100, tide_amplitude_milli_ft: 3600, tide_phase_milliradians: 940, runoff_lag_s: 93600, runoff_gain_milli_ft_per_inch: 6200, release_gain_milli_ft: 120, threshold_status: unavailable-non-operative}
+  - {gauge_id: MRU, official_name: Middle River at Undine Road, baseline_milli_ft: 3400, tide_amplitude_milli_ft: 3000, tide_phase_milliradians: 1250, runoff_lag_s: 79200, runoff_gain_milli_ft_per_inch: 5900, release_gain_milli_ft: 100, threshold_status: unavailable-non-operative}
+  - {gauge_id: OLD, official_name: Old River at Bacon Island, baseline_milli_ft: 3300, tide_amplitude_milli_ft: 3200, tide_phase_milliradians: 1480, runoff_lag_s: 93600, runoff_gain_milli_ft_per_inch: 5700, release_gain_milli_ft: 100, threshold_status: unavailable-non-operative}
+  - {gauge_id: MSD, official_name: San Joaquin River at Mossdale Bridge, baseline_milli_ft: 3500, tide_amplitude_milli_ft: 2400, tide_phase_milliradians: 1760, runoff_lag_s: 36000, runoff_gain_milli_ft_per_inch: 6500, release_gain_milli_ft: 80, threshold_status: unavailable-non-operative}
+breach:
+  breach_id: BREACH-01
+  segment_id: SIM-RD407-WEST-01
+  island_id: ISL-01
+  activation_s: 187200
+  initial_width_milli_ft: 60000
+  final_width_milli_ft: 210000
+  widening_duration_s: 32400
+  mean_inflow_cfs: 8500
+  tidal_inflow_amplitude_cfs: 10500
+  storage_capacity_acre_ft: 76000
+  first_street_flooding_delay_s: 21600
+  one_third_city_delay_s: 50400
+  source_semantics: synthetic-segment-anchored-to-source-bound-andrus-footprint
+crossing_rules:
+  - {crossing_id: XNG-01, rule: normally-open}
+  - {crossing_id: XNG-02, rule: normally-open}
+  - {crossing_id: XNG-03, rule: normally-open}
+  - {crossing_id: XNG-04, rule: close-at-t53-after-scripted-breach}
+  - {crossing_id: XNG-05, rule: normally-open}
+  - {crossing_id: XNG-06, rule: normally-open}
+  - {crossing_id: XNG-07, rule: normally-open}
+  - {crossing_id: XNG-08, rule: ferry-suspend-on-model-wind-or-stage, wind_suspend_milli_knots: 25000, stage_suspend_milli_ft: 10000}
+  - {crossing_id: XNG-09, rule: ferry-suspend-on-model-wind-or-stage, wind_suspend_milli_knots: 25000, stage_suspend_milli_ft: 10000}
+  - {crossing_id: XNG-10, rule: unavailable-because-current-type-unresolved}
+limitations:
+  - Coefficients are synthetic reduced-order teaching parameters, not historical-event calibration.
+  - Gauge stages are generated model states and are not CDEC measurements or forecasts.
+  - The 9.8-inch evaluation total reconciles the inconsistent nominal rate table through one disclosed global scale factor.
+  - Crossing states are scenario assumptions and never claims about current operability.
+  - The breach segment is synthetic within the source-bound Andrus footprint and carries no legal ownership claim.

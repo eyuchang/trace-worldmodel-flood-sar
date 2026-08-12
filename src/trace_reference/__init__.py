@@ -17,6 +17,7 @@ from .loading import (
     load_reference_topology_design,
 )
 from .models import ReferenceScenarioConfig
+from .physical_loading import load_reference_physical_parameters
 from .protocol import REFERENCE_PROTOCOL
 from .seeds import derive_study_seed
 
@@ -28,6 +29,7 @@ __all__ = [
     "load_reference_entity_source_crosswalk",
     "load_reference_gauge_research",
     "load_reference_governance",
+    "load_reference_physical_parameters",
     "load_reference_source_requirements",
     "load_reference_source_research",
     "load_reference_topology_design",
