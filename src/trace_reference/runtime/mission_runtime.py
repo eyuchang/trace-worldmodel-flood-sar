@@ -230,11 +230,17 @@ class ReferenceMissionRuntime:
         self._last_run_through_s = through_s
         return self._result(through_s)
 
-    def checkpoint(self) -> ReferenceMissionRestartCheckpoint:
+    def checkpoint(
+        self,
+        *,
+        register_crash: bool = False,
+    ) -> ReferenceMissionRestartCheckpoint:
         """Bind an executed prefix to every durable store needed for recovery."""
 
         if self._last_run_through_s is None or not self.event_log.events:
             raise RuntimeError("Reference mission must execute before checkpointing")
+        if register_crash:
+            self._record_registered_crash()
         dependencies = self.engine.dependencies
         body = {
             "schema_version": "delta-reference-mission-restart-checkpoint-v2",
@@ -250,6 +256,28 @@ class ReferenceMissionRuntime:
         return ReferenceMissionRestartCheckpoint(
             **body,
             checkpoint_digest=decision_digest(body),
+        )
+
+    def _record_registered_crash(self) -> None:
+        if self._fault_schedule is None or self._last_run_through_s is None:
+            raise RuntimeError("Reference registered crash requires the faulted runtime")
+        trigger = next(
+            item
+            for item in self._fault_schedule.triggers
+            if item.family == "controller-crash-restart"
+        )
+        if self._last_run_through_s != trigger.anchor_s:
+            raise ValueError("Reference registered crash checkpoint is not at its anchor")
+        if any(item.fault_id == trigger.fault_id for item in self._fault_applications):
+            raise RuntimeError("Reference registered crash was already recorded")
+        self._record_target_fault_application(
+            fault_id=trigger.fault_id,
+            target_public_id=f"runtime-prefix-{self.event_log.prefix_digest[:20]}",
+            applied_at_s=trigger.anchor_s,
+            reason=(
+                "The registered controller process boundary persisted this exact durable prefix "
+                "for restart-equivalence evaluation."
+            ),
         )
 
     def _process(self, scheduled: ReferenceScheduledInput) -> None:

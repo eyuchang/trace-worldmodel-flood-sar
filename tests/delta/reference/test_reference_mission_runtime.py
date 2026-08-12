@@ -570,3 +570,59 @@ def test_reference_mission_restart_matches_uninterrupted_continuation(
     assert [item.read_bytes() for item in actual_evidence] == [
         item.read_bytes() for item in expected_evidence
     ]
+
+
+def test_registered_crash_restart_matches_faulted_continuation(
+    scenario,
+    fault_schedule: ReferenceFaultSchedule,
+    tmp_path: Path,
+) -> None:
+    uninterrupted_root = tmp_path / "uninterrupted-faulted"
+    uninterrupted_root.mkdir()
+    uninterrupted, _uninterrupted_log = _mission_runtime(
+        scenario,
+        uninterrupted_root,
+        fault_schedule=fault_schedule,
+    )
+    expected = uninterrupted.run()
+
+    restarted_root = tmp_path / "restarted-faulted"
+    restarted_root.mkdir()
+    before_crash, prefix_log = _mission_runtime(
+        scenario,
+        restarted_root,
+        fault_schedule=fault_schedule,
+    )
+    before_crash.run(through_s=187_200)
+    checkpoint = before_crash.checkpoint(register_crash=True)
+    recovered, recovered_log = _mission_runtime(
+        scenario,
+        restarted_root,
+        events=prefix_log.events,
+        fault_schedule=fault_schedule,
+        restart_checkpoint=checkpoint,
+    )
+    actual = recovered.run()
+
+    crash = next(
+        item for item in actual.fault_applications if item.family == "controller-crash-restart"
+    )
+    assert crash.applied_at_s == 187_200
+    without_crash = tuple(
+        item for item in actual.fault_applications if item.family != "controller-crash-restart"
+    )
+    assert without_crash == expected.fault_applications
+    assert actual.decisions == expected.decisions
+    assert actual.outcomes == expected.outcomes
+    assert actual.contradictions == expected.contradictions
+    assert actual.compensations == expected.compensations
+    assert actual.consistency_debts == expected.consistency_debts
+    for relative_name in (
+        "trace_records.jsonl",
+        "commitments.jsonl",
+        "evidence_index.jsonl",
+    ):
+        assert (restarted_root / relative_name).read_bytes() == (
+            uninterrupted_root / relative_name
+        ).read_bytes()
+    assert recovered_log.verify()
