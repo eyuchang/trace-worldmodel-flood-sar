@@ -11,6 +11,7 @@ from trace_reference import (
 )
 from trace_reference.domain.truth import ReferenceIncidentType
 from trace_reference.generation import (
+    build_reference_truth_fit_seed_summary,
     generate_reference_exposure,
     generate_reference_physical_scenario,
     generate_reference_truth,
@@ -92,3 +93,34 @@ def test_truth_artifact_contains_no_call_volume_target(truth_fixture) -> None:
     serialized = truth.model_dump_json()
     assert "expected_public_reports" not in serialized
     assert "call_volume_target" not in serialized
+
+
+def test_fit_intervals_exactly_reproduce_evaluation_counts(truth_fixture) -> None:
+    physical, exposure, truth = truth_fixture
+    summary = build_reference_truth_fit_seed_summary(physical, exposure, seed=20260812)
+    intercepts = {
+        ReferenceIncidentType.STRANDED_STRUCTURE: 4_200,
+        ReferenceIncidentType.VEHICLE_RESCUE: 1_700,
+        ReferenceIncidentType.LEVEE_INSPECTION: 2_100,
+        ReferenceIncidentType.MEDICAL_ACCESS: 2_500,
+        ReferenceIncidentType.WELFARE_CHECK: 2_500,
+        ReferenceIncidentType.MISSING_PERSON: 1_400,
+        ReferenceIncidentType.ANIMAL_RESCUE: 1_100,
+        ReferenceIncidentType.INFORMATION_NEED: 1_500,
+        ReferenceIncidentType.HAZARD_RESPONSE: 1_200,
+    }
+    expected = Counter(
+        item.incident_type for item in truth.incidents if 0 <= item.onset_s < 345_600
+    )
+    actual = Counter(
+        interval.incident_type
+        for interval in summary.evaluation_intervals
+        if interval.lower_intercept_inclusive <= intercepts[interval.incident_type]
+        and (
+            interval.upper_intercept_exclusive is None
+            or intercepts[interval.incident_type] < interval.upper_intercept_exclusive
+        )
+    )
+
+    assert actual == expected
+    assert summary.eligible_episode_count == len(truth.candidate_audit)

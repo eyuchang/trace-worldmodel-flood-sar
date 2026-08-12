@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -27,6 +27,7 @@ from trace_reference.domain.truth import (
 from .randomness import keyed_digest, uniform_micros
 
 _CANDIDATE_TICK_S = 1_800
+_PROBABILITY_DENOMINATOR = 10**24
 
 _DEVELOPMENT_INTERCEPTS_MICROS = {
     ReferenceIncidentType.STRANDED_STRUCTURE: 4_200,
@@ -76,6 +77,32 @@ class _StructureTickState:
     access_impaired: bool
     occupant_signature: str
     away_signature: str
+
+
+@dataclass(frozen=True)
+class _IncidentFactors:
+    eligible: bool
+    probability_numerator_factor: int
+    severity_micros: int
+    subject_signature: str
+
+
+@dataclass(frozen=True)
+class ReferenceTruthFitInterval:
+    """Intercept interval producing one evaluation incident from one episode."""
+
+    incident_type: ReferenceIncidentType
+    lower_intercept_inclusive: int
+    upper_intercept_exclusive: int | None
+
+
+@dataclass(frozen=True)
+class ReferenceTruthFitSeedSummary:
+    """Compact sufficient statistics for one spent development world."""
+
+    seed: int
+    eligible_episode_count: int
+    evaluation_intervals: tuple[ReferenceTruthFitInterval, ...]
 
 
 @dataclass(frozen=True)
@@ -262,6 +289,107 @@ class _TruthAccumulator:
             self._close(anchor_key, 345_600)
 
 
+@dataclass
+class _FitEpisodeDraft:
+    incident_type: ReferenceIncidentType
+    burn_in_minimum_intercept: int | None = None
+    evaluation_minimum_intercept: int | None = None
+
+    def record(self, at_s: int, minimum_intercept: int) -> None:
+        if at_s < 0:
+            current = self.burn_in_minimum_intercept
+            self.burn_in_minimum_intercept = (
+                minimum_intercept if current is None else min(current, minimum_intercept)
+            )
+        else:
+            current = self.evaluation_minimum_intercept
+            self.evaluation_minimum_intercept = (
+                minimum_intercept if current is None else min(current, minimum_intercept)
+            )
+
+    def evaluation_interval(self) -> ReferenceTruthFitInterval | None:
+        lower = self.evaluation_minimum_intercept
+        upper = self.burn_in_minimum_intercept
+        if lower is None or (upper is not None and lower >= upper):
+            return None
+        return ReferenceTruthFitInterval(
+            incident_type=self.incident_type,
+            lower_intercept_inclusive=lower,
+            upper_intercept_exclusive=upper,
+        )
+
+
+@dataclass
+class _FitAccumulator:
+    seed: int
+    episode_state: dict[tuple[ReferenceIncidentType, str], tuple[str, _FitEpisodeDraft]] = field(
+        default_factory=dict
+    )
+    intervals: list[ReferenceTruthFitInterval] = field(default_factory=list)
+    eligible_episode_count: int = 0
+
+    def observe(
+        self,
+        incident_type: ReferenceIncidentType,
+        anchor_id: str,
+        signature: str,
+        at_s: int,
+        factor: int,
+        structure_id: str,
+    ) -> None:
+        key = (incident_type, anchor_id)
+        previous = self.episode_state.get(key)
+        if previous is None or previous[0] != signature:
+            self._close(key)
+            draft = _FitEpisodeDraft(incident_type=incident_type)
+            self.episode_state[key] = (signature, draft)
+            self.eligible_episode_count += 1
+        else:
+            draft = previous[1]
+        draw = uniform_micros(
+            self.seed,
+            "delta-reference-randomness-v1",
+            "truth-candidate-draw",
+            at_s,
+            incident_type.value,
+            structure_id,
+        )
+        draft.record(at_s, _minimum_accepting_intercept(draw, factor))
+
+    def close_ineligible(
+        self,
+        incident_type: ReferenceIncidentType,
+        anchor_id: str,
+    ) -> None:
+        self._close((incident_type, anchor_id))
+
+    def _close(self, key: tuple[ReferenceIncidentType, str]) -> None:
+        completed = self.episode_state.pop(key, None)
+        if completed is None:
+            return
+        interval = completed[1].evaluation_interval()
+        if interval is not None:
+            self.intervals.append(interval)
+
+    def finish(self) -> ReferenceTruthFitSeedSummary:
+        for key in tuple(self.episode_state):
+            self._close(key)
+        return ReferenceTruthFitSeedSummary(
+            seed=self.seed,
+            eligible_episode_count=self.eligible_episode_count,
+            evaluation_intervals=tuple(
+                sorted(
+                    self.intervals,
+                    key=lambda item: (
+                        item.incident_type.value,
+                        item.lower_intercept_inclusive,
+                        item.upper_intercept_exclusive or 2**63,
+                    ),
+                )
+            ),
+        )
+
+
 def _person_at(person: ReferenceSyntheticPerson, at_s: int) -> str:
     return max(
         (item for item in person.trajectory if item.at_s <= at_s),
@@ -343,7 +471,7 @@ def _person_centered_factors(
 def _eligible_and_factors(
     state: _StructureTickState,
     incident_type: ReferenceIncidentType,
-) -> tuple[bool, int, int, str]:
+) -> _IncidentFactors:
     sample = state.physical
     structure = state.structure
     hazard = state.hazard_micros
@@ -380,15 +508,31 @@ def _eligible_and_factors(
         in {ReferenceIncidentType.VEHICLE_RESCUE, ReferenceIncidentType.MISSING_PERSON}
         else state.occupant_signature
     )
-    probability = round(
-        _DEVELOPMENT_INTERCEPTS_MICROS[incident_type]
-        * hazard
-        * max(50_000, subject_factor)
-        * max(50_000, maximum_vulnerability)
-        * access_factor
-        / 10**24
+    factor = (
+        hazard * max(50_000, subject_factor) * max(50_000, maximum_vulnerability) * access_factor
     )
-    return eligible, min(1_000_000, probability), hazard, subject_signature
+    return _IncidentFactors(
+        eligible=eligible,
+        probability_numerator_factor=factor,
+        severity_micros=hazard,
+        subject_signature=subject_signature,
+    )
+
+
+def _probability_micros(intercept_micros: int, factor: int) -> int:
+    """Use integer half-up rounding for auditable fixed-point probabilities."""
+
+    rounded = (intercept_micros * factor + _PROBABILITY_DENOMINATOR // 2) // (
+        _PROBABILITY_DENOMINATOR
+    )
+    return min(1_000_000, rounded)
+
+
+def _minimum_accepting_intercept(draw_micros: int, factor: int) -> int:
+    """Invert the fixed-point probability exactly for one keyed draw."""
+
+    required = (draw_micros + 1) * _PROBABILITY_DENOMINATOR - _PROBABILITY_DENOMINATOR // 2
+    return max(0, (required + factor - 1) // factor)
 
 
 def _structure_tick_state(
@@ -423,6 +567,40 @@ def _structure_tick_state(
         occupant_signature=_subjects_signature(occupants, signature_cache),
         away_signature=_subjects_signature(away_people, signature_cache),
     )
+
+
+def _iter_structure_tick_states(
+    physical: ReferencePhysicalScenario,
+    exposure: ReferenceExposureScenario,
+) -> Iterator[tuple[int, ReferenceSyntheticStructure, _StructureTickState, bool]]:
+    people_by_home: dict[str, list[ReferenceSyntheticPerson]] = defaultdict(list)
+    for person in exposure.people:
+        people_by_home[person.home_structure_id].append(person)
+    sample_by_time = {sample.at_s: sample for sample in physical.samples}
+    signature_cache: dict[tuple[str, ...], str] = {}
+    levee_anchor_structure_id = next(
+        item.truth_structure_id for item in exposure.structures if item.island_id == "ISL-01"
+    )
+    for at_s in range(-172_800, 345_600, _CANDIDATE_TICK_S):
+        sample = sample_by_time[at_s]
+        hazard_by_island = {
+            f"ISL-{index:02d}": _hazard_micros(sample, f"ISL-{index:02d}") for index in range(1, 9)
+        }
+        access_impaired = any(item.status != "open" for item in sample.crossings)
+        for structure in exposure.structures:
+            yield (
+                at_s,
+                structure,
+                _structure_tick_state(
+                    sample,
+                    structure,
+                    tuple(people_by_home[structure.truth_structure_id]),
+                    hazard_micros=hazard_by_island[structure.island_id],
+                    access_impaired=access_impaired,
+                    signature_cache=signature_cache,
+                ),
+                structure.truth_structure_id == levee_anchor_structure_id,
+            )
 
 
 def _episode_key(context: _CandidateContext, subject_signature: str, start_s: int) -> str:
@@ -483,6 +661,43 @@ def _truth_incident(
     )
 
 
+def build_reference_truth_fit_seed_summary(
+    physical: ReferencePhysicalScenario,
+    exposure: ReferenceExposureScenario,
+    *,
+    seed: int,
+) -> ReferenceTruthFitSeedSummary:
+    """Reduce one spent development world to exact intercept acceptance intervals."""
+
+    accumulator = _FitAccumulator(seed=seed)
+    incident_types = tuple(ReferenceIncidentType)
+    for _at_s, structure, state, is_levee_anchor in _iter_structure_tick_states(
+        physical,
+        exposure,
+    ):
+        for incident_type in incident_types:
+            if incident_type == ReferenceIncidentType.LEVEE_INSPECTION and not is_levee_anchor:
+                continue
+            anchor_id = (
+                "SIM-RD407-WEST-01"
+                if incident_type == ReferenceIncidentType.LEVEE_INSPECTION
+                else structure.truth_structure_id
+            )
+            factors = _eligible_and_factors(state, incident_type)
+            if not factors.eligible:
+                accumulator.close_ineligible(incident_type, anchor_id)
+                continue
+            accumulator.observe(
+                incident_type,
+                anchor_id,
+                factors.subject_signature,
+                state.physical.at_s,
+                factors.probability_numerator_factor,
+                structure.truth_structure_id,
+            )
+    return accumulator.finish()
+
+
 def generate_reference_truth(
     physical: ReferencePhysicalScenario,
     exposure: ReferenceExposureScenario,
@@ -491,65 +706,43 @@ def generate_reference_truth(
 ) -> ReferenceTruthScenario:
     """Generate truth before observations using development-only intercepts."""
 
-    people_by_home: dict[str, list[ReferenceSyntheticPerson]] = defaultdict(list)
-    for person in exposure.people:
-        people_by_home[person.home_structure_id].append(person)
-    sample_by_time = {sample.at_s: sample for sample in physical.samples}
     accumulator = _TruthAccumulator(seed=seed)
-    signature_cache: dict[tuple[str, ...], str] = {}
     incident_types = tuple(ReferenceIncidentType)
-    levee_anchor_structure_id = next(
-        item.truth_structure_id for item in exposure.structures if item.island_id == "ISL-01"
-    )
-    for at_s in range(-172_800, 345_600, _CANDIDATE_TICK_S):
-        sample = sample_by_time[at_s]
-        hazard_by_island = {
-            f"ISL-{index:02d}": _hazard_micros(sample, f"ISL-{index:02d}") for index in range(1, 9)
-        }
-        access_impaired = any(item.status != "open" for item in sample.crossings)
-        for structure in exposure.structures:
-            state = _structure_tick_state(
-                sample,
-                structure,
-                tuple(people_by_home[structure.truth_structure_id]),
-                hazard_micros=hazard_by_island[structure.island_id],
-                access_impaired=access_impaired,
-                signature_cache=signature_cache,
-            )
-            for incident_type in incident_types:
-                if (
-                    incident_type == ReferenceIncidentType.LEVEE_INSPECTION
-                    and structure.truth_structure_id != levee_anchor_structure_id
-                ):
-                    continue
-                eligible, probability, severity, signature = _eligible_and_factors(
-                    state,
+    for at_s, structure, state, is_levee_anchor in _iter_structure_tick_states(
+        physical,
+        exposure,
+    ):
+        for incident_type in incident_types:
+            if incident_type == ReferenceIncidentType.LEVEE_INSPECTION and not is_levee_anchor:
+                continue
+            factors = _eligible_and_factors(state, incident_type)
+            if not factors.eligible:
+                accumulator.close_ineligible(
                     incident_type,
-                )
-                if not eligible:
-                    accumulator.close_ineligible(
-                        incident_type,
-                        (
-                            "SIM-RD407-WEST-01"
-                            if incident_type == ReferenceIncidentType.LEVEE_INSPECTION
-                            else structure.truth_structure_id
-                        ),
-                        at_s,
-                    )
-                    continue
-                accumulator.observe(
-                    _CandidateContext(
-                        seed=seed,
-                        physical=sample,
-                        structure=structure,
-                        occupants=state.occupants,
-                        away_people=state.away_people,
-                        incident_type=incident_type,
+                    (
+                        "SIM-RD407-WEST-01"
+                        if incident_type == ReferenceIncidentType.LEVEE_INSPECTION
+                        else structure.truth_structure_id
                     ),
-                    probability=probability,
-                    severity=severity,
-                    signature=signature,
+                    at_s,
                 )
+                continue
+            accumulator.observe(
+                _CandidateContext(
+                    seed=seed,
+                    physical=state.physical,
+                    structure=structure,
+                    occupants=state.occupants,
+                    away_people=state.away_people,
+                    incident_type=incident_type,
+                ),
+                probability=_probability_micros(
+                    _DEVELOPMENT_INTERCEPTS_MICROS[incident_type],
+                    factors.probability_numerator_factor,
+                ),
+                severity=factors.severity_micros,
+                signature=factors.subject_signature,
+            )
     accumulator.finish()
     accumulator.incidents.sort(key=lambda item: (item.onset_s, item.truth_incident_id))
     accumulator.audit.sort(

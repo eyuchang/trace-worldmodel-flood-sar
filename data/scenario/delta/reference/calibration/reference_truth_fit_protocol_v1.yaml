@@ -1,0 +1,39 @@
+schema_version: delta-reference-truth-fit-protocol-v1
+scientific_status: spent-development-only-no-validation-authority
+scenario_id: WF-DFLD-01-REFERENCE
+protocol_amendment_sha256: 9ebe678e38a0360a3ebbef8ad55a9e334e77269c74c0065adbcc83e813d9f6ac
+seed_namespace: "WF-DFLD-01-REFERENCE|development-v1|index"
+seed_count: 100
+evaluation_start_s: 0
+evaluation_end_s: 345600
+target_total_lower: 1800
+target_total_midpoint: 2000
+target_total_upper: 2200
+intercept_lower: 100
+intercept_upper: 100000000
+coarse_grid_points: 97
+refinement_grid_points: 33
+target_shares:
+  - {incident_type: information_need, share_micros: 390000}
+  - {incident_type: hazard_response, share_micros: 300000}
+  - {incident_type: welfare_check, share_micros: 210000}
+  - {incident_type: levee_inspection, share_micros: 2000}
+  - {incident_type: animal_rescue, share_micros: 30000}
+  - {incident_type: missing_person, share_micros: 18000}
+  - {incident_type: stranded_structure, share_micros: 20000}
+  - {incident_type: vehicle_rescue, share_micros: 15000}
+  - {incident_type: medical_access, share_micros: 15000}
+solver:
+  objective: separable-type-absolute-count-residual
+  tie_break: lower-intercept
+  probability_rounding: integer-half-up
+  seed_weighting: equal-mission-weight
+  per_seed_normalization: forbidden
+resource_stop_bounds:
+  maximum_additional_disk_bytes: 1073741824
+  maximum_peak_memory_bytes: 2147483648
+  maximum_wall_time_s: 900
+limitations:
+  - Synthetic process-design fit; not an estimate of real emergency incidence.
+  - Public report volume and taxonomy are fitted only after truth is frozen.
+  - The illustrative seed is not a separate objective and receives no special weight.
