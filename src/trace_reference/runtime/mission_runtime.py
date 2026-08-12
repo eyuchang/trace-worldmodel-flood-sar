@@ -68,6 +68,7 @@ from .mission_state import (
     reference_runtime_profile_digest,
     reference_scenario_input_digest,
 )
+from .report_fault_overlay import build_reference_report_fault_overlay
 
 
 def _physical_inputs(events: Iterable[ReferenceEvent]) -> Iterator[ReferenceScheduledInput]:
@@ -143,13 +144,24 @@ class ReferenceMissionRuntime:
         self.engine = decision_engine
         self._fault_schedule = fault_schedule
         self._fault_overlay = build_reference_coordination_overlay(scenario, fault_schedule)
+        self._report_fault_overlay = build_reference_report_fault_overlay(scenario, fault_schedule)
         self.event_log: ReferenceEventLog = decision_engine.dependencies.event_log
-        self._reports = {item.call_id: item for item in scenario.observations.raw.reports}
-        self._envelopes = {
-            item.envelope_id: item for item in scenario.observations.delivery.envelopes
-        }
-        self._envelope_by_call = {
-            item.call_id: item for item in scenario.observations.delivery.envelopes
+        runtime_reports = (
+            *scenario.observations.raw.reports,
+            *(item.report for item in self._report_fault_overlay.reports),
+        )
+        runtime_envelopes = (
+            *scenario.observations.delivery.envelopes,
+            *(item.envelope for item in self._report_fault_overlay.reports),
+        )
+        self._runtime_envelopes = tuple(
+            sorted(runtime_envelopes, key=lambda item: (item.delivered_at_s, item.envelope_id))
+        )
+        self._reports = {item.call_id: item for item in runtime_reports}
+        self._envelopes = {item.envelope_id: item for item in self._runtime_envelopes}
+        self._envelope_by_call = {item.call_id: item for item in self._runtime_envelopes}
+        self._injected_fault_by_envelope = {
+            item.envelope.envelope_id: item.fault_id for item in self._report_fault_overlay.reports
         }
         self._telemetry = {item.telemetry_id: item for item in scenario.resources.public.telemetry}
         self._graphs: dict[ReferenceAuthorityId, ReferenceEvidenceGraph] = {
@@ -186,9 +198,10 @@ class ReferenceMissionRuntime:
         external = iter(
             heapq.merge(
                 _physical_inputs(self.scenario.physical.events),
-                _report_inputs(self.scenario.observations.delivery.envelopes),
+                _report_inputs(self._runtime_envelopes),
                 _telemetry_inputs(self.scenario.resources.public.telemetry),
                 _coordination_inputs(self._fault_overlay),
+                _coordination_inputs(self._report_fault_overlay.coordination),
             )
         )
         if self._resume_after_s is not None:
@@ -265,6 +278,26 @@ class ReferenceMissionRuntime:
 
         if not verify_reference_envelope(report, value):
             raise ValueError("Reference report envelope authentication failed before delivery")
+        fault_id = self._injected_fault_by_envelope.get(value.envelope_id)
+        if fault_id is not None:
+            if self._fault_schedule is None:
+                raise RuntimeError("Reference injected report lost its registered schedule")
+            application = build_reference_target_fault_application(
+                self._fault_schedule,
+                fault_id=fault_id,
+                target_public_id=value.envelope_id,
+                applied_at_s=value.delivered_at_s,
+                disposition="applied",
+                reason=(
+                    "The registered runtime-only report overlay delivered this authenticated "
+                    "public evidence without changing the common raw-observation artifact."
+                ),
+            )
+            self.event_log.append_fault_application(
+                at_s=value.delivered_at_s,
+                artifact=application.model_dump(mode="json"),
+            )
+            self._fault_applications.append(application)
         self.event_log.append_public_artifact(
             at_s=value.delivered_at_s,
             event_type=ReferenceEventType.CALL_DELIVERED,
@@ -430,9 +463,12 @@ class ReferenceMissionRuntime:
             raise ValueError("Fresh Reference mission execution requires an empty event log")
         if not self.event_log.verify():
             raise ValueError("Reference mission event chain is invalid")
-        if len(self._reports) != len(self.scenario.observations.raw.reports):
+        expected_reports = len(self.scenario.observations.raw.reports) + len(
+            self._report_fault_overlay.reports
+        )
+        if len(self._reports) != expected_reports:
             raise ValueError("Reference runtime report identifiers are not unique")
-        if len(self._envelopes) != len(self.scenario.observations.delivery.envelopes):
+        if len(self._envelopes) != expected_reports:
             raise ValueError("Reference runtime envelope identifiers are not unique")
         if len(self._telemetry) != len(self.scenario.resources.public.telemetry):
             raise ValueError("Reference runtime telemetry identifiers are not unique")
@@ -451,15 +487,19 @@ class ReferenceMissionRuntime:
     def _validate_public_sources(self) -> None:
         from trace_reference.generation import verify_reference_envelope
 
-        for envelope in self.scenario.observations.delivery.envelopes:
+        for envelope in self._envelopes.values():
             report = self._reports[envelope.call_id]
             if not verify_reference_envelope(report, envelope):
                 raise ValueError("Reference scenario contains an unauthenticated report envelope")
-        for delivery in self.scenario.coordination.public.deliveries:
-            source = self._coordination_source(delivery)
+        attempts = (
+            *self._fault_overlay.attempts,
+            *self._report_fault_overlay.coordination.attempts,
+        )
+        for attempt in attempts:
+            source = self._coordination_source(attempt.delivery)
             if (
                 reference_content_digest(source.model_dump(mode="json"))
-                != delivery.source_content_digest
+                != attempt.delivery.source_content_digest
             ):
                 raise ValueError("Reference scenario coordination source digest is invalid")
 
@@ -469,6 +509,8 @@ class ReferenceMissionRuntime:
             self.engine,
             self.event_log,
             self._fault_schedule,
+            reports=self._reports,
+            envelopes=self._envelopes,
         ).restore(checkpoint)
         self._graphs = restored.graphs
         self._active = restored.active
@@ -823,5 +865,12 @@ class ReferenceMissionRuntime:
                 else self._fault_schedule.profile_id
             ),
             fault_applications=tuple(self._fault_applications),
-            unreachable_delivery_fault_ids=self._fault_overlay.unreachable_fault_ids,
+            unreachable_delivery_fault_ids=tuple(
+                sorted(
+                    {
+                        *self._fault_overlay.unreachable_fault_ids,
+                        *self._report_fault_overlay.coordination.unreachable_fault_ids,
+                    }
+                )
+            ),
         )

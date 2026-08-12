@@ -356,6 +356,29 @@ def verify_reference_envelope(
     return hmac.compare_digest(expected, envelope.integrity_token)
 
 
+def sign_reference_envelope(
+    report: ReferenceRawReport,
+    *,
+    envelope_id: str,
+    delivered_at_s: int,
+    initial_authority_id: ReferenceAuthorityId,
+) -> ReferenceReportEnvelope:
+    """Sign one synthetic public report with the project-owned fixture identity."""
+
+    body: dict[str, object] = {
+        "envelope_id": envelope_id,
+        "call_id": report.call_id,
+        "delivered_at_s": delivered_at_s,
+        "initial_authority_id": initial_authority_id,
+        "authentication_status": "fixture-valid",
+        "key_version": "reference-test-key-v1",
+    }
+    return ReferenceReportEnvelope(
+        **body,
+        integrity_token=_integrity_token(report, body),
+    )
+
+
 def _medical_descriptors(
     affected: tuple[str, ...],
     people_by_id: dict[str, ReferenceSyntheticPerson],
@@ -462,19 +485,13 @@ def generate_reference_observations(
                 else None
             ),
         )
-        envelope_body: dict[str, object] = {
-            "envelope_id": _envelope_id(seed, draft.draft_key),
-            "call_id": call_id,
-            "delivered_at_s": draft.observed_at_s
-            + draft.delivery_delay_s
-            + _language_delay(draft, seed=seed),
-            "initial_authority_id": _initial_authority(draft),
-            "authentication_status": "fixture-valid",
-            "key_version": "reference-test-key-v1",
-        }
-        envelope = ReferenceReportEnvelope(
-            **envelope_body,
-            integrity_token=_integrity_token(report, envelope_body),
+        envelope = sign_reference_envelope(
+            report,
+            envelope_id=_envelope_id(seed, draft.draft_key),
+            delivered_at_s=(
+                draft.observed_at_s + draft.delivery_delay_s + _language_delay(draft, seed=seed)
+            ),
+            initial_authority_id=_initial_authority(draft),
         )
         reports.append(report)
         envelopes.append(envelope)

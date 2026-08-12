@@ -33,6 +33,7 @@ from trace_reference.runtime import (
     build_reference_route_provider_receipt,
 )
 from trace_reference.runtime.fault_overlay import build_reference_coordination_overlay
+from trace_reference.runtime.report_fault_overlay import build_reference_report_fault_overlay
 
 ROOT = Path(__file__).resolve().parents[3]
 FAULT_SCHEDULE = Path("data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json")
@@ -302,11 +303,17 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
         tmp_path,
         fault_schedule=fault_schedule,
     )
-    result = runtime.run(through_s=200_000)
+    report_overlay = build_reference_report_fault_overlay(scenario, fault_schedule)
+    assert report_overlay.coordination.unreachable_fault_ids == ()
+    assert len(report_overlay.reports) == 2
+    through_s = max(200_000, *(item.envelope.delivered_at_s for item in report_overlay.reports))
+    result = runtime.run(through_s=through_s)
     applications = {item.family: item for item in result.fault_applications}
     assert set(applications) == {
+        "authenticated-false-report",
         "reordered-evidence-delivery",
         "duplicated-delivery-retry",
+        "identity-dispute-visible-revision",
         "stale-acknowledgement-key-rotation",
     }
     assert applications["duplicated-delivery-retry"].disposition == ("duplicate-effect-suppressed")
@@ -318,11 +325,36 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
     ]
     assert fault_events
     assert all(item.visibility.value == "hidden_evaluation_only" for item in fault_events)
+    public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
+    assert "authenticated-false-report" not in public_json
+    assert "identity-dispute-visible-revision" not in public_json
     delivered = replay.public_mission_artifacts[
         ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value
     ]
     assert selected["reference-fault-duplicated-delivery-retry-v1"] in delivered
     assert selected["reference-fault-stale-key-acknowledgement-v1"] not in delivered
+    injected = {item.fault_id: item for item in report_overlay.reports}
+    false_report = injected["reference-fault-authenticated-false-report-v1"].report
+    revision = injected["reference-fault-identity-dispute-revision-v1"].report
+    assert false_report.call_id not in {item.call_id for item in scenario.observations.raw.reports}
+    assert "source-unverified" in false_report.descriptor_tokens
+    assert revision.revision_of_call_id is not None
+    revised = next(
+        item
+        for item in scenario.observations.raw.reports
+        if item.call_id == revision.revision_of_call_id
+    )
+    assert revision.callback_token == revised.callback_token
+    revision_steps = [
+        json.loads(value)
+        for value in replay.public_mission_artifacts[
+            ReferenceEventType.RECONCILIATION_UPDATED.value
+        ].values()
+        if json.loads(value)["call_id"] == revision.call_id
+    ]
+    assert len(revision_steps) == 1
+    assert revision_steps[0]["relationship_status"] == "confirmed"
+    assert revision_steps[0]["visible_evidence_basis"] == ["explicit_visible_revision_pointer"]
     assert original_digests == (
         scenario.physical.physical_digest,
         scenario.exposure.exposure_digest,

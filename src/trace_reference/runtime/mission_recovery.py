@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import heapq
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
@@ -24,6 +25,8 @@ from trace_reference.domain import (
     ReferenceMissionDecision,
     ReferenceMissionRestartCheckpoint,
     ReferencePublicArtifactEnvelope,
+    ReferenceRawReport,
+    ReferenceReportEnvelope,
     ReferenceScenarioArtifacts,
 )
 from trace_reference.domain.coordination import ReferenceCoordinationDelivery
@@ -73,18 +76,25 @@ class ReferenceMissionRecovery:
         engine: ReferenceDecisionEngine,
         event_log: ReferenceEventLog,
         fault_schedule: ReferenceFaultSchedule | None,
+        *,
+        reports: Mapping[str, ReferenceRawReport] | None = None,
+        envelopes: Mapping[str, ReferenceReportEnvelope] | None = None,
     ) -> None:
         self.scenario = scenario
         self.engine = engine
         self.event_log = event_log
         self.fault_schedule = fault_schedule
-        self.reports = {item.call_id: item for item in scenario.observations.raw.reports}
-        self.envelopes = {
-            item.envelope_id: item for item in scenario.observations.delivery.envelopes
-        }
-        self.envelope_by_call = {
-            item.call_id: item for item in scenario.observations.delivery.envelopes
-        }
+        self.reports = (
+            dict(reports)
+            if reports is not None
+            else {item.call_id: item for item in scenario.observations.raw.reports}
+        )
+        self.envelopes = (
+            dict(envelopes)
+            if envelopes is not None
+            else {item.envelope_id: item for item in scenario.observations.delivery.envelopes}
+        )
+        self.envelope_by_call = {item.call_id: item for item in self.envelopes.values()}
         self.graphs: dict[ReferenceAuthorityId, ReferenceEvidenceGraph] = {
             cast(ReferenceAuthorityId, authority.authority_id): ReferenceEvidenceGraph(
                 cast(ReferenceAuthorityId, authority.authority_id)
