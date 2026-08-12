@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Literal, TypeAlias
 
 from trace_jepa.contracts import Commitment
 from trace_jepa.support import canonical_json_bytes
@@ -29,6 +30,11 @@ from trace_reference.reconciliation import (
 )
 
 EVALUATION_END_S = 345_600
+ReferenceProviderBehavior: TypeAlias = Literal[
+    "nominal-success",
+    "client-timeout",
+    "late-success",
+]
 
 
 class ReferenceInputKind(str, Enum):
@@ -58,13 +64,20 @@ class ReferencePendingOutcome:
 
 
 @dataclass(frozen=True)
-class ReferencePendingAcquisition:
+class ReferenceAcquisitionContext:
     request: AcquisitionRequestReceipt
     report: ReferenceRawReport
     envelope: ReferenceReportEnvelope
     reconciliation: ReferenceReconciliationStep
     original_decision: ReferenceMissionDecision
     coordination_latency_s: int
+
+
+@dataclass(frozen=True)
+class ReferencePendingAcquisition:
+    context: ReferenceAcquisitionContext
+    behavior: ReferenceProviderBehavior = "nominal-success"
+    fault_id: str | None = None
 
 
 @dataclass(frozen=True)

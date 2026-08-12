@@ -47,7 +47,7 @@ from trace_reference.domain import (
     ReferenceScenarioArtifacts,
 )
 from trace_reference.domain.observations import ReferenceAuthorityId
-from trace_reference.domain.routing import ReferencePublicRouteCatalog
+from trace_reference.domain.routing import ReferencePublicRouteCatalog, ReferencePublicRoutePlan
 from trace_reference.reconciliation import ReferenceReconciliationStep
 
 from .event_store import ReferenceEventLog
@@ -490,14 +490,40 @@ class ReferenceDecisionEngine:
         payload = ReferenceRouteVerificationPayload.model_validate_json(evidence.payload_json)
         if payload.request_id != evidence.request_id or payload.call_id != values.report.call_id:
             raise ValueError("Reference route evidence names another request or public report")
-        route_by_resource = {item.resource_id: item for item in routes.routes}
+        current_resource_ids = {item.resource_id for item in routes.routes}
+        observed_catalogs: dict[int, ReferencePublicRouteCatalog] = {}
         for observation in payload.observations:
-            route = route_by_resource.get(observation.requested_resource_id)
-            if route is None:
+            if observation.requested_resource_id not in current_resource_ids:
                 raise ValueError("Reference route evidence names an absent public resource")
+            route = self._route_at_observation_time(
+                values.report,
+                observation.requested_resource_id,
+                observation.observed_at_s,
+                observed_catalogs,
+            )
             if route.route_plan_id != observation.observed_route_plan_id:
                 raise ValueError("Reference route evidence names another observed route")
             if route.route_plan_digest != observation.observed_route_plan_digest:
                 raise ValueError("Reference route evidence route digest is invalid")
             if route.status.value != observation.observed_status:
                 raise ValueError("Reference route evidence status disagrees with public state")
+
+    def _route_at_observation_time(
+        self,
+        report: ReferenceRawReport,
+        resource_id: str,
+        observed_at_s: int,
+        catalog_cache: dict[int, ReferencePublicRouteCatalog],
+    ) -> ReferencePublicRoutePlan:
+        catalog = catalog_cache.get(observed_at_s)
+        if catalog is None:
+            catalog = self.dependencies.route_service.build_catalog(
+                report,
+                self.dependencies.scenario.resources.public_catalog,
+                at_s=observed_at_s,
+            )
+            catalog_cache[observed_at_s] = catalog
+        route = next((item for item in catalog.routes if item.resource_id == resource_id), None)
+        if route is None:
+            raise ValueError("Reference route evidence names an absent public resource")
+        return route

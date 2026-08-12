@@ -153,20 +153,39 @@ def build_reference_fault_application(
 
     if attempt.fault_id is None:
         raise ValueError("Reference nominal attempt cannot produce a fault application")
-    trigger = next(item for item in schedule.triggers if item.fault_id == attempt.fault_id)
-    application_key = (
-        f"{attempt.fault_id}|{attempt.delivery.delivery_id}|{attempt.at_s}|{disposition}"
+    return build_reference_target_fault_application(
+        schedule,
+        fault_id=attempt.fault_id,
+        target_public_id=attempt.delivery.delivery_id,
+        applied_at_s=attempt.at_s,
+        disposition=disposition,
+        reason=reason,
     )
+
+
+def build_reference_target_fault_application(
+    schedule: ReferenceFaultSchedule,
+    *,
+    fault_id: str,
+    target_public_id: str,
+    applied_at_s: int,
+    disposition: Literal["applied", "duplicate-effect-suppressed", "stale-key-rejected"],
+    reason: str,
+) -> ReferenceFaultApplication:
+    """Bind any realized public runtime target to one exact registered trigger."""
+
+    trigger = next(item for item in schedule.triggers if item.fault_id == fault_id)
+    application_key = f"{fault_id}|{target_public_id}|{applied_at_s}|{disposition}"
     body = {
         "schema_version": "delta-reference-fault-application-v1",
         "application_id": (
             "reference-fault-application-"
             + hashlib.sha256(application_key.encode()).hexdigest()[:20]
         ),
-        "fault_id": trigger.fault_id,
+        "fault_id": fault_id,
         "family": trigger.family,
-        "target_public_id": attempt.delivery.delivery_id,
-        "applied_at_s": attempt.at_s,
+        "target_public_id": target_public_id,
+        "applied_at_s": applied_at_s,
         "disposition": disposition,
         "reason": reason,
     }

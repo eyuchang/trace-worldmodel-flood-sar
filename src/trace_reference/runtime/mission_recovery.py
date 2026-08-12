@@ -37,11 +37,13 @@ from .decision_engine import ReferenceDecisionEngine
 from .event_store import ReferenceEventLog
 from .mission_state import (
     EVALUATION_END_S,
+    ReferenceAcquisitionContext,
     ReferenceActiveCommitment,
     ReferenceDecisionKey,
     ReferenceInputKind,
     ReferencePendingAcquisition,
     ReferencePendingOutcome,
+    ReferenceProviderBehavior,
     ReferenceScheduledInput,
     reference_outcome_for_commitment,
     reference_runtime_profile_digest,
@@ -93,13 +95,13 @@ class ReferenceMissionRecovery:
         self.steps: dict[tuple[str, str], ReferenceReconciliationStep] = {}
         self.requests: dict[str, AcquisitionRequestReceipt] = {}
         self.acquisition_outcomes: tuple[AcquisitionOutcomeReceipt, ...] = ()
+        self.fault_applications: list[ReferenceFaultApplication] = []
 
     def restore(self, checkpoint: ReferenceMissionRestartCheckpoint) -> ReferenceRecoveryResult:
         self._verify_checkpoint(checkpoint)
         artifacts = self._public_artifacts()
-        seen_deliveries, fault_applications = self._restore_delivery_and_fault_state(
-            artifacts
-        )
+        seen_deliveries, fault_applications = self._restore_delivery_and_fault_state(artifacts)
+        self.fault_applications = fault_applications
         self._restore_decisions_and_reconciliation(artifacts)
         self._restore_provider_state(artifacts)
         active, known, outcomes, pending = self._restore_commitments(
@@ -245,7 +247,9 @@ class ReferenceMissionRecovery:
             receipt = ProviderReceipt.model_validate(value)
             outcome, _evidence = executor.ingest(receipt)
             if outcomes.get(receipt.receipt_id) != outcome:
-                raise ValueError("Reference restored provider outcome disagrees with public history")
+                raise ValueError(
+                    "Reference restored provider outcome disagrees with public history"
+                )
         self.acquisition_outcomes = tuple(outcomes.values())
 
     def _restore_commitments(
@@ -282,9 +286,7 @@ class ReferenceMissionRecovery:
             for item in outcomes.values()
         ]
         decisions = {
-            item.commitment_id: item
-            for item in self.decisions
-            if item.commitment_id is not None
+            item.commitment_id: item for item in self.decisions if item.commitment_id is not None
         }
         active: dict[str, ReferenceActiveCommitment] = {}
         pending: list[ReferenceScheduledInput] = []
@@ -332,36 +334,135 @@ class ReferenceMissionRecovery:
         through_s: int,
         pending: list[ReferenceScheduledInput],
     ) -> None:
-        completed_request_ids = {item.request_id for item in self.acquisition_outcomes}
         decisions = {
             item.acquisition_request_id: item
             for item in self.decisions
             if item.acquisition_request_id is not None
         }
+        outcomes_by_request: dict[str, list[AcquisitionOutcomeReceipt]] = {}
+        for outcome in self.acquisition_outcomes:
+            outcomes_by_request.setdefault(outcome.request_id, []).append(outcome)
+        silent_application = next(
+            (
+                item
+                for item in self.fault_applications
+                if item.family == "silent-provider-success-after-timeout"
+            ),
+            None,
+        )
+        if (
+            silent_application is not None
+            and silent_application.target_public_id not in self.requests
+        ):
+            raise ValueError("Reference restored provider fault names an absent request")
         for request_id, request in self.requests.items():
-            if request_id in completed_request_ids:
-                continue
-            if request.expected_delivery_s <= through_s:
-                raise ValueError("Reference restored acquisition is missing its provider outcome")
             decision = decisions.get(request_id)
             if decision is None:
                 raise ValueError("Reference restored acquisition lacks its public decision")
-            step = self.steps[(decision.controller_authority_id, request.target_call_id)]
-            heapq.heappush(
+            context = self._acquisition_context(request, decision)
+            outcomes = outcomes_by_request.get(request_id, [])
+            if silent_application is not None and request_id == silent_application.target_public_id:
+                self._restore_silent_provider(
+                    context,
+                    outcomes,
+                    through_s,
+                    pending,
+                    silent_application.fault_id,
+                )
+                continue
+            if outcomes:
+                continue
+            if request.expected_delivery_s <= through_s:
+                raise ValueError("Reference restored acquisition is missing its provider outcome")
+            self._push_recovered_acquisition(
                 pending,
-                ReferenceScheduledInput(
-                    request.expected_delivery_s,
-                    10,
-                    request.request_id,
-                    ReferenceInputKind.PROVIDER,
-                    ReferencePendingAcquisition(
-                        request,
-                        self.reports[request.target_call_id],
-                        self.envelope_by_call[request.target_call_id],
-                        step,
-                        decision,
-                        decision.decided_at_s
-                        - self.envelope_by_call[request.target_call_id].delivered_at_s,
-                    ),
-                ),
+                at_s=request.expected_delivery_s,
+                context=context,
+                behavior="nominal-success",
+                fault_id=None,
             )
+
+    def _acquisition_context(
+        self,
+        request: AcquisitionRequestReceipt,
+        decision: ReferenceMissionDecision,
+    ) -> ReferenceAcquisitionContext:
+        envelope = self.envelope_by_call[request.target_call_id]
+        return ReferenceAcquisitionContext(
+            request,
+            self.reports[request.target_call_id],
+            envelope,
+            self.steps[(decision.controller_authority_id, request.target_call_id)],
+            decision,
+            decision.decided_at_s - envelope.delivered_at_s,
+        )
+
+    def _restore_silent_provider(
+        self,
+        context: ReferenceAcquisitionContext,
+        outcomes: list[AcquisitionOutcomeReceipt],
+        through_s: int,
+        pending: list[ReferenceScheduledInput],
+        fault_id: str,
+    ) -> None:
+        if self.fault_schedule is None:
+            raise ValueError("Reference restored provider fault lacks its schedule")
+        trigger = next(item for item in self.fault_schedule.triggers if item.fault_id == fault_id)
+        timeout_s = context.request.expected_delivery_s
+        success_s = timeout_s + trigger.delivery_offset_s
+        if any(
+            item.outcome_status not in {"provider-timeout", "evidence-accepted"}
+            for item in outcomes
+        ):
+            raise ValueError("Reference restored silent provider has an unexpected outcome")
+        timeout_count = sum(item.outcome_status == "provider-timeout" for item in outcomes)
+        accepted_count = sum(item.outcome_status == "evidence-accepted" for item in outcomes)
+        if timeout_count > 1 or accepted_count > 1:
+            raise ValueError("Reference restored silent-provider outcomes are duplicated")
+        if accepted_count:
+            if not timeout_count:
+                raise ValueError("Reference silent provider success lacks its prior client timeout")
+            return
+        if timeout_s <= through_s and not timeout_count:
+            raise ValueError("Reference restored silent provider is missing its client timeout")
+        if timeout_s > through_s:
+            self._push_recovered_acquisition(
+                pending,
+                at_s=timeout_s,
+                context=context,
+                behavior="client-timeout",
+                fault_id=fault_id,
+            )
+        if success_s <= through_s:
+            raise ValueError("Reference restored silent provider is missing its late success")
+        self._push_recovered_acquisition(
+            pending,
+            at_s=success_s,
+            context=context,
+            behavior="late-success",
+            fault_id=fault_id,
+        )
+
+    @staticmethod
+    def _push_recovered_acquisition(
+        pending: list[ReferenceScheduledInput],
+        *,
+        at_s: int,
+        context: ReferenceAcquisitionContext,
+        behavior: ReferenceProviderBehavior,
+        fault_id: str | None,
+    ) -> None:
+        heapq.heappush(
+            pending,
+            ReferenceScheduledInput(
+                at_s,
+                10,
+                f"{context.request.request_id}-{behavior}",
+                ReferenceInputKind.PROVIDER,
+                ReferencePendingAcquisition(
+                    context,
+                    behavior,
+                    fault_id,
+                ),
+            ),
+        )

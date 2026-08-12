@@ -3,6 +3,7 @@
 from .acquisition_provider import (
     ReferenceRouteProviderInput,
     build_reference_route_provider_receipt,
+    build_reference_route_provider_timeout,
 )
 from .decision_engine import (
     ReferenceDecisionEngine,
@@ -57,5 +58,6 @@ __all__ = [
     "SelectedCommitmentInput",
     "build_reference_predictor_evidence",
     "build_reference_route_provider_receipt",
+    "build_reference_route_provider_timeout",
     "core_action_from_proposal",
 ]

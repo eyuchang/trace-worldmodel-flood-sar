@@ -35,9 +35,7 @@ from trace_reference.runtime import (
 from trace_reference.runtime.fault_overlay import build_reference_coordination_overlay
 
 ROOT = Path(__file__).resolve().parents[3]
-FAULT_SCHEDULE = Path(
-    "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json"
-)
+FAULT_SCHEDULE = Path("data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json")
 
 
 @pytest.fixture(scope="module")
@@ -141,9 +139,7 @@ def test_reference_mission_runtime_merges_public_streams_and_executes_initial_de
     )
     replay = event_log.replay()
     assert replay.public_mission_artifacts[ReferenceEventType.CALL_DELIVERED.value]
-    assert replay.public_mission_artifacts[
-        ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value
-    ]
+    assert replay.public_mission_artifacts[ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value]
     assert replay.public_mission_artifacts[ReferenceEventType.RECONCILIATION_UPDATED.value]
     assert runtime.engine.dependencies.trace_repository.verify_chain()
     assert runtime.engine.dependencies.evidence_ledger.verify_chain()
@@ -152,6 +148,8 @@ def test_reference_mission_runtime_merges_public_streams_and_executes_initial_de
     public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
     for forbidden in ("truth_incident_id", "truth_person_id", "candidate_digest"):
         assert forbidden not in public_json
+
+
 def test_reference_mission_runtime_does_not_decide_twice_for_one_local_cluster(
     scenario,
     tmp_path: Path,
@@ -177,9 +175,7 @@ def test_reference_mission_runtime_validates_coordination_sources_before_events(
     delivery = scenario.coordination.public.deliveries[0]
     tampered_delivery = delivery.model_copy(update={"source_content_digest": "0" * 64})
     public = scenario.coordination.public.model_copy(
-        update={
-            "deliveries": (tampered_delivery, *scenario.coordination.public.deliveries[1:])
-        }
+        update={"deliveries": (tampered_delivery, *scenario.coordination.public.deliveries[1:])}
     )
     tampered = replace(
         scenario,
@@ -236,9 +232,7 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
         replay.public_mission_artifacts[ReferenceEventType.PROVIDER_RECEIPT_RECORDED.value]
     ) == len(acquisition_decisions)
     assert len(
-        replay.public_mission_artifacts[
-            ReferenceEventType.ACQUISITION_OUTCOME_RECORDED.value
-        ]
+        replay.public_mission_artifacts[ReferenceEventType.ACQUISITION_OUTCOME_RECORDED.value]
     ) == len(acquisition_decisions)
     assert len(
         replay.public_mission_artifacts[ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED.value]
@@ -255,9 +249,7 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
         assert forbidden not in public_json
     request_json = next(
         iter(
-            replay.public_mission_artifacts[
-                ReferenceEventType.ACQUISITION_REQUESTED.value
-            ].values()
+            replay.public_mission_artifacts[ReferenceEventType.ACQUISITION_REQUESTED.value].values()
         )
     )
     request = AcquisitionRequestReceipt.model_validate_json(request_json)
@@ -317,12 +309,8 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
         "duplicated-delivery-retry",
         "stale-acknowledgement-key-rotation",
     }
-    assert applications["duplicated-delivery-retry"].disposition == (
-        "duplicate-effect-suppressed"
-    )
-    assert applications["stale-acknowledgement-key-rotation"].disposition == (
-        "stale-key-rejected"
-    )
+    assert applications["duplicated-delivery-retry"].disposition == ("duplicate-effect-suppressed")
+    assert applications["stale-acknowledgement-key-rotation"].disposition == ("stale-key-rejected")
     replay = event_log.replay()
     delivered = replay.public_mission_artifacts[
         ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value
@@ -336,6 +324,87 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
         scenario.observations.raw.raw_reports_digest,
         scenario.resources.hidden.hidden_resource_digest,
     )
+
+
+def test_silent_provider_success_reconciles_after_client_timeout(
+    scenario,
+    fault_schedule: ReferenceFaultSchedule,
+    tmp_path: Path,
+) -> None:
+    uninterrupted_root = tmp_path / "uninterrupted"
+    uninterrupted_root.mkdir()
+    runtime, event_log = _mission_runtime(
+        scenario,
+        uninterrupted_root,
+        fault_schedule=fault_schedule,
+    )
+    result = runtime.run()
+    application = next(
+        item
+        for item in result.fault_applications
+        if item.family == "silent-provider-success-after-timeout"
+    )
+    replay = event_log.replay()
+    outcomes = [
+        json.loads(value)
+        for value in replay.public_mission_artifacts[
+            ReferenceEventType.ACQUISITION_OUTCOME_RECORDED.value
+        ].values()
+    ]
+    targeted = [item for item in outcomes if item["request_id"] == application.target_public_id]
+    assert [item["outcome_status"] for item in targeted] == [
+        "provider-timeout",
+        "evidence-accepted",
+    ]
+    assert (
+        len(
+            [
+                item
+                for item in result.decisions
+                if item.reassessment_of_decision_id is not None
+                and item.acquisition_request_id is None
+            ]
+        )
+        >= 1
+    )
+    assert runtime.engine.dependencies.trace_repository.verify_chain()
+    assert runtime.engine.dependencies.evidence_ledger.verify_chain()
+
+    request = next(
+        AcquisitionRequestReceipt.model_validate_json(value)
+        for value in replay.public_mission_artifacts[
+            ReferenceEventType.ACQUISITION_REQUESTED.value
+        ].values()
+        if json.loads(value)["request_id"] == application.target_public_id
+    )
+    restarted_root = tmp_path / "restarted"
+    restarted_root.mkdir()
+    before_restart, prefix_log = _mission_runtime(
+        scenario,
+        restarted_root,
+        fault_schedule=fault_schedule,
+    )
+    before_restart.run(through_s=request.expected_delivery_s)
+    checkpoint = before_restart.checkpoint()
+    recovered, recovered_log = _mission_runtime(
+        scenario,
+        restarted_root,
+        events=prefix_log.events,
+        fault_schedule=fault_schedule,
+        restart_checkpoint=checkpoint,
+    )
+    recovered_result = recovered.run()
+
+    assert recovered_result == result
+    assert recovered_log.events == event_log.events
+    for relative_name in (
+        "trace_records.jsonl",
+        "commitments.jsonl",
+        "evidence_index.jsonl",
+    ):
+        assert (restarted_root / relative_name).read_bytes() == (
+            uninterrupted_root / relative_name
+        ).read_bytes()
 
 
 def test_reference_mission_restart_matches_uninterrupted_continuation(

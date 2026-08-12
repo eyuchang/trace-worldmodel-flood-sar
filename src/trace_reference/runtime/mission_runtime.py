@@ -42,6 +42,7 @@ from trace_reference.reconciliation import (
 from .acquisition_provider import (
     ReferenceRouteProviderInput,
     build_reference_route_provider_receipt,
+    build_reference_route_provider_timeout,
 )
 from .decision_engine import ReferenceDecisionEngine, ReferenceDecisionInput
 from .event_store import ReferenceEventLog, verify_reference_event
@@ -49,16 +50,19 @@ from .fault_overlay import (
     ReferenceCoordinationOverlay,
     build_reference_coordination_overlay,
     build_reference_fault_application,
+    build_reference_target_fault_application,
 )
 from .mission_recovery import ReferenceMissionRecovery
 from .mission_state import (
     EVALUATION_END_S,
+    ReferenceAcquisitionContext,
     ReferenceActiveCommitment,
     ReferenceDecisionKey,
     ReferenceInputKind,
     ReferenceMissionRun,
     ReferencePendingAcquisition,
     ReferencePendingOutcome,
+    ReferenceProviderBehavior,
     ReferenceScheduledInput,
     reference_content_digest,
     reference_runtime_profile_digest,
@@ -147,9 +151,7 @@ class ReferenceMissionRuntime:
         self._envelope_by_call = {
             item.call_id: item for item in scenario.observations.delivery.envelopes
         }
-        self._telemetry = {
-            item.telemetry_id: item for item in scenario.resources.public.telemetry
-        }
+        self._telemetry = {item.telemetry_id: item for item in scenario.resources.public.telemetry}
         self._graphs: dict[ReferenceAuthorityId, ReferenceEvidenceGraph] = {
             cast(ReferenceAuthorityId, authority.authority_id): ReferenceEvidenceGraph(
                 cast(ReferenceAuthorityId, authority.authority_id)
@@ -516,9 +518,7 @@ class ReferenceMissionRuntime:
             ServiceOutcomeInput(
                 outcome_id=outcome_id,
                 commitment_id=commitment.commitment_id,
-                status=(
-                    "completed_within_window" if within else "active_at_scenario_censoring"
-                ),
+                status=("completed_within_window" if within else "active_at_scenario_censoring"),
                 scheduled_completion_s=scheduled_completion_s,
                 observed_completion_s=scheduled_completion_s if within else None,
                 authorizing_trace_record_id=commitment.authorizing_trace_record_id,
@@ -562,20 +562,107 @@ class ReferenceMissionRuntime:
             raise RuntimeError("Reference acquisition decision lacks its request")
         if request.expected_delivery_s > EVALUATION_END_S:
             return
+        silent_fault_id = self._select_silent_provider_fault(request)
+        context = ReferenceAcquisitionContext(
+            request,
+            report,
+            envelope,
+            reconciliation,
+            execution.result,
+            coordination_latency_s,
+        )
+        if silent_fault_id is not None:
+            if self._fault_schedule is None:
+                raise RuntimeError("Reference provider fault lost its registered schedule")
+            trigger = next(
+                item for item in self._fault_schedule.triggers if item.fault_id == silent_fault_id
+            )
+            application = build_reference_target_fault_application(
+                self._fault_schedule,
+                fault_id=silent_fault_id,
+                target_public_id=request.request_id,
+                applied_at_s=request.requested_at_s,
+                disposition="applied",
+                reason=(
+                    "The registered semantic trigger selected this acquisition for a "
+                    "client timeout followed by a later authenticated provider success."
+                ),
+            )
+            self.event_log.append_public_artifact(
+                at_s=request.requested_at_s,
+                event_type=ReferenceEventType.FAULT_APPLIED,
+                artifact_id=application.application_id,
+                artifact_schema_version=application.schema_version,
+                artifact=application.model_dump(mode="json"),
+            )
+            self._fault_applications.append(application)
+            self._push_pending_acquisition(
+                request.expected_delivery_s,
+                context,
+                behavior="client-timeout",
+                fault_id=silent_fault_id,
+            )
+            self._push_pending_acquisition(
+                request.expected_delivery_s + trigger.delivery_offset_s,
+                context,
+                behavior="late-success",
+                fault_id=silent_fault_id,
+            )
+            return
+        self._push_pending_acquisition(
+            request.expected_delivery_s,
+            context,
+            behavior="nominal-success",
+            fault_id=None,
+        )
+
+    def _select_silent_provider_fault(
+        self,
+        request: AcquisitionRequestReceipt,
+    ) -> str | None:
+        if self._fault_schedule is None:
+            return None
+        trigger = next(
+            item
+            for item in self._fault_schedule.triggers
+            if item.family == "silent-provider-success-after-timeout"
+        )
+        existing = next(
+            (
+                item
+                for item in self._fault_applications
+                if item.family == "silent-provider-success-after-timeout"
+            ),
+            None,
+        )
+        if existing is not None or request.requested_at_s < trigger.anchor_s:
+            return None
+        eligible = tuple(
+            item
+            for item in self._decisions
+            if item.acquisition_request_id is not None and item.decided_at_s >= trigger.anchor_s
+        )
+        return trigger.fault_id if len(eligible) == trigger.ordinal else None
+
+    def _push_pending_acquisition(
+        self,
+        at_s: int,
+        context: ReferenceAcquisitionContext,
+        *,
+        behavior: ReferenceProviderBehavior,
+        fault_id: str | None,
+    ) -> None:
         heapq.heappush(
             self._pending_outcomes,
             ReferenceScheduledInput(
-                request.expected_delivery_s,
+                at_s,
                 10,
-                request.request_id,
+                f"{context.request.request_id}-{behavior}",
                 ReferenceInputKind.PROVIDER,
                 ReferencePendingAcquisition(
-                    request,
-                    report,
-                    envelope,
-                    reconciliation,
-                    execution.result,
-                    coordination_latency_s,
+                    context,
+                    behavior,
+                    fault_id,
                 ),
             ),
         )
@@ -583,14 +670,22 @@ class ReferenceMissionRuntime:
     def _complete_acquisition(self, value: object, at_s: int) -> None:
         if not isinstance(value, ReferencePendingAcquisition):
             raise TypeError("Reference provider queue payload has the wrong type")
-        receipt = build_reference_route_provider_receipt(
-            ReferenceRouteProviderInput(
-                request=value.request,
-                report=value.report,
-                route_service=self.engine.dependencies.route_service,
-                resources=self.scenario.resources,
+        context = value.context
+        if value.behavior == "client-timeout":
+            receipt = build_reference_route_provider_timeout(context.request)
+        else:
+            late = value.behavior == "late-success"
+            receipt = build_reference_route_provider_receipt(
+                ReferenceRouteProviderInput(
+                    request=context.request,
+                    report=context.report,
+                    route_service=self.engine.dependencies.route_service,
+                    resources=self.scenario.resources,
+                    observed_at_s=(context.request.expected_delivery_s if late else None),
+                    delivered_at_s=(at_s if late else None),
+                    receipt_id_suffix=("late-success" if late else None),
+                )
             )
-        )
         if receipt.delivered_at_s != at_s:
             raise RuntimeError("Reference provider receipt missed its scheduled delivery")
         self.event_log.append_public_artifact(
@@ -602,9 +697,13 @@ class ReferenceMissionRuntime:
         )
         outcome, evidence = self.engine.dependencies.acquisition_executor.ingest(receipt)
         self._record_acquisition_outcome(outcome, at_s)
+        if value.behavior == "client-timeout":
+            if evidence is not None or outcome.outcome_status != "provider-timeout":
+                raise RuntimeError("Reference client timeout produced an invalid provider result")
+            return
         if evidence is None:
             return
-        self._validate_acquired_targets(value.request, evidence)
+        self._validate_acquired_targets(context.request, evidence)
         self.event_log.append_public_artifact(
             at_s=at_s,
             event_type=ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED,
@@ -614,28 +713,29 @@ class ReferenceMissionRuntime:
         )
         reassessment = self.engine.execute(
             ReferenceDecisionInput(
-                report=value.report,
-                envelope=value.envelope,
-                controller_authority_id=value.original_decision.controller_authority_id,
-                reconciliation=value.reconciliation,
+                report=context.report,
+                envelope=context.envelope,
+                controller_authority_id=context.original_decision.controller_authority_id,
+                reconciliation=context.reconciliation,
                 active_commitments=self._active_beliefs(),
                 known_outcomes=tuple(self._known_outcomes),
                 at_s=at_s,
                 created_at=(
-                    self.scenario.config.timeline.evaluation_start_iso8601
-                    + self._seconds(at_s)
+                    self.scenario.config.timeline.evaluation_start_iso8601 + self._seconds(at_s)
                 ),
-                reassessment_of_decision_id=value.original_decision.decision_id,
+                reassessment_of_decision_id=context.original_decision.decision_id,
                 acquisition_outcome=outcome,
                 physical_evidence=evidence,
-                coordination_latency_s=value.coordination_latency_s,
+                coordination_latency_s=context.coordination_latency_s,
             )
         )
         self._decisions.append(reassessment.result)
         if reassessment.commitment is not None:
             self._schedule_outcome(reassessment)
         if reassessment.acquisition_request is not None:
-            raise RuntimeError("Reference post-acquisition reassessment requested another acquisition")
+            raise RuntimeError(
+                "Reference post-acquisition reassessment requested another acquisition"
+            )
 
     def _record_acquisition_outcome(
         self,
@@ -664,13 +764,17 @@ class ReferenceMissionRuntime:
             raise ValueError("Reference provider evidence names another public report")
         if payload.route_catalog_digest_at_request != request.route_catalog_digest:
             raise ValueError("Reference provider evidence names another requested route catalog")
-        requested = tuple(zip(request.target_resource_ids, request.target_route_plan_ids, strict=True))
+        requested = tuple(
+            zip(request.target_resource_ids, request.target_route_plan_ids, strict=True)
+        )
         observed = tuple(
             (item.requested_resource_id, item.requested_route_plan_id)
             for item in payload.observations
         )
         if observed != tuple(sorted(requested)):
-            raise ValueError("Reference provider evidence does not cover the exact requested routes")
+            raise ValueError(
+                "Reference provider evidence does not cover the exact requested routes"
+            )
 
     def _record_outcome(self, value: object, at_s: int) -> None:
         if not isinstance(value, ReferencePendingOutcome):
