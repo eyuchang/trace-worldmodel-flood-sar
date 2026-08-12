@@ -26,6 +26,8 @@ _PUBLIC_MISSION_EVENT_TYPES = frozenset(
         ReferenceEventType.OUTCOME_RECORDED,
         ReferenceEventType.COMPENSATION_RECORDED,
         ReferenceEventType.PROVIDER_RECEIPT_RECORDED,
+        ReferenceEventType.ACQUISITION_REQUESTED,
+        ReferenceEventType.DECISION_MANIFEST_RECORDED,
     }
 )
 _CONTROLLER_VISIBLE_EVENT_TYPES = _PUBLIC_MISSION_EVENT_TYPES | {

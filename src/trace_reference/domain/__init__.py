@@ -21,6 +21,7 @@ from .exposure import (
     ReferenceSyntheticStructure,
     ReferenceTrajectoryChangePoint,
 )
+from .mission import ReferenceDecisionExecution, ReferenceMissionDecision
 from .observations import (
     ReferenceDeliveryEnvelopeScenario,
     ReferenceHiddenObservationLineage,
@@ -83,6 +84,7 @@ __all__ = [
     "ReferenceCoordinationDelivery",
     "ReferenceCrewTruth",
     "ReferenceCrossingStateSample",
+    "ReferenceDecisionExecution",
     "ReferenceDeliveryEnvelopeScenario",
     "ReferenceEvent",
     "ReferenceEventType",
@@ -99,6 +101,7 @@ __all__ = [
     "ReferenceHiddenResourceTelemetryAudit",
     "ReferenceIncidentCandidateAudit",
     "ReferenceIncidentType",
+    "ReferenceMissionDecision",
     "ReferenceMutualAidTier",
     "ReferenceObservationArtifacts",
     "ReferencePhysicalParameters",

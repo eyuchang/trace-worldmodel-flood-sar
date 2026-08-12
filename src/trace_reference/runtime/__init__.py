@@ -1,5 +1,10 @@
 """Event-sourced runtime services for Reference."""
 
+from .decision_engine import (
+    ReferenceDecisionEngine,
+    ReferenceDecisionEngineDependencies,
+    ReferenceDecisionInput,
+)
 from .event_store import ReferenceEventLog, ReferenceWorldState
 from .predictor_evidence import (
     ReferencePredictorEvidenceInput,
@@ -27,6 +32,9 @@ __all__ = [
     "ProposalAssessmentInput",
     "ReferenceClosureResult",
     "ReferenceCommitmentLog",
+    "ReferenceDecisionEngine",
+    "ReferenceDecisionEngineDependencies",
+    "ReferenceDecisionInput",
     "ReferenceEventLog",
     "ReferenceEvidenceLedger",
     "ReferencePredictorEvidenceInput",
