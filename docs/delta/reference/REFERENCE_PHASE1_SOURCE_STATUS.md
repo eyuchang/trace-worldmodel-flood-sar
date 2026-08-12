@@ -1,102 +1,91 @@
-# WF-DFLD-01-REFERENCE Phase 1 source status
+# WF-DFLD-01-REFERENCE Phase 1 source and topology status
 
-Date: 2026-08-11  
-Status: source research only; no new runtime data  
+Date: 2026-08-11
+Status: offline simulation geography approved for development use
 Runtime network access: forbidden
 
-## Verified official locators
+## Completed development package
 
-| ID | Candidate | Current disposition |
-|---|---|---|
-| `REF-SRC-01` | Sacramento County drainage districts | Official feature-service locator verified, with the State Water Board legal-Delta map retained as an identity cross-check. No Reference snapshot or geometry is approved yet. |
-| `REF-SRC-02` | DWR i03 Local Maintenance Areas | Official locator verified. DWR warns that historic boundary accuracy varies; no snapshot or field is approved yet. |
-| `REF-SRC-03` | 2025 Census TIGER/Line California places | Official archive locator verified. Administrative place geometry is not an exposure footprint. |
-| `REF-SRC-04` | Caltrans State Highway Bridges | Official service locator verified. Crossing identity and graph endpoints remain unbound. |
-| `REF-SRC-05` | USGS 3D Hydrography Program | Official service locator verified. A versioned offline snapshot is required. |
-| `REF-SRC-06` | DWR Bay-Delta DEM v4.3 | Official catalog and 10 m Delta archive locator verified. The archive has not been downloaded and its raster member, digest, metadata, nodata, and redistribution terms remain unchecked. |
-| `REF-SRC-07` | CDEC station metadata | All seven supplied station IDs checked field by field. No threshold is operative. |
+`delta-reference-geography-v1` binds the 8 islands, 4 communities, and 10
+crossings required by the approved Reference extent. It is regenerated from
+eight clipped, field-minimized government snapshots under
+`data/scenario/delta/reference/geography/sources/`. Every snapshot records its
+upstream response digest, exact retrieval endpoint and time, redistribution
+disposition, attribution, selected fields, and limitations in
+`source_metadata_v1.yaml`.
 
-Verified means only that the agency and locator identity passed a manual source
-check. It does not mean the source is approved, downloaded, redistributed,
-scientifically adequate, or bound to the simulator.
+The deterministic builder:
 
-Candidate-level terms review currently records the Sacramento County clipped
-snapshot as attributable government data, Census and USGS source data as United
-States public domain, and the Caltrans inventory as carrying no public-use
-restriction. Those dispositions do not authorize a Reference runtime bundle:
-every exact query, selected feature, transformation, attribution, and derived
-fixture must still be recorded in the later build manifest. DWR, CDEC, facility,
-DEM, and OSM redistribution remain unapproved for Reference.
+1. validates caller-rooted regular files and exact digests;
+2. rejects network access, traversal, and symlinked inputs;
+3. validates and, only when necessary, repairs polygon topology while recording
+   the repair status;
+4. stores source geometry in quantized WGS84 microdegrees;
+5. performs areas and route distances in NAD83 / UTM zone 10N (`EPSG:26910`);
+6. retains both official source identities and simulation-only topology
+   semantics; and
+7. regenerates the committed catalog and build manifest byte-for-byte.
 
-## Material findings
+The eight island polygons are source-bound operational-maintenance footprints,
+not parcel, survey, cadastral, or navigation boundaries. Isleton and Walnut
+Grove use Census administrative boundaries only as synthetic-exposure anchors.
+Locke and Ryde use GNIS official location points because no corresponding 2025
+Census place/CDP boundary was returned. No real residence, callback data, or
+upstream county contact field is present.
 
-1. The supplied specification calls `MRU` “Middle River at Union Point.” CDEC
-   calls it “Middle River at Undine Road.”
-2. The supplied specification calls `MSD` “Mokelumne River at Staten.” CDEC
-   identifies it as “San Joaquin River at Mossdale Bridge.” A Staten station, if
-   required, needs a different verified ID.
-3. The Andrus question is not a clean `RD 317` versus `RD 407` conflict.
-   Sacramento County distinguishes Lower Andrus (`RD 317`), Andrus (`RD 407`),
-   and Upper Andrus (`RD 556`), while the State Water Board's island-level index
-   uses Andrus Island (`RD 317`). The Brannan-Andrus maintenance annex also
-   associates `RD 317`, `RD 407`, and `RD 2067` with the combined maintenance
-   district. The specification's west-levee segment remains unbound until those
-   records are spatially reconciled.
-4. Caltrans classifies the Threemile Slough Bridge as a movable lift bridge,
-   not the fixed bridge stated in the specification.
-5. Caltrans identifies Real McCoy II as hydraulically propelled rather than a
-   cable ferry. Its official description reserves cable-drawn operation for
-   J-Mack.
-6. The official Woodward Island project record approves ferry decommissioning
-   and replacement-bridge construction, but that approval does not by itself
-   establish completion. Current crossing status requires confirmation from San
-   Joaquin County, so `XNG-10` remains unbound.
-7. Several specified crossings connect to Ryer, Bethel, or Woodward islands,
-   which are outside the eight-island Reference extent. They require explicit
-   boundary-node semantics rather than invented in-extent endpoints.
+## Andrus and Brannan resolution
 
-## Security and provenance gate before download
+The source review shows that “Andrus Island” is not a single reclamation
+district. Sacramento County separately maps Lower Andrus (`RD 317`), Andrus
+(`RD 407`), and Upper Andrus (`RD 556`); DWR also maps Upper Andrus and the
+combined Brannan-Andrus Levee Maintenance District. The runtime footprint for
+`ISL-01` is therefore the union of the three county polygons, with DWR records
+retained as cross-checks. `ISL-02` uses Sacramento County `RD 2067`, again with
+the combined DWR district as a cross-check.
 
-For each approved source, the offline builder must:
+This resolves the island-footprint question without inventing a false choice
+between `RD 317` and `RD 407`. It does **not** establish a survey-grade west
+levee segment or legal maintenance responsibility for `BREACH-01`. The later
+physical model must use an explicitly synthetic, source-anchored breach segment
+and preserve that limitation.
 
-1. receive a caller-trusted output root and an exact HTTPS URL from a versioned
-   registry;
-2. reject symlinked roots and unsafe destinations;
-3. download to a temporary regular file with a declared byte ceiling;
-4. verify response type, size, archive safety, schema, and digest before atomic
-   replacement;
-5. record retrieval time, URL, response metadata, archive/member digests, CRS,
-   datum, license, transformation version, and every selected source feature;
-6. keep unredistributable source bytes out of git while retaining locators,
-   digests, a reproducible retrieval procedure, and a license-compatible derived
-   fixture; and
-7. make runtime and CI consume only the frozen offline fixture.
+## Corrections to the supplied sketch
 
-No archive should be downloaded merely because a locator is now known. Source
-identity, redistribution, and field fitness must be approved first.
+- Caltrans classifies `XNG-03` (Threemile Slough) as a movable lift bridge, not
+  fixed.
+- Caltrans classifies Real McCoy II (`XNG-08`) as a hydraulic ferry and J-Mack
+  (`XNG-09`) as cable-drawn.
+- GNIS verifies the Woodward Island Ferry identity/location, but the reviewed
+  official project record does not establish whether replacement construction
+  is complete. `XNG-10` therefore remains
+  `official-identity-current-type-unresolved`.
+- `XNG-06` lies just north of the sketch's provisional exposure bounds and
+  `XNG-02`, `XNG-07`, `XNG-08`, `XNG-09`, and `XNG-10` connect exterior places.
+  They are boundary connectors in the route graph and do not expand the
+  eight-island cohort.
+- CDEC identifies `MRU` as Middle River at Undine Road and `MSD` as San Joaquin
+  River at Mossdale Bridge. No supplied Reference threshold is operative.
 
-The implemented `trace_reference.geography` inspection seam is deliberately
-network-free. It accepts an existing caller-rooted file plus an exact digest,
-byte ceiling, media/schema contract, and—where applicable—one exact ZIP member.
-It rejects symlinks, traversal, duplicate/encrypted members, excessive expansion,
-and digest mismatches, and can write only a deterministic non-operative receipt.
-No current research candidate has been promoted through that seam as a runtime
-input.
+## Topology semantics
 
-## Remaining source work
+Official crossing inventory points anchor ten protocol-declared road crossing
+edges. Protocol endpoints express the intended reduced-order access graph; they
+are not claims about road ownership or suitability. Seven source-anchor-derived
+water links make the eight exposure islands connected for synthetic marine
+transfer. Those links carry the explicit label `simulation-topology-only` and
+must not be interpreted as channels, navigation routes, or travel-time advice.
 
-- Snapshot and spatially reconcile the Sacramento County Andrus/Brannan district
-  polygons with the State Water Board and Brannan-Andrus maintenance records;
-  do not assign the specified west-levee segment to a district by island name.
-- Select and snapshot the exact DWR levee layers required for geometry versus
-  governance; a 2017 anatomy layer cannot be presented as current condition.
-- Verify the remaining county crossing identifiers, exact endpoint nodes, road
-  ownership, and current operation. Preserve the XNG-03, XNG-08, and XNG-10
-  source/specification corrections in the frozen crosswalk.
-- Select 3DHP feature classes and snapshot only the Reference waterways.
-- Inspect the DEM v4.3 archive and exact raster member after license review.
-- Verify current gauge sensor/datum semantics and any threshold source.
-- Verify facilities from the responsible agency without inferring staffing or
-  availability from a location record.
-- Assess OSM only as a separately attributed secondary topology aid where
-  authoritative routing fields are unavailable.
+## Deferred source fields
+
+The following fields are deliberately excluded from the development geography
+until they can be added without overstating source evidence:
+
+- survey-grade levee segment geometry and legal maintenance responsibility;
+- field-operational road and water routing;
+- the current Woodward crossing type and operability;
+- large DEM raster bytes and site-specific hydrodynamic calibration;
+- live facility staffing or emergency availability; and
+- any current crossing or gauge status.
+
+The reduced-order physical model may use versioned synthetic values for those
+fields, but must label them as model parameters rather than official facts.

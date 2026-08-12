@@ -1,0 +1,110 @@
+registry_version: delta-reference-geography-source-metadata-v1
+sources:
+  - source_id: REF-GEO-SRC-01
+    agency: California Department of Water Resources
+    dataset_title: i03 Local Maintenance Areas Flood Protection
+    landing_page_url: https://catalog.data.gov/dataset/i03-local-maintenance-areas-flood-protection-681bf
+    machine_readable_url: https://gis.water.ca.gov/arcgis/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/FeatureServer/0/query
+    retrieved_at_utc: '2026-08-12T00:39:22Z'
+    upstream_response_sha256: 576a2bd393ecb0ca26f803b0e9c4092948cf4ffd1188ec4b31e8fb4654813456
+    license_name: Creative Commons Attribution
+    license_locator: https://opendefinition.org/licenses/cc-by/
+    redistribution_status: creative-commons-attribution
+    attribution: California Department of Water Resources, Local Maintenance Areas Flood Protection.
+    limitations:
+      - DWR reports variable boundary accuracy and historic survey uncertainty.
+      - The snapshot is clipped to eight selected operational footprints and is not cadastral data.
+  - source_id: REF-GEO-SRC-02
+    agency: Sacramento County
+    dataset_title: Drainage Districts
+    landing_page_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7
+    machine_readable_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7/query
+    retrieved_at_utc: '2026-08-05T16:00:00Z'
+    upstream_response_sha256: 803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710
+    license_name: Sacramento County public GIS data
+    license_locator: https://data.saccounty.gov/pages/terms
+    redistribution_status: california-government-public-use
+    attribution: Sacramento County GIS, Drainage Districts; clipped and field-minimized for research.
+    limitations:
+      - District geometry is an operational-maintenance proxy rather than an island survey boundary.
+      - Contact fields present upstream are intentionally excluded from this snapshot.
+  - source_id: REF-GEO-SRC-03
+    agency: United States Census Bureau
+    dataset_title: TIGERweb 2025 Incorporated Places
+    landing_page_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4
+    machine_readable_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query
+    retrieved_at_utc: '2026-08-12T00:40:14Z'
+    upstream_response_sha256: c82ef62771a4f15c71bf2e7732c9cac9b1da0b89a947e8263f6e423cf042b763
+    license_name: United States public domain
+    license_locator: https://www.census.gov/data/developers/about/terms-of-service.html
+    redistribution_status: united-states-public-domain
+    attribution: U.S. Census Bureau TIGERweb, 2025 incorporated places.
+    limitations:
+      - The Isleton city boundary is administrative and is not treated as an exposure footprint.
+  - source_id: REF-GEO-SRC-04
+    agency: United States Census Bureau
+    dataset_title: TIGERweb 2025 Census Designated Places
+    landing_page_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/5
+    machine_readable_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/5/query
+    retrieved_at_utc: '2026-08-12T00:40:15Z'
+    upstream_response_sha256: 1fa1c5980f743257d94e1a195e0c841d3973e40b1416673dce32dd679a1fe938
+    license_name: United States public domain
+    license_locator: https://www.census.gov/data/developers/about/terms-of-service.html
+    redistribution_status: united-states-public-domain
+    attribution: U.S. Census Bureau TIGERweb, 2025 census designated places.
+    limitations:
+      - The Walnut Grove CDP boundary is administrative and is not treated as an exposure footprint.
+  - source_id: REF-GEO-SRC-05
+    agency: United States Geological Survey
+    dataset_title: National Map Gazetteer populated places
+    landing_page_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/3
+    machine_readable_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/3/query
+    retrieved_at_utc: '2026-08-12T00:40:51Z'
+    upstream_response_sha256: e7722e43dc25b48d0724e08247c2f9778091bf90c373844bce7c56f993144d3c
+    license_name: United States public domain
+    license_locator: https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits
+    redistribution_status: united-states-public-domain
+    attribution: USGS Geographic Names Information System through The National Map Gazetteer.
+    limitations:
+      - GNIS points establish federal names and locations, not community boundaries.
+      - Locke is represented by the deterministic centroid of the returned official multipoint.
+  - source_id: REF-GEO-SRC-06
+    agency: California Department of Transportation
+    dataset_title: State Highway Bridges
+    landing_page_url: https://dot.ca.gov/caltrans-open-data-inventory
+    machine_readable_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0/query
+    retrieved_at_utc: '2026-08-12T00:43:12Z'
+    upstream_response_sha256: b6074a5fde265558c556d3b7f329a06347ee2594af1a8b8277aff9f493cda1f0
+    license_name: No restrictions on public use
+    license_locator: https://lab.data.ca.gov/dataset/state-highway-bridges
+    redistribution_status: california-government-public-use
+    attribution: Caltrans Structure Maintenance and Investigations, State Highway Bridges.
+    limitations:
+      - Inventory dates and coordinates do not establish real-time bridge or ferry operability.
+      - The inventory corrects XNG-03 to movable lift and XNG-08 to hydraulic ferry.
+  - source_id: REF-GEO-SRC-07
+    agency: California Department of Transportation
+    dataset_title: Local Bridges
+    landing_page_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/Local_Bridges/FeatureServer/0
+    machine_readable_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/Local_Bridges/FeatureServer/0/query
+    retrieved_at_utc: '2026-08-12T00:43:12Z'
+    upstream_response_sha256: d46f902650366ca7fed22afce745a12b483848db05186aa7bb4ed985a55d7837
+    license_name: No restrictions on public use
+    license_locator: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/Local_Bridges/FeatureServer/0
+    redistribution_status: california-government-public-use
+    attribution: Caltrans Structure Maintenance and Investigations, Local Bridges.
+    limitations:
+      - Inventory points do not establish sole-access claims or current bridge operability.
+  - source_id: REF-GEO-SRC-08
+    agency: United States Geological Survey
+    dataset_title: National Map Gazetteer crossings
+    landing_page_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/10
+    machine_readable_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/10/query
+    retrieved_at_utc: '2026-08-12T00:41:49Z'
+    upstream_response_sha256: 3515d4c8e67bb5aebcdb170974792e369408e112f531dd6f895e09f7c2c2bbbf
+    license_name: United States public domain
+    license_locator: https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits
+    redistribution_status: united-states-public-domain
+    attribution: USGS Geographic Names Information System through The National Map Gazetteer.
+    limitations:
+      - The point verifies the Woodward Island Ferry name/location, not its current existence or type.
