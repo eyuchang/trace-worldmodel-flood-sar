@@ -1,0 +1,27 @@
+parameter_version: delta-reference-exposure-parameters-v1
+profile_id: reference-exposure-v1
+scientific_status: synthetic-teaching-cohort-not-demographic-reconstruction
+randomness_namespace: delta-reference-randomness-v1
+minimum_structure_separation_m: 18
+island_allocations:
+  - {island_id: ISL-01, synthetic_people: 420, synthetic_structures: 120}
+  - {island_id: ISL-02, synthetic_people: 230, synthetic_structures: 70}
+  - {island_id: ISL-03, synthetic_people: 180, synthetic_structures: 55}
+  - {island_id: ISL-04, synthetic_people: 140, synthetic_structures: 45}
+  - {island_id: ISL-05, synthetic_people: 140, synthetic_structures: 45}
+  - {island_id: ISL-06, synthetic_people: 110, synthetic_structures: 35}
+  - {island_id: ISL-07, synthetic_people: 90, synthetic_structures: 25}
+  - {island_id: ISL-08, synthetic_people: 90, synthetic_structures: 25}
+limited_mobility_rate_micros: 120000
+wheelchair_rate_micros: 35000
+oxygen_dependency_rate_micros: 30000
+dialysis_dependency_rate_micros: 10000
+insulin_dependency_rate_micros: 55000
+non_english_access_rate_micros: 120000
+no_transport_rate_micros: 220000
+daytime_away_rate_micros: 250000
+nighttime_away_rate_micros: 80000
+limitations:
+  - Aggregate composition is a synthetic mechanism profile, not a demographic estimate.
+  - Locations are seeded points inside simulation footprints and are not parcels or real addresses.
+  - Callback tokens, identities, vulnerabilities, and movement are project-owned synthetic truth fixtures.

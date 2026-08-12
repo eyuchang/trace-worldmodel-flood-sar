@@ -7,6 +7,7 @@ modify or silently re-freeze Small artifacts.
 """
 
 from .baseline import verify_small_baseline
+from .exposure_loading import load_reference_exposure_parameters
 from .loading import (
     load_reference_config,
     load_reference_entity_source_crosswalk,
@@ -27,6 +28,7 @@ __all__ = [
     "derive_study_seed",
     "load_reference_config",
     "load_reference_entity_source_crosswalk",
+    "load_reference_exposure_parameters",
     "load_reference_gauge_research",
     "load_reference_governance",
     "load_reference_physical_parameters",

@@ -6,6 +6,13 @@ from .events import (
     ReferenceEventVisibility,
     ReferenceRuntimeCheckpoint,
 )
+from .exposure import (
+    ReferenceExposureParameters,
+    ReferenceExposureScenario,
+    ReferenceSyntheticPerson,
+    ReferenceSyntheticStructure,
+    ReferenceTrajectoryChangePoint,
+)
 from .physical import (
     ReferenceBreachSample,
     ReferenceCrossingStateSample,
@@ -22,10 +29,15 @@ __all__ = [
     "ReferenceEvent",
     "ReferenceEventType",
     "ReferenceEventVisibility",
+    "ReferenceExposureParameters",
+    "ReferenceExposureScenario",
     "ReferenceGaugeStageSample",
     "ReferencePhysicalParameters",
     "ReferencePhysicalSample",
     "ReferencePhysicalScenario",
     "ReferenceRuntimeCheckpoint",
+    "ReferenceSyntheticPerson",
+    "ReferenceSyntheticStructure",
+    "ReferenceTrajectoryChangePoint",
     "ReferenceWeatherSample",
 ]
