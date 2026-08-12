@@ -18,8 +18,8 @@ _MAX_INPUT_BYTES = 256 * 1024 * 1024
 _DIRECT_INPUTS = (
     "configs/governance/wf_dfld_01_reference_governance_v1.yaml",
     "configs/scenarios/wf_dfld_01_reference_development.yaml",
-    "data/scenario/delta/environment/python311_linux_amd64_v1.json",
     "data/scenario/delta/reference/exposure/reference_exposure_parameters_v1.yaml",
+    "data/scenario/delta/reference/environment/reference_python311_linux_amd64_v1.json",
     "data/scenario/delta/reference/geography/derived/reference_geography_build_manifest_v3.json",
     "data/scenario/delta/reference/geography/derived/reference_geography_catalog_v3.json",
     "data/scenario/delta/reference/geography/source_lifecycle_erratum_v1.yaml",
@@ -50,7 +50,7 @@ def reference_file_inputs(repository_root: Path) -> tuple[ReferenceFileInput, ..
     """Resolve and hash every direct file beneath one caller-trusted repository."""
 
     inputs = []
-    for relative_name in _DIRECT_INPUTS:
+    for relative_name in sorted(_DIRECT_INPUTS):
         path = ArtifactLocator(
             root=repository_root,
             relative_name=Path(relative_name),

@@ -1,0 +1,30 @@
+{
+  "schema_version": "delta-reference-environment-contract-v1",
+  "contract_id": "trace-reference-python311-development-v1",
+  "scope": "WF-DFLD-01-REFERENCE non-LEAP canonical generation, execution, replay, validation, and publication",
+  "package_python_support": ">=3.10",
+  "exact_python_version": "3.11.14",
+  "platform_system": "Linux",
+  "platform_machine": "x86_64",
+  "oci_image": "docker.io/library/python",
+  "oci_tag_for_discovery_only": "3.11.14",
+  "oci_index_sha256": "3b3706a90cb23f04fabb0d255824f9a70ceb46177041898133dd5a35f3a50f0a",
+  "oci_platform_manifest_sha256": "88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d",
+  "oci_platform": "linux/amd64",
+  "dependency_lock_file": "requirements-delta-python311.lock",
+  "dependency_lock_sha256": "06b286ad1b4b4d2397af27e567de3c207db59e67400d329edd214032d58355e1",
+  "dependency_input_file": "requirements-delta-python311.in",
+  "dependency_input_sha256": "b1f0802da0001e064cc940df37aed2533a826745caf0908af71d2d04f183a4fe",
+  "required_imports": [
+    "pyproj",
+    "rasterio",
+    "shapely"
+  ],
+  "installation": "python -m pip install --require-hashes -r requirements-delta-python311.lock",
+  "claims": [
+    "This digest-pinned Linux/amd64 image and hash-locked dependency set define the target canonical Reference execution environment.",
+    "An execution is canonical only when a separately verified execution receipt binds the actual interpreter, platform, image, and installed distributions to this contract.",
+    "Local development outside this environment remains useful engineering evidence but is not canonical validation evidence.",
+    "General package support remains Python >=3.10 and is a separate compatibility claim."
+  ]
+}

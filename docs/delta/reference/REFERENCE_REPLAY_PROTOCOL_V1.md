@@ -14,6 +14,11 @@ the nominal base runtime profile, the selected predictor provenance, the direct
 input-file inventory, and the Python source-tree digest. The manifest records the
 scenario and runtime prefix digests and independently hashes every artifact.
 
+The Reference-specific environment contract identifies the digest-pinned Python
+3.11 target and complete dependency lock. Binding that contract is distinct from
+claiming that a particular run used it; only a separately verified execution
+receipt may make the latter claim.
+
 Execution metadata such as host name, wall-clock time, and GitHub run identity is
 not part of the scientific artifacts. A later execution receipt may record those
 facts without changing otherwise identical scientific output.
