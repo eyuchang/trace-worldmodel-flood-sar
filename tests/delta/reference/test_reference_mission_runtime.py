@@ -363,24 +363,7 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
     )
 
 
-def test_silent_provider_success_reconciles_after_client_timeout(
-    scenario,
-    fault_schedule: ReferenceFaultSchedule,
-    tmp_path: Path,
-) -> None:
-    uninterrupted_root = tmp_path / "uninterrupted"
-    uninterrupted_root.mkdir()
-    runtime, event_log = _mission_runtime(
-        scenario,
-        uninterrupted_root,
-        fault_schedule=fault_schedule,
-    )
-    result = runtime.run()
-    application = next(
-        item
-        for item in result.fault_applications
-        if item.family == "silent-provider-success-after-timeout"
-    )
+def _assert_outcome_fault_closure(result, runtime, replay) -> None:
     partial_application = next(
         item for item in result.fault_applications if item.family == "partial-service-outcome"
     )
@@ -405,7 +388,71 @@ def test_silent_provider_success_reconciles_after_client_timeout(
     assert censored_outcome.status == "active_at_scenario_censoring"
     assert censored_outcome.scheduled_completion_s > 345_600
     assert censored_outcome.observed_completion_s is None
+    assert len(result.contradictions) == 1
+    assert len(result.compensations) == 1
+    assert len(result.consistency_debts) == 1
+    contradiction = result.contradictions[0]
+    compensation = result.compensations[0]
+    debt = result.consistency_debts[0]
+    assert compensation.invalidated_commitment_id == contradiction.commitment_id
+    assert compensation.status == "failed"
+    assert debt.invalidated_commitment_id == contradiction.commitment_id
+    assert debt.failed_compensation_id == compensation.compensation_id
+    assert debt.status == "unresolved-escalated"
+    assert debt.escalation_target == "AUTH-01"
+    revised_record = runtime.engine.dependencies.trace_repository.get(
+        contradiction.authorizing_trace_record_id
+    )
+    assert revised_record.record_version == contradiction.authorizing_trace_record_version + 1
+    assert revised_record.final_status.value == "revise"
+    assert "realized_contradiction" in revised_record.failed_gates
+    revised_evidence = runtime.engine.dependencies.evidence_ledger.get(
+        revised_record.evidence_refs[-1]
+    )
+    assert revised_evidence.decisively_contradicted
+    assert revised_evidence.realized_outcome == contradiction.model_dump(mode="json")
+    assert {
+        item.family: item.target_public_id
+        for item in result.fault_applications
+        if item.family in {"contradictory-outcome-evidence", "failed-compensation"}
+    } == {
+        "contradictory-outcome-evidence": contradiction.commitment_id,
+        "failed-compensation": compensation.compensation_id,
+    }
+    assert (
+        len(replay.public_mission_artifacts[ReferenceEventType.OUTCOME_EVIDENCE_RECORDED.value])
+        == 1
+    )
+    assert len(replay.public_mission_artifacts[ReferenceEventType.COMPENSATION_RECORDED.value]) == 1
+    assert (
+        len(replay.public_mission_artifacts[ReferenceEventType.CONSISTENCY_DEBT_RECORDED.value])
+        == 1
+    )
+    public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
+    assert "contradictory-outcome-evidence" not in public_json
+    assert "failed-compensation" not in public_json
+
+
+def test_silent_provider_success_reconciles_after_client_timeout(
+    scenario,
+    fault_schedule: ReferenceFaultSchedule,
+    tmp_path: Path,
+) -> None:
+    uninterrupted_root = tmp_path / "uninterrupted"
+    uninterrupted_root.mkdir()
+    runtime, event_log = _mission_runtime(
+        scenario,
+        uninterrupted_root,
+        fault_schedule=fault_schedule,
+    )
+    result = runtime.run()
+    application = next(
+        item
+        for item in result.fault_applications
+        if item.family == "silent-provider-success-after-timeout"
+    )
     replay = event_log.replay()
+    _assert_outcome_fault_closure(result, runtime, replay)
     outcomes = [
         json.loads(value)
         for value in replay.public_mission_artifacts[

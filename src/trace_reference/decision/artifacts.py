@@ -76,6 +76,38 @@ class ReferenceCompensationRecord(DeltaModel):
     compensation_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class ReferenceOutcomeContradictionEvidence(DeltaModel):
+    """Controller-visible realized evidence that invalidates a commitment premise."""
+
+    schema_version: Literal["delta-reference-outcome-contradiction-v1"]
+    evidence_id: str = Field(pattern=r"^reference-outcome-contradiction-[0-9a-f]{20}$")
+    commitment_id: str
+    affected_public_subject_ids: tuple[str, ...] = Field(min_length=1)
+    observed_at_s: int = Field(ge=0, le=345_600)
+    source_identity: Literal["reference-outcome-provider-fixture"]
+    authorizing_trace_record_id: str
+    authorizing_trace_record_version: int = Field(ge=1)
+    reason: str = Field(min_length=20)
+    evidence_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ReferenceConsistencyDebtRecord(DeltaModel):
+    """Unresolved post-compensation inconsistency requiring explicit escalation."""
+
+    schema_version: Literal["delta-reference-consistency-debt-v1"]
+    debt_id: str = Field(pattern=r"^reference-consistency-debt-[0-9a-f]{20}$")
+    invalidated_commitment_id: str
+    triggering_trace_record_id: str
+    triggering_trace_record_version: int = Field(ge=1)
+    failed_compensation_id: str
+    affected_public_subject_ids: tuple[str, ...] = Field(min_length=1)
+    recorded_at_s: int = Field(ge=0, le=345_600)
+    status: Literal["unresolved-escalated"]
+    escalation_target: Literal["AUTH-01"]
+    reason: str = Field(min_length=20)
+    debt_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class ReferenceDecisionManifest(DeltaModel):
     schema_version: Literal["delta-reference-decision-manifest-v1"]
     decision_id: str
@@ -139,6 +171,29 @@ class CompensationRecordInput:
 
 
 @dataclass(frozen=True)
+class OutcomeContradictionInput:
+    evidence_id: str
+    commitment_id: str
+    affected_public_subject_ids: tuple[str, ...]
+    observed_at_s: int
+    authorizing_trace_record_id: str
+    authorizing_trace_record_version: int
+    reason: str
+
+
+@dataclass(frozen=True)
+class ConsistencyDebtInput:
+    debt_id: str
+    invalidated_commitment_id: str
+    triggering_trace_record_id: str
+    triggering_trace_record_version: int
+    failed_compensation_id: str
+    affected_public_subject_ids: tuple[str, ...]
+    recorded_at_s: int
+    reason: str
+
+
+@dataclass(frozen=True)
 class DecisionManifestInput:
     decision_id: str
     public_snapshot_digest: str
@@ -178,6 +233,30 @@ def build_compensation_record(
 ) -> ReferenceCompensationRecord:
     body = {"schema_version": "delta-reference-compensation-v1", **values.__dict__}
     return ReferenceCompensationRecord(**body, compensation_digest=decision_digest(body))
+
+
+def build_outcome_contradiction(
+    values: OutcomeContradictionInput,
+) -> ReferenceOutcomeContradictionEvidence:
+    body = {
+        "schema_version": "delta-reference-outcome-contradiction-v1",
+        **values.__dict__,
+        "source_identity": "reference-outcome-provider-fixture",
+    }
+    return ReferenceOutcomeContradictionEvidence(
+        **body,
+        evidence_digest=decision_digest(body),
+    )
+
+
+def build_consistency_debt(values: ConsistencyDebtInput) -> ReferenceConsistencyDebtRecord:
+    body = {
+        "schema_version": "delta-reference-consistency-debt-v1",
+        **values.__dict__,
+        "status": "unresolved-escalated",
+        "escalation_target": "AUTH-01",
+    }
+    return ReferenceConsistencyDebtRecord(**body, debt_digest=decision_digest(body))
 
 
 def build_decision_manifest(values: DecisionManifestInput) -> ReferenceDecisionManifest:

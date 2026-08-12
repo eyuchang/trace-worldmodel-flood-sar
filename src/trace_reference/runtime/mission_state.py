@@ -11,6 +11,9 @@ from trace_jepa.contracts import Commitment
 from trace_jepa.support import canonical_json_bytes
 from trace_reference.decision import (
     AcquisitionRequestReceipt,
+    ReferenceCompensationRecord,
+    ReferenceConsistencyDebtRecord,
+    ReferenceOutcomeContradictionEvidence,
     ReferenceServiceOutcome,
     ReferenceServiceOutcomeStatus,
     ServiceOutcomeInput,
@@ -42,6 +45,7 @@ class ReferenceInputKind(str, Enum):
     PHYSICAL = "physical"
     PROVIDER = "provider"
     OUTCOME = "outcome"
+    OUTCOME_CONTRADICTION = "outcome_contradiction"
     REPORT = "report"
     TELEMETRY = "telemetry"
     COORDINATION = "coordination"
@@ -63,6 +67,15 @@ class ReferencePendingOutcome:
     outcome: ReferenceServiceOutcome
     resource_id: str
     fault_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ReferencePendingContradiction:
+    commitment_id: str
+    resource_id: str
+    affected_public_subject_ids: tuple[str, ...]
+    contradiction_fault_id: str
+    compensation_fault_id: str
 
 
 @dataclass(frozen=True)
@@ -96,6 +109,9 @@ class ReferenceMissionRun:
     complete: bool
     decisions: tuple[ReferenceMissionDecision, ...]
     outcomes: tuple[ReferenceServiceOutcome, ...]
+    contradictions: tuple[ReferenceOutcomeContradictionEvidence, ...]
+    compensations: tuple[ReferenceCompensationRecord, ...]
+    consistency_debts: tuple[ReferenceConsistencyDebtRecord, ...]
     reconciliations: tuple[ReferenceReconciliationArtifact, ...]
     event_prefix_digest: str
     trace_prefix_digest: str

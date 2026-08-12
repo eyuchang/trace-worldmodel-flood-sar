@@ -13,6 +13,9 @@ from trace_reference.decision import (
     AcquisitionOutcomeReceipt,
     AcquisitionRequestReceipt,
     ProviderReceipt,
+    ReferenceCompensationRecord,
+    ReferenceConsistencyDebtRecord,
+    ReferenceOutcomeContradictionEvidence,
     ReferenceServiceOutcome,
 )
 from trace_reference.decision.artifacts import ReferenceCommitmentEnvelope
@@ -46,6 +49,7 @@ from .mission_state import (
     ReferenceDecisionKey,
     ReferenceInputKind,
     ReferencePendingAcquisition,
+    ReferencePendingContradiction,
     ReferencePendingOutcome,
     ReferenceProviderBehavior,
     ReferenceScheduledInput,
@@ -63,6 +67,9 @@ class ReferenceRecoveryResult:
     decided_clusters: set[ReferenceDecisionKey]
     decisions: list[ReferenceMissionDecision]
     outcomes: list[ReferenceServiceOutcome]
+    contradictions: list[ReferenceOutcomeContradictionEvidence]
+    compensations: list[ReferenceCompensationRecord]
+    consistency_debts: list[ReferenceConsistencyDebtRecord]
     pending: list[ReferenceScheduledInput]
     seen_delivery_ids: set[str]
     fault_applications: list[ReferenceFaultApplication]
@@ -107,6 +114,9 @@ class ReferenceMissionRecovery:
         self.requests: dict[str, AcquisitionRequestReceipt] = {}
         self.acquisition_outcomes: tuple[AcquisitionOutcomeReceipt, ...] = ()
         self.fault_applications: list[ReferenceFaultApplication] = []
+        self.contradictions: list[ReferenceOutcomeContradictionEvidence] = []
+        self.compensations: list[ReferenceCompensationRecord] = []
+        self.consistency_debts: list[ReferenceConsistencyDebtRecord] = []
 
     def restore(self, checkpoint: ReferenceMissionRestartCheckpoint) -> ReferenceRecoveryResult:
         self._verify_checkpoint(checkpoint)
@@ -116,6 +126,7 @@ class ReferenceMissionRecovery:
         self.fault_applications = fault_applications
         self._restore_decisions_and_reconciliation(artifacts)
         self._restore_provider_state(artifacts)
+        self._restore_outcome_fault_state(artifacts)
         active, known, outcomes, pending = self._restore_commitments(
             artifacts,
             checkpoint.through_s,
@@ -133,6 +144,9 @@ class ReferenceMissionRecovery:
             decided_clusters=decided,
             decisions=self.decisions,
             outcomes=outcomes,
+            contradictions=self.contradictions,
+            compensations=self.compensations,
+            consistency_debts=self.consistency_debts,
             pending=pending,
             seen_delivery_ids=seen_deliveries,
             fault_applications=fault_applications,
@@ -270,6 +284,43 @@ class ReferenceMissionRecovery:
                 )
         self.acquisition_outcomes = tuple(outcomes.values())
 
+    def _restore_outcome_fault_state(
+        self,
+        artifacts: dict[ReferenceEventType, list[dict[str, object]]],
+    ) -> None:
+        self.contradictions = [
+            ReferenceOutcomeContradictionEvidence.model_validate(value)
+            for value in artifacts.get(ReferenceEventType.OUTCOME_EVIDENCE_RECORDED, ())
+        ]
+        self.compensations = [
+            ReferenceCompensationRecord.model_validate(value)
+            for value in artifacts.get(ReferenceEventType.COMPENSATION_RECORDED, ())
+        ]
+        self.consistency_debts = [
+            ReferenceConsistencyDebtRecord.model_validate(value)
+            for value in artifacts.get(ReferenceEventType.CONSISTENCY_DEBT_RECORDED, ())
+        ]
+        for item, digest_field in (
+            *((item, "evidence_digest") for item in self.contradictions),
+            *((item, "compensation_digest") for item in self.compensations),
+            *((item, "debt_digest") for item in self.consistency_debts),
+        ):
+            if not verify_model_digest(item, digest_field=digest_field):
+                raise ValueError("Reference restored outcome-fault artifact digest is invalid")
+        compensation_by_id = {item.compensation_id: item for item in self.compensations}
+        if len(compensation_by_id) != len(self.compensations):
+            raise ValueError("Reference restored compensation identity is duplicated")
+        if len(self.contradictions) != len(self.compensations) or len(self.compensations) != len(
+            self.consistency_debts
+        ):
+            raise ValueError("Reference restored outcome-fault closure is incomplete")
+        for debt in self.consistency_debts:
+            compensation = compensation_by_id.get(debt.failed_compensation_id)
+            if compensation is None or compensation.invalidated_commitment_id != (
+                debt.invalidated_commitment_id
+            ):
+                raise ValueError("Reference restored debt names another compensation")
+
     def _restore_commitments(
         self,
         artifacts: dict[ReferenceEventType, list[dict[str, object]]],
@@ -290,15 +341,7 @@ class ReferenceMissionRecovery:
             for value in artifacts.get(ReferenceEventType.OUTCOME_RECORDED, ())
             for item in (ReferenceServiceOutcome.model_validate(value),)
         }
-        known = [
-            PublicOutcomeBelief(
-                outcome_id=item.outcome_id,
-                commitment_id=item.commitment_id,
-                status=item.status,
-                observed_at_s=item.observed_at_s,
-            )
-            for item in outcomes.values()
-        ]
+        known = self._known_outcome_beliefs(outcomes)
         decisions = {
             item.commitment_id: item for item in self.decisions if item.commitment_id is not None
         }
@@ -309,6 +352,20 @@ class ReferenceMissionRecovery:
             commitments,
             "partial-service-outcome",
         )
+        contradiction_fault_id, contradiction_target_id = self._commitment_fault_target(
+            commitments,
+            "contradictory-outcome-evidence",
+        )
+        compensation_fault_id = (
+            None
+            if self.fault_schedule is None
+            else next(
+                item.fault_id
+                for item in self.fault_schedule.triggers
+                if item.family == "failed-compensation"
+            )
+        )
+        contradicted_ids = {item.commitment_id for item in self.contradictions}
         for commitment in commitments:
             envelope = envelopes.get(commitment.commitment_id)
             decision = decisions.get(commitment.commitment_id)
@@ -357,6 +414,84 @@ class ReferenceMissionRecovery:
                     ),
                 ),
             )
+            if commitment.commitment_id == contradiction_target_id and (
+                commitment.commitment_id not in contradicted_ids
+            ):
+                self._push_pending_contradiction(
+                    pending,
+                    commitment=commitment,
+                    belief=belief,
+                    through_s=through_s,
+                    contradiction_fault_id=contradiction_fault_id,
+                    compensation_fault_id=compensation_fault_id,
+                )
+        self._validate_restored_outcome_fault_closure(outcomes, contradicted_ids)
+        return active, known, list(outcomes.values()), pending
+
+    def _known_outcome_beliefs(
+        self,
+        outcomes: dict[str, ReferenceServiceOutcome],
+    ) -> list[PublicOutcomeBelief]:
+        known = [
+            PublicOutcomeBelief(
+                outcome_id=item.outcome_id,
+                commitment_id=item.commitment_id,
+                status=item.status,
+                observed_at_s=item.observed_at_s,
+            )
+            for item in outcomes.values()
+        ]
+        known.extend(
+            PublicOutcomeBelief(
+                outcome_id=item.evidence_id,
+                commitment_id=item.commitment_id,
+                status="authorization-premise-contradicted",
+                observed_at_s=item.observed_at_s,
+            )
+            for item in self.contradictions
+        )
+        return known
+
+    @staticmethod
+    def _push_pending_contradiction(
+        pending: list[ReferenceScheduledInput],
+        *,
+        commitment: Commitment,
+        belief: PublicCommitmentBelief,
+        through_s: int,
+        contradiction_fault_id: str | None,
+        compensation_fault_id: str | None,
+    ) -> None:
+        contradiction_s = int(commitment.action.parameters["execution_not_after_s"])
+        if contradiction_s <= through_s:
+            raise ValueError("Reference restored commitment is missing its contradiction")
+        if contradiction_fault_id is None or compensation_fault_id is None:
+            raise ValueError("Reference restored contradiction lost its registered faults")
+        destination = commitment.action.destination
+        if destination is None:
+            raise ValueError("Reference restored contradiction lacks its public affected subject")
+        heapq.heappush(
+            pending,
+            ReferenceScheduledInput(
+                contradiction_s,
+                9,
+                f"reference-contradiction-{commitment.commitment_id}",
+                ReferenceInputKind.OUTCOME_CONTRADICTION,
+                ReferencePendingContradiction(
+                    commitment_id=commitment.commitment_id,
+                    resource_id=belief.resource_id,
+                    affected_public_subject_ids=(destination,),
+                    contradiction_fault_id=contradiction_fault_id,
+                    compensation_fault_id=compensation_fault_id,
+                ),
+            ),
+        )
+
+    def _validate_restored_outcome_fault_closure(
+        self,
+        outcomes: dict[str, ReferenceServiceOutcome],
+        contradicted_ids: set[str],
+    ) -> None:
         partial_outcomes = {
             item.commitment_id
             for item in outcomes.values()
@@ -384,7 +519,20 @@ class ReferenceMissionRecovery:
         expected_censoring = set(censored[:1]) if self.fault_schedule is not None else set()
         if applied_censoring != expected_censoring:
             raise ValueError("Reference restored censoring fault closure is incomplete")
-        return active, known, list(outcomes.values()), pending
+        applied_contradictions = {
+            item.target_public_id
+            for item in self.fault_applications
+            if item.family == "contradictory-outcome-evidence"
+        }
+        applied_compensations = {
+            item.target_public_id
+            for item in self.fault_applications
+            if item.family == "failed-compensation"
+        }
+        if applied_contradictions != contradicted_ids:
+            raise ValueError("Reference restored contradiction fault closure is incomplete")
+        if applied_compensations != {item.compensation_id for item in self.compensations}:
+            raise ValueError("Reference restored compensation fault closure is incomplete")
 
     def _commitment_fault_target(
         self,

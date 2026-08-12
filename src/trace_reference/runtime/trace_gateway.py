@@ -13,6 +13,7 @@ from trace_jepa.contracts import (
     CommitmentDecision,
     EvaluationResult,
     TraceRecord,
+    TraceStatus,
     WorldModelEvidence,
 )
 from trace_jepa.predictor import PredictorRequest
@@ -105,6 +106,7 @@ def core_action_from_proposal(proposal: ActionProposal) -> ActionInstance:
             "deterministic_service_duration_s": action.deterministic_service_duration_s,
             "commitment_horizon_end_s": action.commitment_horizon_end_s,
             "execution_not_before_s": action.execution_not_before_s,
+            "execution_not_after_s": action.execution_not_after_s,
             "reversible": proposal.reversible,
         },
     )
@@ -248,6 +250,30 @@ class ReferenceTraceGateway:
             artifact=envelope.model_dump(mode="json"),
         )
         return ReferenceClosureResult(assessed.assessment, consumed, commitment, envelope)
+
+    def revise_from_outcome(
+        self,
+        record: TraceRecord,
+        evidence: WorldModelEvidence,
+        *,
+        at_s: int,
+        created_at: datetime,
+    ) -> TraceRecord:
+        """Persist a realized contradiction as the next version of its TRACE claim."""
+
+        latest = self.runtime.repository.get(record.record_id)
+        if latest != record:
+            raise ValueError("Reference outcome revision does not target the latest TRACE record")
+        revised = self.runtime.revise_with_outcome(
+            record,
+            evidence,
+            new_status=TraceStatus.REVISE,
+            reason="Authenticated public outcome evidence invalidated the authorization premise.",
+            repair="Compensate the reversible commitment or escalate unresolved consistency debt.",
+            created_at=created_at,
+        )
+        self._append_trace_record(at_s, revised)
+        return revised
 
     def _verify_selection(self, values: SelectedCommitmentInput) -> None:
         if not verify_model_digest(values.selection, digest_field="selection_digest"):

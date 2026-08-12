@@ -11,6 +11,9 @@ from typing import Literal, cast
 from trace_reference.decision import (
     AcquisitionOutcomeReceipt,
     AcquisitionRequestReceipt,
+    ReferenceCompensationRecord,
+    ReferenceConsistencyDebtRecord,
+    ReferenceOutcomeContradictionEvidence,
     ReferencePhysicalEvidence,
     ReferenceServiceOutcome,
     ReferenceServiceOutcomeStatus,
@@ -62,6 +65,7 @@ from .mission_state import (
     ReferenceInputKind,
     ReferenceMissionRun,
     ReferencePendingAcquisition,
+    ReferencePendingContradiction,
     ReferencePendingOutcome,
     ReferenceProviderBehavior,
     ReferenceScheduledInput,
@@ -69,6 +73,7 @@ from .mission_state import (
     reference_runtime_profile_digest,
     reference_scenario_input_digest,
 )
+from .outcome_faults import build_reference_outcome_fault_artifacts
 from .report_fault_overlay import build_reference_report_fault_overlay
 
 
@@ -176,6 +181,9 @@ class ReferenceMissionRuntime:
         self._decided_clusters: set[ReferenceDecisionKey] = set()
         self._decisions: list[ReferenceMissionDecision] = []
         self._outcomes: list[ReferenceServiceOutcome] = []
+        self._contradictions: list[ReferenceOutcomeContradictionEvidence] = []
+        self._compensations: list[ReferenceCompensationRecord] = []
+        self._consistency_debts: list[ReferenceConsistencyDebtRecord] = []
         self._fault_applications: list[ReferenceFaultApplication] = []
         self._seen_delivery_ids: set[str] = set()
         self._pending_outcomes: list[ReferenceScheduledInput] = []
@@ -251,6 +259,8 @@ class ReferenceMissionRuntime:
             self._complete_acquisition(scheduled.payload, scheduled.at_s)
         elif scheduled.kind == ReferenceInputKind.OUTCOME:
             self._record_outcome(scheduled.payload, scheduled.at_s)
+        elif scheduled.kind == ReferenceInputKind.OUTCOME_CONTRADICTION:
+            self._record_outcome_contradiction(scheduled.payload, scheduled.at_s)
         elif scheduled.kind == ReferenceInputKind.REPORT:
             self._record_report(scheduled.payload)
         elif scheduled.kind == ReferenceInputKind.TELEMETRY:
@@ -534,6 +544,9 @@ class ReferenceMissionRuntime:
         self._decided_clusters = restored.decided_clusters
         self._decisions = restored.decisions
         self._outcomes = restored.outcomes
+        self._contradictions = restored.contradictions
+        self._compensations = restored.compensations
+        self._consistency_debts = restored.consistency_debts
         self._pending_outcomes = restored.pending
         self._seen_delivery_ids = restored.seen_delivery_ids
         self._fault_applications = restored.fault_applications
@@ -621,6 +634,34 @@ class ReferenceMissionRuntime:
                 ),
             ),
         )
+        contradiction_fault_id = self._selected_commitment_fault(
+            "contradictory-outcome-evidence",
+            commitment.commitment_id,
+        )
+        if contradiction_fault_id is not None:
+            if self._fault_schedule is None:
+                raise RuntimeError("Reference outcome contradiction lost its fault schedule")
+            compensation = next(
+                item
+                for item in self._fault_schedule.triggers
+                if item.family == "failed-compensation"
+            )
+            heapq.heappush(
+                self._pending_outcomes,
+                ReferenceScheduledInput(
+                    action.execution_not_after_s,
+                    9,
+                    f"reference-contradiction-{commitment.commitment_id}",
+                    ReferenceInputKind.OUTCOME_CONTRADICTION,
+                    ReferencePendingContradiction(
+                        commitment_id=commitment.commitment_id,
+                        resource_id=belief.resource_id,
+                        affected_public_subject_ids=(action.destination_public_id,),
+                        contradiction_fault_id=contradiction_fault_id,
+                        compensation_fault_id=compensation.fault_id,
+                    ),
+                ),
+            )
 
     def _selected_commitment_fault(
         self,
@@ -913,6 +954,88 @@ class ReferenceMissionRuntime:
         if value.outcome.status != "active_at_scenario_censoring":
             del self._active[value.resource_id]
 
+    def _record_outcome_contradiction(self, value: object, at_s: int) -> None:
+        if not isinstance(value, ReferencePendingContradiction):
+            raise TypeError("Reference contradiction queue payload has the wrong type")
+        active = self._active.get(value.resource_id)
+        if active is None or active.belief.commitment_id != value.commitment_id:
+            raise RuntimeError("Reference contradiction does not bind one active commitment")
+        dependencies = self.engine.dependencies
+        record = dependencies.trace_repository.get(active.belief.authorizing_trace_record_id)
+        if record.record_version != active.belief.authorizing_trace_record_version:
+            raise RuntimeError("Reference contradiction found a superseded authorizing record")
+        original_evidence = dependencies.evidence_ledger.get(record.evidence_refs[-1])
+        created_at = self.scenario.config.timeline.evaluation_start_iso8601 + self._seconds(at_s)
+        artifacts = build_reference_outcome_fault_artifacts(
+            commitment_id=value.commitment_id,
+            affected_public_subject_ids=value.affected_public_subject_ids,
+            authorizing_record=record,
+            original_evidence=original_evidence,
+            at_s=at_s,
+            created_at=created_at,
+        )
+        self._record_target_fault_application(
+            fault_id=value.contradiction_fault_id,
+            target_public_id=value.commitment_id,
+            applied_at_s=at_s,
+            reason=(
+                "The registered semantic trigger delivered authenticated public outcome "
+                "evidence contradicting this active reversible commitment."
+            ),
+        )
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.OUTCOME_EVIDENCE_RECORDED,
+            artifact_id=artifacts.contradiction.evidence_id,
+            artifact_schema_version=artifacts.contradiction.schema_version,
+            artifact=artifacts.contradiction.model_dump(mode="json"),
+        )
+        revised = dependencies.trace_gateway.revise_from_outcome(
+            record,
+            artifacts.world_evidence,
+            at_s=at_s,
+            created_at=created_at,
+        )
+        if (
+            revised.record_id != artifacts.compensation.triggering_trace_record_id
+            or revised.record_version != artifacts.compensation.triggering_trace_record_version
+        ):
+            raise RuntimeError("Reference compensation does not bind the realized TRACE revision")
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.COMPENSATION_RECORDED,
+            artifact_id=artifacts.compensation.compensation_id,
+            artifact_schema_version=artifacts.compensation.schema_version,
+            artifact=artifacts.compensation.model_dump(mode="json"),
+        )
+        self._record_target_fault_application(
+            fault_id=value.compensation_fault_id,
+            target_public_id=artifacts.compensation.compensation_id,
+            applied_at_s=at_s,
+            reason=(
+                "The registered dependent fault caused this corrective compensation attempt "
+                "to fail and leave explicit residual consistency debt."
+            ),
+        )
+        self.event_log.append_public_artifact(
+            at_s=at_s,
+            event_type=ReferenceEventType.CONSISTENCY_DEBT_RECORDED,
+            artifact_id=artifacts.debt.debt_id,
+            artifact_schema_version=artifacts.debt.schema_version,
+            artifact=artifacts.debt.model_dump(mode="json"),
+        )
+        self._contradictions.append(artifacts.contradiction)
+        self._compensations.append(artifacts.compensation)
+        self._consistency_debts.append(artifacts.debt)
+        self._known_outcomes.append(
+            PublicOutcomeBelief(
+                outcome_id=artifacts.contradiction.evidence_id,
+                commitment_id=value.commitment_id,
+                status="authorization-premise-contradicted",
+                observed_at_s=at_s,
+            )
+        )
+
     def _selected_censoring_fault(self, commitment_id: str) -> str | None:
         if self._fault_schedule is None:
             return None
@@ -951,6 +1074,9 @@ class ReferenceMissionRuntime:
             complete=through_s == EVALUATION_END_S,
             decisions=tuple(self._decisions),
             outcomes=tuple(self._outcomes),
+            contradictions=tuple(self._contradictions),
+            compensations=tuple(self._compensations),
+            consistency_debts=tuple(self._consistency_debts),
             reconciliations=reconciliations,
             event_prefix_digest=self.event_log.prefix_digest,
             trace_prefix_digest=dependencies.trace_repository.prefix_digest,
