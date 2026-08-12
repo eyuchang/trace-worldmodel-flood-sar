@@ -304,6 +304,8 @@ def _core_action_for_test(proposal) -> ActionInstance:
             "route_gauge_id": action.route_gauge_id,
             "routed_travel_s": action.routed_travel_s,
             "route_status_at_proposal": action.route_status_at_proposal,
+            "deterministic_service_duration_s": action.deterministic_service_duration_s,
+            "commitment_horizon_end_s": action.commitment_horizon_end_s,
         },
     )
 

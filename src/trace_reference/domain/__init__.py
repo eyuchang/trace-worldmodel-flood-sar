@@ -21,7 +21,11 @@ from .exposure import (
     ReferenceSyntheticStructure,
     ReferenceTrajectoryChangePoint,
 )
-from .mission import ReferenceDecisionExecution, ReferenceMissionDecision
+from .mission import (
+    ReferenceDecisionExecution,
+    ReferenceMissionDecision,
+    ReferenceMissionRestartCheckpoint,
+)
 from .observations import (
     ReferenceDeliveryEnvelopeScenario,
     ReferenceHiddenObservationLineage,
@@ -102,6 +106,7 @@ __all__ = [
     "ReferenceIncidentCandidateAudit",
     "ReferenceIncidentType",
     "ReferenceMissionDecision",
+    "ReferenceMissionRestartCheckpoint",
     "ReferenceMutualAidTier",
     "ReferenceObservationArtifacts",
     "ReferencePhysicalParameters",

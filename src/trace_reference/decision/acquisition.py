@@ -279,6 +279,16 @@ class EvidenceAcquisitionExecutor:
         self._requests[request_id] = receipt
         return receipt
 
+    def restore_request(self, request: AcquisitionRequestReceipt) -> None:
+        """Restore one digest-verified durable request without issuing it again."""
+
+        if not verify_model_digest(request, digest_field="request_digest"):
+            raise ValueError("Reference restored acquisition request digest is invalid")
+        existing = self._requests.get(request.request_id)
+        if existing is not None and existing != request:
+            raise ValueError("Reference restored acquisition request conflicts with durable state")
+        self._requests[request.request_id] = request
+
     def ingest(
         self,
         receipt: ProviderReceipt,

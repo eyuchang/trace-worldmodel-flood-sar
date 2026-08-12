@@ -10,7 +10,11 @@ from trace_jepa.experimental import RevalidationGuard
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
 from trace_reference.decision import AcquisitionRequestReceipt, EvidenceAcquisitionExecutor
-from trace_reference.domain import ReferenceEventType
+from trace_reference.domain import (
+    ReferenceEvent,
+    ReferenceEventType,
+    ReferenceMissionRestartCheckpoint,
+)
 from trace_reference.generation import generate_reference_scenario
 from trace_reference.runtime import (
     ReferenceCommitmentLog,
@@ -35,8 +39,14 @@ def scenario():
     return generate_reference_scenario(ROOT, seed=20260812)
 
 
-def _mission_runtime(scenario, root: Path) -> tuple[ReferenceMissionRuntime, ReferenceEventLog]:
-    event_log = ReferenceEventLog()
+def _mission_runtime(
+    scenario,
+    root: Path,
+    *,
+    events: tuple[ReferenceEvent, ...] = (),
+    restart_checkpoint: ReferenceMissionRestartCheckpoint | None = None,
+) -> tuple[ReferenceMissionRuntime, ReferenceEventLog]:
+    event_log = ReferenceEventLog(events)
     predictor = ToyActionPrefixPredictor()
     provenance = predictor.provenance()
     guard = RevalidationGuard.bootstrap(
@@ -90,7 +100,11 @@ def _mission_runtime(scenario, root: Path) -> tuple[ReferenceMissionRuntime, Ref
             environment_contract_version="trace-reference-python311-v1",
         )
     )
-    return ReferenceMissionRuntime(scenario, engine), event_log
+    return ReferenceMissionRuntime(
+        scenario,
+        engine,
+        restart_checkpoint=restart_checkpoint,
+    ), event_log
 
 
 def test_reference_mission_runtime_merges_public_streams_and_executes_initial_decision(
@@ -247,3 +261,51 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
                 resources=scenario.resources,
             )
         )
+
+
+def test_reference_mission_restart_matches_uninterrupted_continuation(
+    scenario,
+    tmp_path: Path,
+) -> None:
+    uninterrupted_root = tmp_path / "uninterrupted"
+    uninterrupted_root.mkdir()
+    uninterrupted, uninterrupted_log = _mission_runtime(scenario, uninterrupted_root)
+    expected = uninterrupted.run()
+
+    restarted_root = tmp_path / "restarted"
+    restarted_root.mkdir()
+    before_crash, prefix_log = _mission_runtime(scenario, restarted_root)
+    before_crash.run(through_s=180_000)
+    checkpoint = before_crash.checkpoint()
+    tampered_checkpoint = checkpoint.model_copy(update={"event_prefix_digest": "0" * 64})
+    with pytest.raises(ValueError, match="checkpoint digest"):
+        _mission_runtime(
+            scenario,
+            restarted_root,
+            events=prefix_log.events,
+            restart_checkpoint=tampered_checkpoint,
+        )
+    recovered, recovered_log = _mission_runtime(
+        scenario,
+        restarted_root,
+        events=prefix_log.events,
+        restart_checkpoint=checkpoint,
+    )
+    actual = recovered.run()
+
+    assert actual == expected
+    assert recovered_log.events == uninterrupted_log.events
+    for relative_name in (
+        "trace_records.jsonl",
+        "commitments.jsonl",
+        "evidence_index.jsonl",
+    ):
+        assert (restarted_root / relative_name).read_bytes() == (
+            uninterrupted_root / relative_name
+        ).read_bytes()
+    expected_evidence = sorted((uninterrupted_root / "evidence").glob("*.json"))
+    actual_evidence = sorted((restarted_root / "evidence").glob("*.json"))
+    assert [item.name for item in actual_evidence] == [item.name for item in expected_evidence]
+    assert [item.read_bytes() for item in actual_evidence] == [
+        item.read_bytes() for item in expected_evidence
+    ]
