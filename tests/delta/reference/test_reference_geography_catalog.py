@@ -7,15 +7,15 @@ from itertools import pairwise
 from pathlib import Path
 
 import pytest
+import yaml
 
-from trace_jepa.support import sha256_file
+from trace_jepa.support import canonical_json_bytes, sha256_file
 from trace_reference.geography import build_reference_geography, load_reference_geography
 
 ROOT = Path(__file__).resolve().parents[3]
 GEOGRAPHY_ROOT = ROOT / "data/scenario/delta/reference/geography"
 SOURCE_NAMES = (
     "dwr_lma_target_v1.geojson",
-    "sacramento_county_andrus_brannan_v1.geojson",
     "census_incorporated_places_v1.geojson",
     "census_designated_places_v1.geojson",
     "usgs_gnis_communities_v1.geojson",
@@ -32,23 +32,21 @@ def test_committed_reference_geography_regenerates_byte_identically(tmp_path: Pa
     )
     committed = GEOGRAPHY_ROOT / "derived"
     for name in (
-        "reference_geography_catalog_v2.json",
-        "reference_geography_build_manifest_v2.json",
+        "reference_geography_catalog_v3.json",
+        "reference_geography_build_manifest_v3.json",
     ):
         assert (tmp_path / name).read_bytes() == (committed / name).read_bytes()
 
 
-def test_development_v1_geography_remains_immutable_protocol_history() -> None:
-    expected = {
-        "reference_geography_catalog_v1.json": (
-            "be3e57790e0b5550a95c8ce6517e86bb8db2668ada50f6894f117bf3bfae7977"
-        ),
-        "reference_geography_build_manifest_v1.json": (
-            "dcf06ad149efdd0c606b53cbcc4c1fdc0dfa028c9ddb3018b6bcec578ec12540"
-        ),
-    }
-    for name, digest in expected.items():
-        assert sha256_file(GEOGRAPHY_ROOT / "derived" / name) == digest
+def test_unsafe_development_geography_is_absent_from_current_tree() -> None:
+    assert not (GEOGRAPHY_ROOT / "derived/reference_geography_catalog_v1.json").exists()
+    assert not (GEOGRAPHY_ROOT / "derived/reference_geography_catalog_v2.json").exists()
+    assert not (GEOGRAPHY_ROOT / "derived/reference_geography_build_manifest_v1.json").exists()
+    assert not (GEOGRAPHY_ROOT / "derived/reference_geography_build_manifest_v2.json").exists()
+    assert not (GEOGRAPHY_ROOT / "source_metadata_v1.yaml").exists()
+    assert not (GEOGRAPHY_ROOT / "source_metadata_v2.yaml").exists()
+    assert not (GEOGRAPHY_ROOT / "source_retrieval_receipts_v2.yaml").exists()
+    assert not (GEOGRAPHY_ROOT / "sources/sacramento_county_andrus_brannan_v1.geojson").exists()
 
 
 def test_catalog_binds_all_reference_entities_and_corrected_crossing_types() -> None:
@@ -68,7 +66,7 @@ def test_catalog_binds_all_reference_entities_and_corrected_crossing_types() -> 
     assert all(item.boundary.area_m2_epsg26910 > 1_000_000 for item in catalog.islands)
 
 
-def test_andrus_binding_preserves_district_segmentation_and_balmd_crosscheck() -> None:
+def test_andrus_brannan_use_disclosed_nonoverlapping_dwr_partition() -> None:
     catalog = load_reference_geography(geography_root=GEOGRAPHY_ROOT)
     andrus = catalog.islands[0]
     identifiers = {
@@ -76,14 +74,24 @@ def test_andrus_binding_preserves_district_segmentation_and_balmd_crosscheck() -
         for binding in andrus.source_bindings
         for identifier in binding.feature_identifiers
     }
-    assert {"OBJECTID:19", "OBJECTID:22", "OBJECTID:23"}.issubset(identifiers)
+    assert "OBJECTID:79" in identifiers
     assert "OBJECTID:259" in identifiers
-    assert andrus.boundary_semantics == "union-of-county-reclamation-district-footprints"
+    assert andrus.boundary_semantics == (
+        "dwr-balmd-synthetic-partition-plus-upper-andrus-footprint"
+    )
 
     brannan = catalog.islands[1]
-    assert brannan.boundary_semantics == "single-county-reclamation-district-footprint"
+    assert brannan.boundary_semantics == "dwr-balmd-synthetic-partition-footprint"
     assert len(brannan.source_bindings) == 1
-    assert brannan.source_bindings[0].feature_identifiers == ("OBJECTID:24",)
+    assert brannan.source_bindings[0].feature_identifiers == ("OBJECTID:259",)
+    andrus_points = {
+        point for polygon in andrus.boundary.polygons_e6 for ring in polygon for point in ring
+    }
+    brannan_points = {
+        point for polygon in brannan.boundary.polygons_e6 for ring in polygon for point in ring
+    }
+    assert min(point[0] for point in andrus_points) >= -121_623_000
+    assert max(point[0] for point in brannan_points) <= -121_623_000
 
 
 def test_community_identifiers_and_derived_anchor_semantics_are_explicit() -> None:
@@ -126,10 +134,11 @@ def test_release_and_license_policy_is_fail_closed() -> None:
     sources = {item.source_id: item for item in catalog.sources}
     assert sources["REF-GEO-SRC-06"].redistribution_status == ("creative-commons-attribution")
     assert sources["REF-GEO-SRC-07"].redistribution_status == ("creative-commons-attribution")
-    county = sources["REF-GEO-SRC-02"]
-    assert county.redistribution_status == "redistribution-review-required"
-    assert county.release_inclusion == "excluded-pending-dataset-specific-license-review"
-    assert catalog.scientific_status.startswith("development-only")
+    assert "REF-GEO-SRC-02" not in sources
+    assert all(item.release_inclusion == "included" for item in sources.values())
+    assert catalog.scientific_status == (
+        "simulation-grade-curated-from-redistributable-authoritative-sources"
+    )
 
 
 def test_polygon_orientation_is_canonical_and_source_requirements_are_reconciled() -> None:
@@ -176,7 +185,7 @@ def test_all_committed_source_objects_are_recursively_free_of_contact_fields() -
 def test_catalog_tamper_and_symlink_fail_closed(tmp_path: Path) -> None:
     copied = tmp_path / "geography"
     shutil.copytree(GEOGRAPHY_ROOT, copied)
-    catalog_path = copied / "derived/reference_geography_catalog_v2.json"
+    catalog_path = copied / "derived/reference_geography_catalog_v3.json"
     catalog_path.write_bytes(catalog_path.read_bytes() + b" ")
     with pytest.raises(ValueError, match="catalog digest mismatch"):
         load_reference_geography(geography_root=copied)
@@ -195,8 +204,9 @@ def test_catalog_tamper_and_symlink_fail_closed(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("relative_name", "message"),
     [
-        ("source_metadata_v2.yaml", "metadata registry digest mismatch"),
-        ("source_retrieval_receipts_v2.yaml", "retrieval receipts digest mismatch"),
+        ("source_metadata_v3.yaml", "metadata registry digest mismatch"),
+        ("source_retrieval_receipts_v3.yaml", "retrieval receipts digest mismatch"),
+        ("source_lifecycle_erratum_v1.yaml", "source lifecycle erratum digest mismatch"),
     ],
 )
 def test_provenance_registry_mutation_fails_closed(
@@ -232,10 +242,54 @@ def test_builder_rejects_intermediate_symlink_source_directory(tmp_path: Path) -
         build_reference_geography(geography_root=copied, output_root=output)
 
 
+def test_builder_rejects_undeclared_property_even_with_updated_source_digest(
+    tmp_path: Path,
+) -> None:
+    copied = tmp_path / "geography"
+    shutil.copytree(GEOGRAPHY_ROOT, copied)
+    source_path = copied / "sources/census_incorporated_places_v1.geojson"
+    source = json.loads(source_path.read_text("utf-8"))
+    source["features"][0]["properties"]["UNDECLARED_CONTACT_FIELD"] = "rejected"
+    source_path.write_bytes(canonical_json_bytes(source))
+    receipts_path = copied / "source_retrieval_receipts_v3.yaml"
+    receipts = yaml.safe_load(receipts_path.read_text("utf-8"))
+    receipt = next(item for item in receipts["receipts"] if item["source_id"] == "REF-GEO-SRC-03")
+    receipt["output_sha256"] = sha256_file(source_path)
+    receipts_path.write_text(yaml.safe_dump(receipts, sort_keys=False), encoding="utf-8")
+    output = tmp_path / "output"
+    output.mkdir()
+    with pytest.raises(ValueError, match="property schema mismatch"):
+        build_reference_geography(geography_root=copied, output_root=output)
+
+
+def test_geography_v3_binds_exact_geospatial_environment_and_lifecycle() -> None:
+    manifest_path = GEOGRAPHY_ROOT / "derived/reference_geography_build_manifest_v3.json"
+    manifest = json.loads(manifest_path.read_text("utf-8"))
+    assert set(manifest["environment_versions"]) == {"pyproj", "proj", "shapely", "geos"}
+    assert manifest["source_lifecycle_relative_path"] == "source_lifecycle_erratum_v1.yaml"
+    assert manifest["release_ready"] is False
+
+
+def test_phase0_lifecycle_erratum_supersedes_without_rewriting_research_history() -> None:
+    lifecycle = yaml.safe_load(
+        (GEOGRAPHY_ROOT / "source_lifecycle_erratum_v1.yaml").read_text("utf-8")
+    )
+    assert lifecycle["phase0_status"] == "superseded-research-history-no-runtime-authority"
+    assert [item["phase0_requirement_id"] for item in lifecycle["entries"]] == [
+        "REF-SRC-01",
+        "REF-SRC-02",
+        "REF-SRC-03",
+        "REF-SRC-04",
+    ]
+    assert lifecycle["entries"][3]["phase1_status"] == (
+        "verified-caltrans-cc-by-and-gnis-public-domain"
+    )
+
+
 def test_environment_binding_and_metadata_schema_fail_closed(tmp_path: Path) -> None:
     copied = tmp_path / "geography"
     shutil.copytree(GEOGRAPHY_ROOT, copied)
-    manifest_path = copied / "derived/reference_geography_build_manifest_v2.json"
+    manifest_path = copied / "derived/reference_geography_build_manifest_v3.json"
     manifest = json.loads(manifest_path.read_text("utf-8"))
     manifest["environment_versions"]["python"] = "0.0.0"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -244,7 +298,7 @@ def test_environment_binding_and_metadata_schema_fail_closed(tmp_path: Path) -> 
 
     copied = tmp_path / "invalid-schema"
     shutil.copytree(GEOGRAPHY_ROOT, copied)
-    metadata_path = copied / "source_metadata_v2.yaml"
+    metadata_path = copied / "source_metadata_v3.yaml"
     metadata_path.write_text(
         metadata_path.read_text("utf-8").replace(
             "    agency: California Department of Water Resources\n",

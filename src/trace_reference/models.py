@@ -179,6 +179,7 @@ class ReferenceScenarioConfig(DeltaModel):
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    geography_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     approved_decision_set: Literal["reference-scientific-decisions-v1"]
     small_baseline_registry: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
     timeline: ReferenceTimelineConfig
@@ -204,6 +205,10 @@ class ReferenceScenarioConfig(DeltaModel):
             "6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"
         ):
             raise ValueError("Reference configuration does not bind the approved amendment")
+        if self.geography_amendment_sha256 != (
+            "489dbee8e296d1b55ffd4ec4f5628462251f26ffad1fabaff27ef70bb0c6a630"
+        ):
+            raise ValueError("Reference configuration does not bind geography amendment v2")
         if self.axes.kappa != 1.0:
             raise ValueError("canonical Reference must retain kappa=1.0")
         if tuple(item.study_id for item in self.registered_sensitivities) != (

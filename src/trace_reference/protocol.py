@@ -14,6 +14,7 @@ class ReferenceProtocolRevision:
     status: str
     approved_decision_set: str
     protocol_amendment_sha256: str
+    geography_amendment_sha256: str
     scenario_schema: str
     generator: str
     randomness_namespace: str
@@ -36,10 +37,11 @@ REFERENCE_PROTOCOL = ReferenceProtocolRevision(
     status="approved-decisions-development-only",
     approved_decision_set="reference-scientific-decisions-v1",
     protocol_amendment_sha256=("6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"),
+    geography_amendment_sha256=("489dbee8e296d1b55ffd4ec4f5628462251f26ffad1fabaff27ef70bb0c6a630"),
     scenario_schema="trace-delta-reference-scenario-v1",
     generator="delta-reference-generator-v1",
     randomness_namespace="delta-reference-randomness-v1",
-    geography="delta-reference-geography-v1",
+    geography="delta-reference-geography-v3",
     physical="delta-reference-physical-v1",
     breach="delta-reference-breach-v1",
     truth="delta-reference-ground-truth-v1",

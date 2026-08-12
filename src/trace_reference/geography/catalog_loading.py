@@ -16,6 +16,7 @@ from .builder import SOURCE_RELATIVE_NAMES
 from .catalog_models import (
     ReferenceGeographyBuildManifest,
     ReferenceGeographyCatalog,
+    ReferenceSourceLifecycleErratum,
     ReferenceSourceRetrievalRegistry,
 )
 
@@ -52,13 +53,15 @@ def _verified_artifact(*, root: Path, relative_name: str, expected_sha256: str, 
     return path
 
 
-def _verify_v2_provenance(geography_root: Path, manifest: ReferenceGeographyBuildManifest) -> None:
+def _verify_current_provenance(
+    geography_root: Path, manifest: ReferenceGeographyBuildManifest
+) -> None:
     metadata_name = manifest.metadata_registry_relative_path
     metadata_sha256 = manifest.metadata_registry_sha256
     receipts_name = manifest.retrieval_receipts_relative_path
     receipts_sha256 = manifest.retrieval_receipts_sha256
     if None in {metadata_name, metadata_sha256, receipts_name, receipts_sha256}:
-        raise ValueError("v2 geography provenance is incomplete")
+        raise ValueError("current geography provenance is incomplete")
     metadata_path = _verified_artifact(
         root=geography_root,
         relative_name=str(metadata_name),
@@ -74,6 +77,18 @@ def _verify_v2_provenance(geography_root: Path, manifest: ReferenceGeographyBuil
     receipt_registry = ReferenceSourceRetrievalRegistry.model_validate(_yaml_object(receipts_path))
     if receipt_registry.metadata_registry_sha256 != sha256_file(metadata_path):
         raise ValueError("Reference receipt registry metadata binding mismatch")
+    lifecycle_name = manifest.source_lifecycle_relative_path
+    lifecycle_sha256 = manifest.source_lifecycle_sha256
+    if manifest.manifest_version == "delta-reference-geography-build-v3":
+        if lifecycle_name is None or lifecycle_sha256 is None:
+            raise ValueError("Reference geography source lifecycle binding is incomplete")
+        lifecycle_path = _verified_artifact(
+            root=geography_root,
+            relative_name=lifecycle_name,
+            expected_sha256=lifecycle_sha256,
+            label="Reference geography source lifecycle erratum",
+        )
+        ReferenceSourceLifecycleErratum.model_validate(_yaml_object(lifecycle_path))
 
     package_root = Path(__file__).parent
     for relative_name, expected_digest in manifest.transformation_source_sha256.items():
@@ -96,7 +111,7 @@ def _verify_v2_provenance(geography_root: Path, manifest: ReferenceGeographyBuil
 def load_reference_geography(
     *,
     geography_root: Path,
-    manifest_relative_name: Path = Path("derived/reference_geography_build_manifest_v2.json"),
+    manifest_relative_name: Path = Path("derived/reference_geography_build_manifest_v3.json"),
 ) -> ReferenceGeographyCatalog:
     """Load the exact offline catalog and verify every bound source snapshot."""
 
@@ -107,8 +122,11 @@ def load_reference_geography(
         label="Reference geography build manifest",
     ).resolve()
     manifest = ReferenceGeographyBuildManifest.model_validate(_json_object(manifest_path))
-    if manifest.manifest_version == "delta-reference-geography-build-v2":
-        _verify_v2_provenance(geography_root, manifest)
+    if manifest.manifest_version in {
+        "delta-reference-geography-build-v2",
+        "delta-reference-geography-build-v3",
+    }:
+        _verify_current_provenance(geography_root, manifest)
     catalog_path = ArtifactLocator(
         root=manifest_path.parent,
         relative_name=Path(manifest.catalog_relative_path),

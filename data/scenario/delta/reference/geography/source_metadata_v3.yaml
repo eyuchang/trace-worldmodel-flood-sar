@@ -1,7 +1,7 @@
-registry_version: delta-reference-geography-source-metadata-v2
+registry_version: delta-reference-geography-source-metadata-v3
 sources:
   - source_id: REF-GEO-SRC-01
-    phase0_requirement_ids: [REF-SRC-02]
+    phase0_requirement_ids: [REF-SRC-01, REF-SRC-02]
     agency: California Department of Water Resources
     dataset_title: i03 Local Maintenance Areas Flood Protection
     landing_page_url: https://catalog.data.gov/dataset/i03-local-maintenance-areas-flood-protection-681bf
@@ -16,22 +16,6 @@ sources:
     limitations:
       - DWR reports variable boundary accuracy and historic survey uncertainty.
       - The snapshot is clipped to eight selected operational footprints and is not cadastral data.
-  - source_id: REF-GEO-SRC-02
-    phase0_requirement_ids: [REF-SRC-01]
-    agency: Sacramento County
-    dataset_title: Drainage Districts
-    landing_page_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7
-    machine_readable_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7/query
-    retrieved_at_utc: '2026-08-05T16:00:00Z'
-    upstream_response_sha256: 803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710
-    license_name: Dataset-specific redistribution terms not verified
-    license_locator: https://data.saccounty.gov/pages/terms
-    redistribution_status: redistribution-review-required
-    release_inclusion: excluded-pending-dataset-specific-license-review
-    attribution: Sacramento County GIS, Drainage Districts; clipped and field-minimized for research.
-    limitations:
-      - District geometry is an operational-maintenance proxy rather than an island survey boundary.
-      - Contact fields present upstream are intentionally excluded from this snapshot.
   - source_id: REF-GEO-SRC-03
     phase0_requirement_ids: [REF-SRC-03]
     agency: United States Census Bureau

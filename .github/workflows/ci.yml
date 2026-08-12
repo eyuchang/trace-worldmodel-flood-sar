@@ -41,6 +41,7 @@ jobs:
           scripts/select_delta_v8_reconciliation.py
           scripts/verify_delta_refactor_equivalence.py
           scripts/verify_delta_reference_environment.py
+          scripts/reference/verify_delivery_history.py
           scripts/write_delta_scientific_manifest.py
           src/trace_jepa/contracts/models.py
           src/trace_jepa/controller.py
@@ -67,6 +68,7 @@ jobs:
           scripts/select_delta_v8_reconciliation.py
           scripts/verify_delta_refactor_equivalence.py
           scripts/verify_delta_reference_environment.py
+          scripts/reference/verify_delivery_history.py
           scripts/write_delta_scientific_manifest.py
           src/trace_jepa/experimental/revalidation.py
           src/trace_jepa/predictor

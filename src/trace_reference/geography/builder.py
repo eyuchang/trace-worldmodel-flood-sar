@@ -14,7 +14,7 @@ import shapely
 import yaml
 from pyproj import Transformer
 from shapely import make_valid, normalize, orient_polygons, union_all
-from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon, shape
+from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon, box, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
@@ -37,6 +37,7 @@ from .catalog_models import (
     ReferenceRouteEdge,
     ReferenceRouteNode,
     ReferenceSourceBinding,
+    ReferenceSourceLifecycleErratum,
     ReferenceSourceMetadata,
     ReferenceSourceMetadataRegistry,
     ReferenceSourceRecord,
@@ -45,7 +46,6 @@ from .catalog_models import (
 
 SOURCE_RELATIVE_NAMES = {
     "REF-GEO-SRC-01": "dwr_lma_target_v1.geojson",
-    "REF-GEO-SRC-02": "sacramento_county_andrus_brannan_v1.geojson",
     "REF-GEO-SRC-03": "census_incorporated_places_v1.geojson",
     "REF-GEO-SRC-04": "census_designated_places_v1.geojson",
     "REF-GEO-SRC-05": "usgs_gnis_communities_v1.geojson",
@@ -55,6 +55,7 @@ SOURCE_RELATIVE_NAMES = {
 }
 
 _TO_METRIC = Transformer.from_crs(4326, 26910, always_xy=True)
+_BALMD_SYNTHETIC_PARTITION_LONGITUDE = -121.623
 
 
 def _safe_source_path(geography_root: Path, relative_name: str) -> Path:
@@ -183,17 +184,6 @@ def _source_binding(source_id: str, identifiers: Sequence[str], use: str) -> Ref
 
 def _build_islands(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceIsland, ...]:
     dwr = sources["REF-GEO-SRC-01"]
-    county = sources["REF-GEO-SRC-02"]
-    county_andrus_features = _features_by_integer(county, "OBJECTID", (19, 22, 23))
-    for feature, district in zip(
-        county_andrus_features,
-        ("Upper Andrus Island 556", "Lower Andrus Island 317", "Andrus Island 407"),
-        strict=True,
-    ):
-        _require_properties(feature, {"DISTRICT": district})
-    county_brannan = _feature_by_integer(county, "OBJECTID", 24)
-    _require_properties(county_brannan, {"DISTRICT": "Brannan Island 2067"})
-    county_andrus = union_all([_feature_geometry(item) for item in county_andrus_features])
     dwr_expectations = {
         11: ("0341", "Sherman Island"),
         12: ("0003", "Grand Island"),
@@ -209,27 +199,32 @@ def _build_islands(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceIsla
             _feature_by_integer(dwr, "OBJECTID", object_id),
             {"LMA_Code": code, "LMA_Placename": place_name},
         )
+    balmd = _feature_geometry(_feature_by_integer(dwr, "OBJECTID", 259))
+    upper_andrus = _feature_geometry(_feature_by_integer(dwr, "OBJECTID", 79))
+    east_partition = balmd.intersection(box(_BALMD_SYNTHETIC_PARTITION_LONGITUDE, -90, 180, 90))
+    west_partition = balmd.intersection(box(-180, -90, _BALMD_SYNTHETIC_PARTITION_LONGITUDE, 90))
+    if east_partition.is_empty or west_partition.is_empty:
+        raise ValueError("DWR BALMD synthetic partition produced an empty island footprint")
     definitions = (
         (
             "ISL-01",
             "Andrus Island",
-            county_andrus,
+            union_all((east_partition, upper_andrus)),
             (
                 _source_binding(
-                    "REF-GEO-SRC-02",
-                    ("OBJECTID:19", "OBJECTID:22", "OBJECTID:23"),
+                    "REF-GEO-SRC-01",
+                    ("OBJECTID:79", "OBJECTID:259"),
                     "primary-boundary",
                 ),
-                _source_binding("REF-GEO-SRC-01", ("OBJECTID:79", "OBJECTID:259"), "cross-check"),
             ),
-            "union-of-county-reclamation-district-footprints",
+            "dwr-balmd-synthetic-partition-plus-upper-andrus-footprint",
         ),
         (
             "ISL-02",
             "Brannan Island",
-            _feature_geometry(county_brannan),
-            (_source_binding("REF-GEO-SRC-02", ("OBJECTID:24",), "primary-boundary"),),
-            "single-county-reclamation-district-footprint",
+            west_partition,
+            (_source_binding("REF-GEO-SRC-01", ("OBJECTID:259",), "primary-boundary"),),
+            "dwr-balmd-synthetic-partition-footprint",
         ),
         *tuple(
             (
@@ -647,8 +642,7 @@ def _validate_retrieval_registry(
             raise ValueError(f"retrieval output digest mismatch: {receipt.source_id}")
 
     expected_phase0_mapping = {
-        "REF-GEO-SRC-01": ("REF-SRC-02",),
-        "REF-GEO-SRC-02": ("REF-SRC-01",),
+        "REF-GEO-SRC-01": ("REF-SRC-01", "REF-SRC-02"),
         "REF-GEO-SRC-03": ("REF-SRC-03",),
         "REF-GEO-SRC-04": ("REF-SRC-03",),
         "REF-GEO-SRC-05": ("REF-SRC-03",),
@@ -682,6 +676,30 @@ def _validate_entity_receipt_bindings(
             )
 
 
+def _validate_exact_property_schemas(
+    sources: Mapping[str, Mapping[str, Any]],
+    retrieval_registry: ReferenceSourceRetrievalRegistry,
+) -> None:
+    """Reject undeclared upstream fields, including contact or schema-expansion fields."""
+
+    for receipt in retrieval_registry.receipts:
+        expected_fields = set(receipt.selected_fields)
+        features = sources[receipt.source_id].get("features")
+        if not isinstance(features, list):
+            raise TypeError(f"Reference source {receipt.source_id} has no feature array")
+        for feature in features:
+            if not isinstance(feature, Mapping):
+                raise TypeError(
+                    f"Reference source {receipt.source_id} contains a non-object feature"
+                )
+            observed_fields = set(_properties(feature))
+            if observed_fields != expected_fields:
+                raise ValueError(
+                    f"Reference source property schema mismatch: {receipt.source_id}; "
+                    f"expected={sorted(expected_fields)!r}; observed={sorted(observed_fields)!r}"
+                )
+
+
 def _transformation_source_hashes() -> dict[str, str]:
     package_root = Path(__file__).parent
     names = ("builder.py", "catalog_models.py", "catalog_loading.py", "snapshot.py")
@@ -711,8 +729,9 @@ def build_reference_geography(
     *,
     geography_root: Path,
     output_root: Path,
-    metadata_relative_name: Path = Path("source_metadata_v2.yaml"),
-    retrieval_relative_name: Path = Path("source_retrieval_receipts_v2.yaml"),
+    metadata_relative_name: Path = Path("source_metadata_v3.yaml"),
+    retrieval_relative_name: Path = Path("source_retrieval_receipts_v3.yaml"),
+    lifecycle_relative_name: Path = Path("source_lifecycle_erratum_v1.yaml"),
 ) -> ReferenceGeographyBuildManifest:
     """Build and write a deterministic catalog from exact offline snapshots."""
 
@@ -728,15 +747,29 @@ def build_reference_geography(
         maximum_bytes=1_000_000,
         label="Reference geography retrieval receipts",
     ).resolve()
+    lifecycle_registry_path = ArtifactLocator(
+        root=geography_root,
+        relative_name=lifecycle_relative_name,
+        maximum_bytes=1_000_000,
+        label="Reference geography source lifecycle erratum",
+    ).resolve()
     metadata_registry = ReferenceSourceMetadataRegistry.model_validate(
         _yaml_mapping(metadata_registry_path, "Reference source metadata")
     )
     retrieval_registry = ReferenceSourceRetrievalRegistry.model_validate(
         _yaml_mapping(retrieval_registry_path, "Reference retrieval receipt registry")
     )
+    lifecycle_registry = ReferenceSourceLifecycleErratum.model_validate(
+        _yaml_mapping(lifecycle_registry_path, "Reference source lifecycle erratum")
+    )
     metadata_registry_sha256 = sha256_file(metadata_registry_path)
     retrieval_registry_sha256 = sha256_file(retrieval_registry_path)
     records = _source_records(metadata_registry.sources, geography_root)
+    lifecycle_source_ids = {
+        source_id for item in lifecycle_registry.entries for source_id in item.phase1_source_ids
+    }
+    if not lifecycle_source_ids.issubset({item.source_id for item in records}):
+        raise ValueError("source lifecycle erratum refers to an absent Phase 1 source")
     _validate_retrieval_registry(
         records=records,
         retrieval_registry=retrieval_registry,
@@ -747,13 +780,14 @@ def build_reference_geography(
         source_id: _load_geojson(geography_root, relative_name, expected[source_id])
         for source_id, relative_name in SOURCE_RELATIVE_NAMES.items()
     }
+    _validate_exact_property_schemas(sources, retrieval_registry)
     islands = _build_islands(sources)
     communities = _build_communities(sources)
     crossings = _build_crossings(sources)
     nodes, edges = _build_routes(islands, crossings)
     catalog = ReferenceGeographyCatalog(
-        catalog_version="delta-reference-geography-v2",
-        scientific_status="development-only-simulation-grade-pending-one-source-license-review",
+        catalog_version="delta-reference-geography-v3",
+        scientific_status="simulation-grade-curated-from-redistributable-authoritative-sources",
         source_crs="EPSG:4326",
         metric_crs="EPSG:26910",
         coordinate_quantization="wgs84-microdegrees-and-epsg26910-millimetres",
@@ -767,13 +801,13 @@ def build_reference_geography(
         limitations=(
             "The catalog supports a synthetic reduced-order simulator, not navigation or field dispatch.",
             "Maintenance-area boundaries proxy island footprints and do not establish parcel ownership.",
-            "The Sacramento County-derived clipped fixture is excluded from release until its dataset-specific redistribution terms are verified.",
+            "Andrus and Brannan use a disclosed synthetic partition of DWR's combined BALMD footprint rather than separate survey boundaries.",
             "Road and water graph endpoints are protocol design assumptions anchored by official points.",
             "The current Woodward crossing type and operability remain unresolved and non-operative facts.",
         ),
     )
     _validate_entity_receipt_bindings(catalog, retrieval_registry)
-    catalog_name = "reference_geography_catalog_v2.json"
+    catalog_name = "reference_geography_catalog_v3.json"
     catalog_bytes = canonical_json_bytes(catalog.model_dump(mode="json"))
     atomic_write_bytes(
         output_root / catalog_name,
@@ -782,7 +816,7 @@ def build_reference_geography(
         label="Reference geography catalog",
     )
     manifest = ReferenceGeographyBuildManifest(
-        manifest_version="delta-reference-geography-build-v2",
+        manifest_version="delta-reference-geography-build-v3",
         catalog_relative_path=catalog_name,
         catalog_sha256=hashlib.sha256(catalog_bytes).hexdigest(),
         source_snapshot_sha256=expected,
@@ -792,6 +826,8 @@ def build_reference_geography(
         metadata_registry_sha256=metadata_registry_sha256,
         retrieval_receipts_relative_path=retrieval_registry_path.name,
         retrieval_receipts_sha256=retrieval_registry_sha256,
+        source_lifecycle_relative_path=lifecycle_registry_path.name,
+        source_lifecycle_sha256=sha256_file(lifecycle_registry_path),
         transformation_source_sha256=_transformation_source_hashes(),
         environment_versions={
             "pyproj": pyproj.__version__,
@@ -799,13 +835,16 @@ def build_reference_geography(
             "shapely": shapely.__version__,
             "geos": shapely.geos_version_string,
         },
+        # The artifact content is redistributable, but this local research branch
+        # still has prohibited County bytes in ancestor objects. A sanitized
+        # delivery lineage must be verified before this gate can become true.
         release_ready=False,
         transformations=(
             "validate exact offline source digests and GeoJSON FeatureCollection schemas",
             "validate exact retrieval recipes, selections, timestamps, and response/output digests",
             "repair polygonal source geometry only with shapely.make_valid and record every repair",
             "orient polygon exteriors counterclockwise and normalize canonical ring and polygon order",
-            "union county RD317/RD407/RD556 for the Andrus simulation footprint",
+            "partition DWR BALMD at the registered synthetic longitude and combine its east partition with DWR Upper Andrus for the Andrus simulation footprint",
             "transform WGS84 geometry to EPSG:26910 for area and distance calculations",
             "quantize WGS84 to microdegrees and EPSG:26910 points to millimetres",
             "derive a simulation-only route graph from source anchors and protocol endpoints",
@@ -814,11 +853,10 @@ def build_reference_geography(
             "RD407 west-levee breach segment survey geometry and legal maintenance responsibility",
             "Woodward Island crossing current type, completion, and operability",
             "road/water edge suitability for field routing",
-            "Sacramento County dataset-specific redistribution permission",
         ),
     )
     atomic_write_bytes(
-        output_root / "reference_geography_build_manifest_v2.json",
+        output_root / "reference_geography_build_manifest_v3.json",
         canonical_json_bytes(manifest.model_dump(mode="json")),
         root=output_root,
         label="Reference geography build manifest",

@@ -1,0 +1,26 @@
+registry_version: delta-reference-source-lifecycle-erratum-v1
+date: '2026-08-12'
+authoritative_registry: source_metadata_v3.yaml
+authoritative_receipts: source_retrieval_receipts_v3.yaml
+phase0_status: superseded-research-history-no-runtime-authority
+entries:
+  - phase0_requirement_id: REF-SRC-01
+    phase0_status: not-retrieved
+    phase1_source_ids: [REF-GEO-SRC-01]
+    phase1_status: superseded-by-dwr-balmd-synthetic-partition-v3
+  - phase0_requirement_id: REF-SRC-02
+    phase0_status: not-retrieved
+    phase1_source_ids: [REF-GEO-SRC-01]
+    phase1_status: verified-dwr-lma-runtime-source
+  - phase0_requirement_id: REF-SRC-03
+    phase0_status: not-retrieved
+    phase1_source_ids: [REF-GEO-SRC-03, REF-GEO-SRC-04, REF-GEO-SRC-05]
+    phase1_status: verified-census-gnis-runtime-sources
+  - phase0_requirement_id: REF-SRC-04
+    phase0_status: not-retrieved
+    phase1_source_ids: [REF-GEO-SRC-06, REF-GEO-SRC-07, REF-GEO-SRC-08]
+    phase1_status: verified-caltrans-cc-by-and-gnis-public-domain
+notes:
+  - Phase 0 candidate statuses were intentionally non-operative and are not silently rewritten.
+  - Caltrans State Highway Bridges and Local Bridges are Creative Commons Attribution datasets.
+  - Remaining Phase 0 requirements REF-SRC-05 through REF-SRC-09 are still unresolved for later source milestones.

@@ -1,26 +1,28 @@
 # WF-DFLD-01-REFERENCE Phase 1 source and topology status
 
 Date: 2026-08-12
-Status: offline simulation geography v2 approved for development use; not release-ready
+Status: offline simulation geography v3 approved for development use; sanitized delivery required
 Runtime network access: forbidden
 
 ## Completed development package
 
-`delta-reference-geography-v2` binds the 8 islands, 4 communities, and 10
+`delta-reference-geography-v3` binds the 8 islands, 4 communities, and 10
 crossings required by the approved Reference extent. It is regenerated from
-eight clipped, field-minimized government snapshots under
+seven clipped, field-minimized government snapshots under
 `data/scenario/delta/reference/geography/sources/`. Every snapshot records its
 upstream response digest, exact retrieval endpoint and time, redistribution
 disposition, attribution, selected fields, and limitations in
-`source_metadata_v2.yaml`. Exact ordered query parameters, upstream-response
+`source_metadata_v3.yaml`. Exact ordered query parameters, upstream-response
 digests, feature-selection rules, transformation identifiers, and derived-output
-digests are independently bound in `source_retrieval_receipts_v2.yaml`.
+digests are independently bound in `source_retrieval_receipts_v3.yaml`.
 
-Version 1 remains immutable development history. Version 2 corrects source
-licensing, identifier semantics, canonical geometry, and fail-closed provenance.
-The Sacramento County snapshot is excluded from any release until its
-dataset-specific redistribution terms are verified; therefore this package is
-not yet release-ready even though it is suitable for local development.
+Versions 1 and 2 remain local development history. Version 3 removes all runtime
+dependence on Sacramento County bytes and uses only government snapshots with
+verified redistribution dispositions. Because restricted-status County bytes
+remain in ancestor objects of this local research branch, public delivery must
+use a sanitized lineage from a safe base unless explicit permission is obtained.
+The required procedure and digest-level pre-push check are recorded in the
+geography amendment v2.
 
 The deterministic builder:
 
@@ -32,8 +34,8 @@ The deterministic builder:
 5. performs areas and route distances in NAD83 / UTM zone 10N (`EPSG:26910`);
 6. retains both official source identities and simulation-only topology
    semantics; and
-7. binds the Python, PyProj, PROJ, Shapely, and GEOS versions used for geometry;
-   and
+7. binds the PyProj, PROJ, Shapely, and GEOS versions used for geometry (Python
+   is bound by the scenario execution-environment contract); and
 8. regenerates the committed catalog and build manifest byte-for-byte.
 
 The eight island polygons are source-bound operational-maintenance footprints,
@@ -48,18 +50,18 @@ upstream county contact field is present.
 ## Andrus and Brannan resolution
 
 The source review shows that “Andrus Island” is not a single reclamation
-district. Sacramento County separately maps Lower Andrus (`RD 317`), Andrus
-(`RD 407`), and Upper Andrus (`RD 556`); DWR also maps Upper Andrus and the
-combined Brannan-Andrus Levee Maintenance District. The runtime footprint for
-`ISL-01` is therefore the union of the three county polygons, with DWR records
-retained as cross-checks for Andrus. `ISL-02` uses the single Sacramento County
-`RD 2067` footprint. The combined DWR district is not treated as a Brannan-only
-footprint.
+district. DWR supplies Upper Andrus (`RD 556`) and a combined Brannan-Andrus
+Levee Maintenance District (`BALMD`) footprint, but not redistributable separate
+boundaries for `RD 317`, `RD 407`, and `RD 2067` in the reviewed LMA service.
+Version 3 therefore partitions BALMD at the explicitly synthetic longitude
+`-121.623000`. `ISL-01` is the east partition plus DWR Upper Andrus; `ISL-02` is
+the west partition. This is a non-overlapping simulation footprint, not a legal,
+cadastral, survey, hydrological, or reclamation-district boundary.
 
 Caltrans identifies both State Highway Bridges and Local Bridges as Creative
-Commons Attribution datasets. Their catalog records retain attribution. The
-County license remains unresolved as described above rather than being inferred
-from general government-data availability.
+Commons Attribution datasets. Their catalog records retain attribution. County
+metadata and digests remain only as local protocol history; County bytes and
+County-derived catalog geometry are absent from the current tree.
 
 This resolves the island-footprint question without inventing a false choice
 between `RD 317` and `RD 407`. It does **not** establish a survey-grade west

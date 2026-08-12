@@ -167,7 +167,7 @@ The first implementation should reserve, but not claim as frozen until review, t
 ```text
 trace-delta-reference-scenario-v1
 delta-reference-generator-v1
-delta-reference-geography-v2
+delta-reference-geography-v1
 delta-reference-physical-v1
 delta-reference-breach-v1
 delta-reference-ground-truth-v1

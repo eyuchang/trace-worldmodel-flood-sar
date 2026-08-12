@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal, TypeAlias
 
 from pydantic import Field, model_validator
@@ -41,14 +42,49 @@ class ReferenceSourceMetadata(DeltaModel):
 
 
 class ReferenceSourceMetadataRegistry(DeltaModel):
-    registry_version: Literal["delta-reference-geography-source-metadata-v2"]
-    sources: tuple[ReferenceSourceMetadata, ...] = Field(min_length=8, max_length=8)
+    registry_version: Literal[
+        "delta-reference-geography-source-metadata-v2",
+        "delta-reference-geography-source-metadata-v3",
+    ]
+    sources: tuple[ReferenceSourceMetadata, ...] = Field(min_length=7, max_length=8)
 
     @model_validator(mode="after")
     def validate_source_coverage(self) -> ReferenceSourceMetadataRegistry:
-        expected = tuple(f"REF-GEO-SRC-{index:02d}" for index in range(1, 9))
+        expected = (
+            tuple(f"REF-GEO-SRC-{index:02d}" for index in range(1, 9))
+            if self.registry_version.endswith("v2")
+            else ("REF-GEO-SRC-01", *(f"REF-GEO-SRC-{index:02d}" for index in range(3, 9)))
+        )
         if tuple(item.source_id for item in self.sources) != expected:
             raise ValueError("source metadata must bind every source exactly once in source order")
+        return self
+
+
+class ReferenceSourceLifecycleEntry(DeltaModel):
+    phase0_requirement_id: str = Field(pattern=r"^REF-SRC-0[1-4]$")
+    phase0_status: Literal["not-retrieved"]
+    phase1_source_ids: tuple[str, ...] = Field(min_length=1)
+    phase1_status: str = Field(min_length=10)
+
+
+class ReferenceSourceLifecycleErratum(DeltaModel):
+    registry_version: Literal["delta-reference-source-lifecycle-erratum-v1"]
+    date: date
+    authoritative_registry: Literal["source_metadata_v3.yaml"]
+    authoritative_receipts: Literal["source_retrieval_receipts_v3.yaml"]
+    phase0_status: Literal["superseded-research-history-no-runtime-authority"]
+    entries: tuple[ReferenceSourceLifecycleEntry, ...] = Field(min_length=4, max_length=4)
+    notes: tuple[str, ...] = Field(min_length=2)
+
+    @model_validator(mode="after")
+    def validate_phase0_coverage(self) -> ReferenceSourceLifecycleErratum:
+        if tuple(item.phase0_requirement_id for item in self.entries) != (
+            "REF-SRC-01",
+            "REF-SRC-02",
+            "REF-SRC-03",
+            "REF-SRC-04",
+        ):
+            raise ValueError("source lifecycle erratum must cover resolved Phase 0 requirements")
         return self
 
 
@@ -90,6 +126,8 @@ class ReferenceIsland(DeltaModel):
     boundary_semantics: Literal[
         "union-of-county-reclamation-district-footprints",
         "single-county-reclamation-district-footprint",
+        "dwr-balmd-synthetic-partition-plus-upper-andrus-footprint",
+        "dwr-balmd-synthetic-partition-footprint",
         "dwr-local-maintenance-area-footprint",
     ]
     limitation: str = Field(min_length=20)
@@ -199,10 +237,15 @@ class ReferenceSourceRecord(DeltaModel):
 class ReferenceGeographyCatalog(DeltaModel):
     """Complete offline runtime geography; no network access is required."""
 
-    catalog_version: Literal["delta-reference-geography-v1", "delta-reference-geography-v2"]
+    catalog_version: Literal[
+        "delta-reference-geography-v1",
+        "delta-reference-geography-v2",
+        "delta-reference-geography-v3",
+    ]
     scientific_status: Literal[
         "simulation-grade-curated-from-authoritative-sources",
         "development-only-simulation-grade-pending-one-source-license-review",
+        "simulation-grade-curated-from-redistributable-authoritative-sources",
     ]
     source_crs: Literal["EPSG:4326"]
     metric_crs: Literal["EPSG:26910"]
@@ -260,6 +303,7 @@ class ReferenceGeographyBuildManifest(DeltaModel):
     manifest_version: Literal[
         "delta-reference-geography-build-v1",
         "delta-reference-geography-build-v2",
+        "delta-reference-geography-build-v3",
     ]
     catalog_relative_path: str
     catalog_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -270,6 +314,8 @@ class ReferenceGeographyBuildManifest(DeltaModel):
     metadata_registry_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     retrieval_receipts_relative_path: str | None = None
     retrieval_receipts_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    source_lifecycle_relative_path: str | None = None
+    source_lifecycle_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     transformation_source_sha256: dict[str, str] = Field(default_factory=dict)
     environment_versions: dict[str, str] = Field(default_factory=dict)
     release_ready: bool = False
@@ -278,7 +324,10 @@ class ReferenceGeographyBuildManifest(DeltaModel):
 
     @model_validator(mode="after")
     def validate_v2_provenance(self) -> ReferenceGeographyBuildManifest:
-        if self.manifest_version == "delta-reference-geography-build-v2":
+        if self.manifest_version in {
+            "delta-reference-geography-build-v2",
+            "delta-reference-geography-build-v3",
+        }:
             required = (
                 self.metadata_registry_relative_path,
                 self.metadata_registry_sha256,
@@ -286,11 +335,22 @@ class ReferenceGeographyBuildManifest(DeltaModel):
                 self.retrieval_receipts_sha256,
             )
             if any(value is None for value in required):
-                raise ValueError("v2 geography manifests require metadata and retrieval receipts")
+                raise ValueError(
+                    "current geography manifests require metadata and retrieval receipts"
+                )
             if len(self.transformation_source_sha256) < 4:
-                raise ValueError("v2 geography manifest incompletely binds transformation code")
+                raise ValueError(
+                    "current geography manifest incompletely binds transformation code"
+                )
             if not self.environment_versions:
-                raise ValueError("v2 geography manifest must bind geospatial environment versions")
+                raise ValueError(
+                    "current geography manifest must bind geospatial environment versions"
+                )
+            if self.manifest_version == "delta-reference-geography-build-v3" and None in {
+                self.source_lifecycle_relative_path,
+                self.source_lifecycle_sha256,
+            }:
+                raise ValueError("v3 geography manifest must bind the source lifecycle erratum")
         return self
 
 
@@ -311,20 +371,33 @@ class ReferenceSourceRetrievalReceipt(DeltaModel):
     selected_feature_identifiers: tuple[str, ...] = Field(min_length=1)
     selected_fields: tuple[str, ...] = Field(min_length=1)
     selection_rule: str = Field(min_length=10)
-    transformation_id: Literal["reference-field-minimized-canonical-geojson-v2"]
+    transformation_id: Literal[
+        "reference-field-minimized-canonical-geojson-v2",
+        "reference-field-minimized-canonical-geojson-v3",
+    ]
     output_relative_path: str
     output_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class ReferenceSourceRetrievalRegistry(DeltaModel):
-    registry_version: Literal["delta-reference-source-retrieval-receipts-v2"]
-    metadata_registry_relative_path: Literal["source_metadata_v2.yaml"]
+    registry_version: Literal[
+        "delta-reference-source-retrieval-receipts-v2",
+        "delta-reference-source-retrieval-receipts-v3",
+    ]
+    metadata_registry_relative_path: Literal[
+        "source_metadata_v2.yaml",
+        "source_metadata_v3.yaml",
+    ]
     metadata_registry_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    receipts: tuple[ReferenceSourceRetrievalReceipt, ...] = Field(min_length=8, max_length=8)
+    receipts: tuple[ReferenceSourceRetrievalReceipt, ...] = Field(min_length=7, max_length=8)
 
     @model_validator(mode="after")
     def validate_source_coverage(self) -> ReferenceSourceRetrievalRegistry:
-        expected = tuple(f"REF-GEO-SRC-{index:02d}" for index in range(1, 9))
+        expected = (
+            tuple(f"REF-GEO-SRC-{index:02d}" for index in range(1, 9))
+            if self.registry_version.endswith("v2")
+            else ("REF-GEO-SRC-01", *(f"REF-GEO-SRC-{index:02d}" for index in range(3, 9)))
+        )
         if tuple(item.source_id for item in self.receipts) != expected:
             raise ValueError(
                 "retrieval receipts must bind every source exactly once in source order"
