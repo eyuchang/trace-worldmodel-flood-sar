@@ -5,11 +5,16 @@ from pathlib import Path
 import pytest
 
 from trace_reference import (
+    load_reference_activation_parameters,
     load_reference_config,
     load_reference_exposure_parameters,
     load_reference_governance,
     load_reference_physical_parameters,
     load_reference_resource_parameters,
+)
+from trace_reference.domain.coordination import (
+    ReferenceResourceActivationPhase,
+    ReferenceResourceActivationSchedule,
 )
 from trace_reference.generation import (
     generate_reference_coordination,
@@ -44,6 +49,10 @@ def coordination_inputs():
         ROOT,
         Path("data/scenario/delta/reference/resources/reference_resource_parameters_v1.yaml"),
     )
+    activation_parameters = load_reference_activation_parameters(
+        ROOT,
+        Path("data/scenario/delta/reference/resources/reference_activation_parameters_v1.yaml"),
+    )
     geography = load_reference_geography(
         geography_root=ROOT / "data/scenario/delta/reference/geography"
     )
@@ -59,33 +68,114 @@ def coordination_inputs():
         iota=config.axes.iota,
         delta=config.axes.delta,
     )
-    return governance, observations, resources
+    return governance, observations, resources, activation_parameters
 
 
 def test_coordination_is_deterministic_and_uses_public_inputs_only(
     coordination_inputs,
 ) -> None:
-    governance, observations, resources = coordination_inputs
+    governance, observations, resources, activation_parameters = coordination_inputs
     first = generate_reference_coordination(
-        observations.delivery, resources.public, governance, seed=20260812
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
     )
     second = generate_reference_coordination(
-        observations.delivery, resources.public, governance, seed=20260812
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
     )
     assert first.model_dump_json() == second.model_dump_json()
     public = first.public.model_dump_json()
     assert "truth_incident" not in public
     assert "truth_person" not in public
     assert "hidden" not in public
+    activation_json = first.activations.model_dump_json()
+    assert "truth_incident" not in activation_json
+    assert "truth_person" not in activation_json
     assert governance.scientific_status == "design-draft-not-legal-command-model"
+
+
+def test_activation_schedule_has_complete_ordered_role_histories(
+    coordination_inputs,
+) -> None:
+    governance, observations, resources, activation_parameters = coordination_inputs
+    coordinated = generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=4,
+    )
+    assert len(coordinated.activations.events) == len(resources.hidden.resources) * 4 * 6
+    assert (
+        coordinated.activations.resource_catalog_digest
+        == resources.public_catalog.resource_catalog_digest
+    )
+    grouped = {}
+    for event in coordinated.activations.events:
+        grouped.setdefault((event.resource_id, event.recipient_authority_id), []).append(event)
+    expected_phases = tuple(ReferenceResourceActivationPhase)
+    for values in grouped.values():
+        ordered = tuple(sorted(values, key=lambda item: expected_phases.index(item.phase)))
+        assert tuple(item.phase for item in ordered) == expected_phases
+        assert tuple(item.delivered_at_s for item in ordered) == tuple(
+            sorted(item.delivered_at_s for item in ordered)
+        )
+    local = next(item for item in resources.hidden.resources if item.tier.value == "T0-local")
+    local_requests = tuple(
+        item
+        for item in coordinated.activations.events
+        if item.resource_id == local.resource_id
+        and item.phase == ReferenceResourceActivationPhase.REQUESTED
+    )
+    assert {item.observed_at_s for item in local_requests} == {-172_800}
+
+
+def test_activation_schedule_digest_fails_closed(coordination_inputs) -> None:
+    governance, observations, resources, activation_parameters = coordination_inputs
+    coordinated = generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=4,
+    )
+    payload = coordinated.activations.model_dump(mode="json")
+    payload["schedule_digest"] = "0" * 64
+    with pytest.raises(ValueError, match="schedule digest"):
+        ReferenceResourceActivationSchedule.model_validate(payload)
+
+
+def test_activation_parameter_loader_rejects_symlink(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    source = ROOT / (
+        "data/scenario/delta/reference/resources/reference_activation_parameters_v1.yaml"
+    )
+    (root / "parameters.yaml").symlink_to(source)
+
+    with pytest.raises(ValueError, match="must not be a symlink"):
+        load_reference_activation_parameters(root, Path("parameters.yaml"))
 
 
 def test_phi_one_collapses_delivery_to_one_immediate_logical_authority(
     coordination_inputs,
 ) -> None:
-    governance, observations, resources = coordination_inputs
+    governance, observations, resources, activation_parameters = coordination_inputs
     coordinated = generate_reference_coordination(
-        observations.delivery, resources.public, governance, seed=20260812, phi=1
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=1,
     )
     source_count = len(observations.delivery.envelopes) + len(resources.public.telemetry)
     assert len(coordinated.public.deliveries) == source_count
@@ -95,14 +185,20 @@ def test_phi_one_collapses_delivery_to_one_immediate_logical_authority(
         for item in coordinated.public.deliveries
     )
     assert all(item.disposition == "delivered" for item in coordinated.hidden.attempts)
+    assert {item.recipient_authority_id for item in coordinated.activations.events} == {"AUTH-01"}
 
 
 def test_phi_four_preserves_local_delivery_and_models_cross_role_loss(
     coordination_inputs,
 ) -> None:
-    governance, observations, resources = coordination_inputs
+    governance, observations, resources, activation_parameters = coordination_inputs
     coordinated = generate_reference_coordination(
-        observations.delivery, resources.public, governance, seed=20260812, phi=4
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=4,
     )
     source_count = len(observations.delivery.envelopes) + len(resources.public.telemetry)
     assert len(coordinated.hidden.attempts) == source_count * 4
@@ -132,9 +228,14 @@ def test_phi_four_preserves_local_delivery_and_models_cross_role_loss(
 def test_higher_phi_adds_queue_partitions_without_new_authority_claims(
     coordination_inputs,
 ) -> None:
-    governance, observations, resources = coordination_inputs
+    governance, observations, resources, activation_parameters = coordination_inputs
     coordinated = generate_reference_coordination(
-        observations.delivery, resources.public, governance, seed=20260812, phi=9
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=9,
     )
     assert {item.recipient_authority_id for item in coordinated.public.deliveries} <= {
         "AUTH-01",

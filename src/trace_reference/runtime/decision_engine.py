@@ -133,6 +133,11 @@ class ReferenceDecisionEngine:
                 delivered_coordination_ids=self.dependencies.event_log.public_artifact_ids(
                     ReferenceEventType.COORDINATION_MESSAGE_DELIVERED
                 ),
+                delivered_activation_event_ids=(
+                    self.dependencies.event_log.public_artifact_ids(
+                        ReferenceEventType.RESOURCE_ACTIVATION_UPDATED
+                    )
+                ),
                 evidence_prefix_digest=self.dependencies.evidence_ledger.prefix_digest,
                 trace_prefix_digest=self.dependencies.trace_repository.prefix_digest,
                 commitment_prefix_digest=self.dependencies.commitment_log.prefix_digest,
@@ -147,6 +152,7 @@ class ReferenceDecisionEngine:
             self.dependencies.scenario.resources.public_catalog,
             self.dependencies.scenario.coordination.public,
             self.dependencies.predictor.provenance(),
+            self.dependencies.scenario.coordination.activations,
         )
         routes = self.dependencies.route_service.build_catalog(
             values.report,

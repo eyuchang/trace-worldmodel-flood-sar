@@ -8,7 +8,25 @@ import yaml
 
 from trace_jepa.support import ArtifactLocator
 
+from .domain.coordination import ReferenceActivationParameters
 from .domain.resources import ReferenceResourceParameters
+
+
+def load_reference_activation_parameters(
+    root: Path,
+    relative_name: Path,
+) -> ReferenceActivationParameters:
+    path = ArtifactLocator(
+        root=root,
+        relative_name=relative_name,
+        maximum_bytes=100_000,
+        label="Reference activation parameters",
+    ).resolve()
+    try:
+        payload = yaml.safe_load(path.read_text("utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise ValueError("Reference activation parameters are not valid bounded YAML") from exc
+    return ReferenceActivationParameters.model_validate(payload)
 
 
 def load_reference_resource_parameters(

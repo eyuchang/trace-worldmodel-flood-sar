@@ -1,11 +1,15 @@
 """Typed Reference scenario domain contracts."""
 
 from .coordination import (
+    ReferenceActivationParameters,
     ReferenceCoordinationArtifacts,
     ReferenceCoordinationAttemptAudit,
     ReferenceCoordinationDelivery,
     ReferenceHiddenCoordinationAudit,
     ReferencePublicCoordinationScenario,
+    ReferenceResourceActivationEvent,
+    ReferenceResourceActivationPhase,
+    ReferenceResourceActivationSchedule,
 )
 from .events import (
     ReferenceEvent,
@@ -88,6 +92,7 @@ from .truth import (
 )
 
 __all__ = [
+    "ReferenceActivationParameters",
     "ReferenceBreachSample",
     "ReferenceCoordinationArtifacts",
     "ReferenceCoordinationAttemptAudit",
@@ -136,6 +141,9 @@ __all__ = [
     "ReferenceRawObservationScenario",
     "ReferenceRawReport",
     "ReferenceReportEnvelope",
+    "ReferenceResourceActivationEvent",
+    "ReferenceResourceActivationPhase",
+    "ReferenceResourceActivationSchedule",
     "ReferenceResourceArtifacts",
     "ReferenceResourceCapability",
     "ReferenceResourceClass",

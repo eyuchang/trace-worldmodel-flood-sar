@@ -29,8 +29,8 @@ class PublicResourceBelief(DeltaModel):
     reported_state: str
     owning_authority_id: str = Field(pattern=r"^AUTH-0[1-4]$")
     staged_node_id: str
-    observed_at_s: int = Field(ge=-172_800, lt=345_600)
-    telemetry_id: str = Field(pattern=r"^RT-[0-9a-f]{16}$")
+    observed_at_s: int = Field(ge=-172_800, le=345_600)
+    availability_evidence_id: str = Field(pattern=r"^(RT|RME)-[0-9a-f]{16}$")
 
 
 class PublicCommitmentBelief(DeltaModel):
@@ -60,7 +60,7 @@ class PublicAuthorityEvidence(DeltaModel):
 class ControllerVisibleSnapshot(DeltaModel):
     """Explicit allowlist projection; it cannot recursively contain hidden runtime state."""
 
-    schema_version: Literal["delta-reference-public-snapshot-v1"]
+    schema_version: Literal["delta-reference-public-snapshot-v2"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     mission_id: str
     decision_id: str

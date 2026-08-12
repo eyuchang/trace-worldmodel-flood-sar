@@ -36,7 +36,10 @@ from trace_reference.domain import (
     ReferenceResourceTelemetry,
     ReferenceScenarioArtifacts,
 )
-from trace_reference.domain.coordination import ReferenceCoordinationDelivery
+from trace_reference.domain.coordination import (
+    ReferenceCoordinationDelivery,
+    ReferenceResourceActivationEvent,
+)
 from trace_reference.domain.observations import ReferenceAuthorityId
 from trace_reference.reconciliation import (
     ReferenceEvidenceGraph,
@@ -111,6 +114,19 @@ def _telemetry_inputs(
             item.telemetry_id,
             ReferenceInputKind.TELEMETRY,
             item,
+        )
+
+
+def _activation_inputs(
+    events: Iterable[ReferenceResourceActivationEvent],
+) -> Iterator[ReferenceScheduledInput]:
+    for event in events:
+        yield ReferenceScheduledInput(
+            event.delivered_at_s,
+            15,
+            event.event_id,
+            ReferenceInputKind.ACTIVATION,
+            event,
         )
 
 
@@ -207,6 +223,7 @@ class ReferenceMissionRuntime:
         external = iter(
             heapq.merge(
                 _physical_inputs(self.scenario.physical.events),
+                _activation_inputs(self.scenario.coordination.activations.events),
                 _report_inputs(self._runtime_envelopes),
                 _telemetry_inputs(self.scenario.resources.public.telemetry),
                 _coordination_inputs(self._fault_overlay),
@@ -293,6 +310,8 @@ class ReferenceMissionRuntime:
             self._record_report(scheduled.payload)
         elif scheduled.kind == ReferenceInputKind.TELEMETRY:
             self._record_telemetry(scheduled.payload)
+        elif scheduled.kind == ReferenceInputKind.ACTIVATION:
+            self._record_activation(scheduled.payload)
         else:
             self._deliver_coordination(scheduled.payload)
 
@@ -352,6 +371,17 @@ class ReferenceMissionRuntime:
                 "schema_version": "delta-reference-resource-telemetry-item-v1",
                 "telemetry": value.model_dump(mode="json"),
             },
+        )
+
+    def _record_activation(self, value: object) -> None:
+        if not isinstance(value, ReferenceResourceActivationEvent):
+            raise TypeError("Reference activation queue payload has the wrong type")
+        self.event_log.append_public_artifact(
+            at_s=value.delivered_at_s,
+            event_type=ReferenceEventType.RESOURCE_ACTIVATION_UPDATED,
+            artifact_id=value.event_id,
+            artifact_schema_version=value.schema_version,
+            artifact=value.model_dump(mode="json"),
         )
 
     def _deliver_coordination(self, value: object) -> None:
@@ -526,8 +556,25 @@ class ReferenceMissionRuntime:
             raise ValueError("Reference runtime envelope identifiers are not unique")
         if len(self._telemetry) != len(self.scenario.resources.public.telemetry):
             raise ValueError("Reference runtime telemetry identifiers are not unique")
+        self._validate_activation_sources()
         self._validate_physical_chain()
         self._validate_public_sources()
+
+    def _validate_activation_sources(self) -> None:
+        schedule = self.scenario.coordination.activations
+        catalog = self.scenario.resources.public_catalog
+        if schedule.resource_catalog_digest != catalog.resource_catalog_digest:
+            raise ValueError("Reference activation schedule binds another resource catalog")
+        resources = {item.resource_id: item for item in catalog.resources}
+        if {item.resource_id for item in schedule.events} != set(resources):
+            raise ValueError("Reference activation schedule must cover the exact resource roster")
+        for event in schedule.events:
+            resource = resources[event.resource_id]
+            if (
+                event.tier != resource.tier
+                or event.approving_authority_id != resource.owning_authority_id
+            ):
+                raise ValueError("Reference activation event conflicts with its resource roster")
 
     def _validate_physical_chain(self) -> None:
         previous = "GENESIS"

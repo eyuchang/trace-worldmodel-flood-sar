@@ -20,6 +20,7 @@ class ReferenceEventType(str, Enum):
     CROSSING_STATE_CHANGED = "crossing_state_changed"
     CALL_DELIVERED = "call_delivered"
     COORDINATION_MESSAGE_DELIVERED = "coordination_message_delivered"
+    RESOURCE_ACTIVATION_UPDATED = "resource_activation_updated"
     RECONCILIATION_UPDATED = "reconciliation_updated"
     RESOURCE_STATE_CHANGED = "resource_state_changed"
     TRACE_DECISION_RECORDED = "trace_decision_recorded"

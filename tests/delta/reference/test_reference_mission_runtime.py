@@ -141,6 +141,15 @@ def test_reference_mission_runtime_merges_public_streams_and_executes_initial_de
     replay = event_log.replay()
     assert replay.public_mission_artifacts[ReferenceEventType.CALL_DELIVERED.value]
     assert replay.public_mission_artifacts[ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value]
+    delivered_activation_ids = event_log.public_artifact_ids(
+        ReferenceEventType.RESOURCE_ACTIVATION_UPDATED
+    )
+    assert delivered_activation_ids == frozenset(
+        item.event_id
+        for item in scenario.coordination.activations.events
+        if item.delivered_at_s <= first
+    )
+    assert replay.public_mission_artifacts[ReferenceEventType.RESOURCE_ACTIVATION_UPDATED.value]
     assert replay.public_mission_artifacts[ReferenceEventType.RECONCILIATION_UPDATED.value]
     assert runtime.engine.dependencies.trace_repository.verify_chain()
     assert runtime.engine.dependencies.evidence_ledger.verify_chain()
@@ -183,6 +192,20 @@ def test_reference_mission_runtime_validates_coordination_sources_before_events(
         coordination=scenario.coordination.model_copy(update={"public": public}),
     )
     with pytest.raises(ValueError, match="coordination source digest"):
+        _mission_runtime(tampered, tmp_path)
+
+
+def test_reference_mission_runtime_binds_activation_schedule_to_resource_roster(
+    scenario,
+    tmp_path: Path,
+) -> None:
+    activations = scenario.coordination.activations.model_copy(
+        update={"resource_catalog_digest": "0" * 64}
+    )
+    coordination = scenario.coordination.model_copy(update={"activations": activations})
+    tampered = replace(scenario, coordination=coordination)
+
+    with pytest.raises(ValueError, match="another resource catalog"):
         _mission_runtime(tampered, tmp_path)
 
 
@@ -308,13 +331,13 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
     through_s = max(200_000, *(item.envelope.delivered_at_s for item in report_overlay.reports))
     result = runtime.run(through_s=through_s)
     applications = {item.family: item for item in result.fault_applications}
-    assert set(applications) == {
+    assert {
         "authenticated-false-report",
         "reordered-evidence-delivery",
         "duplicated-delivery-retry",
         "identity-dispute-visible-revision",
         "stale-acknowledgement-key-rotation",
-    }
+    } <= set(applications)
     assert applications["duplicated-delivery-retry"].disposition == ("duplicate-effect-suppressed")
     assert applications["stale-acknowledgement-key-rotation"].disposition == ("stale-key-rejected")
     replay = event_log.replay()

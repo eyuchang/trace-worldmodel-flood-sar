@@ -142,6 +142,15 @@ def test_hidden_state_and_public_telemetry_are_distinct(resources) -> None:
     assert any(
         item.state == ReferenceResourceState.CREW_REST for item in resources.hidden.state_samples
     )
+    nonlocal_ids = {
+        item.resource_id for item in resources.hidden.resources if item.tier.value != "T0-local"
+    }
+    assert any(
+        item.resource_id in nonlocal_ids
+        and not item.crew_on_duty
+        and item.state == ReferenceResourceState.CREW_REST
+        for item in resources.hidden.state_samples
+    )
 
 
 def test_resource_loader_rejects_symlinked_parameter_file(tmp_path: Path) -> None:

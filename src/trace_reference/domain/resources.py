@@ -48,6 +48,10 @@ class ReferenceMutualAidTier(str, Enum):
 class ReferenceResourceState(str, Enum):
     AVAILABLE_STAGED = "available-staged"
     AWAITING_REQUEST = "awaiting-request"
+    ACTIVATION_APPROVED = "activation-approved"
+    MOBILIZING = "mobilizing"
+    IN_TRANSIT = "in-transit"
+    ARRIVED_AWAITING_AVAILABILITY = "arrived-awaiting-availability"
     INITIAL_OUTAGE = "initial-outage"
     CREW_REST = "crew-rest"
 

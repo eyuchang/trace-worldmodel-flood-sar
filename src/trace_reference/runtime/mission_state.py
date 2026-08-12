@@ -48,6 +48,7 @@ class ReferenceInputKind(str, Enum):
     OUTCOME_CONTRADICTION = "outcome_contradiction"
     REPORT = "report"
     TELEMETRY = "telemetry"
+    ACTIVATION = "activation"
     COORDINATION = "coordination"
 
 
@@ -144,6 +145,7 @@ def reference_scenario_input_digest(scenario: ReferenceScenarioArtifacts) -> str
             "resource_catalog": scenario.resources.public_catalog.resource_catalog_digest,
             "resource_telemetry": scenario.resources.public.telemetry_digest,
             "coordination": scenario.coordination.public.public_coordination_digest,
+            "resource_activations": scenario.coordination.activations.schedule_digest,
             "prior": scenario.prior.model_dump(mode="json"),
         }
     )

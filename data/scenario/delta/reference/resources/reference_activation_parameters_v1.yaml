@@ -1,0 +1,14 @@
+parameter_version: delta-reference-activation-parameters-v1
+scientific_status: development-synthetic-role-workflow-not-legal-or-operational-claim
+requesting_authority_id: AUTH-01
+cross_role_latency_limit_s_per_phi: 300
+tier_request_anchor_s:
+  T0-local: -172800
+  T1-county: 43200
+  T2-regional: 108000
+  T3-state: 151200
+  T4-federal: 187200
+limitations:
+  - Phase anchors are transparent scenario-design inputs, not reconstructions of real emergency requests.
+  - Logical approvals model information dependencies and do not assert legal command or compact authority.
+  - Arrival and availability are synthetic teaching states, not claims about live staffing or response times.

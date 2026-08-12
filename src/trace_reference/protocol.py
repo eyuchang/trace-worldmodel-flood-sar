@@ -25,6 +25,7 @@ class ReferenceProtocolRevision:
     observations: str
     resources: str
     governance: str
+    coordination: str
     faults: str
     recovery: str
     acceptance: str
@@ -48,6 +49,7 @@ REFERENCE_PROTOCOL = ReferenceProtocolRevision(
     observations="delta-reference-observations-v1",
     resources="delta-reference-resources-v1",
     governance="delta-reference-governance-v1",
+    coordination="delta-reference-coordination-v2",
     faults="delta-reference-faults-v1",
     recovery="delta-reference-recovery-v1",
     acceptance="delta-reference-acceptance-v1",

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+
 from trace_jepa.predictor import ToyActionPrefixPredictor
+from trace_jepa.support import canonical_json_bytes
 from trace_reference.decision.visibility import (
     SnapshotInput,
     build_controller_visible_snapshot,
@@ -8,6 +11,9 @@ from trace_reference.decision.visibility import (
 from trace_reference.domain.coordination import (
     ReferenceCoordinationDelivery,
     ReferencePublicCoordinationScenario,
+    ReferenceResourceActivationEvent,
+    ReferenceResourceActivationPhase,
+    ReferenceResourceActivationSchedule,
 )
 from trace_reference.domain.resources import (
     ReferenceMutualAidTier,
@@ -21,7 +27,61 @@ from trace_reference.domain.resources import (
 )
 
 
-def _snapshot(*, delivered_ids: frozenset[str]):
+def _activation_schedule(resource_id: str) -> ReferenceResourceActivationSchedule:
+    phases = tuple(ReferenceResourceActivationPhase)
+    events = []
+    predecessor = None
+    for index, phase in enumerate(phases, start=1):
+        event_body = {
+            "schema_version": "delta-reference-resource-activation-event-v1",
+            "event_id": f"RME-{index:016x}",
+            "activation_id": "RMA-0000000000000001",
+            "resource_id": resource_id,
+            "tier": "T0-local",
+            "phase": phase.value,
+            "observed_at_s": 890 + index * 10,
+            "delivered_at_s": 890 + index * 10,
+            "requesting_authority_id": "AUTH-01",
+            "approving_authority_id": "AUTH-01",
+            "recipient_authority_id": "AUTH-01",
+            "reported_state": (
+                "awaiting-request",
+                "activation-approved",
+                "mobilizing",
+                "in-transit",
+                "arrived-awaiting-availability",
+                "available-staged",
+            )[index - 1],
+            "predecessor_event_id": predecessor,
+        }
+        event = ReferenceResourceActivationEvent(
+            **event_body,
+            event_digest=hashlib.sha256(canonical_json_bytes(event_body)).hexdigest(),
+        )
+        events.append(event)
+        predecessor = event.event_id
+    schedule_body = {
+        "scenario_id": "WF-DFLD-01-REFERENCE",
+        "schema_version": "delta-reference-resource-activation-schedule-v1",
+        "parameter_version": "delta-reference-activation-parameters-v1",
+        "scientific_status": ("development-synthetic-role-workflow-not-legal-or-operational-claim"),
+        "resource_catalog_digest": "1" * 64,
+        "seed": 1,
+        "phi": 1,
+        "events": [item.model_dump(mode="json") for item in events],
+    }
+    return ReferenceResourceActivationSchedule(
+        **schedule_body,
+        schedule_digest=hashlib.sha256(canonical_json_bytes(schedule_body)).hexdigest(),
+    )
+
+
+def _snapshot(
+    *,
+    delivered_ids: frozenset[str],
+    delivered_activation_ids: frozenset[str] = frozenset(),
+    at_s: int = 1_000,
+):
     resource = ReferencePublicResourceDefinition(
         resource_id="RR-0000000000000001",
         resource_class=ReferenceResourceClass.TYPE_I_ENGINE,
@@ -85,7 +145,7 @@ def _snapshot(*, delivered_ids: frozenset[str]):
             mission_id="reference-visibility-test",
             decision_id="reference-visibility-decision",
             controller_authority_id="AUTH-01",
-            at_s=1_000,
+            at_s=at_s,
             delivered_coordination_ids=delivered_ids,
             evidence_prefix_digest="GENESIS",
             trace_prefix_digest="GENESIS",
@@ -96,11 +156,13 @@ def _snapshot(*, delivered_ids: frozenset[str]):
             prior_profile_id="reference-prior-pi-v1",
             policy_version="reference-visibility-policy-v1",
             environment_contract_version="reference-development-environment-v1",
+            delivered_activation_event_ids=delivered_activation_ids,
         ),
         telemetry,
         catalog,
         coordination,
         ToyActionPrefixPredictor().provenance(),
+        _activation_schedule(resource.resource_id),
     )
 
 
@@ -114,3 +176,26 @@ def test_snapshot_uses_durable_inbox_not_planned_delivery_schedule() -> None:
     assert tuple(item.resource_id for item in after_acceptance.resource_beliefs) == (
         "RR-0000000000000001",
     )
+
+
+def test_snapshot_uses_only_durably_delivered_activation_phase() -> None:
+    telemetry_only = _snapshot(
+        delivered_ids=frozenset({"CD-0000000000000001"}),
+        at_s=925,
+    )
+    through_mobilized = _snapshot(
+        delivered_ids=frozenset({"CD-0000000000000001"}),
+        delivered_activation_ids=frozenset(
+            {
+                "RME-0000000000000001",
+                "RME-0000000000000002",
+                "RME-0000000000000003",
+            }
+        ),
+        at_s=925,
+    )
+
+    assert telemetry_only.resource_beliefs[0].reported_state == "available-staged"
+    activation_belief = through_mobilized.resource_beliefs[0]
+    assert activation_belief.reported_state == "mobilizing"
+    assert activation_belief.availability_evidence_id == "RME-0000000000000003"

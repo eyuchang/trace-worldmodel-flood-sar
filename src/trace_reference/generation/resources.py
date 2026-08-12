@@ -88,10 +88,10 @@ def _state_sample(
     on_duty, fatigue = _crew_on_duty(crew, at_s)
     if resource.initial_outage_until_s is not None and at_s < resource.initial_outage_until_s:
         state = ReferenceResourceState.INITIAL_OUTAGE
-    elif resource.tier.value != "T0-local":
-        state = ReferenceResourceState.AWAITING_REQUEST
     elif not on_duty:
         state = ReferenceResourceState.CREW_REST
+    elif resource.tier.value != "T0-local":
+        state = ReferenceResourceState.AWAITING_REQUEST
     else:
         state = ReferenceResourceState.AVAILABLE_STAGED
     depletion = uniform_micros(seed, _NAMESPACE, resource.resource_id, at_s, "fuel") % 300_001
