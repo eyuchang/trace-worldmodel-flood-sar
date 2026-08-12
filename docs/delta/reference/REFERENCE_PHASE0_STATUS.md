@@ -2,7 +2,7 @@
 
 Date: 2026-08-11  
 Branch: `demo-delta-reference-scenario` (local only)  
-Scientific status: design draft; development only
+Scientific status: approved decision basis; development only
 
 ## Completed
 
@@ -48,14 +48,15 @@ Scientific status: design draft; development only
   been inferred.
 - No LEAP effectiveness study has been mixed into the base Reference design.
 
-## Decisions required before scientific freeze
+## Approved scientific-decision basis
 
-The raw correspondence, meeting transcript, and supplied specification have now
-been re-audited. Most items have a well-supported recommended interpretation;
-the inherited 4:1 value remains internally contradictory. The complete
-classification and recommendations are stored outside the repository at
-`/Users/jaylanroy/Desktop/TRACE/WF_DFLD_01_REFERENCE_DECISION_RECOMMENDATIONS.md`
-for Jay's approval.
+Jay approved all eight recommendations on 2026-08-11. The repository records
+that approval in `WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V1.md`. Canonical
+Reference remains `kappa=1.0`; strict load is report-only; and the paired
+`kappa=0.5` scarcity sensitivity is registered with no 4:1 gate. Base Reference
+remains non-LEAP and integration-acceptance-first.
 
-Until those decisions are recorded, implementation may advance only through
-reversible architecture, source, topology, security, and development tooling.
+Implementation and spent-development calibration may now proceed under that
+amendment. No holdout or confirmatory seed may be derived or executed until a
+later complete preregistration freezes sources, coefficients, endpoints,
+environment, and scientific-input membership.

@@ -1,9 +1,11 @@
-status: design-draft-development-only
+status: approved-decisions-development-only
 scenario_id: WF-DFLD-01-REFERENCE
 scenario_schema_version: trace-delta-reference-scenario-v1
 generator_version: delta-reference-generator-v1
 randomness_namespace_version: delta-reference-randomness-v1
 protocol_document_sha256: 03c407ceb1b87041e36f0c58c352840e94bab6cec73a1f69eacd80173e77a552
+protocol_amendment_sha256: 6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca
+approved_decision_set: reference-scientific-decisions-v1
 small_baseline_registry: data/scenario/delta/reference_protocol/small_baseline_v1.json
 
 timeline:
@@ -36,9 +38,11 @@ extent:
 
 process_targets:
   expected_public_reports_evaluation: 2900
-  expected_peak_public_reports_per_hour: 95
+  breach_phase_public_report_intensity_per_hour: 95
+  breach_phase_start_s: 187200
+  breach_phase_end_s: 230400
   breach_time_s: 187200
-  intended_peak_load_regime: approximately_4_to_1_development_target_only
+  inherited_load_reference: approximately_4_to_1_protocol_history_report_only
 
 canonical_predictor:
   implementation: toy
@@ -71,6 +75,15 @@ study_namespaces:
   validation:
     namespace: "WF-DFLD-01-REFERENCE|validation-v1|index"
     materialized: false
+
+registered_sensitivities:
+  - study_id: reference-kappa-0p5-scarcity-v1
+    changed_axis: kappa
+    value: 0.5
+    pairing: same-seed-byte-identical-nonresource-exogenous
+    primary_metric: strict-concurrent-load-report-only
+    numerical_gate: false
+    status: registered-design-not-executed
 
 exclusions:
   - confirmatory_seed_materialization

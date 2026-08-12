@@ -104,16 +104,20 @@ class ReferenceExtentConfig(DeltaModel):
 
 class ReferenceProcessTargets(DeltaModel):
     expected_public_reports_evaluation: int = Field(gt=0)
-    expected_peak_public_reports_per_hour: int = Field(gt=0)
+    breach_phase_public_report_intensity_per_hour: int = Field(gt=0)
+    breach_phase_start_s: int = Field(gt=0)
+    breach_phase_end_s: int = Field(gt=0)
     breach_time_s: int = Field(gt=0)
-    intended_peak_load_regime: Literal["approximately_4_to_1_development_target_only"]
+    inherited_load_reference: Literal["approximately_4_to_1_protocol_history_report_only"]
 
     @model_validator(mode="after")
     def validate_process_design_targets(self) -> ReferenceProcessTargets:
         if self.expected_public_reports_evaluation != 2_900:
             raise ValueError("Reference report-volume target must remain 2,900 in expectation")
-        if self.expected_peak_public_reports_per_hour != 95:
-            raise ValueError("Reference peak-hour target must remain 95 in expectation")
+        if self.breach_phase_public_report_intensity_per_hour != 95:
+            raise ValueError("Reference breach-phase report intensity must remain 95/hour")
+        if (self.breach_phase_start_s, self.breach_phase_end_s) != (187_200, 230_400):
+            raise ValueError("Reference breach phase must remain [T+52h,T+64h)")
         if self.breach_time_s != 187_200:
             raise ValueError("Reference canonical breach must remain at T+52 hours")
         return self
@@ -153,15 +157,29 @@ class ReferenceStudyNamespaces(DeltaModel):
         return self
 
 
+class ReferenceRegisteredSensitivity(DeltaModel):
+    """Approved, report-only development sensitivity with no execution authority."""
+
+    study_id: Literal["reference-kappa-0p5-scarcity-v1"]
+    changed_axis: Literal["kappa"]
+    value: float = Field(ge=0.5, le=0.5)
+    pairing: Literal["same-seed-byte-identical-nonresource-exogenous"]
+    primary_metric: Literal["strict-concurrent-load-report-only"]
+    numerical_gate: Literal[False]
+    status: Literal["registered-design-not-executed"]
+
+
 class ReferenceScenarioConfig(DeltaModel):
     """Canonical development configuration; no confirmatory surface is accepted."""
 
-    status: Literal["design-draft-development-only"]
+    status: Literal["approved-decisions-development-only"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     scenario_schema_version: Literal["trace-delta-reference-scenario-v1"]
     generator_version: Literal["delta-reference-generator-v1"]
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    approved_decision_set: Literal["reference-scientific-decisions-v1"]
     small_baseline_registry: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
     timeline: ReferenceTimelineConfig
     axes: ReferenceAxisConfig
@@ -171,6 +189,9 @@ class ReferenceScenarioConfig(DeltaModel):
     fault_profiles: ReferenceFaultProfiles
     generation_order: tuple[str, ...]
     study_namespaces: ReferenceStudyNamespaces
+    registered_sensitivities: tuple[ReferenceRegisteredSensitivity, ...] = Field(
+        min_length=1, max_length=1
+    )
     exclusions: tuple[str, ...]
 
     @model_validator(mode="after")
@@ -179,6 +200,16 @@ class ReferenceScenarioConfig(DeltaModel):
             "03c407ceb1b87041e36f0c58c352840e94bab6cec73a1f69eacd80173e77a552"
         ):
             raise ValueError("Reference configuration does not bind the reviewed draft")
+        if self.protocol_amendment_sha256 != (
+            "6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"
+        ):
+            raise ValueError("Reference configuration does not bind the approved amendment")
+        if self.axes.kappa != 1.0:
+            raise ValueError("canonical Reference must retain kappa=1.0")
+        if tuple(item.study_id for item in self.registered_sensitivities) != (
+            "reference-kappa-0p5-scarcity-v1",
+        ):
+            raise ValueError("approved scarcity sensitivity is absent")
         if self.generation_order != REFERENCE_GENERATION_ORDER:
             raise ValueError("declared Reference generation order disagrees with execution design")
         expected_namespaces = {

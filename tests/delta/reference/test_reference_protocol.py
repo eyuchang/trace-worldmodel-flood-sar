@@ -36,10 +36,21 @@ BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 
 def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> None:
     config = load_reference_config(ROOT, CONFIG)
-    assert config.status == "design-draft-development-only"
+    assert config.status == "approved-decisions-development-only"
+    assert config.approved_decision_set == "reference-scientific-decisions-v1"
+    assert config.protocol_amendment_sha256 == REFERENCE_PROTOCOL.protocol_amendment_sha256
     assert config.timeline.burn_in_start_s == -172_800
     assert config.timeline.evaluation_end_s == 345_600
     assert config.process_targets.breach_time_s == 187_200
+    assert config.process_targets.breach_phase_public_report_intensity_per_hour == 95
+    assert (
+        config.process_targets.breach_phase_start_s,
+        config.process_targets.breach_phase_end_s,
+    ) == (187_200, 230_400)
+    assert config.axes.kappa == 1.0
+    assert config.registered_sensitivities[0].value == 0.5
+    assert config.registered_sensitivities[0].numerical_gate is False
+    assert config.registered_sensitivities[0].status == "registered-design-not-executed"
     assert config.extent.synthetic_people == 1_400
     assert config.generation_order == REFERENCE_GENERATION_ORDER
     assert REFERENCE_PROTOCOL.generation_order == REFERENCE_GENERATION_ORDER
@@ -167,9 +178,7 @@ def test_reference_entity_crosswalk_records_corrections_without_binding_runtime(
     assert entries["XNG-03"].research_status == "official-record-corrects-design"
     assert "movable lift" in entries["XNG-03"].official_identifiers
     assert entries["XNG-08"].research_status == "official-record-corrects-design"
-    assert entries["XNG-10"].research_status == (
-        "official-record-raises-current-status-question"
-    )
+    assert entries["XNG-10"].research_status == ("official-record-raises-current-status-question")
     requirement_ids = {item.source_id for item in requirements.requirements}
     assert all(set(entry.source_requirement_ids) <= requirement_ids for entry in registry.entries)
     assert tuple(entry.design_name for entry in registry.entries) == tuple(

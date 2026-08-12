@@ -12,6 +12,8 @@ class ReferenceProtocolRevision:
     """Version identifiers that must advance together at scientific freeze."""
 
     status: str
+    approved_decision_set: str
+    protocol_amendment_sha256: str
     scenario_schema: str
     generator: str
     randomness_namespace: str
@@ -31,7 +33,9 @@ class ReferenceProtocolRevision:
 
 
 REFERENCE_PROTOCOL = ReferenceProtocolRevision(
-    status="design-draft-development-only",
+    status="approved-decisions-development-only",
+    approved_decision_set="reference-scientific-decisions-v1",
+    protocol_amendment_sha256=("6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"),
     scenario_schema="trace-delta-reference-scenario-v1",
     generator="delta-reference-generator-v1",
     randomness_namespace="delta-reference-randomness-v1",
