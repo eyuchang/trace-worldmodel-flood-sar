@@ -56,9 +56,10 @@ class ReferenceMissionDecision(DeltaModel):
 class ReferenceMissionRestartCheckpoint(DeltaModel):
     """Exact durable prefixes required to reconstruct a mission continuation."""
 
-    schema_version: Literal["delta-reference-mission-restart-checkpoint-v1"]
+    schema_version: Literal["delta-reference-mission-restart-checkpoint-v2"]
     through_s: int = Field(ge=-172_800, le=345_600)
     scenario_input_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    runtime_profile_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     event_sequence: int = Field(ge=1)
     event_prefix_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     trace_prefix_digest: str = Field(pattern=r"^(GENESIS|[0-9a-f]{64})$")

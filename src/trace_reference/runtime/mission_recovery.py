@@ -19,6 +19,8 @@ from trace_reference.decision.domain import PublicCommitmentBelief, PublicOutcom
 from trace_reference.domain import (
     ReferenceEventType,
     ReferenceEventVisibility,
+    ReferenceFaultApplication,
+    ReferenceFaultSchedule,
     ReferenceMissionDecision,
     ReferenceMissionRestartCheckpoint,
     ReferencePublicArtifactEnvelope,
@@ -42,6 +44,7 @@ from .mission_state import (
     ReferencePendingOutcome,
     ReferenceScheduledInput,
     reference_outcome_for_commitment,
+    reference_runtime_profile_digest,
     reference_scenario_input_digest,
 )
 
@@ -55,6 +58,8 @@ class ReferenceRecoveryResult:
     decisions: list[ReferenceMissionDecision]
     outcomes: list[ReferenceServiceOutcome]
     pending: list[ReferenceScheduledInput]
+    seen_delivery_ids: set[str]
+    fault_applications: list[ReferenceFaultApplication]
 
 
 class ReferenceMissionRecovery:
@@ -65,10 +70,12 @@ class ReferenceMissionRecovery:
         scenario: ReferenceScenarioArtifacts,
         engine: ReferenceDecisionEngine,
         event_log: ReferenceEventLog,
+        fault_schedule: ReferenceFaultSchedule | None,
     ) -> None:
         self.scenario = scenario
         self.engine = engine
         self.event_log = event_log
+        self.fault_schedule = fault_schedule
         self.reports = {item.call_id: item for item in scenario.observations.raw.reports}
         self.envelopes = {
             item.envelope_id: item for item in scenario.observations.delivery.envelopes
@@ -90,6 +97,9 @@ class ReferenceMissionRecovery:
     def restore(self, checkpoint: ReferenceMissionRestartCheckpoint) -> ReferenceRecoveryResult:
         self._verify_checkpoint(checkpoint)
         artifacts = self._public_artifacts()
+        seen_deliveries, fault_applications = self._restore_delivery_and_fault_state(
+            artifacts
+        )
         self._restore_decisions_and_reconciliation(artifacts)
         self._restore_provider_state(artifacts)
         active, known, outcomes, pending = self._restore_commitments(
@@ -110,6 +120,8 @@ class ReferenceMissionRecovery:
             decisions=self.decisions,
             outcomes=outcomes,
             pending=pending,
+            seen_delivery_ids=seen_deliveries,
+            fault_applications=fault_applications,
         )
 
     def _verify_checkpoint(self, checkpoint: ReferenceMissionRestartCheckpoint) -> None:
@@ -117,6 +129,10 @@ class ReferenceMissionRecovery:
             raise ValueError("Reference mission restart checkpoint digest is invalid")
         if checkpoint.scenario_input_digest != reference_scenario_input_digest(self.scenario):
             raise ValueError("Reference mission restart checkpoint names another scenario")
+        if checkpoint.runtime_profile_digest != reference_runtime_profile_digest(
+            self.fault_schedule
+        ):
+            raise ValueError("Reference mission restart checkpoint names another runtime profile")
         if checkpoint.event_sequence != len(self.event_log.events):
             raise ValueError("Reference mission restart checkpoint event count is invalid")
         if checkpoint.event_prefix_digest != self.event_log.prefix_digest:
@@ -154,6 +170,31 @@ class ReferenceMissionRecovery:
                 raise TypeError("Reference restored public artifact root must be an object")
             restored.setdefault(event.event_type, []).append(value)
         return restored
+
+    @staticmethod
+    def _restore_delivery_and_fault_state(
+        artifacts: dict[ReferenceEventType, list[dict[str, object]]],
+    ) -> tuple[set[str], list[ReferenceFaultApplication]]:
+        seen = {
+            ReferenceCoordinationDelivery.model_validate(value["delivery"]).delivery_id
+            for value in artifacts.get(
+                ReferenceEventType.COORDINATION_MESSAGE_DELIVERED,
+                (),
+            )
+        }
+        applications = [
+            ReferenceFaultApplication.model_validate(value)
+            for value in artifacts.get(ReferenceEventType.FAULT_APPLIED, ())
+        ]
+        for application in applications:
+            if not verify_model_digest(application, digest_field="application_digest"):
+                raise ValueError("Reference restored fault application digest is invalid")
+            if (
+                application.disposition == "duplicate-effect-suppressed"
+                and application.target_public_id not in seen
+            ):
+                raise ValueError("Reference restored duplicate suppression lacks prior effect")
+        return seen, applications
 
     def _restore_decisions_and_reconciliation(
         self,
@@ -319,6 +360,8 @@ class ReferenceMissionRecovery:
                         self.envelope_by_call[request.target_call_id],
                         step,
                         decision,
+                        decision.decided_at_s
+                        - self.envelope_by_call[request.target_call_id].delivered_at_s,
                     ),
                 ),
             )

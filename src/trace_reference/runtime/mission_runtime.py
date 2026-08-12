@@ -6,7 +6,7 @@ import heapq
 import json
 from collections.abc import Iterable, Iterator
 from datetime import timedelta
-from typing import cast
+from typing import Literal, cast
 
 from trace_reference.decision import (
     AcquisitionOutcomeReceipt,
@@ -19,9 +19,12 @@ from trace_reference.decision import (
 from trace_reference.decision.canonical import decision_digest
 from trace_reference.decision.domain import PublicCommitmentBelief, PublicOutcomeBelief
 from trace_reference.domain import (
+    ReferenceCoordinationFaultAttempt,
     ReferenceDecisionExecution,
     ReferenceEvent,
     ReferenceEventType,
+    ReferenceFaultApplication,
+    ReferenceFaultSchedule,
     ReferenceMissionDecision,
     ReferenceMissionRestartCheckpoint,
     ReferenceRawReport,
@@ -42,6 +45,11 @@ from .acquisition_provider import (
 )
 from .decision_engine import ReferenceDecisionEngine, ReferenceDecisionInput
 from .event_store import ReferenceEventLog, verify_reference_event
+from .fault_overlay import (
+    ReferenceCoordinationOverlay,
+    build_reference_coordination_overlay,
+    build_reference_fault_application,
+)
 from .mission_recovery import ReferenceMissionRecovery
 from .mission_state import (
     EVALUATION_END_S,
@@ -53,6 +61,7 @@ from .mission_state import (
     ReferencePendingOutcome,
     ReferenceScheduledInput,
     reference_content_digest,
+    reference_runtime_profile_digest,
     reference_scenario_input_digest,
 )
 
@@ -95,15 +104,15 @@ def _telemetry_inputs(
 
 
 def _coordination_inputs(
-    scenario: ReferenceScenarioArtifacts,
+    overlay: ReferenceCoordinationOverlay,
 ) -> Iterator[ReferenceScheduledInput]:
-    for delivery in scenario.coordination.public.deliveries:
+    for attempt in overlay.attempts:
         yield ReferenceScheduledInput(
-            delivery.delivered_at_s,
+            attempt.at_s,
             30,
-            delivery.delivery_id,
+            attempt.attempt_id,
             ReferenceInputKind.COORDINATION,
-            delivery,
+            attempt,
         )
 
 
@@ -115,14 +124,21 @@ class ReferenceMissionRuntime:
         scenario: ReferenceScenarioArtifacts,
         decision_engine: ReferenceDecisionEngine,
         *,
+        fault_schedule: ReferenceFaultSchedule | None = None,
         restart_checkpoint: ReferenceMissionRestartCheckpoint | None = None,
     ) -> None:
         if decision_engine.dependencies.scenario is not scenario:
             raise ValueError("Reference decision engine must bind the exact scenario object")
         if scenario.config.timeline.evaluation_end_s != EVALUATION_END_S:
             raise ValueError("Reference runtime requires the registered 96-hour horizon")
+        if fault_schedule is not None and (
+            fault_schedule.profile_id != scenario.config.fault_profiles.integration_acceptance
+        ):
+            raise ValueError("Reference fault schedule does not bind the configured profile")
         self.scenario = scenario
         self.engine = decision_engine
+        self._fault_schedule = fault_schedule
+        self._fault_overlay = build_reference_coordination_overlay(scenario, fault_schedule)
         self.event_log: ReferenceEventLog = decision_engine.dependencies.event_log
         self._reports = {item.call_id: item for item in scenario.observations.raw.reports}
         self._envelopes = {
@@ -145,6 +161,8 @@ class ReferenceMissionRuntime:
         self._decided_clusters: set[ReferenceDecisionKey] = set()
         self._decisions: list[ReferenceMissionDecision] = []
         self._outcomes: list[ReferenceServiceOutcome] = []
+        self._fault_applications: list[ReferenceFaultApplication] = []
+        self._seen_delivery_ids: set[str] = set()
         self._pending_outcomes: list[ReferenceScheduledInput] = []
         self._run_started = False
         self._resume_after_s: int | None = None
@@ -168,7 +186,7 @@ class ReferenceMissionRuntime:
                 _physical_inputs(self.scenario.physical.events),
                 _report_inputs(self.scenario.observations.delivery.envelopes),
                 _telemetry_inputs(self.scenario.resources.public.telemetry),
-                _coordination_inputs(self.scenario),
+                _coordination_inputs(self._fault_overlay),
             )
         )
         if self._resume_after_s is not None:
@@ -195,9 +213,10 @@ class ReferenceMissionRuntime:
             raise RuntimeError("Reference mission must execute before checkpointing")
         dependencies = self.engine.dependencies
         body = {
-            "schema_version": "delta-reference-mission-restart-checkpoint-v1",
+            "schema_version": "delta-reference-mission-restart-checkpoint-v2",
             "through_s": self._last_run_through_s,
             "scenario_input_digest": reference_scenario_input_digest(self.scenario),
+            "runtime_profile_digest": reference_runtime_profile_digest(self._fault_schedule),
             "event_sequence": len(self.event_log.events),
             "event_prefix_digest": self.event_log.prefix_digest,
             "trace_prefix_digest": dependencies.trace_repository.prefix_digest,
@@ -271,54 +290,86 @@ class ReferenceMissionRuntime:
         )
 
     def _deliver_coordination(self, value: object) -> None:
-        if not isinstance(value, ReferenceCoordinationDelivery):
+        if not isinstance(value, ReferenceCoordinationFaultAttempt):
             raise TypeError("Reference coordination queue payload has the wrong type")
-        source = self._coordination_source(value)
+        delivery = value.delivery
+        if value.behavior == "stale-key-reject":
+            self._record_fault_application(
+                value,
+                disposition="stale-key-rejected",
+                reason=(
+                    "The deterministic fixture key rotation rejected this stale "
+                    "coordination acknowledgement before controller delivery."
+                ),
+            )
+            return
+        if delivery.delivery_id in self._seen_delivery_ids:
+            self._record_fault_application(
+                value,
+                disposition="duplicate-effect-suppressed",
+                reason=(
+                    "The durable inbox recognized the previously applied delivery ID "
+                    "and suppressed a second controller-visible effect."
+                ),
+            )
+            return
+        if value.behavior == "reordered-delivery":
+            self._record_fault_application(
+                value,
+                disposition="applied",
+                reason=(
+                    "The registered transport overlay delayed this delivery while "
+                    "leaving its source evidence content unchanged."
+                ),
+            )
+        source = self._coordination_source(delivery)
         if (
             reference_content_digest(source.model_dump(mode="json"))
-            != value.source_content_digest
+            != delivery.source_content_digest
         ):
             raise ValueError("Reference coordination delivery source digest is invalid")
         self.event_log.append_public_artifact(
-            at_s=value.delivered_at_s,
+            at_s=value.at_s,
             event_type=ReferenceEventType.COORDINATION_MESSAGE_DELIVERED,
-            artifact_id=value.delivery_id,
+            artifact_id=delivery.delivery_id,
             artifact_schema_version="delta-reference-coordination-delivery-v1",
             artifact={
                 "schema_version": "delta-reference-coordination-delivery-v1",
-                "delivery": value.model_dump(mode="json"),
+                "delivery": delivery.model_dump(mode="json"),
             },
         )
-        if value.evidence_kind != "public-report-envelope":
+        self._seen_delivery_ids.add(delivery.delivery_id)
+        if delivery.evidence_kind != "public-report-envelope":
             return
-        envelope = self._envelopes[value.evidence_id]
+        envelope = self._envelopes[delivery.evidence_id]
         report = self._reports[envelope.call_id]
-        graph = self._graphs[value.recipient_authority_id]
-        step = graph.process(report, delivered_at_s=value.delivered_at_s)
+        graph = self._graphs[delivery.recipient_authority_id]
+        step = graph.process(report, delivered_at_s=value.at_s)
         self.event_log.append_public_artifact(
-            at_s=value.delivered_at_s,
+            at_s=value.at_s,
             event_type=ReferenceEventType.RECONCILIATION_UPDATED,
-            artifact_id=f"{value.recipient_authority_id}-{report.call_id}",
+            artifact_id=f"{delivery.recipient_authority_id}-{report.call_id}",
             artifact_schema_version="delta-reference-reconciliation-step-v1",
             artifact=step.model_dump(mode="json"),
         )
-        if not self._is_initial_decision_delivery(value, envelope):
+        if not self._is_initial_decision_delivery(delivery, envelope):
             return
-        cluster_key = (value.recipient_authority_id, step.belief_cluster_id)
+        cluster_key = (delivery.recipient_authority_id, step.belief_cluster_id)
         if cluster_key in self._decided_clusters:
             return
         execution = self.engine.execute(
             ReferenceDecisionInput(
                 report=report,
                 envelope=envelope,
-                controller_authority_id=value.recipient_authority_id,
+                controller_authority_id=delivery.recipient_authority_id,
                 reconciliation=step,
                 active_commitments=self._active_beliefs(),
                 known_outcomes=tuple(self._known_outcomes),
-                at_s=value.delivered_at_s,
+                coordination_latency_s=value.at_s - delivery.source_available_at_s,
+                at_s=value.at_s,
                 created_at=(
                     self.scenario.config.timeline.evaluation_start_iso8601
-                    + self._seconds(value.delivered_at_s)
+                    + self._seconds(value.at_s)
                 ),
             )
         )
@@ -327,7 +378,41 @@ class ReferenceMissionRuntime:
         if execution.commitment is not None:
             self._schedule_outcome(execution)
         elif execution.acquisition_request is not None:
-            self._schedule_acquisition(execution, report, envelope, step)
+            self._schedule_acquisition(
+                execution,
+                report,
+                envelope,
+                step,
+                coordination_latency_s=value.at_s - delivery.source_available_at_s,
+            )
+
+    def _record_fault_application(
+        self,
+        attempt: ReferenceCoordinationFaultAttempt,
+        *,
+        disposition: Literal[
+            "applied",
+            "duplicate-effect-suppressed",
+            "stale-key-rejected",
+        ],
+        reason: str,
+    ) -> None:
+        if self._fault_schedule is None:
+            raise RuntimeError("Reference nominal runtime cannot record a fault application")
+        application = build_reference_fault_application(
+            self._fault_schedule,
+            attempt,
+            disposition=disposition,
+            reason=reason,
+        )
+        self.event_log.append_public_artifact(
+            at_s=attempt.at_s,
+            event_type=ReferenceEventType.FAULT_APPLIED,
+            artifact_id=application.application_id,
+            artifact_schema_version=application.schema_version,
+            artifact=application.model_dump(mode="json"),
+        )
+        self._fault_applications.append(application)
 
     @staticmethod
     def _seconds(value: int) -> timedelta:
@@ -384,6 +469,7 @@ class ReferenceMissionRuntime:
             self.scenario,
             self.engine,
             self.event_log,
+            self._fault_schedule,
         ).restore(checkpoint)
         self._graphs = restored.graphs
         self._active = restored.active
@@ -392,7 +478,10 @@ class ReferenceMissionRuntime:
         self._decisions = restored.decisions
         self._outcomes = restored.outcomes
         self._pending_outcomes = restored.pending
+        self._seen_delivery_ids = restored.seen_delivery_ids
+        self._fault_applications = restored.fault_applications
         self._resume_after_s = checkpoint.through_s
+
     def _is_initial_decision_delivery(
         self,
         delivery: ReferenceCoordinationDelivery,
@@ -407,7 +496,6 @@ class ReferenceMissionRuntime:
             delivery.delivered_at_s >= 0
             and delivery.recipient_authority_id == authority
             and delivery.source_available_at_s == envelope.delivered_at_s
-            and delivery.delivered_at_s == envelope.delivered_at_s
         )
 
     def _schedule_outcome(self, execution: ReferenceDecisionExecution) -> None:
@@ -466,6 +554,8 @@ class ReferenceMissionRuntime:
         report: ReferenceRawReport,
         envelope: ReferenceReportEnvelope,
         reconciliation: ReferenceReconciliationStep,
+        *,
+        coordination_latency_s: int,
     ) -> None:
         request = execution.acquisition_request
         if request is None:
@@ -485,6 +575,7 @@ class ReferenceMissionRuntime:
                     envelope,
                     reconciliation,
                     execution.result,
+                    coordination_latency_s,
                 ),
             ),
         )
@@ -537,6 +628,7 @@ class ReferenceMissionRuntime:
                 reassessment_of_decision_id=value.original_decision.decision_id,
                 acquisition_outcome=outcome,
                 physical_evidence=evidence,
+                coordination_latency_s=value.coordination_latency_s,
             )
         )
         self._decisions.append(reassessment.result)
@@ -627,4 +719,11 @@ class ReferenceMissionRuntime:
             trace_prefix_digest=dependencies.trace_repository.prefix_digest,
             evidence_prefix_digest=dependencies.evidence_ledger.prefix_digest,
             commitment_prefix_digest=dependencies.commitment_log.prefix_digest,
+            fault_profile_id=(
+                "reference-nominal-v1"
+                if self._fault_schedule is None
+                else self._fault_schedule.profile_id
+            ),
+            fault_applications=tuple(self._fault_applications),
+            unreachable_delivery_fault_ids=self._fault_overlay.unreachable_fault_ids,
         )

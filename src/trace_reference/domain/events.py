@@ -31,6 +31,7 @@ class ReferenceEventType(str, Enum):
     ACQUISITION_OUTCOME_RECORDED = "acquisition_outcome_recorded"
     ACQUISITION_REQUESTED = "acquisition_requested"
     DECISION_MANIFEST_RECORDED = "decision_manifest_recorded"
+    FAULT_APPLIED = "fault_applied"
 
 
 class ReferenceEventVisibility(str, Enum):

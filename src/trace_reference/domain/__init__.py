@@ -21,7 +21,12 @@ from .exposure import (
     ReferenceSyntheticStructure,
     ReferenceTrajectoryChangePoint,
 )
-from .faults import ReferenceFaultSchedule, ReferenceFaultTrigger
+from .faults import (
+    ReferenceCoordinationFaultAttempt,
+    ReferenceFaultApplication,
+    ReferenceFaultSchedule,
+    ReferenceFaultTrigger,
+)
 from .mission import (
     ReferenceDecisionExecution,
     ReferenceMissionDecision,
@@ -87,6 +92,7 @@ __all__ = [
     "ReferenceCoordinationArtifacts",
     "ReferenceCoordinationAttemptAudit",
     "ReferenceCoordinationDelivery",
+    "ReferenceCoordinationFaultAttempt",
     "ReferenceCrewTruth",
     "ReferenceCrossingStateSample",
     "ReferenceDecisionExecution",
@@ -96,6 +102,7 @@ __all__ = [
     "ReferenceEventVisibility",
     "ReferenceExposureParameters",
     "ReferenceExposureScenario",
+    "ReferenceFaultApplication",
     "ReferenceFaultSchedule",
     "ReferenceFaultTrigger",
     "ReferenceGaugeContextPoint",

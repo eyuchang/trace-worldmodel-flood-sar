@@ -21,6 +21,7 @@ from trace_reference.domain import (
     ReferenceReportEnvelope,
     ReferenceScenarioArtifacts,
 )
+from trace_reference.domain.faults import ReferenceFaultApplication, ReferenceFaultSchedule
 from trace_reference.domain.observations import ReferenceAuthorityId
 from trace_reference.reconciliation import (
     ReferenceReconciliationArtifact,
@@ -63,6 +64,7 @@ class ReferencePendingAcquisition:
     envelope: ReferenceReportEnvelope
     reconciliation: ReferenceReconciliationStep
     original_decision: ReferenceMissionDecision
+    coordination_latency_s: int
 
 
 @dataclass(frozen=True)
@@ -84,6 +86,9 @@ class ReferenceMissionRun:
     trace_prefix_digest: str
     evidence_prefix_digest: str
     commitment_prefix_digest: str
+    fault_profile_id: str
+    fault_applications: tuple[ReferenceFaultApplication, ...]
+    unreachable_delivery_fault_ids: tuple[str, ...]
 
 
 ReferenceDecisionKey = tuple[ReferenceAuthorityId, str]
@@ -109,6 +114,17 @@ def reference_scenario_input_digest(scenario: ReferenceScenarioArtifacts) -> str
             "resource_telemetry": scenario.resources.public.telemetry_digest,
             "coordination": scenario.coordination.public.public_coordination_digest,
             "prior": scenario.prior.model_dump(mode="json"),
+        }
+    )
+
+
+def reference_runtime_profile_digest(schedule: ReferenceFaultSchedule | None) -> str:
+    """Bind restart state to nominal or one exact registered fault schedule."""
+
+    return reference_content_digest(
+        {
+            "profile_id": "reference-nominal-v1" if schedule is None else schedule.profile_id,
+            "fault_schedule_digest": None if schedule is None else schedule.schedule_digest,
         }
     )
 

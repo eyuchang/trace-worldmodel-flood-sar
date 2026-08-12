@@ -108,6 +108,7 @@ class ReferenceDecisionInput:
     reassessment_of_decision_id: str | None = None
     acquisition_outcome: AcquisitionOutcomeReceipt | None = None
     physical_evidence: ReferencePhysicalEvidence | None = None
+    coordination_latency_s: int | None = None
 
 
 class ReferenceDecisionEngine:
@@ -370,6 +371,8 @@ class ReferenceDecisionEngine:
         return packages
 
     def _coordination_latency(self, values: ReferenceDecisionInput) -> int:
+        if values.coordination_latency_s is not None:
+            return values.coordination_latency_s
         delivery = next(
             item
             for item in self.dependencies.scenario.coordination.public.deliveries
@@ -424,8 +427,7 @@ class ReferenceDecisionEngine:
         from trace_reference.generation import verify_reference_envelope
 
         reassessing = values.physical_evidence is not None
-        if not reassessing and values.at_s != values.envelope.delivered_at_s:
-            raise ValueError("Reference initial decision must occur at authenticated delivery")
+        self._validate_delivery_time(values, reassessing=reassessing)
         if values.at_s < 0:
             raise ValueError("Reference response decisions begin at evaluation T0")
         if values.report.call_id != values.envelope.call_id:
@@ -452,6 +454,23 @@ class ReferenceDecisionEngine:
             and values.physical_evidence.delivered_at_s != values.at_s
         ):
             raise ValueError("Reference acquisition reassessment must occur at evidence delivery")
+
+    @staticmethod
+    def _validate_delivery_time(
+        values: ReferenceDecisionInput,
+        *,
+        reassessing: bool,
+    ) -> None:
+        if reassessing:
+            return
+        observed_latency_s = values.at_s - values.envelope.delivered_at_s
+        if observed_latency_s < 0:
+            raise ValueError("Reference initial decision cannot precede report delivery")
+        if (
+            values.coordination_latency_s is not None
+            and values.coordination_latency_s != observed_latency_s
+        ):
+            raise ValueError("Reference initial decision has inconsistent delivery latency")
 
     def _validate_physical_evidence(
         self,

@@ -8,6 +8,8 @@ from pydantic import Field, model_validator
 
 from trace_jepa.scenario.delta.domain.base import DeltaModel
 
+from .coordination import ReferenceCoordinationDelivery
+
 ReferenceFaultFamily: TypeAlias = Literal[
     "reordered-evidence-delivery",
     "duplicated-delivery-retry",
@@ -106,4 +108,47 @@ class ReferenceFaultSchedule(DeltaModel):
             if item.prerequisite_fault_id is not None
         ):
             raise ValueError("Reference fault prerequisite is absent from the schedule")
+        return self
+
+
+class ReferenceFaultApplication(DeltaModel):
+    """One controller-visible fault effect or explicit duplicate suppression."""
+
+    schema_version: Literal["delta-reference-fault-application-v1"]
+    application_id: str = Field(pattern=r"^reference-fault-application-[0-9a-f]{20}$")
+    fault_id: str = Field(pattern=r"^reference-fault-[a-z0-9-]+-v1$")
+    family: ReferenceFaultFamily
+    target_public_id: str = Field(min_length=1, max_length=200)
+    applied_at_s: int = Field(ge=0, le=359_999)
+    disposition: Literal[
+        "applied",
+        "duplicate-effect-suppressed",
+        "stale-key-rejected",
+    ]
+    reason: str = Field(min_length=20, max_length=500)
+    application_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ReferenceCoordinationFaultAttempt(DeltaModel):
+    """Effective transport attempt; source evidence content remains unchanged."""
+
+    attempt_id: str = Field(pattern=r"^reference-fault-attempt-[0-9a-f]{20}$")
+    at_s: int = Field(ge=-172_800, le=359_999)
+    delivery: ReferenceCoordinationDelivery
+    fault_id: str | None = Field(
+        default=None,
+        pattern=r"^reference-fault-[a-z0-9-]+-v1$",
+    )
+    behavior: Literal[
+        "deliver",
+        "reordered-delivery",
+        "duplicate-retry",
+        "stale-key-reject",
+    ]
+
+    @model_validator(mode="after")
+    def validate_fault_binding(self) -> ReferenceCoordinationFaultAttempt:
+        faulted = self.behavior != "deliver"
+        if faulted != (self.fault_id is not None):
+            raise ValueError("Reference coordination fault attempt has an incomplete binding")
         return self

@@ -9,10 +9,12 @@ import pytest
 from trace_jepa.experimental import RevalidationGuard
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
+from trace_reference import load_reference_fault_schedule
 from trace_reference.decision import AcquisitionRequestReceipt, EvidenceAcquisitionExecutor
 from trace_reference.domain import (
     ReferenceEvent,
     ReferenceEventType,
+    ReferenceFaultSchedule,
     ReferenceMissionRestartCheckpoint,
 )
 from trace_reference.generation import generate_reference_scenario
@@ -30,8 +32,12 @@ from trace_reference.runtime import (
     ReferenceTraceRepository,
     build_reference_route_provider_receipt,
 )
+from trace_reference.runtime.fault_overlay import build_reference_coordination_overlay
 
 ROOT = Path(__file__).resolve().parents[3]
+FAULT_SCHEDULE = Path(
+    "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json"
+)
 
 
 @pytest.fixture(scope="module")
@@ -39,11 +45,17 @@ def scenario():
     return generate_reference_scenario(ROOT, seed=20260812)
 
 
+@pytest.fixture(scope="module")
+def fault_schedule() -> ReferenceFaultSchedule:
+    return load_reference_fault_schedule(ROOT, FAULT_SCHEDULE)
+
+
 def _mission_runtime(
     scenario,
     root: Path,
     *,
     events: tuple[ReferenceEvent, ...] = (),
+    fault_schedule: ReferenceFaultSchedule | None = None,
     restart_checkpoint: ReferenceMissionRestartCheckpoint | None = None,
 ) -> tuple[ReferenceMissionRuntime, ReferenceEventLog]:
     event_log = ReferenceEventLog(events)
@@ -103,6 +115,7 @@ def _mission_runtime(
     return ReferenceMissionRuntime(
         scenario,
         engine,
+        fault_schedule=fault_schedule,
         restart_checkpoint=restart_checkpoint,
     ), event_log
 
@@ -263,8 +276,71 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
         )
 
 
+def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
+    scenario,
+    fault_schedule: ReferenceFaultSchedule,
+    tmp_path: Path,
+) -> None:
+    original_digests = (
+        scenario.physical.physical_digest,
+        scenario.exposure.exposure_digest,
+        scenario.truth.truth_digest,
+        scenario.observations.raw.raw_reports_digest,
+        scenario.resources.hidden.hidden_resource_digest,
+    )
+    overlay = build_reference_coordination_overlay(scenario, fault_schedule)
+    assert overlay.unreachable_fault_ids == ()
+    selected = dict(overlay.selected_targets)
+    assert len(selected) == 3
+
+    reordered = next(item for item in overlay.attempts if item.behavior == "reordered-delivery")
+    original = next(
+        item
+        for item in scenario.coordination.public.deliveries
+        if item.delivery_id == reordered.delivery.delivery_id
+    )
+    assert reordered.at_s == original.delivered_at_s + 900
+    assert any(
+        original.delivered_at_s < item.delivered_at_s < reordered.at_s
+        for item in scenario.coordination.public.deliveries
+    )
+
+    runtime, event_log = _mission_runtime(
+        scenario,
+        tmp_path,
+        fault_schedule=fault_schedule,
+    )
+    result = runtime.run(through_s=200_000)
+    applications = {item.family: item for item in result.fault_applications}
+    assert set(applications) == {
+        "reordered-evidence-delivery",
+        "duplicated-delivery-retry",
+        "stale-acknowledgement-key-rotation",
+    }
+    assert applications["duplicated-delivery-retry"].disposition == (
+        "duplicate-effect-suppressed"
+    )
+    assert applications["stale-acknowledgement-key-rotation"].disposition == (
+        "stale-key-rejected"
+    )
+    replay = event_log.replay()
+    delivered = replay.public_mission_artifacts[
+        ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value
+    ]
+    assert selected["reference-fault-duplicated-delivery-retry-v1"] in delivered
+    assert selected["reference-fault-stale-key-acknowledgement-v1"] not in delivered
+    assert original_digests == (
+        scenario.physical.physical_digest,
+        scenario.exposure.exposure_digest,
+        scenario.truth.truth_digest,
+        scenario.observations.raw.raw_reports_digest,
+        scenario.resources.hidden.hidden_resource_digest,
+    )
+
+
 def test_reference_mission_restart_matches_uninterrupted_continuation(
     scenario,
+    fault_schedule: ReferenceFaultSchedule,
     tmp_path: Path,
 ) -> None:
     uninterrupted_root = tmp_path / "uninterrupted"
@@ -284,6 +360,14 @@ def test_reference_mission_restart_matches_uninterrupted_continuation(
             restarted_root,
             events=prefix_log.events,
             restart_checkpoint=tampered_checkpoint,
+        )
+    with pytest.raises(ValueError, match="runtime profile"):
+        _mission_runtime(
+            scenario,
+            restarted_root,
+            events=prefix_log.events,
+            fault_schedule=fault_schedule,
+            restart_checkpoint=checkpoint,
         )
     recovered, recovered_log = _mission_runtime(
         scenario,
