@@ -9,12 +9,27 @@ from trace_reference import (
     load_reference_exposure_parameters,
     load_reference_physical_parameters,
 )
+from trace_reference.calibration.observation_fit import (
+    load_reference_observation_fit_protocol,
+    reference_observation_target_schedule_micros,
+)
 from trace_reference.generation import (
     generate_reference_exposure,
     generate_reference_observations,
     generate_reference_physical_scenario,
     generate_reference_truth,
     verify_reference_envelope,
+)
+from trace_reference.generation.observation_fit_kernel import (
+    build_reference_observation_fit_incidents,
+    build_reference_observation_fit_potentials,
+    summarize_reference_observation_fit_incidents,
+)
+from trace_reference.generation.observation_parameters import (
+    ReferenceObservationGenerationCoefficients,
+)
+from trace_reference.generation.observations import (
+    summarize_reference_observation_draws,
 )
 from trace_reference.geography import load_reference_geography
 
@@ -181,3 +196,76 @@ def test_reference_observations_use_only_synthetic_contact_tokens(observations) 
     assert tokens
     assert all(token.startswith("SYN-CB-") for token in tokens)
     assert all("+1" not in token and "@" not in token for token in tokens)
+
+
+def test_observation_fit_protocol_reconciles_the_inherited_rate_table() -> None:
+    protocol = load_reference_observation_fit_protocol(ROOT)
+    schedule = reference_observation_target_schedule_micros()
+
+    assert len(schedule) == 96
+    assert schedule[52:64] == (95_000_000,) * 12
+    assert sum(schedule) == protocol.target_evaluation_reports * 1_000_000
+    assert sum(schedule[:52] + schedule[64:]) == 1_760_000_000
+
+
+def test_truth_linked_witness_opportunities_and_v2_schema(observation_inputs) -> None:
+    exposure, truth = observation_inputs
+    coefficients = ReferenceObservationGenerationCoefficients(
+        coefficient_version="delta-reference-observation-development-coefficients-v2",
+        coefficient_digest="test-only-digest",
+        randomness_namespace="reference-observations-v2",
+        initial_report_probability_micros=500_000,
+        supplemental_witness_slots_per_incident=2,
+        hourly_witness_probability_micros=(500_000,) * 96,
+    )
+    potentials = build_reference_observation_fit_potentials(
+        truth,
+        exposure,
+        seed=20260812,
+        witness_slots=2,
+    )
+    generated = generate_reference_observations(
+        truth,
+        exposure,
+        seed=20260812,
+        coefficients=coefficients,
+    )
+
+    evaluation_truth = sum(item.onset_s >= 0 for item in truth.incidents)
+    assert sum(potentials.witness_opportunities) == 2 * evaluation_truth
+    assert generated.raw.schema_version == "delta-reference-observations-v2"
+    assert generated.raw.coefficient_version.endswith("v2")
+    assert any(item.relationship == "independent-witness" for item in generated.hidden.entries)
+
+
+@pytest.mark.parametrize("iota", [0.3, 0.7, 1.0])
+def test_compact_observation_fit_replay_matches_full_draft_counts(
+    observation_inputs,
+    iota: float,
+) -> None:
+    exposure, truth = observation_inputs
+    coefficients = ReferenceObservationGenerationCoefficients(
+        coefficient_version="delta-reference-observation-development-coefficients-v2",
+        coefficient_digest="test-only-digest",
+        randomness_namespace="reference-observations-v2",
+        initial_report_probability_micros=420_000,
+        supplemental_witness_slots_per_incident=4,
+        hourly_witness_probability_micros=tuple(
+            150_000 + (hour % 7) * 50_000 for hour in range(96)
+        ),
+    )
+    full = summarize_reference_observation_draws(
+        truth,
+        exposure,
+        seed=20260812,
+        coefficients=coefficients,
+        iota=iota,
+    )
+    compact = summarize_reference_observation_fit_incidents(
+        build_reference_observation_fit_incidents(truth, exposure),
+        seed=20260812,
+        coefficients=coefficients,
+        iota=iota,
+    )
+
+    assert compact == full

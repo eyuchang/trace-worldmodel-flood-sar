@@ -26,6 +26,20 @@ def test_reference_scientific_manifest_covers_all_python_and_direct_inputs() -> 
         "data/scenario/delta/reference/environment/reference_python311_linux_amd64_v1.json" in paths
     )
     assert "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md" in paths
+    assert (
+        "data/scenario/delta/reference/calibration/reference_observation_coefficients_v2.json"
+        in paths
+    )
+    assert not any(
+        path.endswith(
+            (
+                "reference_observation_fit_benchmark_failed_v1.json",
+                "reference_observation_fit_benchmark_v2.json",
+                "reference_observation_fit_report_v1.json",
+            )
+        )
+        for path in paths
+    )
     assert not any(
         part in path
         for path in paths

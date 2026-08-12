@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from trace_reference.provenance import execute_reference_scenario
+from trace_reference.provenance.models import ReferenceResultSummary
 from trace_reference.publication import (
     ReferencePublicationResultTable,
     publish_reference_bundle,
@@ -60,9 +61,12 @@ def test_reference_publication_is_verified_and_explicitly_development_only(
 def test_reference_publication_result_table_is_machine_verified(
     published_bundle: tuple[Path, Path, Path],
 ) -> None:
-    _parent, _source, output = published_bundle
+    _parent, source, output = published_bundle
     table = ReferencePublicationResultTable.model_validate_json(
         (output / "result_table.json").read_text(encoding="utf-8")
+    )
+    source_summary = ReferenceResultSummary.model_validate_json(
+        (source / "result_summary.json").read_text(encoding="utf-8")
     )
 
     assert table.seed == 20260812
@@ -70,7 +74,9 @@ def test_reference_publication_result_table_is_machine_verified(
     assert table.decision_count == (
         table.allocation_count + table.refusal_count + table.acquisition_request_count
     )
-    assert table.peak_finite_strict_concurrent_load_ratio_milli == 4_000
+    assert table.peak_finite_strict_concurrent_load_ratio_milli == (
+        source_summary.peak_finite_strict_concurrent_load_ratio_milli
+    )
 
 
 def test_reference_publication_regeneration_is_byte_identical(

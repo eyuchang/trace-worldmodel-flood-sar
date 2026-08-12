@@ -19,6 +19,7 @@ ReferenceLineageRelationship: TypeAlias = Literal[
     "conflict",
     "revision",
     "third-party-welfare",
+    "independent-witness",
     "false-benign-levee",
 ]
 
@@ -70,9 +71,15 @@ class ReferenceRawReport(DeltaModel):
 
 class ReferenceRawObservationScenario(DeltaModel):
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    schema_version: Literal["delta-reference-observations-v1"]
-    coefficient_version: Literal["delta-reference-observation-development-coefficients-v1"]
-    scientific_status: Literal["development-coefficients-not-frozen-for-validation"]
+    schema_version: Literal["delta-reference-observations-v1", "delta-reference-observations-v2"]
+    coefficient_version: Literal[
+        "delta-reference-observation-development-coefficients-v1",
+        "delta-reference-observation-development-coefficients-v2",
+    ]
+    scientific_status: Literal[
+        "development-coefficients-not-frozen-for-validation",
+        "frozen-spent-development-fit-not-validation-evidence",
+    ]
     seed: int = Field(ge=0)
     iota_micros: int = Field(ge=300_000, le=1_000_000)
     reports: tuple[ReferenceRawReport, ...]

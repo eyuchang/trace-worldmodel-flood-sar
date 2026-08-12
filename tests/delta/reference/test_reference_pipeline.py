@@ -31,8 +31,10 @@ def test_reference_pipeline_executes_approved_causal_order_offline() -> None:
         "63fa9591c17a1208cfa45c46a76997785aa9a9a15e00a074a1e62fe22540b25a"
     )
     assert scenario.observations.raw.scientific_status == (
-        "development-coefficients-not-frozen-for-validation"
+        "frozen-spent-development-fit-not-validation-evidence"
     )
+    assert scenario.observations.raw.coefficient_version.endswith("v2")
+    assert sum(item.observed_at_s >= 0 for item in scenario.observations.raw.reports) > 2_000
     assert scenario.prior.prior_accuracy_milli == 700
 
 

@@ -13,7 +13,10 @@ from trace_reference import (
     load_reference_physical_parameters,
     load_reference_resource_parameters,
 )
-from trace_reference.calibration.loading import load_reference_truth_coefficients
+from trace_reference.calibration.loading import (
+    load_reference_observation_coefficients,
+    load_reference_truth_coefficients,
+)
 from trace_reference.domain.scenario import (
     ReferencePriorProfile,
     ReferenceScenarioArtifacts,
@@ -23,6 +26,7 @@ from trace_reference.models import ReferenceScenarioConfig
 
 from .coordination import generate_reference_coordination
 from .exposure import generate_reference_exposure
+from .observation_parameters import ReferenceObservationGenerationCoefficients
 from .observations import generate_reference_observations
 from .physical import generate_reference_physical_scenario
 from .resources import generate_reference_resources
@@ -40,6 +44,9 @@ _ACTIVATIONS = Path(
 _GEOGRAPHY = Path("data/scenario/delta/reference/geography")
 _TRUTH_COEFFICIENTS = Path(
     "data/scenario/delta/reference/calibration/reference_truth_coefficients_v2.json"
+)
+_OBSERVATION_COEFFICIENTS = Path(
+    "data/scenario/delta/reference/calibration/reference_observation_coefficients_v2.json"
 )
 
 
@@ -60,6 +67,9 @@ def generate_reference_scenario(
     resource_parameters = load_reference_resource_parameters(root, _RESOURCES)
     activation_parameters = load_reference_activation_parameters(root, _ACTIVATIONS)
     truth_coefficients = load_reference_truth_coefficients(root, _TRUTH_COEFFICIENTS)
+    observation_coefficients = load_reference_observation_coefficients(
+        root, _OBSERVATION_COEFFICIENTS
+    )
     physical = generate_reference_physical_scenario(
         physical_parameters,
         sigma=resolved.axes.sigma,
@@ -83,6 +93,20 @@ def generate_reference_scenario(
         exposure,
         seed=seed,
         iota=resolved.axes.iota,
+        coefficients=ReferenceObservationGenerationCoefficients(
+            coefficient_version=observation_coefficients.coefficient_version,
+            coefficient_digest=observation_coefficients.coefficient_digest,
+            randomness_namespace=observation_coefficients.randomness_namespace,
+            initial_report_probability_micros=(
+                observation_coefficients.initial_report_probability_micros
+            ),
+            supplemental_witness_slots_per_incident=(
+                observation_coefficients.supplemental_witness_slots_per_incident
+            ),
+            hourly_witness_probability_micros=tuple(
+                item.witness_probability_micros for item in observation_coefficients.hourly
+            ),
+        ),
     )
     resources = generate_reference_resources(
         resource_parameters,

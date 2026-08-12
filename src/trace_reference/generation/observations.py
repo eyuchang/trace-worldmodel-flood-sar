@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import math
+from collections import Counter
 from dataclasses import dataclass
 from typing import Literal
 
@@ -31,22 +32,18 @@ from trace_reference.domain.truth import (
     ReferenceTruthScenario,
 )
 
-from .randomness import standard_normal, uniform_micros
+from .observation_parameters import (
+    REFERENCE_PUBLIC_TAXONOMY_BY_INCIDENT,
+    ReferenceObservationDrawSummary,
+    ReferenceObservationGenerationCoefficients,
+    legacy_reference_observation_coefficients,
+    observation_draw_micros,
+    observation_probability_micros,
+    witness_observed_at_s,
+)
+from .randomness import standard_normal
 
-_RANDOMNESS_NAMESPACE = "reference-observations-v1"
 _FIXTURE_SIGNING_MATERIAL = b"WF-DFLD-01-REFERENCE non-secret test signing fixture v1"
-
-_TAXONOMY = {
-    ReferenceIncidentType.STRANDED_STRUCTURE: ReferencePublicTaxonomy.C_STR,
-    ReferenceIncidentType.VEHICLE_RESCUE: ReferencePublicTaxonomy.C_VEH,
-    ReferenceIncidentType.LEVEE_INSPECTION: ReferencePublicTaxonomy.C_LEV,
-    ReferenceIncidentType.MEDICAL_ACCESS: ReferencePublicTaxonomy.C_MED,
-    ReferenceIncidentType.WELFARE_CHECK: ReferencePublicTaxonomy.C_WEL,
-    ReferenceIncidentType.MISSING_PERSON: ReferencePublicTaxonomy.C_MIS,
-    ReferenceIncidentType.ANIMAL_RESCUE: ReferencePublicTaxonomy.C_ANI,
-    ReferenceIncidentType.INFORMATION_NEED: ReferencePublicTaxonomy.C_INF,
-    ReferenceIncidentType.HAZARD_RESPONSE: ReferencePublicTaxonomy.C_HAZ,
-}
 
 _DESCRIPTORS = {
     ReferencePublicTaxonomy.C_STR: ("water-rising", "upper-floor", "porch-visible"),
@@ -99,13 +96,11 @@ class _OptionalReportSpec:
 
 
 def _probability(base_micros: int, iota_micros: int, *, inverse: bool = False) -> int:
-    quality = iota_micros / 700_000
-    scaled = base_micros / quality if inverse else base_micros * quality
-    return min(950_000, max(10_000, round(scaled)))
+    return observation_probability_micros(base_micros, iota_micros, inverse=inverse)
 
 
-def _draw(seed: int, draft_key: str, mechanism: str) -> int:
-    return uniform_micros(seed, _RANDOMNESS_NAMESPACE, draft_key, mechanism)
+def _draw(seed: int, namespace: str, draft_key: str, mechanism: str) -> int:
+    return observation_draw_micros(seed, namespace, draft_key, mechanism)
 
 
 def _draft(
@@ -113,6 +108,7 @@ def _draft(
     people_by_id: dict[str, ReferenceSyntheticPerson],
     *,
     seed: int,
+    namespace: str,
     spec: _DraftSpec,
 ) -> _Draft:
     key = f"{incident.truth_incident_id}|{spec.suffix}"
@@ -120,12 +116,12 @@ def _draft(
     return _Draft(
         draft_key=key,
         observed_at_s=min(345_300, incident.onset_s + spec.onset_offset_s),
-        delivery_delay_s=_draw(seed, key, "delivery-delay") % (spec.maximum_delay_s + 1),
+        delivery_delay_s=_draw(seed, namespace, key, "delivery-delay") % (spec.maximum_delay_s + 1),
         truth_incident=incident,
         relationship=spec.relationship,
         channel=spec.channel,
         callback_person=affected[0] if affected and spec.callback else None,
-        taxonomy=spec.taxonomy or _TAXONOMY[incident.incident_type],
+        taxonomy=spec.taxonomy or REFERENCE_PUBLIC_TAXONOMY_BY_INCIDENT[incident.incident_type],
         taxonomy_truthful=spec.taxonomy_truthful,
         revision_of_key=spec.revision_of_key,
     )
@@ -137,32 +133,39 @@ def _incident_drafts(
     *,
     seed: int,
     iota_micros: int,
+    coefficients: ReferenceObservationGenerationCoefficients,
 ) -> list[_Draft]:
     key = incident.truth_incident_id
-    if _draw(seed, key, "report") >= _probability(760_000, iota_micros):
-        return []
+    namespace = coefficients.randomness_namespace
+    initial_reported = _draw(seed, namespace, key, "report") < _probability(
+        coefficients.initial_report_probability_micros,
+        iota_micros,
+    )
     initial_key = f"{key}|initial"
-    drafts = [
-        _draft(
-            incident,
-            people_by_id,
-            seed=seed,
-            spec=_DraftSpec(
-                relationship="initial",
-                suffix="initial",
-                onset_offset_s=60,
-                maximum_delay_s=1_800,
-                channel="911",
-            ),
+    drafts: list[_Draft] = []
+    if initial_reported:
+        drafts.append(
+            _draft(
+                incident,
+                people_by_id,
+                seed=seed,
+                namespace=namespace,
+                spec=_DraftSpec(
+                    relationship="initial",
+                    suffix="initial",
+                    onset_offset_s=60,
+                    maximum_delay_s=1_800,
+                    channel="911",
+                ),
+            )
         )
-    ]
     optional_reports = (
         _OptionalReportSpec("duplicate", 300_000, 120, 3_600, "social-relay", True),
         _OptionalReportSpec("multi-channel", 140_000, 300, 3_600, "radio-relay", False),
         _OptionalReportSpec("conflict", 160_000, 480, 3_600, "311", True),
     )
-    for optional in optional_reports:
-        if _draw(seed, key, optional.relationship) >= _probability(
+    for optional in optional_reports if initial_reported else ():
+        if _draw(seed, namespace, key, optional.relationship) >= _probability(
             optional.base_probability_micros, iota_micros, inverse=True
         ):
             continue
@@ -172,6 +175,7 @@ def _incident_drafts(
                 incident,
                 people_by_id,
                 seed=seed,
+                namespace=namespace,
                 spec=_DraftSpec(
                     relationship=optional.relationship,
                     suffix=optional.relationship,
@@ -193,14 +197,18 @@ def _incident_drafts(
     vulnerable = any(
         person.mobility != "standard" or person.medical_dependency != "none" for person in affected
     )
-    if vulnerable and _draw(seed, key, "third-party-welfare") < _probability(
-        120_000, iota_micros, inverse=True
+    if (
+        initial_reported
+        and vulnerable
+        and _draw(seed, namespace, key, "third-party-welfare")
+        < _probability(120_000, iota_micros, inverse=True)
     ):
         drafts.append(
             _draft(
                 incident,
                 people_by_id,
                 seed=seed,
+                namespace=namespace,
                 spec=_DraftSpec(
                     relationship="third-party-welfare",
                     suffix="third-party-welfare",
@@ -213,14 +221,18 @@ def _incident_drafts(
                 ),
             )
         )
-    if incident.incident_type == ReferenceIncidentType.STRANDED_STRUCTURE and _draw(
-        seed, key, "revision"
-    ) < _probability(400_000, iota_micros, inverse=True):
+    if (
+        initial_reported
+        and incident.incident_type == ReferenceIncidentType.STRANDED_STRUCTURE
+        and _draw(seed, namespace, key, "revision")
+        < _probability(400_000, iota_micros, inverse=True)
+    ):
         drafts.append(
             _draft(
                 incident,
                 people_by_id,
                 seed=seed,
+                namespace=namespace,
                 spec=_DraftSpec(
                     relationship="revision",
                     suffix="revision",
@@ -231,7 +243,96 @@ def _incident_drafts(
                 ),
             )
         )
+    drafts.extend(
+        _independent_witness_drafts(
+            incident,
+            people_by_id,
+            seed=seed,
+            coefficients=coefficients,
+        )
+    )
     return drafts
+
+
+def _witness_time(seed: int, namespace: str, incident: ReferenceTruthIncident, slot: int) -> int:
+    return witness_observed_at_s(
+        seed,
+        namespace,
+        incident.truth_incident_id,
+        incident.onset_s,
+        slot,
+    )
+
+
+def _independent_witness_drafts(
+    incident: ReferenceTruthIncident,
+    people_by_id: dict[str, ReferenceSyntheticPerson],
+    *,
+    seed: int,
+    coefficients: ReferenceObservationGenerationCoefficients,
+) -> list[_Draft]:
+    if incident.onset_s < 0:
+        return []
+    drafts: list[_Draft] = []
+    namespace = coefficients.randomness_namespace
+    channels: tuple[ReferenceChannel, ...] = ("311", "radio-relay", "social-relay", "walk-in")
+    for slot in range(coefficients.supplemental_witness_slots_per_incident):
+        observed_at_s = _witness_time(seed, namespace, incident, slot)
+        hour_index = observed_at_s // 3_600
+        probability = coefficients.hourly_witness_probability_micros[hour_index]
+        key = f"{incident.truth_incident_id}|independent-witness-{slot:02d}"
+        if _draw(seed, namespace, key, "report") >= probability:
+            continue
+        channel = channels[_draw(seed, namespace, key, "channel") % len(channels)]
+        draft = _draft(
+            incident,
+            people_by_id,
+            seed=seed,
+            namespace=namespace,
+            spec=_DraftSpec(
+                relationship="independent-witness",
+                suffix=f"independent-witness-{slot:02d}",
+                onset_offset_s=observed_at_s - incident.onset_s,
+                maximum_delay_s=3_600,
+                channel=channel,
+                callback=False,
+            ),
+        )
+        drafts.append(draft)
+    return drafts
+
+
+def summarize_reference_observation_draws(
+    truth: ReferenceTruthScenario,
+    exposure: ReferenceExposureScenario,
+    *,
+    seed: int,
+    coefficients: ReferenceObservationGenerationCoefficients,
+    iota: float = 0.7,
+) -> ReferenceObservationDrawSummary:
+    """Evaluate exact keyed report draws without constructing Pydantic artifacts."""
+
+    iota_micros = round(iota * 1_000_000)
+    people_by_id = {item.truth_person_id: item for item in exposure.people}
+    drafts = _report_drafts(
+        truth,
+        people_by_id,
+        seed=seed,
+        iota_micros=iota_micros,
+        coefficients=coefficients,
+    )
+    evaluation = tuple(item for item in drafts if 0 <= item.observed_at_s < 345_600)
+    hourly = [0] * 96
+    for draft in evaluation:
+        hourly[draft.observed_at_s // 3_600] += 1
+    relationships = Counter(item.relationship for item in evaluation)
+    taxonomies = Counter(item.taxonomy.value for item in evaluation)
+    return ReferenceObservationDrawSummary(
+        evaluation_reports=len(evaluation),
+        hourly_counts=tuple(hourly),
+        relationship_counts=tuple(sorted(relationships.items())),
+        taxonomy_counts=tuple(sorted(taxonomies.items())),
+    )
 
 
 def _report_drafts(
@@ -240,21 +341,33 @@ def _report_drafts(
     *,
     seed: int,
     iota_micros: int,
+    coefficients: ReferenceObservationGenerationCoefficients,
 ) -> list[_Draft]:
     drafts = [
         draft
         for incident in truth.incidents
-        for draft in _incident_drafts(incident, people_by_id, seed=seed, iota_micros=iota_micros)
+        for draft in _incident_drafts(
+            incident,
+            people_by_id,
+            seed=seed,
+            iota_micros=iota_micros,
+            coefficients=coefficients,
+        )
     ]
     for hour_start in range(-172_800, 345_600, 3_600):
         key = f"false-benign-levee|{hour_start}"
-        if _draw(seed, key, "report") >= _probability(90_000, iota_micros, inverse=True):
+        if _draw(seed, coefficients.randomness_namespace, key, "report") >= _probability(
+            90_000, iota_micros, inverse=True
+        ):
             continue
         drafts.append(
             _Draft(
                 draft_key=key,
                 observed_at_s=hour_start + 900,
-                delivery_delay_s=_draw(seed, key, "delivery-delay") % 1_801,
+                delivery_delay_s=_draw(
+                    seed, coefficients.randomness_namespace, key, "delivery-delay"
+                )
+                % 1_801,
                 truth_incident=None,
                 relationship="false-benign-levee",
                 channel="311",
@@ -281,8 +394,9 @@ def _location(
     *,
     seed: int,
     iota_micros: int,
+    namespace: str,
 ) -> tuple[ReferencePublicLocation, int]:
-    method_draw = _draw(seed, draft.draft_key, "location-method")
+    method_draw = _draw(seed, namespace, draft.draft_key, "location-method")
     quality_share = iota_micros / 700_000
     gps_limit = round(250_000 * quality_share)
     address_limit = gps_limit + round(200_000 * quality_share)
@@ -300,15 +414,14 @@ def _location(
         15,
         round((lower + (upper - lower) * (method_draw % 10_000) / 10_000) * quality_scale),
     )
-    angle = 2 * math.pi * _draw(seed, draft.draft_key, "location-angle") / 1_000_000
+    angle = 2 * math.pi * _draw(seed, namespace, draft.draft_key, "location-angle") / 1_000_000
     distance = (
-        abs(standard_normal(seed, _RANDOMNESS_NAMESPACE, draft.draft_key, "location-distance"))
-        * precision
+        abs(standard_normal(seed, namespace, draft.draft_key, "location-distance")) * precision
     )
     incident = draft.truth_incident
     true_x = incident.location_easting_mm if incident else 621_000_000
     true_y = incident.location_northing_mm if incident else 4_223_000_000
-    descriptor_index = _draw(seed, draft.draft_key, "location-descriptor") % 3
+    descriptor_index = _draw(seed, namespace, draft.draft_key, "location-descriptor") % 3
     return (
         ReferencePublicLocation(
             easting_mm_epsg26910=true_x + round(math.cos(angle) * distance * 1_000),
@@ -402,6 +515,7 @@ def _reported_occupants(
     affected: tuple[str, ...],
     *,
     seed: int,
+    namespace: str,
 ) -> int | None:
     if not affected:
         return None
@@ -409,17 +523,17 @@ def _reported_occupants(
     if draft.relationship == "revision":
         return truth_count
     noise_options = (-1, 0, 0, 1, 2)
-    noise = noise_options[_draw(seed, draft.draft_key, "occupants") % len(noise_options)]
+    noise = noise_options[_draw(seed, namespace, draft.draft_key, "occupants") % len(noise_options)]
     if draft.relationship == "conflict" and noise == 0:
         noise = 2
     return max(0, truth_count + noise)
 
 
-def _language_delay(draft: _Draft, *, seed: int) -> int:
+def _language_delay(draft: _Draft, *, seed: int, namespace: str) -> int:
     person = draft.callback_person
     if person is None or person.language_access == "english":
         return 0
-    return 300 + _draw(seed, draft.draft_key, "language-delay") % 601
+    return 300 + _draw(seed, namespace, draft.draft_key, "language-delay") % 601
 
 
 def generate_reference_observations(
@@ -428,14 +542,22 @@ def generate_reference_observations(
     *,
     seed: int,
     iota: float = 0.7,
+    coefficients: ReferenceObservationGenerationCoefficients | None = None,
 ) -> ReferenceObservationArtifacts:
     """Transform hidden truth into separately checksummed raw, delivery, and lineage data."""
 
     if not 0.3 <= iota <= 1.0:
         raise ValueError("Reference iota must remain within the registered axis range")
     iota_micros = round(iota * 1_000_000)
+    selected = coefficients or legacy_reference_observation_coefficients()
     people_by_id = {item.truth_person_id: item for item in exposure.people}
-    drafts = _report_drafts(truth, people_by_id, seed=seed, iota_micros=iota_micros)
+    drafts = _report_drafts(
+        truth,
+        people_by_id,
+        seed=seed,
+        iota_micros=iota_micros,
+        coefficients=selected,
+    )
     draft_to_call_id = {draft.draft_key: _public_id(seed, draft.draft_key) for draft in drafts}
     if len(set(draft_to_call_id.values())) != len(draft_to_call_id):
         raise RuntimeError("Reference public report identifier collision")
@@ -445,16 +567,26 @@ def generate_reference_observations(
     lineage: list[ReferenceHiddenReportLineage] = []
     for draft in drafts:
         call_id = draft_to_call_id[draft.draft_key]
-        location, location_error_m = _location(draft, seed=seed, iota_micros=iota_micros)
-        callback_failed = _draw(seed, draft.draft_key, "callback-failure") < _probability(
-            310_000, iota_micros, inverse=True
+        location, location_error_m = _location(
+            draft,
+            seed=seed,
+            iota_micros=iota_micros,
+            namespace=selected.randomness_namespace,
         )
-        call_dropped = _draw(seed, draft.draft_key, "drop") < _probability(
-            100_000, iota_micros, inverse=True
-        )
+        callback_failed = _draw(
+            seed, selected.randomness_namespace, draft.draft_key, "callback-failure"
+        ) < _probability(310_000, iota_micros, inverse=True)
+        call_dropped = _draw(
+            seed, selected.randomness_namespace, draft.draft_key, "drop"
+        ) < _probability(100_000, iota_micros, inverse=True)
         affected = draft.truth_incident.affected_truth_person_ids if draft.truth_incident else ()
         occupant_truth = len(affected) if affected else None
-        reported_occupants = _reported_occupants(draft, affected, seed=seed)
+        reported_occupants = _reported_occupants(
+            draft,
+            affected,
+            seed=seed,
+            namespace=selected.randomness_namespace,
+        )
         descriptors = _DESCRIPTORS[draft.taxonomy]
         report = ReferenceRawReport(
             call_id=call_id,
@@ -477,7 +609,10 @@ def generate_reference_observations(
             reported_occupants=reported_occupants,
             medical_descriptors=_medical_descriptors(affected, people_by_id),
             descriptor_tokens=(
-                descriptors[_draw(seed, draft.draft_key, "descriptor") % len(descriptors)],
+                descriptors[
+                    _draw(seed, selected.randomness_namespace, draft.draft_key, "descriptor")
+                    % len(descriptors)
+                ],
             ),
             revision_of_call_id=(
                 draft_to_call_id[draft.revision_of_key]
@@ -489,7 +624,13 @@ def generate_reference_observations(
             report,
             envelope_id=_envelope_id(seed, draft.draft_key),
             delivered_at_s=(
-                draft.observed_at_s + draft.delivery_delay_s + _language_delay(draft, seed=seed)
+                draft.observed_at_s
+                + draft.delivery_delay_s
+                + _language_delay(
+                    draft,
+                    seed=seed,
+                    namespace=selected.randomness_namespace,
+                )
             ),
             initial_authority_id=_initial_authority(draft),
         )
@@ -516,9 +657,17 @@ def generate_reference_observations(
     lineage.sort(key=lambda item: item.call_id)
     raw_body = {
         "scenario_id": "WF-DFLD-01-REFERENCE",
-        "schema_version": "delta-reference-observations-v1",
-        "coefficient_version": "delta-reference-observation-development-coefficients-v1",
-        "scientific_status": "development-coefficients-not-frozen-for-validation",
+        "schema_version": (
+            "delta-reference-observations-v1"
+            if coefficients is None
+            else "delta-reference-observations-v2"
+        ),
+        "coefficient_version": selected.coefficient_version,
+        "scientific_status": (
+            "development-coefficients-not-frozen-for-validation"
+            if coefficients is None
+            else "frozen-spent-development-fit-not-validation-evidence"
+        ),
         "seed": seed,
         "iota_micros": iota_micros,
         "reports": [item.model_dump(mode="json") for item in reports],

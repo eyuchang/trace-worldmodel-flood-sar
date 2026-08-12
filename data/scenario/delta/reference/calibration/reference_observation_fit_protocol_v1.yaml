@@ -1,0 +1,76 @@
+schema_version: delta-reference-observation-fit-protocol-v1
+scientific_status: spent-development-only-no-validation-authority
+scenario_id: WF-DFLD-01-REFERENCE
+protocol_amendment_sha256: 07b0c901231323d1110ded728c8a1bb67e2a110368ed0644113a25626a7303d5
+truth_fit_report_sha256: b38bf51639b3ccf86e93bc7098e4d70743ecfa516c22b76110535b339ead74bb
+truth_coefficients_file_sha256: 2cbc9796e35478c9dc5b896c7f1226f39a82dfabea11abac7b0e3f90cdee4a85
+truth_coefficient_digest: 63fa9591c17a1208cfa45c46a76997785aa9a9a15e00a074a1e62fe22540b25a
+seed_namespace: "WF-DFLD-01-REFERENCE|development-v1|index"
+seed_count: 100
+evaluation_start_s: 0
+evaluation_end_s: 345600
+hour_bin_s: 3600
+target_evaluation_reports: 2900
+breach_phase_start_s: 187200
+breach_phase_end_s: 230400
+breach_hourly_target_micros: 95000000
+unscaled_nonbreach_integral_micros: 2620000000
+nonbreach_scale_numerator: 88
+nonbreach_scale_denominator: 131
+scaled_nonbreach_integral_micros: 1760000000
+supplemental_witness_slots_per_incident: 24
+initial_report_probability_candidates_micros:
+  - 100000
+  - 120000
+  - 140000
+  - 160000
+  - 180000
+  - 200000
+  - 220000
+  - 240000
+  - 260000
+  - 280000
+  - 300000
+  - 320000
+  - 340000
+  - 360000
+  - 380000
+  - 400000
+  - 420000
+  - 440000
+  - 460000
+  - 480000
+  - 500000
+  - 520000
+  - 540000
+  - 560000
+  - 580000
+  - 600000
+  - 620000
+  - 640000
+  - 660000
+  - 680000
+  - 700000
+  - 720000
+  - 740000
+  - 760000
+maximum_witness_probability_micros: 950000
+selection_rule: largest-feasible-initial-probability
+tie_break: lower-maximum-witness-probability-then-lower-candidate
+fixed_base_probabilities_micros:
+  duplicate: 300000
+  multi_channel: 140000
+  conflict: 160000
+  third_party_welfare: 120000
+  stranded_revision: 400000
+  false_benign_levee: 90000
+  callback_failure: 310000
+  call_drop: 100000
+resource_stop_bounds:
+  maximum_additional_disk_bytes: 1073741824
+  maximum_peak_memory_bytes: 2147483648
+  maximum_wall_time_s: 900
+limitations:
+  - Synthetic report-process design; not an estimate of real emergency reporting behavior.
+  - Hourly probabilities are one global vector across seeds and never a per-seed solution.
+  - The original peak taxonomy table conflicts with the approved latent composition and is diagnostic only.
