@@ -202,6 +202,7 @@ class ReferenceEventLog:
 
     def __init__(self, events: Iterable[ReferenceEvent] = ()) -> None:
         self._events: list[ReferenceEvent] = []
+        self._public_artifact_ids: dict[ReferenceEventType, set[str]] = {}
         for event in events:
             self.append_existing(event)
 
@@ -212,6 +213,13 @@ class ReferenceEventLog:
     @property
     def prefix_digest(self) -> str:
         return self._events[-1].event_digest if self._events else "GENESIS"
+
+    def public_artifact_ids(self, event_type: ReferenceEventType) -> frozenset[str]:
+        """Return IDs durably accepted for one controller-visible artifact type."""
+
+        if event_type not in _PUBLIC_MISSION_EVENT_TYPES:
+            raise ValueError("Reference event type does not carry public artifacts")
+        return frozenset(self._public_artifact_ids.get(event_type, ()))
 
     def append(
         self,
@@ -232,6 +240,7 @@ class ReferenceEventLog:
             previous_event_digest=self.prefix_digest,
         )
         self._events.append(event)
+        self._index_public_artifact(event)
         return event
 
     def append_public_artifact(
@@ -287,6 +296,13 @@ class ReferenceEventLog:
         if not verify_reference_event(event):
             raise ValueError("Reference event digest is invalid")
         self._events.append(event)
+        self._index_public_artifact(event)
+
+    def _index_public_artifact(self, event: ReferenceEvent) -> None:
+        if event.event_type not in _PUBLIC_MISSION_EVENT_TYPES:
+            return
+        envelope = ReferencePublicArtifactEnvelope.model_validate_json(event.payload_json)
+        self._public_artifact_ids.setdefault(event.event_type, set()).add(envelope.artifact_id)
 
     def verify(self) -> bool:
         try:

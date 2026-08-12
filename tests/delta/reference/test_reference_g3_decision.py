@@ -175,6 +175,7 @@ def decision_fixture():
             decision_id="reference-decision-001",
             controller_authority_id="AUTH-01",
             at_s=1_000,
+            delivered_coordination_ids=frozenset(item.delivery_id for item in deliveries),
             evidence_prefix_digest="4" * 64,
             trace_prefix_digest="GENESIS",
             commitment_prefix_digest="GENESIS",

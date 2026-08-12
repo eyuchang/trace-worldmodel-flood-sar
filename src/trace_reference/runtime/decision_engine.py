@@ -130,6 +130,9 @@ class ReferenceDecisionEngine:
                 decision_id=decision_id,
                 controller_authority_id=values.controller_authority_id,
                 at_s=values.at_s,
+                delivered_coordination_ids=self.dependencies.event_log.public_artifact_ids(
+                    ReferenceEventType.COORDINATION_MESSAGE_DELIVERED
+                ),
                 evidence_prefix_digest=self.dependencies.evidence_ledger.prefix_digest,
                 trace_prefix_digest=self.dependencies.trace_repository.prefix_digest,
                 commitment_prefix_digest=self.dependencies.commitment_log.prefix_digest,

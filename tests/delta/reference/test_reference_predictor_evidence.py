@@ -75,6 +75,11 @@ def predictor_fixture() -> _PredictorFixture:
                 decision_id=f"decision-{report.call_id}",
                 controller_authority_id=envelope.initial_authority_id,
                 at_s=at_s,
+                delivered_coordination_ids=frozenset(
+                    item.delivery_id
+                    for item in aggregate.coordination.public.deliveries
+                    if item.delivered_at_s <= at_s
+                ),
                 evidence_prefix_digest="1" * 64,
                 trace_prefix_digest="GENESIS",
                 commitment_prefix_digest="GENESIS",

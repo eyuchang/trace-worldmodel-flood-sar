@@ -47,6 +47,20 @@ def test_public_mission_events_replay_and_restart_exactly() -> None:
         "RE-0000000000000001"
     ]
     assert json.loads(report_json)["description"] == "water at doorway"
+    assert log.public_artifact_ids(ReferenceEventType.CALL_DELIVERED) == frozenset(
+        {"RE-0000000000000001"}
+    )
+    assert log.public_artifact_ids(ReferenceEventType.COORDINATION_MESSAGE_DELIVERED) == frozenset(
+        {"CD-0000000000000001"}
+    )
+    assert ReferenceEventLog(log.events).public_artifact_ids(
+        ReferenceEventType.COORDINATION_MESSAGE_DELIVERED
+    ) == frozenset({"CD-0000000000000001"})
+
+
+def test_public_artifact_index_rejects_nonartifact_event_type() -> None:
+    with pytest.raises(ValueError, match="does not carry public artifacts"):
+        ReferenceEventLog().public_artifact_ids(ReferenceEventType.PUBLIC_ENVIRONMENT_SAMPLE)
 
 
 def test_public_artifact_replay_is_idempotent_but_rejects_identity_conflict() -> None:

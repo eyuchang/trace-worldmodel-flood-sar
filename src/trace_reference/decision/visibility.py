@@ -29,6 +29,7 @@ class SnapshotInput:
     decision_id: str
     controller_authority_id: ReferenceAuthorityId
     at_s: int
+    delivered_coordination_ids: frozenset[str]
     evidence_prefix_digest: str
     trace_prefix_digest: str
     commitment_prefix_digest: str
@@ -84,6 +85,7 @@ def build_controller_visible_snapshot(
     delivered = tuple(
         item
         for item in coordination.deliveries
+        if item.delivery_id in request.delivered_coordination_ids
         if item.recipient_authority_id == request.controller_authority_id
         and item.delivered_at_s <= request.at_s
     )
