@@ -13,6 +13,7 @@ from trace_reference import (
     derive_study_seed,
     load_reference_config,
     load_reference_entity_source_crosswalk,
+    load_reference_fault_schedule,
     load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
@@ -32,6 +33,9 @@ SOURCE_RESEARCH = Path("data/scenario/delta/reference/sources/source_research_v1
 GAUGE_RESEARCH = Path("data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml")
 TOPOLOGY_DESIGN = Path("data/scenario/delta/reference/topology_design_v1.yaml")
 ENTITY_CROSSWALK = Path("data/scenario/delta/reference/sources/entity_source_crosswalk_v1.yaml")
+FAULT_SCHEDULE = Path(
+    "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json"
+)
 BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 PROTOCOL_DRAFT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md")
 GEOGRAPHY_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md")
@@ -60,10 +64,43 @@ def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> Non
     assert config.registered_sensitivities[0].status == "registered-design-not-executed"
     assert config.extent.synthetic_people == 1_400
     assert config.generation_order == REFERENCE_GENERATION_ORDER
+    assert Path(config.fault_profiles.registered_schedule) == FAULT_SCHEDULE
     assert REFERENCE_PROTOCOL.generation_order == REFERENCE_GENERATION_ORDER
     payload = yaml.safe_load((ROOT / CONFIG).read_text("utf-8"))
     assert "confirmatory" not in payload["study_namespaces"]
     assert "confirmatory_seeds" not in json.dumps(payload).lower()
+
+
+def test_reference_fault_schedule_covers_required_families_without_runtime_ids() -> None:
+    config = load_reference_config(ROOT, CONFIG)
+    schedule = load_reference_fault_schedule(
+        ROOT,
+        Path(config.fault_profiles.registered_schedule),
+    )
+    assert schedule.profile_id == config.fault_profiles.integration_acceptance
+    assert len(schedule.triggers) == 11
+    assert all(trigger.anchor_s >= 0 for trigger in schedule.triggers)
+    assert all(trigger.fault_id.startswith("reference-fault-") for trigger in schedule.triggers)
+    serialized = schedule.model_dump_json()
+    assert '"RI-' not in serialized
+    assert '"RC-' not in serialized
+    assert '"RR-' not in serialized
+
+
+def test_reference_fault_schedule_fails_closed_on_tamper_and_symlink(tmp_path: Path) -> None:
+    payload = json.loads((ROOT / FAULT_SCHEDULE).read_text("utf-8"))
+    payload["triggers"][0]["anchor_s"] += 1
+    tampered = tmp_path / "faults.json"
+    tampered.write_text(json.dumps(payload), "utf-8")
+    with pytest.raises(ReferenceConfigurationError, match="digest"):
+        load_reference_fault_schedule(tmp_path, Path("faults.json"))
+
+    target = tmp_path / "target.json"
+    target.write_bytes((ROOT / FAULT_SCHEDULE).read_bytes())
+    alias = tmp_path / "alias.json"
+    alias.symlink_to(target)
+    with pytest.raises(ReferenceConfigurationError, match="safe"):
+        load_reference_fault_schedule(tmp_path, Path("alias.json"))
 
 
 def test_reference_config_rejects_scope_and_holdout_substitution(tmp_path: Path) -> None:

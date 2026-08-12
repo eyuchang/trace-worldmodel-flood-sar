@@ -131,6 +131,7 @@ class ReferencePredictorConfig(DeltaModel):
 class ReferenceFaultProfiles(DeltaModel):
     baseline: Literal["reference-nominal-v1"]
     integration_acceptance: Literal["reference-faulted-v1"]
+    registered_schedule: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
 
 
 class ReferenceStudyNamespace(DeltaModel):

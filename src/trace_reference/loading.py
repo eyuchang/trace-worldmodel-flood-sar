@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import yaml
 
-from trace_jepa.support import ArtifactLocator
+from trace_jepa.support import ArtifactLocator, canonical_json_bytes
 
+from .domain.faults import ReferenceFaultSchedule
 from .models import (
     ReferenceGaugeResearchRegistry,
     ReferenceGovernanceRegistry,
@@ -142,3 +144,23 @@ def load_small_baseline_registry(root: Path, relative_name: Path) -> ReferenceSm
         raise ReferenceConfigurationError(
             "Reference Small baseline registry violates its schema"
         ) from exc
+
+
+def load_reference_fault_schedule(
+    root: Path,
+    relative_name: Path,
+) -> ReferenceFaultSchedule:
+    """Load and verify the registered development-only semantic fault schedule."""
+
+    payload = _load_json(root, relative_name, "Reference fault schedule")
+    try:
+        schedule = ReferenceFaultSchedule.model_validate(payload)
+    except ValueError as exc:
+        raise ReferenceConfigurationError(
+            "Reference fault schedule violates its schema"
+        ) from exc
+    body = schedule.model_dump(mode="json", exclude={"schedule_digest"})
+    expected = hashlib.sha256(canonical_json_bytes(body)).hexdigest()
+    if schedule.schedule_digest != expected:
+        raise ReferenceConfigurationError("Reference fault schedule digest is invalid")
+    return schedule

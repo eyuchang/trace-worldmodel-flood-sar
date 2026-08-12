@@ -11,6 +11,7 @@ from .exposure_loading import load_reference_exposure_parameters
 from .loading import (
     load_reference_config,
     load_reference_entity_source_crosswalk,
+    load_reference_fault_schedule,
     load_reference_gauge_research,
     load_reference_governance,
     load_reference_source_requirements,
@@ -30,6 +31,7 @@ __all__ = [
     "load_reference_config",
     "load_reference_entity_source_crosswalk",
     "load_reference_exposure_parameters",
+    "load_reference_fault_schedule",
     "load_reference_gauge_context",
     "load_reference_gauge_research",
     "load_reference_governance",

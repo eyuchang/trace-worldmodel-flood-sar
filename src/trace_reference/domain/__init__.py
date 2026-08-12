@@ -21,6 +21,7 @@ from .exposure import (
     ReferenceSyntheticStructure,
     ReferenceTrajectoryChangePoint,
 )
+from .faults import ReferenceFaultSchedule, ReferenceFaultTrigger
 from .mission import (
     ReferenceDecisionExecution,
     ReferenceMissionDecision,
@@ -95,6 +96,8 @@ __all__ = [
     "ReferenceEventVisibility",
     "ReferenceExposureParameters",
     "ReferenceExposureScenario",
+    "ReferenceFaultSchedule",
+    "ReferenceFaultTrigger",
     "ReferenceGaugeContextPoint",
     "ReferenceGaugeContextRegistry",
     "ReferenceGaugeStageSample",

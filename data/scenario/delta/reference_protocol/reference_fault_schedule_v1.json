@@ -1,0 +1,121 @@
+{
+  "exogenous_invariance": "geography-physical-exposure-truth-raw-observations-resources-byte-identical",
+  "profile_id": "reference-faulted-v1",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "schedule_digest": "b2f1e6763475b594c7f7f53d0e3988f16664788b3a3c2ea966b4cf1e559a3bb0",
+  "schema_version": "delta-reference-fault-schedule-v1",
+  "scientific_status": "development-integration-rules-not-validation-frozen",
+  "target_selection_semantics": "phase-anchored-first-eligible-with-canonical-digest-tie-break",
+  "triggers": [
+    {
+      "anchor_s": 180000,
+      "delivery_offset_s": 0,
+      "family": "authenticated-false-report",
+      "fault_id": "reference-fault-authenticated-false-report-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Inject one integrity-valid but explicitly untrusted report before breach onset without changing raw observation artifacts.",
+      "selector": "fixed-overlay-report-at-anchor"
+    },
+    {
+      "anchor_s": 345600,
+      "delivery_offset_s": 0,
+      "family": "completion-after-scenario-censoring",
+      "fault_id": "reference-fault-completion-after-censoring-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Select an active commitment at the registered censoring boundary and preserve its untruncated later completion.",
+      "selector": "active-commitment-at-censoring"
+    },
+    {
+      "anchor_s": 194400,
+      "delivery_offset_s": 0,
+      "family": "contradictory-outcome-evidence",
+      "fault_id": "reference-fault-contradictory-outcome-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Target the first reversible commitment after T+54 hours so contradiction handling is selected independently of inspected IDs.",
+      "selector": "first-reversible-commitment-after-anchor"
+    },
+    {
+      "anchor_s": 187200,
+      "delivery_offset_s": 0,
+      "family": "controller-crash-restart",
+      "fault_id": "reference-fault-controller-crash-restart-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Restart at the scripted breach boundary using only the durable prefix available at that completed simulation timestamp.",
+      "selector": "runtime-boundary-at-anchor"
+    },
+    {
+      "anchor_s": 172800,
+      "delivery_offset_s": 120,
+      "family": "duplicated-delivery-retry",
+      "fault_id": "reference-fault-duplicated-delivery-retry-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Retry the first eligible report delivery after T+48 hours and require an exactly-once controller-visible effect.",
+      "selector": "first-public-report-delivery-after-anchor"
+    },
+    {
+      "anchor_s": 194400,
+      "delivery_offset_s": 0,
+      "family": "failed-compensation",
+      "fault_id": "reference-fault-failed-compensation-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": "reference-fault-contradictory-outcome-v1",
+      "rationale": "Fail the repair caused by the registered contradiction and require explicit residual consistency debt and escalation.",
+      "selector": "compensation-caused-by-fault"
+    },
+    {
+      "anchor_s": 183600,
+      "delivery_offset_s": 600,
+      "family": "identity-dispute-visible-revision",
+      "fault_id": "reference-fault-identity-dispute-revision-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Select the first callback-bearing report after T+51 hours and deliver a later visible identity revision without lineage access.",
+      "selector": "first-callback-report-after-anchor"
+    },
+    {
+      "anchor_s": 190800,
+      "delivery_offset_s": 0,
+      "family": "partial-service-outcome",
+      "fault_id": "reference-fault-partial-service-outcome-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Target the first reversible commitment after T+53 hours to exercise partial-effect recording and affected-set repair.",
+      "selector": "first-reversible-commitment-after-anchor"
+    },
+    {
+      "anchor_s": 165600,
+      "delivery_offset_s": 900,
+      "family": "reordered-evidence-delivery",
+      "fault_id": "reference-fault-reordered-evidence-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Delay the first eligible report after T+46 hours so later public evidence can arrive first without changing raw reports.",
+      "selector": "first-public-report-delivery-after-anchor"
+    },
+    {
+      "anchor_s": 187200,
+      "delivery_offset_s": 600,
+      "family": "silent-provider-success-after-timeout",
+      "fault_id": "reference-fault-silent-provider-success-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Select the first physical acquisition after breach onset, time out the client, and later reconcile the provider receipt idempotently.",
+      "selector": "first-acquisition-after-anchor"
+    },
+    {
+      "anchor_s": 198000,
+      "delivery_offset_s": 0,
+      "family": "stale-acknowledgement-key-rotation",
+      "fault_id": "reference-fault-stale-key-acknowledgement-v1",
+      "ordinal": 1,
+      "prerequisite_fault_id": null,
+      "rationale": "Reject the first eligible coordination delivery after T+55 hours under a deterministic project-fixture key rotation.",
+      "selector": "first-coordination-delivery-after-anchor"
+    }
+  ]
+}

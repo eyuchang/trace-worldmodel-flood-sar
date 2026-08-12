@@ -52,6 +52,7 @@ canonical_predictor:
 fault_profiles:
   baseline: reference-nominal-v1
   integration_acceptance: reference-faulted-v1
+  registered_schedule: data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json
 
 generation_order:
   - geography
