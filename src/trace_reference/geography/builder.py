@@ -9,8 +9,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
+import pyproj
+import shapely
+import yaml
 from pyproj import Transformer
-from shapely import make_valid, union_all
+from shapely import make_valid, normalize, orient_polygons, union_all
 from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
@@ -34,7 +37,10 @@ from .catalog_models import (
     ReferenceRouteEdge,
     ReferenceRouteNode,
     ReferenceSourceBinding,
+    ReferenceSourceMetadata,
+    ReferenceSourceMetadataRegistry,
     ReferenceSourceRecord,
+    ReferenceSourceRetrievalRegistry,
 )
 
 SOURCE_RELATIVE_NAMES = {
@@ -51,13 +57,19 @@ SOURCE_RELATIVE_NAMES = {
 _TO_METRIC = Transformer.from_crs(4326, 26910, always_xy=True)
 
 
-def _load_geojson(root: Path, relative_name: str, expected_sha256: str) -> dict[str, Any]:
-    path = ArtifactLocator(
-        root=root,
-        relative_name=Path(relative_name),
+def _safe_source_path(geography_root: Path, relative_name: str) -> Path:
+    """Resolve a bounded source beneath a caller-trusted root before any read or hash."""
+
+    return ArtifactLocator(
+        root=geography_root,
+        relative_name=Path("sources") / relative_name,
         maximum_bytes=25_000_000,
         label=f"Reference geography source {relative_name}",
     ).resolve()
+
+
+def _load_geojson(root: Path, relative_name: str, expected_sha256: str) -> dict[str, Any]:
+    path = _safe_source_path(root, relative_name)
     if sha256_file(path) != expected_sha256:
         raise ValueError(f"Reference geography source digest mismatch: {relative_name}")
     try:
@@ -76,6 +88,13 @@ def _properties(feature: Mapping[str, Any]) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
         raise TypeError("Reference feature properties must be an object")
     return value
+
+
+def _require_properties(feature: Mapping[str, Any], expected: Mapping[str, object]) -> None:
+    properties = _properties(feature)
+    for field, value in expected.items():
+        if properties.get(field) != value:
+            raise ValueError(f"Reference source semantic mismatch: expected {field}={value!r}")
 
 
 def _feature_by_integer(payload: Mapping[str, Any], field: str, value: int) -> Mapping[str, Any]:
@@ -115,7 +134,7 @@ def _valid_polygonal(geometry: BaseGeometry) -> tuple[MultiPolygon, str]:
         polygons = [item for item in getattr(geometry, "geoms", ()) if isinstance(item, Polygon)]
     if not polygons:
         raise ValueError("Reference boundary has no polygonal component")
-    result = MultiPolygon(polygons)
+    result = cast(MultiPolygon, orient_polygons(normalize(MultiPolygon(polygons))))
     if not result.is_valid:
         raise ValueError("Reference boundary remains invalid after repair")
     return result, status
@@ -165,9 +184,31 @@ def _source_binding(source_id: str, identifiers: Sequence[str], use: str) -> Ref
 def _build_islands(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceIsland, ...]:
     dwr = sources["REF-GEO-SRC-01"]
     county = sources["REF-GEO-SRC-02"]
-    county_andrus = union_all(
-        [_feature_geometry(item) for item in _features_by_integer(county, "OBJECTID", (19, 22, 23))]
-    )
+    county_andrus_features = _features_by_integer(county, "OBJECTID", (19, 22, 23))
+    for feature, district in zip(
+        county_andrus_features,
+        ("Upper Andrus Island 556", "Lower Andrus Island 317", "Andrus Island 407"),
+        strict=True,
+    ):
+        _require_properties(feature, {"DISTRICT": district})
+    county_brannan = _feature_by_integer(county, "OBJECTID", 24)
+    _require_properties(county_brannan, {"DISTRICT": "Brannan Island 2067"})
+    county_andrus = union_all([_feature_geometry(item) for item in county_andrus_features])
+    dwr_expectations = {
+        11: ("0341", "Sherman Island"),
+        12: ("0003", "Grand Island"),
+        20: ("0563", "Tyler Island"),
+        23: ("0756", "Bouldin Island"),
+        79: ("0556", "Upper Andrus Island"),
+        81: ("0038", "Staten Island"),
+        96: ("1601", "Twitchell Island"),
+        259: ("BALMD", "Brannan-Andrus Island"),
+    }
+    for object_id, (code, place_name) in dwr_expectations.items():
+        _require_properties(
+            _feature_by_integer(dwr, "OBJECTID", object_id),
+            {"LMA_Code": code, "LMA_Placename": place_name},
+        )
     definitions = (
         (
             "ISL-01",
@@ -186,12 +227,9 @@ def _build_islands(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceIsla
         (
             "ISL-02",
             "Brannan Island",
-            _feature_geometry(_feature_by_integer(county, "OBJECTID", 24)),
-            (
-                _source_binding("REF-GEO-SRC-02", ("OBJECTID:24",), "primary-boundary"),
-                _source_binding("REF-GEO-SRC-01", ("OBJECTID:259",), "cross-check"),
-            ),
-            "union-of-county-reclamation-district-footprints",
+            _feature_geometry(county_brannan),
+            (_source_binding("REF-GEO-SRC-02", ("OBJECTID:24",), "primary-boundary"),),
+            "single-county-reclamation-district-footprint",
         ),
         *tuple(
             (
@@ -253,6 +291,14 @@ def _point_from_geometry(geometry: BaseGeometry) -> Point:
 def _build_communities(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceCommunity, ...]:
     incorporated = _feature_by_name(sources["REF-GEO-SRC-03"], "NAME", "Isleton city")
     cdp = _feature_by_name(sources["REF-GEO-SRC-04"], "NAME", "Walnut Grove CDP")
+    _require_properties(
+        incorporated,
+        {"STATE": "06", "PLACE": "36882", "BASENAME": "Isleton"},
+    )
+    _require_properties(
+        cdp,
+        {"STATE": "06", "PLACE": "83374", "BASENAME": "Walnut Grove"},
+    )
     definitions = (
         ("TWN-01", "Isleton", incorporated, "REF-GEO-SRC-03", "PLACE:36882"),
         ("TWN-02", "Walnut Grove", cdp, "REF-GEO-SRC-04", "PLACE:83374"),
@@ -277,19 +323,39 @@ def _build_communities(sources: Mapping[str, dict[str, Any]]) -> tuple[Reference
         ("TWN-04", "Ryde", "gaz_id:252785"),
     ):
         feature = _feature_by_name(gnis, "gaz_name", name)
+        expected_gaz_id = int(identifier.partition(":")[2])
+        _require_properties(
+            feature,
+            {
+                "gaz_id": expected_gaz_id,
+                "gaz_featureclass": "Populated Place",
+                "county_name": "Sacramento",
+                "state_alpha": "CA",
+            },
+        )
+        geometry = _feature_geometry(feature)
+        is_multipoint = isinstance(geometry, MultiPoint)
         communities.append(
             ReferenceCommunity(
                 community_id=community_id,
                 name=name,
-                anchor=_metric_point(_point_from_geometry(_feature_geometry(feature))),
+                anchor=_metric_point(_point_from_geometry(geometry)),
                 boundary=None,
-                geometry_semantics="gnis-official-point-no-boundary",
+                geometry_semantics=(
+                    "gnis-derived-centroid-of-official-multipoint-no-boundary"
+                    if is_multipoint
+                    else "gnis-official-point-no-boundary"
+                ),
                 source_bindings=(
-                    _source_binding("REF-GEO-SRC-05", (identifier,), "identity-point"),
+                    _source_binding(
+                        "REF-GEO-SRC-05",
+                        (identifier,),
+                        "derived-anchor" if is_multipoint else "identity-point",
+                    ),
                 ),
                 limitation=(
-                    "GNIS supplies an identity/location point, not a community or exposure boundary; "
-                    "any later synthetic exposure footprint must be separately versioned."
+                    "GNIS supplies identity/location geometry, not a community or exposure boundary; "
+                    "the deterministic multipoint centroid, when used, is a derived simulation anchor."
                 ),
             )
         )
@@ -389,9 +455,32 @@ def _build_crossings(sources: Mapping[str, dict[str, Any]]) -> tuple[ReferenceCr
             "official-identity-current-type-unresolved",
         ),
     )
+    expected_inventory_names = {
+        2061: "SACRAMENTO RIVER (RIO VISTA)",
+        2717: "SAN JOAQUIN RIVER (ANTIOCH)",
+        2286: "THREE MILE SLOUGH",
+        2255: "SACRAMENTO RIVER (ISLETON)",
+        29344: "SACRAMENTO RIVER (WALNUT GROVE)",
+        2257: "SACRAMENTO RIVER (PAINTERSVILLE)",
+        30337: "DUTCH SLOUGH",
+        2212: "CACHE SLOUGH FERRY",
+        2070: "STEAMBOAT SLOUGH FERRY (J-MACK)",
+    }
     crossings: list[ReferenceCrossing] = []
     for crossing_id, name, source_id, object_id, crossing_type, role, evidence in definitions:
         feature = _feature_by_integer(sources[source_id], "OBJECTID", object_id)
+        if source_id in {"REF-GEO-SRC-06", "REF-GEO-SRC-07"}:
+            _require_properties(feature, {"NAME": expected_inventory_names[object_id]})
+        if source_id == "REF-GEO-SRC-08":
+            _require_properties(
+                feature,
+                {
+                    "gaz_id": 238175,
+                    "gaz_name": "Woodward Island Ferry",
+                    "gaz_featureclass": "Crossing",
+                    "state_alpha": "CA",
+                },
+            )
         crossings.append(
             ReferenceCrossing(
                 crossing_id=crossing_id,
@@ -502,45 +591,160 @@ def _build_routes(
 
 
 def _source_records(
-    source_metadata: Sequence[Mapping[str, Any]], source_root: Path
+    source_metadata: Sequence[ReferenceSourceMetadata], geography_root: Path
 ) -> tuple[ReferenceSourceRecord, ...]:
     records: list[ReferenceSourceRecord] = []
     for raw in source_metadata:
-        source_id = str(raw["source_id"])
+        source_id = raw.source_id
         relative_name = SOURCE_RELATIVE_NAMES[source_id]
+        source_path = _safe_source_path(geography_root, relative_name)
         records.append(
             ReferenceSourceRecord(
                 source_id=source_id,
-                agency=raw["agency"],
-                dataset_title=raw["dataset_title"],
-                landing_page_url=raw["landing_page_url"],
-                machine_readable_url=raw["machine_readable_url"],
-                retrieved_at_utc=raw["retrieved_at_utc"],
-                upstream_response_sha256=raw["upstream_response_sha256"],
+                phase0_requirement_ids=raw.phase0_requirement_ids,
+                agency=raw.agency,
+                dataset_title=raw.dataset_title,
+                landing_page_url=raw.landing_page_url,
+                machine_readable_url=raw.machine_readable_url,
+                retrieved_at_utc=raw.retrieved_at_utc,
+                upstream_response_sha256=raw.upstream_response_sha256,
                 committed_snapshot_relative_path=relative_name,
-                committed_snapshot_sha256=sha256_file(source_root / relative_name),
-                license_name=raw["license_name"],
-                license_locator=raw["license_locator"],
-                redistribution_status=raw["redistribution_status"],
-                attribution=raw["attribution"],
-                limitations=tuple(raw["limitations"]),
+                committed_snapshot_sha256=sha256_file(source_path),
+                license_name=raw.license_name,
+                license_locator=raw.license_locator,
+                redistribution_status=raw.redistribution_status,
+                release_inclusion=raw.release_inclusion,
+                attribution=raw.attribution,
+                limitations=raw.limitations,
             )
         )
     return tuple(records)
 
 
+def _validate_retrieval_registry(
+    *,
+    records: Sequence[ReferenceSourceRecord],
+    retrieval_registry: ReferenceSourceRetrievalRegistry,
+    metadata_registry_sha256: str,
+) -> None:
+    if retrieval_registry.metadata_registry_sha256 != metadata_registry_sha256:
+        raise ValueError("retrieval receipts bind a different metadata registry")
+    record_by_id = {item.source_id: item for item in records}
+    for receipt in retrieval_registry.receipts:
+        record = record_by_id.get(receipt.source_id)
+        if record is None:
+            raise ValueError(f"retrieval receipt refers to absent source {receipt.source_id}")
+        if receipt.endpoint_url != record.machine_readable_url:
+            raise ValueError(f"retrieval endpoint mismatch: {receipt.source_id}")
+        if receipt.retrieved_at_utc != record.retrieved_at_utc:
+            raise ValueError(f"retrieval timestamp mismatch: {receipt.source_id}")
+        if receipt.response_sha256 != record.upstream_response_sha256:
+            raise ValueError(f"retrieval response digest mismatch: {receipt.source_id}")
+        expected_output = f"sources/{record.committed_snapshot_relative_path}"
+        if receipt.output_relative_path != expected_output:
+            raise ValueError(f"retrieval output path mismatch: {receipt.source_id}")
+        if receipt.output_sha256 != record.committed_snapshot_sha256:
+            raise ValueError(f"retrieval output digest mismatch: {receipt.source_id}")
+
+    expected_phase0_mapping = {
+        "REF-GEO-SRC-01": ("REF-SRC-02",),
+        "REF-GEO-SRC-02": ("REF-SRC-01",),
+        "REF-GEO-SRC-03": ("REF-SRC-03",),
+        "REF-GEO-SRC-04": ("REF-SRC-03",),
+        "REF-GEO-SRC-05": ("REF-SRC-03",),
+        "REF-GEO-SRC-06": ("REF-SRC-04",),
+        "REF-GEO-SRC-07": ("REF-SRC-04",),
+        "REF-GEO-SRC-08": ("REF-SRC-04",),
+    }
+    observed_phase0_mapping = {item.source_id: item.phase0_requirement_ids for item in records}
+    if observed_phase0_mapping != expected_phase0_mapping:
+        raise ValueError("Phase 0 and Phase 1 source identifiers are not fully reconciled")
+
+
+def _validate_entity_receipt_bindings(
+    catalog: ReferenceGeographyCatalog,
+    retrieval_registry: ReferenceSourceRetrievalRegistry,
+) -> None:
+    receipt_features = {
+        item.source_id: set(item.selected_feature_identifiers)
+        for item in retrieval_registry.receipts
+    }
+    bindings = tuple(binding for entity in catalog.islands for binding in entity.source_bindings)
+    bindings += tuple(
+        binding for entity in catalog.communities for binding in entity.source_bindings
+    )
+    bindings += tuple(binding for entity in catalog.crossings for binding in entity.source_bindings)
+    for binding in bindings:
+        absent = set(binding.feature_identifiers) - receipt_features[binding.source_id]
+        if absent:
+            raise ValueError(
+                f"entity binding is absent from source receipt {binding.source_id}: {sorted(absent)}"
+            )
+
+
+def _transformation_source_hashes() -> dict[str, str]:
+    package_root = Path(__file__).parent
+    names = ("builder.py", "catalog_models.py", "catalog_loading.py", "snapshot.py")
+    return {name: sha256_file(_safe_code_path(package_root, name)) for name in names}
+
+
+def _safe_code_path(package_root: Path, name: str) -> Path:
+    return ArtifactLocator(
+        root=package_root,
+        relative_name=Path(name),
+        maximum_bytes=1_000_000,
+        label=f"Reference geography transformation source {name}",
+    ).resolve()
+
+
+def _yaml_mapping(path: Path, label: str) -> Mapping[str, Any]:
+    try:
+        value = yaml.safe_load(path.read_text("utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"{label} is not valid bounded YAML") from exc
+    if not isinstance(value, Mapping):
+        raise TypeError(f"{label} root must be an object")
+    return cast(Mapping[str, Any], value)
+
+
 def build_reference_geography(
     *,
-    source_root: Path,
-    source_metadata: Sequence[Mapping[str, Any]],
+    geography_root: Path,
     output_root: Path,
+    metadata_relative_name: Path = Path("source_metadata_v2.yaml"),
+    retrieval_relative_name: Path = Path("source_retrieval_receipts_v2.yaml"),
 ) -> ReferenceGeographyBuildManifest:
     """Build and write a deterministic catalog from exact offline snapshots."""
 
-    records = _source_records(source_metadata, source_root)
+    metadata_registry_path = ArtifactLocator(
+        root=geography_root,
+        relative_name=metadata_relative_name,
+        maximum_bytes=1_000_000,
+        label="Reference geography source metadata",
+    ).resolve()
+    retrieval_registry_path = ArtifactLocator(
+        root=geography_root,
+        relative_name=retrieval_relative_name,
+        maximum_bytes=1_000_000,
+        label="Reference geography retrieval receipts",
+    ).resolve()
+    metadata_registry = ReferenceSourceMetadataRegistry.model_validate(
+        _yaml_mapping(metadata_registry_path, "Reference source metadata")
+    )
+    retrieval_registry = ReferenceSourceRetrievalRegistry.model_validate(
+        _yaml_mapping(retrieval_registry_path, "Reference retrieval receipt registry")
+    )
+    metadata_registry_sha256 = sha256_file(metadata_registry_path)
+    retrieval_registry_sha256 = sha256_file(retrieval_registry_path)
+    records = _source_records(metadata_registry.sources, geography_root)
+    _validate_retrieval_registry(
+        records=records,
+        retrieval_registry=retrieval_registry,
+        metadata_registry_sha256=metadata_registry_sha256,
+    )
     expected = {item.source_id: item.committed_snapshot_sha256 for item in records}
     sources = {
-        source_id: _load_geojson(source_root, relative_name, expected[source_id])
+        source_id: _load_geojson(geography_root, relative_name, expected[source_id])
         for source_id, relative_name in SOURCE_RELATIVE_NAMES.items()
     }
     islands = _build_islands(sources)
@@ -548,8 +752,8 @@ def build_reference_geography(
     crossings = _build_crossings(sources)
     nodes, edges = _build_routes(islands, crossings)
     catalog = ReferenceGeographyCatalog(
-        catalog_version="delta-reference-geography-v1",
-        scientific_status="simulation-grade-curated-from-authoritative-sources",
+        catalog_version="delta-reference-geography-v2",
+        scientific_status="development-only-simulation-grade-pending-one-source-license-review",
         source_crs="EPSG:4326",
         metric_crs="EPSG:26910",
         coordinate_quantization="wgs84-microdegrees-and-epsg26910-millimetres",
@@ -563,11 +767,13 @@ def build_reference_geography(
         limitations=(
             "The catalog supports a synthetic reduced-order simulator, not navigation or field dispatch.",
             "Maintenance-area boundaries proxy island footprints and do not establish parcel ownership.",
+            "The Sacramento County-derived clipped fixture is excluded from release until its dataset-specific redistribution terms are verified.",
             "Road and water graph endpoints are protocol design assumptions anchored by official points.",
             "The current Woodward crossing type and operability remain unresolved and non-operative facts.",
         ),
     )
-    catalog_name = "reference_geography_catalog_v1.json"
+    _validate_entity_receipt_bindings(catalog, retrieval_registry)
+    catalog_name = "reference_geography_catalog_v2.json"
     catalog_bytes = canonical_json_bytes(catalog.model_dump(mode="json"))
     atomic_write_bytes(
         output_root / catalog_name,
@@ -576,15 +782,29 @@ def build_reference_geography(
         label="Reference geography catalog",
     )
     manifest = ReferenceGeographyBuildManifest(
-        manifest_version="delta-reference-geography-build-v1",
+        manifest_version="delta-reference-geography-build-v2",
         catalog_relative_path=catalog_name,
         catalog_sha256=hashlib.sha256(catalog_bytes).hexdigest(),
         source_snapshot_sha256=expected,
         builder_module="trace_reference.geography.builder",
-        builder_source_sha256=sha256_file(Path(__file__)),
+        builder_source_sha256=_transformation_source_hashes()["builder.py"],
+        metadata_registry_relative_path=metadata_registry_path.name,
+        metadata_registry_sha256=metadata_registry_sha256,
+        retrieval_receipts_relative_path=retrieval_registry_path.name,
+        retrieval_receipts_sha256=retrieval_registry_sha256,
+        transformation_source_sha256=_transformation_source_hashes(),
+        environment_versions={
+            "pyproj": pyproj.__version__,
+            "proj": pyproj.proj_version_str,
+            "shapely": shapely.__version__,
+            "geos": shapely.geos_version_string,
+        },
+        release_ready=False,
         transformations=(
             "validate exact offline source digests and GeoJSON FeatureCollection schemas",
+            "validate exact retrieval recipes, selections, timestamps, and response/output digests",
             "repair polygonal source geometry only with shapely.make_valid and record every repair",
+            "orient polygon exteriors counterclockwise and normalize canonical ring and polygon order",
             "union county RD317/RD407/RD556 for the Andrus simulation footprint",
             "transform WGS84 geometry to EPSG:26910 for area and distance calculations",
             "quantize WGS84 to microdegrees and EPSG:26910 points to millimetres",
@@ -594,10 +814,11 @@ def build_reference_geography(
             "RD407 west-levee breach segment survey geometry and legal maintenance responsibility",
             "Woodward Island crossing current type, completion, and operability",
             "road/water edge suitability for field routing",
+            "Sacramento County dataset-specific redistribution permission",
         ),
     )
     atomic_write_bytes(
-        output_root / "reference_geography_build_manifest_v1.json",
+        output_root / "reference_geography_build_manifest_v2.json",
         canonical_json_bytes(manifest.model_dump(mode="json")),
         root=output_root,
         label="Reference geography build manifest",

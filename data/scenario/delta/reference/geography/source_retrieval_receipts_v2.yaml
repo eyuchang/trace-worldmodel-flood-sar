@@ -1,0 +1,140 @@
+registry_version: delta-reference-source-retrieval-receipts-v2
+metadata_registry_relative_path: source_metadata_v2.yaml
+metadata_registry_sha256: e0bcf00285ad92fb5db7a8a6a5914dff555bd3701838d31eefd39010d85a0915
+receipts:
+  - source_id: REF-GEO-SRC-01
+    request_method: GET
+    endpoint_url: https://gis.water.ca.gov/arcgis/rest/services/Boundaries/i03_Local_Maintenance_Areas_Flood_Protection/FeatureServer/0/query
+    ordered_query_parameters:
+      - {name: where, value: 'OBJECTID IN (11,12,20,23,79,81,96,259)'}
+      - {name: outFields, value: 'OBJECTID,LMA_Code,LMA_Name,LMA_Placename,LMA_Type,LMA_Status,Boundary_source,Date_Data_Applies_To,Date_Last_Modified'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:39:22Z'
+    response_sha256: 576a2bd393ecb0ca26f803b0e9c4092948cf4ffd1188ec4b31e8fb4654813456
+    selected_feature_identifiers: [OBJECTID:11, OBJECTID:12, OBJECTID:20, OBJECTID:23, OBJECTID:79, OBJECTID:81, OBJECTID:96, OBJECTID:259]
+    selected_fields: [OBJECTID, LMA_Code, LMA_Name, LMA_Placename, LMA_Type, LMA_Status, Boundary_source, Date_Data_Applies_To, Date_Last_Modified]
+    selection_rule: exact OBJECTID allowlist for the seven single LMAs and BALMD cross-check
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/dwr_lma_target_v1.geojson
+    output_sha256: 6bb348a3c6e3c80a2cafbbb7c9f8b512f945b2f357f84001cb3065a4e78baa6c
+  - source_id: REF-GEO-SRC-02
+    request_method: inherited-verified-snapshot
+    endpoint_url: https://mapservices.gis.saccounty.net/ArcGIS/rest/services/SERVICE_DISTRICTS/MapServer/7/query
+    ordered_query_parameters:
+      - {name: where, value: "DISTRICT IN ('Andrus Island 407','Lower Andrus Island 317','Upper Andrus Island 556','Brannan Island 2067')"}
+      - {name: outFields, value: '*'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-05T16:00:00Z'
+    response_sha256: 803a6c1200a2cdb54a0deec87b6627f7bc4edc58eee74a5b3a834cb176514710
+    selected_feature_identifiers: [OBJECTID:19, OBJECTID:22, OBJECTID:23, OBJECTID:24]
+    selected_fields: [OBJECTID, DISTRICT, 'Shape.STArea()', 'Shape.STLength()']
+    selection_rule: exact four-feature allowlist inherited from the independently verified Small snapshot
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/sacramento_county_andrus_brannan_v1.geojson
+    output_sha256: af9c9cb9ea6a79ae569ee156c1e5753df468697fe14cf9a2e3f7f15a97eaaca0
+  - source_id: REF-GEO-SRC-03
+    request_method: GET
+    endpoint_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query
+    ordered_query_parameters:
+      - {name: where, value: "STATE='06' AND BASENAME IN ('Isleton','Walnut Grove','Locke','Ryde')"}
+      - {name: outFields, value: 'STATE,PLACE,BASENAME,NAME,LSADC,FUNCSTAT,MTFCC'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:40:14Z'
+    response_sha256: c82ef62771a4f15c71bf2e7732c9cac9b1da0b89a947e8263f6e423cf042b763
+    selected_feature_identifiers: [PLACE:36882]
+    selected_fields: [STATE, PLACE, BASENAME, NAME, LSADC, FUNCSTAT, MTFCC]
+    selection_rule: exact California incorporated-place response for Isleton city
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/census_incorporated_places_v1.geojson
+    output_sha256: 31c94b637dd981e4d227a2978f5abf26a258538082e1e6b21ceac1dd6989c338
+  - source_id: REF-GEO-SRC-04
+    request_method: GET
+    endpoint_url: https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/5/query
+    ordered_query_parameters:
+      - {name: where, value: "STATE='06' AND BASENAME IN ('Isleton','Walnut Grove','Locke','Ryde')"}
+      - {name: outFields, value: 'STATE,PLACE,BASENAME,NAME,LSADC,FUNCSTAT,MTFCC'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:40:15Z'
+    response_sha256: 1fa1c5980f743257d94e1a195e0c841d3973e40b1416673dce32dd679a1fe938
+    selected_feature_identifiers: [PLACE:83374]
+    selected_fields: [STATE, PLACE, BASENAME, NAME, LSADC, FUNCSTAT, MTFCC]
+    selection_rule: exact California census-designated-place response for Walnut Grove CDP
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/census_designated_places_v1.geojson
+    output_sha256: 6465e9795fcc119ccd551279e90e2288415a8dd652ee12ba5521f983496ccd63
+  - source_id: REF-GEO-SRC-05
+    request_method: GET
+    endpoint_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/3/query
+    ordered_query_parameters:
+      - {name: where, value: "state_alpha='CA' AND gaz_name IN ('Locke','Ryde')"}
+      - {name: outFields, value: 'OBJECTID,gaz_id,gaz_name,gaz_featureclass,fcode,state_alpha,county_name,isunknowncoords,incounty_id'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:40:51Z'
+    response_sha256: e7722e43dc25b48d0724e08247c2f9778091bf90c373844bce7c56f993144d3c
+    selected_feature_identifiers: [OBJECTID:182671, gaz_id:252785, OBJECTID:205993, gaz_id:1656136]
+    selected_fields: [OBJECTID, gaz_id, gaz_name, gaz_featureclass, fcode, state_alpha, county_name, isunknowncoords, incounty_id]
+    selection_rule: exact GNIS populated-place response for Sacramento County Locke and Ryde identities
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/usgs_gnis_communities_v1.geojson
+    output_sha256: 9ff1938e329af1347c200e88fc3439f24701ba7f9be5cd018e960844a2fb7d72
+  - source_id: REF-GEO-SRC-06
+    request_method: GET
+    endpoint_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/State_Highway_Bridges/MapServer/0/query
+    ordered_query_parameters:
+      - {name: where, value: 'OBJECTID IN (2061,2717,2286,2255,2257,2212,2070)'}
+      - {name: outFields, value: 'OBJECTID,BRIDGE,NAME,LOC,RTE,LAT,LON,DESIGN_MAIN,DATA_EXTRACTED'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:43:12Z'
+    response_sha256: b6074a5fde265558c556d3b7f329a06347ee2594af1a8b8277aff9f493cda1f0
+    selected_feature_identifiers: [OBJECTID:2061, OBJECTID:2070, OBJECTID:2212, OBJECTID:2255, OBJECTID:2257, OBJECTID:2286, OBJECTID:2717]
+    selected_fields: [OBJECTID, BRIDGE, NAME, LOC, RTE, LAT, LON, DESIGN_MAIN, DATA_EXTRACTED]
+    selection_rule: exact seven-feature Caltrans state crossing allowlist
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/caltrans_state_crossings_v1.geojson
+    output_sha256: 50feaba6c3e1eb762827b3442c78482557932fa5923925bc5a9dc96aa1024878
+  - source_id: REF-GEO-SRC-07
+    request_method: GET
+    endpoint_url: https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/Local_Bridges/FeatureServer/0/query
+    ordered_query_parameters:
+      - {name: where, value: 'OBJECTID IN (29344,30337)'}
+      - {name: outFields, value: 'OBJECTID,BRIDGE,NAME,LOC,FAC,LAT,LON,DESIGN_MAI,DATA_EXTRA'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:43:12Z'
+    response_sha256: d46f902650366ca7fed22afce745a12b483848db05186aa7bb4ed985a55d7837
+    selected_feature_identifiers: [OBJECTID:29344, OBJECTID:30337]
+    selected_fields: [OBJECTID, BRIDGE, NAME, LOC, FAC, LAT, LON, DESIGN_MAI, DATA_EXTRA]
+    selection_rule: exact two-feature Caltrans local crossing allowlist
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/caltrans_local_crossings_v1.geojson
+    output_sha256: 4df1720295e3c7a032cd8cb334de51f2b27546e418b5a476c63a93875f1c9a95
+  - source_id: REF-GEO-SRC-08
+    request_method: GET
+    endpoint_url: https://carto.nationalmap.gov/arcgis/rest/services/geonames/MapServer/10/query
+    ordered_query_parameters:
+      - {name: where, value: "state_alpha='CA' AND (gaz_name LIKE '%Walnut Grove%' OR gaz_name LIKE '%Bethel Island%' OR gaz_name LIKE '%Woodward Island%' OR gaz_name LIKE '%McCoy%')"}
+      - {name: outFields, value: '*'}
+      - {name: returnGeometry, value: 'true'}
+      - {name: outSR, value: '4326'}
+      - {name: f, value: geojson}
+    retrieved_at_utc: '2026-08-12T00:41:49Z'
+    response_sha256: 3515d4c8e67bb5aebcdb170974792e369408e112f531dd6f895e09f7c2c2bbbf
+    selected_feature_identifiers: [OBJECTID:1193, gaz_id:238175]
+    selected_fields: [OBJECTID, gaz_id, gaz_name, gaz_featureclass, fcode, state_alpha, county_name, isunknowncoords, incounty_id]
+    selection_rule: exact GNIS crossing response for Woodward Island Ferry
+    transformation_id: reference-field-minimized-canonical-geojson-v2
+    output_relative_path: sources/usgs_gnis_woodward_crossing_v1.geojson
+    output_sha256: af8a90c607a0beebc4aedba066b667b3b4d3e4e7f38020b1451eda37c7a6f1c3

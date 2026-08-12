@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
+
+import pyproj
+import shapely
+import yaml
 
 from trace_jepa.support import ArtifactLocator, sha256_file
 
 from .builder import SOURCE_RELATIVE_NAMES
-from .catalog_models import ReferenceGeographyBuildManifest, ReferenceGeographyCatalog
+from .catalog_models import (
+    ReferenceGeographyBuildManifest,
+    ReferenceGeographyCatalog,
+    ReferenceSourceRetrievalRegistry,
+)
 
 
 def _json_object(path: Path) -> dict[str, object]:
@@ -21,10 +30,73 @@ def _json_object(path: Path) -> dict[str, object]:
     return value
 
 
+def _yaml_object(path: Path) -> dict[str, Any]:
+    try:
+        value = yaml.safe_load(path.read_text("utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise ValueError("Reference geography provenance is not valid bounded YAML") from exc
+    if not isinstance(value, dict):
+        raise TypeError("Reference geography provenance root must be an object")
+    return value
+
+
+def _verified_artifact(*, root: Path, relative_name: str, expected_sha256: str, label: str) -> Path:
+    path = ArtifactLocator(
+        root=root,
+        relative_name=Path(relative_name),
+        maximum_bytes=1_000_000,
+        label=label,
+    ).resolve()
+    if sha256_file(path) != expected_sha256:
+        raise ValueError(f"{label} digest mismatch")
+    return path
+
+
+def _verify_v2_provenance(geography_root: Path, manifest: ReferenceGeographyBuildManifest) -> None:
+    metadata_name = manifest.metadata_registry_relative_path
+    metadata_sha256 = manifest.metadata_registry_sha256
+    receipts_name = manifest.retrieval_receipts_relative_path
+    receipts_sha256 = manifest.retrieval_receipts_sha256
+    if None in {metadata_name, metadata_sha256, receipts_name, receipts_sha256}:
+        raise ValueError("v2 geography provenance is incomplete")
+    metadata_path = _verified_artifact(
+        root=geography_root,
+        relative_name=str(metadata_name),
+        expected_sha256=str(metadata_sha256),
+        label="Reference geography metadata registry",
+    )
+    receipts_path = _verified_artifact(
+        root=geography_root,
+        relative_name=str(receipts_name),
+        expected_sha256=str(receipts_sha256),
+        label="Reference geography retrieval receipts",
+    )
+    receipt_registry = ReferenceSourceRetrievalRegistry.model_validate(_yaml_object(receipts_path))
+    if receipt_registry.metadata_registry_sha256 != sha256_file(metadata_path):
+        raise ValueError("Reference receipt registry metadata binding mismatch")
+
+    package_root = Path(__file__).parent
+    for relative_name, expected_digest in manifest.transformation_source_sha256.items():
+        _verified_artifact(
+            root=package_root,
+            relative_name=relative_name,
+            expected_sha256=expected_digest,
+            label=f"Reference transformation source {relative_name}",
+        )
+    actual_environment = {
+        "pyproj": pyproj.__version__,
+        "proj": pyproj.proj_version_str,
+        "shapely": shapely.__version__,
+        "geos": shapely.geos_version_string,
+    }
+    if manifest.environment_versions != actual_environment:
+        raise ValueError("Reference geography geospatial environment mismatch")
+
+
 def load_reference_geography(
     *,
     geography_root: Path,
-    manifest_relative_name: Path = Path("derived/reference_geography_build_manifest_v1.json"),
+    manifest_relative_name: Path = Path("derived/reference_geography_build_manifest_v2.json"),
 ) -> ReferenceGeographyCatalog:
     """Load the exact offline catalog and verify every bound source snapshot."""
 
@@ -35,6 +107,8 @@ def load_reference_geography(
         label="Reference geography build manifest",
     ).resolve()
     manifest = ReferenceGeographyBuildManifest.model_validate(_json_object(manifest_path))
+    if manifest.manifest_version == "delta-reference-geography-build-v2":
+        _verify_v2_provenance(geography_root, manifest)
     catalog_path = ArtifactLocator(
         root=manifest_path.parent,
         relative_name=Path(manifest.catalog_relative_path),

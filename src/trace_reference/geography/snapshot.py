@@ -26,7 +26,8 @@ def _bounded_feature_collection(path: Path) -> dict[str, Any]:
 
 def write_minimized_snapshot(
     *,
-    input_path: Path,
+    input_root: Path,
+    input_relative_name: Path,
     output_root: Path,
     relative_name: Path,
     allowed_fields: tuple[str, ...],
@@ -34,6 +35,12 @@ def write_minimized_snapshot(
 ) -> None:
     """Write canonical source geometry with only declared non-personal fields."""
 
+    input_path = ArtifactLocator(
+        root=input_root,
+        relative_name=input_relative_name,
+        maximum_bytes=25_000_000,
+        label="Reference snapshot input",
+    ).resolve()
     payload = _bounded_feature_collection(input_path)
     allowed = set(allowed_fields)
     selected: list[dict[str, Any]] = []
@@ -72,15 +79,10 @@ def main() -> None:
     parser.add_argument("--fields", required=True)
     parser.add_argument("--object-ids", default="")
     args = parser.parse_args()
-    input_path = ArtifactLocator(
-        root=args.input_root,
-        relative_name=args.input,
-        maximum_bytes=25_000_000,
-        label="Reference snapshot input",
-    ).resolve()
     object_ids = tuple(int(item) for item in args.object_ids.split(",") if item)
     write_minimized_snapshot(
-        input_path=input_path,
+        input_root=args.input_root,
+        input_relative_name=args.input,
         output_root=args.output_root,
         relative_name=args.output,
         allowed_fields=tuple(item for item in args.fields.split(",") if item),

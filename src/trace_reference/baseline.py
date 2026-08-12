@@ -9,9 +9,7 @@ from trace_jepa.support import ArtifactLocator, sha256_file
 from .loading import load_small_baseline_registry
 from .models import ReferenceSmallBaselineRegistry
 
-DEFAULT_BASELINE_REGISTRY = Path(
-    "data/scenario/delta/reference_protocol/small_baseline_v1.json"
-)
+DEFAULT_BASELINE_REGISTRY = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 
 
 def verify_small_baseline(

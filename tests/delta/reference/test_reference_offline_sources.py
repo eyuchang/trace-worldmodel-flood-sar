@@ -11,6 +11,7 @@ from trace_reference.geography import (
     ReferenceArchiveMemberSpec,
     ReferenceSourceArtifactSpec,
     inspect_reference_source,
+    write_minimized_snapshot,
     write_reference_source_receipt,
 )
 from trace_reference.geography.offline_sources import ReferenceSourceSecurityError
@@ -145,3 +146,43 @@ def test_reference_receipt_rejects_symlinked_output_parent(tmp_path: Path) -> No
     (output / "alias").symlink_to(outside, target_is_directory=True)
     with pytest.raises(ReferenceSourceSecurityError, match="parent must not be a symlink"):
         write_reference_source_receipt(output, Path("alias/receipt.json"), receipt)
+
+
+def test_snapshot_requires_caller_root_and_rejects_intermediate_symlinks(tmp_path: Path) -> None:
+    input_root = tmp_path / "input"
+    input_root.mkdir()
+    nested = input_root / "nested"
+    nested.mkdir()
+    payload = b'{"type":"FeatureCollection","features":[]}\n'
+    (nested / "source.geojson").write_bytes(payload)
+    output_root = tmp_path / "output"
+    output_root.mkdir()
+
+    write_minimized_snapshot(
+        input_root=input_root,
+        input_relative_name=Path("nested/source.geojson"),
+        output_root=output_root,
+        relative_name=Path("safe.geojson"),
+        allowed_fields=("OBJECTID",),
+    )
+    assert (output_root / "safe.geojson").is_file()
+
+    alias = input_root / "alias"
+    alias.symlink_to(nested, target_is_directory=True)
+    with pytest.raises(ValueError, match="parent must not be a symlink"):
+        write_minimized_snapshot(
+            input_root=input_root,
+            input_relative_name=Path("alias/source.geojson"),
+            output_root=output_root,
+            relative_name=Path("unsafe.geojson"),
+            allowed_fields=("OBJECTID",),
+        )
+
+    with pytest.raises(ValueError, match="unsafe relative name"):
+        write_minimized_snapshot(
+            input_root=input_root,
+            input_relative_name=Path("../outside.geojson"),
+            output_root=output_root,
+            relative_name=Path("unsafe.geojson"),
+            allowed_fields=("OBJECTID",),
+        )

@@ -48,6 +48,7 @@ jobs:
           src/trace_jepa/predictor
           src/trace_jepa/scenario/delta
           src/trace_jepa/support
+          src/trace_reference
           tests/delta
           tests/predictor
           tests/test_experimental_profile_provenance.py
@@ -71,6 +72,7 @@ jobs:
           src/trace_jepa/predictor
           src/trace_jepa/scenario/delta
           src/trace_jepa/support
+          src/trace_reference
           tests/delta
           tests/predictor
       - name: Type-check Delta and predictor seams
@@ -78,6 +80,7 @@ jobs:
           python -m mypy
           src/trace_jepa/scenario/delta
           src/trace_jepa/predictor
+          src/trace_reference
           src/trace_jepa/experimental/revalidation.py
           src/trace_jepa/support
       - name: Test with registered branch coverage
