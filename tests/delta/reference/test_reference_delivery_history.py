@@ -82,3 +82,22 @@ def test_default_inventory_covers_small_and_reference_raw_and_derived_evidence()
         DEFAULT_PROHIBITED_INVENTORY.blob_sha256
     )
     assert any("small_book" in prefix for prefix in DEFAULT_PROHIBITED_INVENTORY.path_prefixes)
+    for digest in (
+        "24dea31e8aee2337802c1f16477906c640d34e7626e92113751e329d13605915",
+        "93de7a385e4b3838cb70991db9eb56446579e16125ea5050c8b5c1918bb3534e",
+        "2254e6296ec0b24d10d91e722606e321da318dbc0e7b2d86a18a32645a7fdb8a",
+    ):
+        assert digest in DEFAULT_PROHIBITED_INVENTORY.blob_sha256
+
+
+def test_delivery_history_rejects_renamed_frozen_small_manifest(tmp_path: Path) -> None:
+    repo = _repository(tmp_path)
+    source = (
+        Path(__file__).resolve().parents[3]
+        / "data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json"
+    )
+    (repo / "renamed-frozen-evidence.json").write_bytes(source.read_bytes())
+    _git(repo, "add", "renamed-frozen-evidence.json")
+    _git(repo, "commit", "--quiet", "-m", "rename frozen Small manifest")
+    with pytest.raises(ValueError, match="prohibited County-derived blob"):
+        verify_delivery_history(repo, "HEAD")
