@@ -12,8 +12,30 @@ from trace_reference.domain.events import (
     ReferenceEvent,
     ReferenceEventType,
     ReferenceEventVisibility,
+    ReferencePublicArtifactEnvelope,
     ReferenceRuntimeCheckpoint,
 )
+
+_PUBLIC_MISSION_EVENT_TYPES = frozenset(
+    {
+        ReferenceEventType.CALL_DELIVERED,
+        ReferenceEventType.COORDINATION_MESSAGE_DELIVERED,
+        ReferenceEventType.RESOURCE_STATE_CHANGED,
+        ReferenceEventType.TRACE_DECISION_RECORDED,
+        ReferenceEventType.COMMITMENT_CREATED,
+        ReferenceEventType.OUTCOME_RECORDED,
+        ReferenceEventType.COMPENSATION_RECORDED,
+        ReferenceEventType.PROVIDER_RECEIPT_RECORDED,
+    }
+)
+_CONTROLLER_VISIBLE_EVENT_TYPES = _PUBLIC_MISSION_EVENT_TYPES | {
+    ReferenceEventType.CROSSING_STATE_CHANGED,
+    ReferenceEventType.PUBLIC_ENVIRONMENT_SAMPLE,
+}
+_HIDDEN_EVENT_TYPES = {
+    ReferenceEventType.BREACH_ACTIVATED,
+    ReferenceEventType.HIDDEN_PHYSICAL_TRUTH,
+}
 
 
 def _canonical_payload(payload: Mapping[str, object]) -> str:
@@ -55,6 +77,7 @@ def create_reference_event(
 ) -> ReferenceEvent:
     """Create one content-addressed event without nondeterministic identifiers."""
 
+    _validate_event_visibility(event_type, visibility)
     payload_json = _canonical_payload(payload)
     body = _event_body(
         sequence=sequence,
@@ -73,6 +96,10 @@ def create_reference_event(
 
 
 def verify_reference_event(event: ReferenceEvent) -> bool:
+    try:
+        _validate_event_visibility(event.event_type, event.visibility)
+    except ValueError:
+        return False
     body = _event_body(
         sequence=event.sequence,
         at_s=event.at_s,
@@ -85,9 +112,25 @@ def verify_reference_event(event: ReferenceEvent) -> bool:
     return digest == event.event_digest and event.event_id == f"reference-event-{digest[:20]}"
 
 
+def _validate_event_visibility(
+    event_type: ReferenceEventType,
+    visibility: ReferenceEventVisibility,
+) -> None:
+    if (
+        event_type in _CONTROLLER_VISIBLE_EVENT_TYPES
+        and visibility != ReferenceEventVisibility.CONTROLLER_VISIBLE
+    ):
+        raise ValueError("Reference controller-visible event type has hidden visibility")
+    if (
+        event_type in _HIDDEN_EVENT_TYPES
+        and visibility != ReferenceEventVisibility.HIDDEN_EVALUATION_ONLY
+    ):
+        raise ValueError("Reference hidden event type has controller-visible visibility")
+
+
 @dataclass
 class ReferenceWorldState:
-    """Minimal physical reducer state; later slices add public mission state."""
+    """Replayable physical state plus canonical controller-visible mission artifacts."""
 
     at_s: int = -172_800
     breach_active: bool = False
@@ -95,6 +138,7 @@ class ReferenceWorldState:
     stored_milli_acre_ft: int = 0
     crossing_status: dict[str, str] = field(default_factory=dict)
     public_environment_digest: str = "GENESIS"
+    public_mission_artifacts: dict[str, dict[str, str]] = field(default_factory=dict)
     event_prefix_digest: str = "GENESIS"
 
     def canonical_value(self) -> dict[str, object]:
@@ -105,6 +149,10 @@ class ReferenceWorldState:
             "stored_milli_acre_ft": self.stored_milli_acre_ft,
             "crossing_status": dict(sorted(self.crossing_status.items())),
             "public_environment_digest": self.public_environment_digest,
+            "public_mission_artifacts": {
+                event_type: dict(sorted(artifacts.items()))
+                for event_type, artifacts in sorted(self.public_mission_artifacts.items())
+            },
             "event_prefix_digest": self.event_prefix_digest,
         }
 
@@ -129,6 +177,15 @@ class ReferenceWorldState:
             self.public_environment_digest = hashlib.sha256(
                 event.payload_json.encode("utf-8")
             ).hexdigest()
+        elif event.event_type in _PUBLIC_MISSION_EVENT_TYPES:
+            if event.visibility != ReferenceEventVisibility.CONTROLLER_VISIBLE:
+                raise ValueError("Reference public mission event has hidden visibility")
+            envelope = ReferencePublicArtifactEnvelope.model_validate(payload)
+            artifacts = self.public_mission_artifacts.setdefault(event.event_type.value, {})
+            previous = artifacts.get(envelope.artifact_id)
+            if previous is not None and previous != envelope.artifact_json:
+                raise ValueError("Reference public artifact ID was reused with different content")
+            artifacts[envelope.artifact_id] = envelope.artifact_json
         self.event_prefix_digest = event.event_digest
 
 
@@ -168,6 +225,34 @@ class ReferenceEventLog:
         )
         self._events.append(event)
         return event
+
+    def append_public_artifact(
+        self,
+        *,
+        at_s: int,
+        event_type: ReferenceEventType,
+        artifact_id: str,
+        artifact_schema_version: str,
+        artifact: Mapping[str, object],
+    ) -> ReferenceEvent:
+        """Append a canonical allowlisted public artifact to a mission event."""
+
+        if event_type not in _PUBLIC_MISSION_EVENT_TYPES:
+            raise ValueError("Reference artifact event type is not a public mission event")
+        artifact_json = _canonical_payload(artifact)
+        envelope = ReferencePublicArtifactEnvelope(
+            schema_version="delta-reference-public-event-artifact-v1",
+            artifact_id=artifact_id,
+            artifact_schema_version=artifact_schema_version,
+            artifact_json=artifact_json,
+            artifact_content_sha256=hashlib.sha256(artifact_json.encode("utf-8")).hexdigest(),
+        )
+        return self.append(
+            at_s=at_s,
+            event_type=event_type,
+            visibility=ReferenceEventVisibility.CONTROLLER_VISIBLE,
+            payload=envelope.model_dump(mode="json"),
+        )
 
     def append_existing(self, event: ReferenceEvent) -> None:
         if event.sequence != len(self._events) + 1:

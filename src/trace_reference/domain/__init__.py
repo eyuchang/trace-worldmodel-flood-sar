@@ -11,6 +11,7 @@ from .events import (
     ReferenceEvent,
     ReferenceEventType,
     ReferenceEventVisibility,
+    ReferencePublicArtifactEnvelope,
     ReferenceRuntimeCheckpoint,
 )
 from .exposure import (
@@ -89,6 +90,7 @@ __all__ = [
     "ReferencePhysicalParameters",
     "ReferencePhysicalSample",
     "ReferencePhysicalScenario",
+    "ReferencePublicArtifactEnvelope",
     "ReferencePublicCoordinationScenario",
     "ReferencePublicLocation",
     "ReferencePublicResourceTelemetryScenario",
