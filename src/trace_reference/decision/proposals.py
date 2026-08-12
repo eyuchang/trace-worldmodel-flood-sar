@@ -218,9 +218,7 @@ def _acquisition_offers(
     snapshot: ControllerVisibleSnapshot,
 ) -> tuple[EvidenceAcquisitionOffer, ...]:
     uncertain_routes = tuple(
-        item
-        for item in request.route_catalog.routes
-        if item.status == ReferenceRouteStatus.UNKNOWN
+        item for item in request.route_catalog.routes if item.status == ReferenceRouteStatus.UNKNOWN
     )
     if not uncertain_routes:
         return ()

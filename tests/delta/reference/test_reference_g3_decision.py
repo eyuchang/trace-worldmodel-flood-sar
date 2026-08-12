@@ -7,7 +7,6 @@ import pytest
 from pydantic import ValidationError
 
 from trace_jepa.contracts import (
-    ActionInstance,
     Claim,
     ClaimLayer,
     CommitmentDecision,
@@ -100,6 +99,7 @@ from trace_reference.runtime import (
     ReferenceTraceGateway,
     ReferenceTraceRepository,
     SelectedCommitmentInput,
+    core_action_from_proposal,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -285,29 +285,8 @@ def _catalog(decision_fixture, *, hold_primary: bool = False):
     return proposals, eligibility, build_response_bundle_catalog(snapshot, proposals, eligibility)
 
 
-def _core_action_for_test(proposal) -> ActionInstance:
-    action = proposal.action
-    return ActionInstance(
-        action_id=action.action_id,
-        action_type=action.action_class,
-        actor_id=action.actor_resource_id or "reference-unassigned-resource",
-        origin=action.origin_node_id,
-        destination=action.destination_public_id,
-        route_id=action.route_id,
-        parameters={
-            "required_capability": action.required_capability,
-            "reference_action_digest": action.action_digest,
-            "actor_crew_id": action.actor_crew_id,
-            "route_plan_digest": action.route_plan_digest,
-            "route_crossing_ids": action.route_crossing_ids,
-            "focal_crossing_id": action.focal_crossing_id,
-            "route_gauge_id": action.route_gauge_id,
-            "routed_travel_s": action.routed_travel_s,
-            "route_status_at_proposal": action.route_status_at_proposal,
-            "deterministic_service_duration_s": action.deterministic_service_duration_s,
-            "commitment_horizon_end_s": action.commitment_horizon_end_s,
-        },
-    )
+def _core_action_for_test(proposal):
+    return core_action_from_proposal(proposal)
 
 
 def _bound_proposals(decision_fixture, *, observation_age_s: float = 60.0):
@@ -793,7 +772,10 @@ def test_g3_service_outcomes_preserve_completion_beyond_censoring() -> None:
             commitment_id=commitment.commitment_id,
             status="active_at_scenario_censoring",
             scheduled_completion_s=348_600,
+            observed_at_s=345_600,
             observed_completion_s=None,
+            realized_service_fraction_micros=None,
+            affected_public_subject_ids=("RBC-0000000000000001",),
             authorizing_trace_record_id=commitment.authorizing_trace_record_id,
             authorizing_trace_record_version=commitment.authorizing_trace_record_version,
         )

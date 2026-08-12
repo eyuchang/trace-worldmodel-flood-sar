@@ -75,9 +75,7 @@ class ReferenceRouteVerificationObservation(DeltaModel):
     observed_route_plan_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     observed_status: Literal["open", "blocked", "unknown", "unavailable"]
     observed_at_s: int = Field(ge=-172_800, le=388_800)
-    observation_semantics: Literal[
-        "synthetic-direct-route-observation-not-operational-status"
-    ]
+    observation_semantics: Literal["synthetic-direct-route-observation-not-operational-status"]
 
 
 class ReferenceRouteVerificationPayload(DeltaModel):

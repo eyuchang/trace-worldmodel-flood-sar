@@ -12,6 +12,7 @@ from trace_jepa.support import canonical_json_bytes
 from trace_reference.decision import (
     AcquisitionRequestReceipt,
     ReferenceServiceOutcome,
+    ReferenceServiceOutcomeStatus,
     ServiceOutcomeInput,
     build_service_outcome,
 )
@@ -61,6 +62,7 @@ class ReferenceScheduledInput:
 class ReferencePendingOutcome:
     outcome: ReferenceServiceOutcome
     resource_id: str
+    fault_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -145,15 +147,32 @@ def reference_runtime_profile_digest(schedule: ReferenceFaultSchedule | None) ->
 def reference_outcome_for_commitment(
     commitment: Commitment,
     scheduled_completion_s: int,
+    *,
+    partial: bool = False,
 ) -> ReferenceServiceOutcome:
     within = scheduled_completion_s <= EVALUATION_END_S
+    if partial and not within:
+        raise ValueError("Reference partial service must be observed within the scenario window")
+    status: ReferenceServiceOutcomeStatus = (
+        "partial_service_within_window"
+        if partial
+        else ("completed_within_window" if within else "active_at_scenario_censoring")
+    )
+    destination = commitment.action.destination
+    if destination is None:
+        raise ValueError("Reference service commitment lacks its public affected subject")
     return build_service_outcome(
         ServiceOutcomeInput(
             outcome_id=f"reference-outcome-{commitment.commitment_id[-20:]}",
             commitment_id=commitment.commitment_id,
-            status=("completed_within_window" if within else "active_at_scenario_censoring"),
+            status=status,
             scheduled_completion_s=scheduled_completion_s,
-            observed_completion_s=scheduled_completion_s if within else None,
+            observed_at_s=(scheduled_completion_s if within else EVALUATION_END_S),
+            observed_completion_s=(scheduled_completion_s if within and not partial else None),
+            realized_service_fraction_micros=(
+                None if not within else (500_000 if partial else 1_000_000)
+            ),
+            affected_public_subject_ids=(destination,),
             authorizing_trace_record_id=commitment.authorizing_record_id,
             authorizing_trace_record_version=commitment.authorizing_record_version,
         )

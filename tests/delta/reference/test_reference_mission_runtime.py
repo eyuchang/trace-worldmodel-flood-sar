@@ -217,12 +217,11 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
         item.decision_id for item in acquisition_decisions
     }
     assert any(item.status == "active_at_scenario_censoring" for item in result.outcomes)
+    assert all(item.status != "partial_service_within_window" for item in result.outcomes)
     assert all(
-        (
-            item.observed_completion_s == item.scheduled_completion_s
-            if item.status == "completed_within_window"
-            else item.observed_completion_s is None and item.scheduled_completion_s > 345_600
-        )
+        item.observed_completion_s == item.scheduled_completion_s
+        if item.status == "completed_within_window"
+        else item.observed_completion_s is None
         for item in result.outcomes
     )
     replay = event_log.replay()
@@ -382,6 +381,30 @@ def test_silent_provider_success_reconciles_after_client_timeout(
         for item in result.fault_applications
         if item.family == "silent-provider-success-after-timeout"
     )
+    partial_application = next(
+        item for item in result.fault_applications if item.family == "partial-service-outcome"
+    )
+    partial_outcomes = tuple(
+        item for item in result.outcomes if item.status == "partial_service_within_window"
+    )
+    assert len(partial_outcomes) == 1
+    assert partial_outcomes[0].commitment_id == partial_application.target_public_id
+    assert partial_outcomes[0].realized_service_fraction_micros == 500_000
+    assert len(partial_outcomes[0].affected_public_subject_ids) == 1
+    assert partial_outcomes[0].affected_public_subject_ids[0].startswith("RBC-")
+    censor_application = next(
+        item
+        for item in result.fault_applications
+        if item.family == "completion-after-scenario-censoring"
+    )
+    censored_outcome = next(
+        item
+        for item in result.outcomes
+        if item.commitment_id == censor_application.target_public_id
+    )
+    assert censored_outcome.status == "active_at_scenario_censoring"
+    assert censored_outcome.scheduled_completion_s > 345_600
+    assert censored_outcome.observed_completion_s is None
     replay = event_log.replay()
     outcomes = [
         json.loads(value)

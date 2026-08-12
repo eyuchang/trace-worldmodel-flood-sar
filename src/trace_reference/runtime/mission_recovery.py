@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
+from trace_jepa.contracts import Commitment
 from trace_reference.decision import (
     AcquisitionOutcomeReceipt,
     AcquisitionRequestReceipt,
@@ -294,11 +295,7 @@ class ReferenceMissionRecovery:
                 outcome_id=item.outcome_id,
                 commitment_id=item.commitment_id,
                 status=item.status,
-                observed_at_s=(
-                    item.observed_completion_s
-                    if item.observed_completion_s is not None
-                    else EVALUATION_END_S
-                ),
+                observed_at_s=item.observed_at_s,
             )
             for item in outcomes.values()
         ]
@@ -307,7 +304,12 @@ class ReferenceMissionRecovery:
         }
         active: dict[str, ReferenceActiveCommitment] = {}
         pending: list[ReferenceScheduledInput] = []
-        for commitment in self.engine.dependencies.commitment_log.all():
+        commitments = self.engine.dependencies.commitment_log.all()
+        partial_fault_id, partial_target_id = self._commitment_fault_target(
+            commitments,
+            "partial-service-outcome",
+        )
+        for commitment in commitments:
             envelope = envelopes.get(commitment.commitment_id)
             decision = decisions.get(commitment.commitment_id)
             if envelope is None or decision is None or decision.selected_resource_id is None:
@@ -319,7 +321,14 @@ class ReferenceMissionRecovery:
             duration_s = int(parameters["deterministic_service_duration_s"])
             if completion_s - duration_s < envelope.committed_at_s:
                 raise ValueError("Reference restored commitment has an invalid service schedule")
-            outcome = reference_outcome_for_commitment(commitment, completion_s)
+            partial = (
+                commitment.commitment_id == partial_target_id and completion_s <= EVALUATION_END_S
+            )
+            outcome = reference_outcome_for_commitment(
+                commitment,
+                completion_s,
+                partial=partial,
+            )
             belief = PublicCommitmentBelief(
                 commitment_id=commitment.commitment_id,
                 resource_id=decision.selected_resource_id,
@@ -341,10 +350,68 @@ class ReferenceMissionRecovery:
                     10,
                     outcome.outcome_id,
                     ReferenceInputKind.OUTCOME,
-                    ReferencePendingOutcome(outcome, belief.resource_id),
+                    ReferencePendingOutcome(
+                        outcome,
+                        belief.resource_id,
+                        partial_fault_id if partial else None,
+                    ),
                 ),
             )
+        partial_outcomes = {
+            item.commitment_id
+            for item in outcomes.values()
+            if item.status == "partial_service_within_window"
+        }
+        applied_partial = {
+            item.target_public_id
+            for item in self.fault_applications
+            if item.family == "partial-service-outcome"
+        }
+        if partial_outcomes != applied_partial:
+            raise ValueError("Reference restored partial service fault closure is incomplete")
+        censored = tuple(
+            sorted(
+                item.commitment_id
+                for item in outcomes.values()
+                if item.status == "active_at_scenario_censoring"
+            )
+        )
+        applied_censoring = {
+            item.target_public_id
+            for item in self.fault_applications
+            if item.family == "completion-after-scenario-censoring"
+        }
+        expected_censoring = set(censored[:1]) if self.fault_schedule is not None else set()
+        if applied_censoring != expected_censoring:
+            raise ValueError("Reference restored censoring fault closure is incomplete")
         return active, known, list(outcomes.values()), pending
+
+    def _commitment_fault_target(
+        self,
+        commitments: list[Commitment],
+        family: str,
+    ) -> tuple[str | None, str | None]:
+        if self.fault_schedule is None:
+            return None, None
+        trigger = next(item for item in self.fault_schedule.triggers if item.family == family)
+        eligible = tuple(
+            sorted(
+                (
+                    item
+                    for item in commitments
+                    if bool(item.action.parameters.get("reversible"))
+                    and int(item.action.parameters["execution_not_before_s"]) >= trigger.anchor_s
+                ),
+                key=lambda item: (
+                    int(item.action.parameters["execution_not_before_s"]),
+                    item.commitment_id,
+                ),
+            )
+        )
+        index = trigger.ordinal - 1
+        if index >= len(eligible):
+            return trigger.fault_id, None
+        return trigger.fault_id, eligible[index].commitment_id
 
     def _restore_pending_acquisitions(
         self,

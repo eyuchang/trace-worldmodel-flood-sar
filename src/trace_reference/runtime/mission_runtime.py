@@ -13,6 +13,7 @@ from trace_reference.decision import (
     AcquisitionRequestReceipt,
     ReferencePhysicalEvidence,
     ReferenceServiceOutcome,
+    ReferenceServiceOutcomeStatus,
     ServiceOutcomeInput,
     build_service_outcome,
 )
@@ -280,24 +281,15 @@ class ReferenceMissionRuntime:
             raise ValueError("Reference report envelope authentication failed before delivery")
         fault_id = self._injected_fault_by_envelope.get(value.envelope_id)
         if fault_id is not None:
-            if self._fault_schedule is None:
-                raise RuntimeError("Reference injected report lost its registered schedule")
-            application = build_reference_target_fault_application(
-                self._fault_schedule,
+            self._record_target_fault_application(
                 fault_id=fault_id,
                 target_public_id=value.envelope_id,
                 applied_at_s=value.delivered_at_s,
-                disposition="applied",
                 reason=(
                     "The registered runtime-only report overlay delivered this authenticated "
                     "public evidence without changing the common raw-observation artifact."
                 ),
             )
-            self.event_log.append_fault_application(
-                at_s=value.delivered_at_s,
-                artifact=application.model_dump(mode="json"),
-            )
-            self._fault_applications.append(application)
         self.event_log.append_public_artifact(
             at_s=value.delivered_at_s,
             event_type=ReferenceEventType.CALL_DELIVERED,
@@ -446,6 +438,30 @@ class ReferenceMissionRuntime:
         )
         self._fault_applications.append(application)
 
+    def _record_target_fault_application(
+        self,
+        *,
+        fault_id: str,
+        target_public_id: str,
+        applied_at_s: int,
+        reason: str,
+    ) -> None:
+        if self._fault_schedule is None:
+            raise RuntimeError("Reference runtime fault lost its registered schedule")
+        application = build_reference_target_fault_application(
+            self._fault_schedule,
+            fault_id=fault_id,
+            target_public_id=target_public_id,
+            applied_at_s=applied_at_s,
+            disposition="applied",
+            reason=reason,
+        )
+        self.event_log.append_fault_application(
+            at_s=applied_at_s,
+            artifact=application.model_dump(mode="json"),
+        )
+        self._fault_applications.append(application)
+
     @staticmethod
     def _seconds(value: int) -> timedelta:
         return timedelta(seconds=value)
@@ -553,13 +569,28 @@ class ReferenceMissionRuntime:
         scheduled_completion_s = action.commitment_horizon_end_s
         outcome_id = f"reference-outcome-{commitment.commitment_id[-20:]}"
         within = scheduled_completion_s <= EVALUATION_END_S
+        partial_fault_id = self._selected_commitment_fault(
+            "partial-service-outcome",
+            commitment.commitment_id,
+        )
+        partial = partial_fault_id is not None and within
+        status: ReferenceServiceOutcomeStatus = (
+            "partial_service_within_window"
+            if partial
+            else ("completed_within_window" if within else "active_at_scenario_censoring")
+        )
         outcome = build_service_outcome(
             ServiceOutcomeInput(
                 outcome_id=outcome_id,
                 commitment_id=commitment.commitment_id,
-                status=("completed_within_window" if within else "active_at_scenario_censoring"),
+                status=status,
                 scheduled_completion_s=scheduled_completion_s,
-                observed_completion_s=scheduled_completion_s if within else None,
+                observed_at_s=(scheduled_completion_s if within else EVALUATION_END_S),
+                observed_completion_s=(scheduled_completion_s if within and not partial else None),
+                realized_service_fraction_micros=(
+                    None if not within else (500_000 if partial else 1_000_000)
+                ),
+                affected_public_subject_ids=(action.destination_public_id,),
                 authorizing_trace_record_id=commitment.authorizing_trace_record_id,
                 authorizing_trace_record_version=commitment.authorizing_trace_record_version,
             )
@@ -583,9 +614,40 @@ class ReferenceMissionRuntime:
                 10,
                 outcome_id,
                 ReferenceInputKind.OUTCOME,
-                ReferencePendingOutcome(outcome, belief.resource_id),
+                ReferencePendingOutcome(
+                    outcome,
+                    belief.resource_id,
+                    partial_fault_id if partial else None,
+                ),
             ),
         )
+
+    def _selected_commitment_fault(
+        self,
+        family: Literal["partial-service-outcome", "contradictory-outcome-evidence"],
+        commitment_id: str,
+    ) -> str | None:
+        if self._fault_schedule is None:
+            return None
+        trigger = next(item for item in self._fault_schedule.triggers if item.family == family)
+        eligible = tuple(
+            sorted(
+                (
+                    item
+                    for item in self.engine.dependencies.commitment_log.all()
+                    if bool(item.action.parameters.get("reversible"))
+                    and int(item.action.parameters["execution_not_before_s"]) >= trigger.anchor_s
+                ),
+                key=lambda item: (
+                    int(item.action.parameters["execution_not_before_s"]),
+                    item.commitment_id,
+                ),
+            )
+        )
+        index = trigger.ordinal - 1
+        if index >= len(eligible) or eligible[index].commitment_id != commitment_id:
+            return None
+        return trigger.fault_id
 
     def _schedule_acquisition(
         self,
@@ -616,22 +678,15 @@ class ReferenceMissionRuntime:
             trigger = next(
                 item for item in self._fault_schedule.triggers if item.fault_id == silent_fault_id
             )
-            application = build_reference_target_fault_application(
-                self._fault_schedule,
+            self._record_target_fault_application(
                 fault_id=silent_fault_id,
                 target_public_id=request.request_id,
                 applied_at_s=request.requested_at_s,
-                disposition="applied",
                 reason=(
                     "The registered semantic trigger selected this acquisition for a "
                     "client timeout followed by a later authenticated provider success."
                 ),
             )
-            self.event_log.append_fault_application(
-                at_s=request.requested_at_s,
-                artifact=application.model_dump(mode="json"),
-            )
-            self._fault_applications.append(application)
             self._push_pending_acquisition(
                 request.expected_delivery_s,
                 context,
@@ -818,6 +873,27 @@ class ReferenceMissionRuntime:
         active = self._active.get(value.resource_id)
         if active is None or active.scheduled_outcome != value.outcome:
             raise RuntimeError("Reference outcome does not bind one active commitment")
+        if value.fault_id is not None:
+            self._record_target_fault_application(
+                fault_id=value.fault_id,
+                target_public_id=value.outcome.commitment_id,
+                applied_at_s=at_s,
+                reason=(
+                    "The registered semantic trigger produced a half-complete public service "
+                    "outcome and retained its affected public subject set."
+                ),
+            )
+        censor_fault_id = self._selected_censoring_fault(value.outcome.commitment_id)
+        if censor_fault_id is not None:
+            self._record_target_fault_application(
+                fault_id=censor_fault_id,
+                target_public_id=value.outcome.commitment_id,
+                applied_at_s=at_s,
+                reason=(
+                    "The registered censoring boundary preserved this active commitment's "
+                    "untruncated scheduled completion without reporting it as completed."
+                ),
+            )
         self.event_log.append_public_artifact(
             at_s=at_s,
             event_type=ReferenceEventType.OUTCOME_RECORDED,
@@ -831,10 +907,31 @@ class ReferenceMissionRuntime:
                 outcome_id=value.outcome.outcome_id,
                 commitment_id=value.outcome.commitment_id,
                 status=value.outcome.status,
-                observed_at_s=at_s,
+                observed_at_s=value.outcome.observed_at_s,
             )
         )
-        del self._active[value.resource_id]
+        if value.outcome.status != "active_at_scenario_censoring":
+            del self._active[value.resource_id]
+
+    def _selected_censoring_fault(self, commitment_id: str) -> str | None:
+        if self._fault_schedule is None:
+            return None
+        trigger = next(
+            item
+            for item in self._fault_schedule.triggers
+            if item.family == "completion-after-scenario-censoring"
+        )
+        eligible = tuple(
+            sorted(
+                item.scheduled_outcome.commitment_id
+                for item in self._active.values()
+                if item.scheduled_outcome.status == "active_at_scenario_censoring"
+            )
+        )
+        index = trigger.ordinal - 1
+        if index >= len(eligible) or eligible[index] != commitment_id:
+            return None
+        return trigger.fault_id
 
     def _active_beliefs(self) -> tuple[PublicCommitmentBelief, ...]:
         return tuple(

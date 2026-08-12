@@ -104,6 +104,8 @@ def core_action_from_proposal(proposal: ActionProposal) -> ActionInstance:
             "route_status_at_proposal": action.route_status_at_proposal,
             "deterministic_service_duration_s": action.deterministic_service_duration_s,
             "commitment_horizon_end_s": action.commitment_horizon_end_s,
+            "execution_not_before_s": action.execution_not_before_s,
+            "reversible": proposal.reversible,
         },
     )
 
