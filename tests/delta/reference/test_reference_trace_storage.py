@@ -110,6 +110,9 @@ def test_reference_trace_storage_round_trips_full_closure(tmp_path: Path) -> Non
     assert repository.get(consumed.record_id).record_version == consumed.record_version
     assert commitments.all() == [commitment]
     assert evidence.get("reference-evidence-001") == _evidence()
+    assert repository.prefix_digest != "GENESIS"
+    assert commitments.prefix_digest != "GENESIS"
+    assert evidence.prefix_digest != "GENESIS"
 
 
 def test_reference_trace_storage_is_idempotent_and_detects_tampering(tmp_path: Path) -> None:
@@ -154,3 +157,22 @@ def test_reference_trace_storage_rejects_unsafe_ids_and_symlink_roots(tmp_path: 
     alias.symlink_to(target, target_is_directory=True)
     with pytest.raises(ValueError, match="root must not be a symlink"):
         ReferenceTraceRepository(alias)
+
+
+def test_reference_evidence_index_detects_content_tampering_and_orphans(tmp_path: Path) -> None:
+    ledger = ReferenceEvidenceLedger(tmp_path)
+    ledger.put(_evidence())
+    original_prefix = ledger.prefix_digest
+    assert ReferenceEvidenceLedger(tmp_path).prefix_digest == original_prefix
+
+    evidence_path = tmp_path / "evidence/reference-evidence-001.json"
+    evidence_path.write_text(evidence_path.read_text("utf-8").replace("route", "r0ute"))
+    with pytest.raises(ValueError, match="index chain is invalid"):
+        ReferenceEvidenceLedger(tmp_path)
+
+    clean = tmp_path / "clean"
+    clean.mkdir()
+    ReferenceEvidenceLedger(clean)
+    (clean / "evidence/orphan.json").write_text("{}")
+    with pytest.raises(ValueError, match="index chain is invalid"):
+        ReferenceEvidenceLedger(clean)

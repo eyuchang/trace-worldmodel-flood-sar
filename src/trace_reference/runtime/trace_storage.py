@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -103,6 +104,62 @@ class ReferenceEvidenceLedger(EvidenceLedger):
             declared_root=self._trusted_root,
             label="Reference evidence directory",
         )
+        self._index_path = _prepare_file(
+            self._trusted_root,
+            Path(f"{relative.name}_index.jsonl"),
+            "Reference evidence index",
+        )
+        self._index = _load_json_lines(
+            self._index_path,
+            maximum_bytes=_MAX_LEDGER_BYTES,
+            label="Reference evidence index",
+        )
+        self._evidence_hashes: dict[str, str] = {}
+        if not self.verify_chain():
+            raise ValueError("Reference evidence index chain is invalid")
+
+    @property
+    def prefix_digest(self) -> str:
+        return str(self._index[-1]["entry_hash"]) if self._index else "GENESIS"
+
+    def verify_chain(self) -> bool:
+        previous_hash = "GENESIS"
+        seen: set[str] = set()
+        discovered = {
+            item.stem for item in self.root.iterdir() if item.is_file() and item.suffix == ".json"
+        }
+        for index, envelope in enumerate(self._index, start=1):
+            try:
+                evidence_id = str(envelope["evidence_id"])
+                content_hash = str(envelope["content_sha256"])
+                body = {
+                    "sequence": index,
+                    "previous_hash": previous_hash,
+                    "evidence_id": evidence_id,
+                    "content_sha256": content_hash,
+                }
+                if evidence_id in seen or _ARTIFACT_ID.fullmatch(evidence_id) is None:
+                    return False
+                if envelope.get("sequence") != index:
+                    return False
+                if envelope.get("previous_hash") != previous_hash:
+                    return False
+                if envelope.get("entry_hash") != sha256_value(body):
+                    return False
+                path = safe_regular_file(
+                    self.root / f"{evidence_id}.json",
+                    declared_root=self._trusted_root,
+                    maximum_bytes=_MAX_EVIDENCE_BYTES,
+                    label="Reference evidence artifact",
+                )
+                if hashlib.sha256(path.read_bytes()).hexdigest() != content_hash:
+                    return False
+                seen.add(evidence_id)
+                self._evidence_hashes[evidence_id] = content_hash
+                previous_hash = str(envelope["entry_hash"])
+            except (KeyError, OSError, TypeError, ValueError):
+                return False
+        return seen == discovered
 
     def _path(self, evidence_id: str) -> Path:
         if _ARTIFACT_ID.fullmatch(evidence_id) is None:
@@ -131,13 +188,31 @@ class ReferenceEvidenceLedger(EvidenceLedger):
                 raise ImmutableWriteError(
                     f"evidence {evidence.evidence_id} already exists with different content"
                 )
+            if evidence.evidence_id not in self._evidence_hashes:
+                raise ValueError("Reference evidence artifact is absent from its index")
             return evidence.evidence_id
+        content_hash = hashlib.sha256(payload).hexdigest()
         atomic_write_bytes(
             path,
             payload,
             root=self._trusted_root,
             label="Reference evidence artifact",
         )
+        body = {
+            "sequence": len(self._index) + 1,
+            "previous_hash": self.prefix_digest,
+            "evidence_id": evidence.evidence_id,
+            "content_sha256": content_hash,
+        }
+        envelope = {**body, "entry_hash": sha256_value(body)}
+        _append_line(
+            self._index_path,
+            envelope,
+            trusted_root=self._trusted_root,
+            label="Reference evidence index",
+        )
+        self._index.append(envelope)
+        self._evidence_hashes[evidence.evidence_id] = content_hash
         return evidence.evidence_id
 
     def get(self, evidence_id: str) -> WorldModelEvidence:
@@ -186,6 +261,10 @@ class ReferenceTraceRepository(TraceRepository):
 
     def _envelopes(self) -> list[dict[str, object]]:
         return list(self._cache)
+
+    @property
+    def prefix_digest(self) -> str:
+        return str(self._cache[-1]["entry_hash"]) if self._cache else "GENESIS"
 
     def write(self, record: TraceRecord) -> TraceRecord:
         key = (record.record_id, record.record_version)
@@ -321,6 +400,10 @@ class ReferenceCommitmentLog(CommitmentLog):
         )
         self._cache.append(envelope)
         self._commitments[commitment.commitment_id] = commitment
+
+    @property
+    def prefix_digest(self) -> str:
+        return str(self._cache[-1]["entry_hash"]) if self._cache else "GENESIS"
 
     def all(self) -> list[Commitment]:
         return [self._commitments[key] for key in sorted(self._commitments)]
