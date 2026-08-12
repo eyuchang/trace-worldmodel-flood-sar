@@ -15,6 +15,12 @@ from .models import (
     ReferenceValueInput,
 )
 from .replay import ReferenceExecution, execute_reference_scenario, verify_exact_reference_replay
+from .scientific_inputs import (
+    ReferenceScientificInputManifest,
+    ReferenceScientificInputMember,
+    build_reference_scientific_input_manifest,
+    verify_reference_scientific_input_manifest,
+)
 from .specifications import ReferenceArtifactWriteRequest
 
 __all__ = [
@@ -25,11 +31,15 @@ __all__ = [
     "ReferenceFileInput",
     "ReferenceReplayManifest",
     "ReferenceResultSummary",
+    "ReferenceScientificInputManifest",
+    "ReferenceScientificInputMember",
     "ReferenceValueInput",
+    "build_reference_scientific_input_manifest",
     "execute_reference_scenario",
     "reference_source_tree_sha256",
     "verify_exact_reference_replay",
     "verify_reference_artifacts",
     "verify_reference_input_inventory",
+    "verify_reference_scientific_input_manifest",
     "write_reference_artifacts",
 ]

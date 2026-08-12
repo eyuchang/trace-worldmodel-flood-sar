@@ -41,16 +41,32 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference/sources/requirements_v1.yaml",
     "data/scenario/delta/reference/sources/source_research_v1.yaml",
     "data/scenario/delta/reference/topology_design_v1.yaml",
+    "docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md",
+    "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
+    "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V1.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md",
     "pyproject.toml",
+    "requirements-delta-python311.in",
     "requirements-delta-python311.lock",
 )
+
+
+def reference_direct_input_paths() -> tuple[str, ...]:
+    """Return the unique canonical direct-input path registry."""
+
+    paths = tuple(sorted(_DIRECT_INPUTS))
+    if len(set(paths)) != len(paths):
+        raise RuntimeError("Reference direct-input path registry contains duplicates")
+    return paths
 
 
 def reference_file_inputs(repository_root: Path) -> tuple[ReferenceFileInput, ...]:
     """Resolve and hash every direct file beneath one caller-trusted repository."""
 
     inputs = []
-    for relative_name in sorted(_DIRECT_INPUTS):
+    for relative_name in reference_direct_input_paths():
         path = ArtifactLocator(
             root=repository_root,
             relative_name=Path(relative_name),

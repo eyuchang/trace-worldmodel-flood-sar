@@ -15,6 +15,7 @@ from trace_reference.runtime import ReferenceMissionRun, ReferenceRuntimeBundle
 from trace_reference.validation import ReferenceCapacityEvaluation
 
 from .models import ReferenceResultSummary
+from .scientific_inputs import build_reference_scientific_input_manifest
 
 
 @dataclass(frozen=True)
@@ -222,6 +223,13 @@ def build_reference_artifact_specs(
                 "fault_profile_id": run.fault_profile_id,
                 "unreachable_delivery_fault_ids": run.unreachable_delivery_fault_ids,
             },
+        ),
+        ReferenceArtifactSpec(
+            "scientific_input_manifest",
+            "scientific_input_manifest.json",
+            build_reference_scientific_input_manifest(request.repository_root).model_dump(
+                mode="json"
+            ),
         ),
         ReferenceArtifactSpec(
             "trace_chain", "trace_chain.json", bundle.trace_repository.chain_entries()
