@@ -202,6 +202,39 @@ class ReferenceResourceTelemetry(DeltaModel):
     reported_fuel_or_charge_band: Literal["full", "usable", "low", "unknown"]
 
 
+class ReferencePublicResourceDefinition(DeltaModel):
+    """Controller-known roster facts, separated from outages, fatigue, and true state."""
+
+    resource_id: str = Field(pattern=r"^RR-[0-9a-f]{16}$")
+    resource_class: ReferenceResourceClass
+    capabilities: tuple[ReferenceResourceCapability, ...] = Field(min_length=1)
+    service_units: int = Field(ge=1, le=8)
+    physical_capacity: int = Field(ge=0, le=24)
+    home_base_id: str = Field(pattern=r"^BASE-[A-Z0-9-]+$")
+    staged_node_id: str = Field(pattern=r"^(ISL-0[1-8]|BND-[A-Z0-9-]+)$")
+    owning_authority_id: Literal["AUTH-01", "AUTH-02", "AUTH-03", "AUTH-04"]
+    tier: ReferenceMutualAidTier
+    nominal_travel_s: int = Field(ge=0, le=43_200)
+    constraints: tuple[str, ...] = Field(min_length=1)
+
+
+class ReferencePublicResourceCatalog(DeltaModel):
+    scenario_id: Literal["WF-DFLD-01-REFERENCE"]
+    schema_version: Literal["delta-reference-resource-catalog-v1"]
+    scientific_status: Literal["synthetic-planning-roster-not-current-inventory-claim"]
+    resources: tuple[ReferencePublicResourceDefinition, ...]
+    resource_catalog_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_public_roster(self) -> ReferencePublicResourceCatalog:
+        if self.resources != tuple(sorted(self.resources, key=lambda item: item.resource_id)):
+            raise ValueError("Reference public resource catalog must use canonical order")
+        identifiers = tuple(item.resource_id for item in self.resources)
+        if len(set(identifiers)) != len(identifiers):
+            raise ValueError("Reference public resource identifiers must be unique")
+        return self
+
+
 class ReferenceResourceTelemetryAuditEntry(DeltaModel):
     audit_id: str = Field(pattern=r"^RA-[0-9a-f]{16}$")
     resource_id: str = Field(pattern=r"^RR-[0-9a-f]{16}$")
@@ -252,12 +285,15 @@ class ReferenceHiddenResourceTelemetryAudit(DeltaModel):
 
 class ReferenceResourceArtifacts(DeltaModel):
     hidden: ReferenceHiddenResourceScenario
+    public_catalog: ReferencePublicResourceCatalog
     public: ReferencePublicResourceTelemetryScenario
     hidden_telemetry_audit: ReferenceHiddenResourceTelemetryAudit
 
     @model_validator(mode="after")
     def validate_public_resource_join(self) -> ReferenceResourceArtifacts:
         resource_ids = {item.resource_id for item in self.hidden.resources}
+        if {item.resource_id for item in self.public_catalog.resources} != resource_ids:
+            raise ValueError("Reference public roster and hidden inventory do not join exactly")
         if not {item.resource_id for item in self.public.telemetry} <= resource_ids:
             raise ValueError("Reference telemetry names an unknown physical resource")
         if {item.resource_id for item in self.hidden_telemetry_audit.entries} != resource_ids:

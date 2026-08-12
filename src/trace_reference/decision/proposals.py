@@ -60,7 +60,7 @@ def _action(
         "actor_crew_id": parts.crew_id,
         "origin_node_id": parts.origin,
         "destination_public_id": request.target_public_incident_id,
-        "route_id": "reference-public-route-v1",
+        "route_id": request.route_id,
         "required_capability": parts.capability,
         "execution_not_before_s": max(-172_800, request.decision_deadline_s - 900),
         "execution_not_after_s": request.decision_deadline_s,

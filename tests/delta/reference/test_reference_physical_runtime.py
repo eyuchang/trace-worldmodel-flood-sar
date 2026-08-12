@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from trace_reference import load_reference_physical_parameters
+from trace_reference import load_reference_gauge_context, load_reference_physical_parameters
 from trace_reference.domain.events import ReferenceEventType, ReferenceEventVisibility
 from trace_reference.generation import generate_reference_physical_scenario
 from trace_reference.runtime import ReferenceEventLog
@@ -147,3 +147,26 @@ def test_physical_parameter_loader_rejects_symlink(tmp_path: Path) -> None:
     alias.symlink_to(target)
     with pytest.raises(ValueError, match="must not be a symlink"):
         load_reference_physical_parameters(tmp_path, Path("alias.yaml"))
+
+
+def test_gauge_context_is_exact_official_identity_transcription() -> None:
+    registry = load_reference_gauge_context(
+        ROOT,
+        Path("data/scenario/delta/reference/physical/reference_gauge_context_v1.yaml"),
+    )
+    assert tuple(item.gauge_id for item in registry.gauges) == (
+        "FPT",
+        "RVB",
+        "SJJ",
+        "ANH",
+        "MRU",
+        "OLD",
+        "MSD",
+    )
+    assert next(item for item in registry.gauges if item.gauge_id == "MRU").official_name == (
+        "Middle River at Undine Road"
+    )
+    assert next(item for item in registry.gauges if item.gauge_id == "MSD").official_name == (
+        "San Joaquin River at Mossdale Bridge"
+    )
+    assert all(item.threshold_status == "unavailable-non-operative" for item in registry.gauges)

@@ -8,8 +8,8 @@ from trace_jepa.predictor import PredictorProvenance
 from trace_reference.domain.coordination import ReferencePublicCoordinationScenario
 from trace_reference.domain.observations import ReferenceAuthorityId
 from trace_reference.domain.resources import (
+    ReferencePublicResourceCatalog,
     ReferencePublicResourceTelemetryScenario,
-    ReferenceResourceTruth,
 )
 
 from .canonical import decision_digest
@@ -42,12 +42,12 @@ class SnapshotInput:
 
 def _latest_resource_beliefs(
     telemetry: ReferencePublicResourceTelemetryScenario,
-    resources: tuple[ReferenceResourceTruth, ...],
+    resources: ReferencePublicResourceCatalog,
     *,
     at_s: int,
     delivered_telemetry_ids: frozenset[str],
 ) -> tuple[PublicResourceBelief, ...]:
-    resource_by_id = {item.resource_id: item for item in resources}
+    resource_by_id = {item.resource_id: item for item in resources.resources}
     latest = {}
     for item in telemetry.telemetry:
         if item.delivered_at_s <= at_s and item.telemetry_id in delivered_telemetry_ids:
@@ -72,7 +72,7 @@ def _latest_resource_beliefs(
 def build_controller_visible_snapshot(
     request: SnapshotInput,
     telemetry: ReferencePublicResourceTelemetryScenario,
-    resources: tuple[ReferenceResourceTruth, ...],
+    resources: ReferencePublicResourceCatalog,
     coordination: ReferencePublicCoordinationScenario,
     predictor: PredictorProvenance,
 ) -> ControllerVisibleSnapshot:

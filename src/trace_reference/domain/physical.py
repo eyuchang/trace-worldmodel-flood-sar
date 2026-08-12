@@ -40,6 +40,33 @@ class ReferenceGaugeParameter(DeltaModel):
     threshold_status: Literal["unavailable-non-operative"]
 
 
+class ReferenceGaugeContextPoint(DeltaModel):
+    gauge_id: Literal["FPT", "RVB", "SJJ", "ANH", "MRU", "OLD", "MSD"]
+    official_name: str
+    latitude_e6: int = Field(ge=-90_000_000, le=90_000_000)
+    longitude_e6: int = Field(ge=-180_000_000, le=180_000_000)
+    threshold_status: Literal["unavailable-non-operative"]
+
+
+class ReferenceGaugeContextRegistry(DeltaModel):
+    registry_version: Literal["delta-reference-gauge-context-v1"]
+    scientific_status: Literal["official-identity-context-only-thresholds-non-operative"]
+    derived_from_registry: Literal[
+        "data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml"
+    ]
+    derived_from_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    transformation: Literal["exact-field-transcription-no-coordinate-interpolation"]
+    gauges: tuple[ReferenceGaugeContextPoint, ...] = Field(min_length=7, max_length=7)
+    limitations: tuple[str, ...] = Field(min_length=3)
+
+    @model_validator(mode="after")
+    def validate_context_gauges(self) -> ReferenceGaugeContextRegistry:
+        expected = ("FPT", "RVB", "SJJ", "ANH", "MRU", "OLD", "MSD")
+        if tuple(item.gauge_id for item in self.gauges) != expected:
+            raise ValueError("Reference context-gauge coverage or order is incomplete")
+        return self
+
+
 class ReferenceBreachParameters(DeltaModel):
     breach_id: Literal["BREACH-01"]
     segment_id: Literal["SIM-RD407-WEST-01"]

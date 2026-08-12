@@ -178,7 +178,7 @@ def decision_fixture():
             environment_contract_version="trace-reference-python311-v1",
         ),
         public_telemetry,
-        tuple(selected),
+        resources.public_catalog,
         coordination,
         ToyActionPrefixPredictor().provenance(),
     )
@@ -188,6 +188,7 @@ def decision_fixture():
         public_snapshot_digest=snapshot.snapshot_digest,
         target_public_incident_id="public-belief-cluster-001",
         public_taxonomy="C-STR",
+        route_id="XNG-04",
         decision_deadline_s=3_600,
         policy_version=snapshot.policy_version,
         proposal_namespace="reference-public-proposal-grammar-v1",
@@ -268,7 +269,7 @@ def _bound_proposals(decision_fixture, *, observation_age_s: float = 60.0):
             observation=PredictorObservation(
                 routes=[
                     PredictorRouteObservation(
-                        route_id="reference-public-route-v1",
+                        route_id=action.route_id or "XNG-04",
                         report="open",
                         nominal_travel_s=900,
                         confidence=0.95,

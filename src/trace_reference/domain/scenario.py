@@ -14,7 +14,7 @@ from trace_reference.models import ReferenceGovernanceRegistry, ReferenceScenari
 from .coordination import ReferenceCoordinationArtifacts
 from .exposure import ReferenceExposureScenario
 from .observations import ReferenceObservationArtifacts
-from .physical import ReferencePhysicalScenario
+from .physical import ReferenceGaugeContextRegistry, ReferencePhysicalScenario
 from .resources import ReferenceResourceArtifacts
 from .truth import ReferenceTruthScenario
 
@@ -35,6 +35,7 @@ class ReferenceScenarioArtifacts:
     geography: ReferenceGeographyCatalog
     governance: ReferenceGovernanceRegistry
     physical: ReferencePhysicalScenario
+    gauge_context: ReferenceGaugeContextRegistry
     exposure: ReferenceExposureScenario
     truth: ReferenceTruthScenario
     observations: ReferenceObservationArtifacts

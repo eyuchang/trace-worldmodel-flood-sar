@@ -9,6 +9,8 @@ from trace_reference.domain.resources import (
     ReferenceCrewTruth,
     ReferenceHiddenResourceScenario,
     ReferenceHiddenResourceTelemetryAudit,
+    ReferencePublicResourceCatalog,
+    ReferencePublicResourceDefinition,
     ReferencePublicResourceTelemetryScenario,
     ReferenceResourceArtifacts,
     ReferenceResourceParameters,
@@ -317,6 +319,27 @@ def generate_reference_resources(
         "iota_micros": iota_micros,
         "telemetry": [item.model_dump(mode="json") for item in telemetry],
     }
+    catalog_body = {
+        "scenario_id": "WF-DFLD-01-REFERENCE",
+        "schema_version": "delta-reference-resource-catalog-v1",
+        "scientific_status": "synthetic-planning-roster-not-current-inventory-claim",
+        "resources": [
+            ReferencePublicResourceDefinition(
+                resource_id=item.resource_id,
+                resource_class=item.resource_class,
+                capabilities=item.capabilities,
+                service_units=item.service_units,
+                physical_capacity=item.physical_capacity,
+                home_base_id=item.home_base_id,
+                staged_node_id=item.staged_node_id,
+                owning_authority_id=item.owning_authority_id,
+                tier=item.tier,
+                nominal_travel_s=item.nominal_travel_s,
+                constraints=item.constraints,
+            ).model_dump(mode="json")
+            for item in resources
+        ],
+    }
     telemetry_audit_body = {
         "scenario_id": "WF-DFLD-01-REFERENCE",
         "schema_version": "delta-reference-resource-telemetry-audit-v1",
@@ -328,6 +351,10 @@ def generate_reference_resources(
         hidden=ReferenceHiddenResourceScenario(
             **hidden_body,
             hidden_resource_digest=hashlib.sha256(canonical_json_bytes(hidden_body)).hexdigest(),
+        ),
+        public_catalog=ReferencePublicResourceCatalog(
+            **catalog_body,
+            resource_catalog_digest=hashlib.sha256(canonical_json_bytes(catalog_body)).hexdigest(),
         ),
         public=ReferencePublicResourceTelemetryScenario(
             **public_body,

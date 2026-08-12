@@ -67,6 +67,21 @@ def test_inventory_has_exact_crew_join_and_capability_separation(resources) -> N
     )
 
 
+def test_public_roster_contains_no_hidden_operational_state(resources) -> None:
+    hidden_ids = {item.resource_id for item in resources.hidden.resources}
+    public_ids = {item.resource_id for item in resources.public_catalog.resources}
+    assert public_ids == hidden_ids
+    serialized = resources.public_catalog.model_dump_json()
+    for forbidden in (
+        "initial_outage_until_s",
+        "fatigue",
+        "crew_rest",
+        "hidden_resource_digest",
+        "state_samples",
+    ):
+        assert forbidden not in serialized
+
+
 def test_kappa_mu_iota_delta_have_separate_resource_effects(parameters) -> None:
     baseline = generate_reference_resources(parameters, seed=20260812)
     slow = generate_reference_resources(parameters, seed=20260812, mu=1.5)

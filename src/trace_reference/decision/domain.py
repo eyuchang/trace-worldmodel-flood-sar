@@ -135,6 +135,7 @@ class ProposalRequest(DeltaModel):
     public_snapshot_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     target_public_incident_id: str
     public_taxonomy: str
+    route_id: str = Field(pattern=r"^XNG-(0[1-9]|10)$")
     decision_deadline_s: int = Field(ge=-172_800, le=345_600)
     policy_version: str
     proposal_namespace: Literal["reference-public-proposal-grammar-v1"]

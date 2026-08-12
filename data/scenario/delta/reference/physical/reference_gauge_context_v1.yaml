@@ -1,0 +1,17 @@
+registry_version: delta-reference-gauge-context-v1
+scientific_status: official-identity-context-only-thresholds-non-operative
+derived_from_registry: data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml
+derived_from_sha256: 86dff07bbe2d0505736cd714b8e1b1b95e087ecaa8f72001691d9f71c7cda394
+transformation: exact-field-transcription-no-coordinate-interpolation
+gauges:
+  - {gauge_id: FPT, official_name: Sacramento River at Freeport, latitude_e6: 38456112, longitude_e6: -121500300, threshold_status: unavailable-non-operative}
+  - {gauge_id: RVB, official_name: Sacramento River at Rio Vista Bridge, latitude_e6: 38159737, longitude_e6: -121686355, threshold_status: unavailable-non-operative}
+  - {gauge_id: SJJ, official_name: San Joaquin River at Jersey Point (USGS), latitude_e6: 38052000, longitude_e6: -121689000, threshold_status: unavailable-non-operative}
+  - {gauge_id: ANH, official_name: San Joaquin River at Antioch, latitude_e6: 38017830, longitude_e6: -121802963, threshold_status: unavailable-non-operative}
+  - {gauge_id: MRU, official_name: Middle River at Undine Road, latitude_e6: 37833900, longitude_e6: -121386000, threshold_status: unavailable-non-operative}
+  - {gauge_id: OLD, official_name: Old River near Tracy, latitude_e6: 37804810, longitude_e6: -121449562, threshold_status: unavailable-non-operative}
+  - {gauge_id: MSD, official_name: San Joaquin River at Mossdale Bridge, latitude_e6: 37786000, longitude_e6: -121306000, threshold_status: unavailable-non-operative}
+limitations:
+  - Coordinates are official-station metadata transcriptions used only to select contextual model output.
+  - Generated stage is a reduced-order model value, not an observed CDEC value or forecast.
+  - No gauge threshold is operative.

@@ -7,6 +7,7 @@ from pathlib import Path
 from trace_reference import (
     load_reference_config,
     load_reference_exposure_parameters,
+    load_reference_gauge_context,
     load_reference_governance,
     load_reference_physical_parameters,
     load_reference_resource_parameters,
@@ -28,6 +29,7 @@ from .truth import generate_reference_truth
 _CONFIG = Path("configs/scenarios/wf_dfld_01_reference_development.yaml")
 _GOVERNANCE = Path("configs/governance/wf_dfld_01_reference_governance_v1.yaml")
 _PHYSICAL = Path("data/scenario/delta/reference/physical/reference_physical_parameters_v1.yaml")
+_GAUGE_CONTEXT = Path("data/scenario/delta/reference/physical/reference_gauge_context_v1.yaml")
 _EXPOSURE = Path("data/scenario/delta/reference/exposure/reference_exposure_parameters_v1.yaml")
 _RESOURCES = Path("data/scenario/delta/reference/resources/reference_resource_parameters_v1.yaml")
 _GEOGRAPHY = Path("data/scenario/delta/reference/geography")
@@ -45,6 +47,7 @@ def generate_reference_scenario(
     geography = load_reference_geography(geography_root=root / _GEOGRAPHY)
     governance = load_reference_governance(root, _GOVERNANCE)
     physical_parameters = load_reference_physical_parameters(root, _PHYSICAL)
+    gauge_context = load_reference_gauge_context(root, _GAUGE_CONTEXT)
     exposure_parameters = load_reference_exposure_parameters(root, _EXPOSURE)
     resource_parameters = load_reference_resource_parameters(root, _RESOURCES)
     physical = generate_reference_physical_scenario(
@@ -90,6 +93,7 @@ def generate_reference_scenario(
         geography=geography,
         governance=governance,
         physical=physical,
+        gauge_context=gauge_context,
         exposure=exposure,
         truth=truth,
         observations=observations,
