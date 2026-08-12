@@ -81,7 +81,9 @@ def _artifact_sha256(value: object) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
 
 
-def _core_action(proposal: ActionProposal) -> ActionInstance:
+def core_action_from_proposal(proposal: ActionProposal) -> ActionInstance:
+    """Convert an exact Reference proposal into the shared TRACE action contract."""
+
     action = proposal.action
     return ActionInstance(
         action_id=action.action_id,
@@ -94,6 +96,12 @@ def _core_action(proposal: ActionProposal) -> ActionInstance:
             "required_capability": action.required_capability,
             "reference_action_digest": action.action_digest,
             "actor_crew_id": action.actor_crew_id,
+            "route_plan_digest": action.route_plan_digest,
+            "route_crossing_ids": action.route_crossing_ids,
+            "focal_crossing_id": action.focal_crossing_id,
+            "route_gauge_id": action.route_gauge_id,
+            "routed_travel_s": action.routed_travel_s,
+            "route_status_at_proposal": action.route_status_at_proposal,
         },
     )
 
@@ -101,7 +109,7 @@ def _core_action(proposal: ActionProposal) -> ActionInstance:
 def _verify_predictor_binding(values: ProposalAssessmentInput) -> None:
     proposal = values.proposal
     request = values.predictor_request
-    action = _core_action(proposal)
+    action = core_action_from_proposal(proposal)
     if request.plan.first_action != action:
         raise ValueError("Reference predictor request does not bind the proposed action")
     request_digest = _artifact_sha256(request.model_dump(mode="json"))
@@ -212,7 +220,7 @@ class ReferenceTraceGateway:
         )
         commitment = self.runtime.commit(
             record=consumed,
-            action=_core_action(values.proposal),
+            action=core_action_from_proposal(values.proposal),
             commitment_id=commitment_id,
             created_at=values.assessment_input.created_at,
         )

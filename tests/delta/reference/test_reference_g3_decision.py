@@ -25,7 +25,11 @@ from trace_jepa.predictor import (
 )
 from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
 from trace_jepa.support import canonical_json_bytes, sha256_bytes
-from trace_reference import load_reference_resource_parameters
+from trace_reference import (
+    load_reference_gauge_context,
+    load_reference_physical_parameters,
+    load_reference_resource_parameters,
+)
 from trace_reference.decision.acquisition import (
     EvidenceAcquisitionExecutor,
     ProviderReceiptInput,
@@ -70,18 +74,29 @@ from trace_reference.domain.coordination import (
     ReferenceCoordinationDelivery,
     ReferencePublicCoordinationScenario,
 )
+from trace_reference.domain.observations import (
+    ReferencePublicLocation,
+    ReferencePublicTaxonomy,
+    ReferenceRawReport,
+)
 from trace_reference.domain.resources import (
     ReferencePublicResourceTelemetryScenario,
     ReferenceResourceClass,
     ReferenceResourceState,
     ReferenceResourceTelemetry,
 )
-from trace_reference.generation import generate_reference_resources
+from trace_reference.generation import (
+    generate_reference_physical_scenario,
+    generate_reference_resources,
+)
+from trace_reference.geography import load_reference_geography
 from trace_reference.runtime import (
     ProposalAssessmentInput,
     ReferenceCommitmentLog,
     ReferenceEventLog,
     ReferenceEvidenceLedger,
+    ReferenceRouteService,
+    ReferenceScenarioIndex,
     ReferenceTraceGateway,
     ReferenceTraceRepository,
     SelectedCommitmentInput,
@@ -98,14 +113,16 @@ def decision_fixture():
     )
     resources = generate_reference_resources(parameters, seed=20260812, kappa=1.0)
     selected = []
-    for resource_class in (
-        ReferenceResourceClass.RESCUE_BOAT,
-        ReferenceResourceClass.TYPE_I_ENGINE,
-        ReferenceResourceClass.SMALL_UAS,
+    for resource_class, staged_node_id in (
+        (ReferenceResourceClass.RESCUE_BOAT, "ISL-01"),
+        (ReferenceResourceClass.TYPE_I_ENGINE, "ISL-01"),
+        (ReferenceResourceClass.SMALL_UAS, "BND-NORTH"),
     ):
         selected.append(
             next(
-                item for item in resources.hidden.resources if item.resource_class == resource_class
+                item
+                for item in resources.hidden.resources
+                if item.resource_class == resource_class and item.staged_node_id == staged_node_id
             )
         )
     telemetry = tuple(
@@ -182,13 +199,51 @@ def decision_fixture():
         coordination,
         ToyActionPrefixPredictor().provenance(),
     )
+    geography = load_reference_geography(
+        geography_root=ROOT / "data/scenario/delta/reference/geography"
+    )
+    physical = generate_reference_physical_scenario(
+        load_reference_physical_parameters(
+            ROOT,
+            Path("data/scenario/delta/reference/physical/reference_physical_parameters_v1.yaml"),
+        )
+    )
+    gauge_context = load_reference_gauge_context(
+        ROOT,
+        Path("data/scenario/delta/reference/physical/reference_gauge_context_v1.yaml"),
+    )
+    island = next(item for item in geography.islands if item.island_id == "ISL-02")
+    report = ReferenceRawReport(
+        call_id="RC-0123456789abcdef",
+        observed_at_s=900,
+        channel="911",
+        callback_token="SYN-CB-0123456789abcdef",
+        callback_failed=False,
+        call_dropped=False,
+        third_party=False,
+        language_access="english",
+        location=ReferencePublicLocation(
+            easting_mm_epsg26910=island.anchor.easting_mm_epsg26910,
+            northing_mm_epsg26910=island.anchor.northing_mm_epsg26910,
+            precision_m=25,
+            method="gps",
+            stated_descriptor="synthetic island anchor",
+        ),
+        taxonomy=ReferencePublicTaxonomy.C_STR,
+        reported_occupants=2,
+        medical_descriptors=(),
+        descriptor_tokens=("porch",),
+    )
+    route_catalog = ReferenceRouteService(
+        ReferenceScenarioIndex.from_physical(geography, gauge_context, physical)
+    ).build_catalog(report, resources.public_catalog, at_s=1_000)
     request = ProposalRequest(
         schema_version="delta-reference-proposal-request-v1",
         decision_id=snapshot.decision_id,
         public_snapshot_digest=snapshot.snapshot_digest,
         target_public_incident_id="public-belief-cluster-001",
         public_taxonomy="C-STR",
-        route_id="XNG-04",
+        route_catalog=route_catalog,
         decision_deadline_s=3_600,
         policy_version=snapshot.policy_version,
         proposal_namespace="reference-public-proposal-grammar-v1",
@@ -243,6 +298,12 @@ def _core_action_for_test(proposal) -> ActionInstance:
             "required_capability": action.required_capability,
             "reference_action_digest": action.action_digest,
             "actor_crew_id": action.actor_crew_id,
+            "route_plan_digest": action.route_plan_digest,
+            "route_crossing_ids": action.route_crossing_ids,
+            "focal_crossing_id": action.focal_crossing_id,
+            "route_gauge_id": action.route_gauge_id,
+            "routed_travel_s": action.routed_travel_s,
+            "route_status_at_proposal": action.route_status_at_proposal,
         },
     )
 
@@ -255,6 +316,7 @@ def _bound_proposals(decision_fixture, *, observation_age_s: float = 60.0):
     bindings = {}
     created_at = datetime(2026, 1, 17, 4, 16, 40, tzinfo=UTC)
     for proposal in (*proposals.physical_actions, *proposals.safe_alternatives):
+        action_spec = proposal.action
         action = _core_action_for_test(proposal)
         plan = PlanCandidate(
             plan_id=f"plan-{proposal.action.action_digest[:20]}",
@@ -269,12 +331,15 @@ def _bound_proposals(decision_fixture, *, observation_age_s: float = 60.0):
             observation=PredictorObservation(
                 routes=[
                     PredictorRouteObservation(
-                        route_id=action.route_id or "XNG-04",
-                        report="open",
-                        nominal_travel_s=900,
+                        route_id=action.route_id,
+                        report=action_spec.route_status_at_proposal,
+                        nominal_travel_s=action_spec.routed_travel_s,
                         confidence=0.95,
                         observation_age_s=observation_age_s,
                         crossing_sample_time_s=900,
+                        gauge_id=action_spec.route_gauge_id,
+                        gauge_sample_time_s=900,
+                        gauge_threshold_status="unavailable-non-operative",
                     )
                 ],
                 context=PredictorContext(

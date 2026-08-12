@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from trace_reference.domain.routing import ReferencePublicRoutePlan, ReferenceRouteStatus
+
 from .canonical import decision_digest, verify_model_digest
 from .domain import (
     ControllerVisibleSnapshot,
@@ -52,6 +54,7 @@ def _action(
     request: ProposalRequest,
     *,
     parts: _ActionParts,
+    route: ReferencePublicRoutePlan,
 ) -> ReferenceActionSpec:
     body = {
         "action_id": _id("reference-action", request.decision_id, parts.suffix),
@@ -60,12 +63,18 @@ def _action(
         "actor_crew_id": parts.crew_id,
         "origin_node_id": parts.origin,
         "destination_public_id": request.target_public_incident_id,
-        "route_id": request.route_id,
+        "route_id": route.route_plan_id,
+        "route_plan_digest": route.route_plan_digest,
+        "route_crossing_ids": route.crossing_ids,
+        "focal_crossing_id": route.focal_crossing_id,
+        "route_gauge_id": route.gauge_id,
+        "routed_travel_s": route.estimated_travel_s,
+        "route_status_at_proposal": route.status.value,
         "required_capability": parts.capability,
         "execution_not_before_s": max(-172_800, request.decision_deadline_s - 900),
         "execution_not_after_s": request.decision_deadline_s,
-        "commitment_horizon_end_s": min(
-            345_600, request.decision_deadline_s + parts.service_duration_s
+        "commitment_horizon_end_s": (
+            request.decision_deadline_s + (route.estimated_travel_s or 0) + parts.service_duration_s
         ),
         "deterministic_service_duration_s": parts.service_duration_s,
     }
@@ -79,10 +88,19 @@ def _physical_proposals(
     if request.public_taxonomy not in _ACTION_BY_TAXONOMY:
         return ()
     action_class, capability, consequence, reversible = _ACTION_BY_TAXONOMY[request.public_taxonomy]
-    compatible = [
+    route_by_resource = {item.resource_id: item for item in request.route_catalog.routes}
+    active_resource_ids = {item.resource_id for item in snapshot.active_commitments}
+    capability_compatible = [
         item
         for item in snapshot.resource_beliefs
-        if capability in item.capabilities and item.reported_state == "available-staged"
+        if capability in item.capabilities
+        and item.reported_state == "available-staged"
+        and item.resource_id not in active_resource_ids
+    ]
+    compatible = [
+        item
+        for item in capability_compatible
+        if route_by_resource[item.resource_id].status != ReferenceRouteStatus.UNAVAILABLE
     ]
     canonical_by_equivalence: dict[tuple[str, str, int], PublicResourceBelief] = {}
     for item in compatible:
@@ -90,6 +108,7 @@ def _physical_proposals(
         canonical_by_equivalence.setdefault(key, item)
     proposals = []
     for item in canonical_by_equivalence.values():
+        route = route_by_resource[item.resource_id]
         authority_evidence = next(
             (
                 evidence.coordination_delivery_ids
@@ -109,6 +128,7 @@ def _physical_proposals(
                 3_600,
                 item.resource_id,
             ),
+            route=route,
         )
         request_digest = decision_digest(
             {"snapshot": snapshot.snapshot_digest, "action": action.action_digest}
@@ -136,12 +156,16 @@ def _safe_alternatives(
     request: ProposalRequest,
     snapshot: ControllerVisibleSnapshot,
 ) -> tuple[SafeAlternativeProposal, ...]:
+    route_by_resource = {item.resource_id: item for item in request.route_catalog.routes}
+    active_resource_ids = {item.resource_id for item in snapshot.active_commitments}
     candidate = next(
         (
             item
             for item in snapshot.resource_beliefs
             if "public-information" in item.capabilities
             and item.reported_state == "available-staged"
+            and item.resource_id not in active_resource_ids
+            and route_by_resource[item.resource_id].status != ReferenceRouteStatus.UNAVAILABLE
         ),
         None,
     )
@@ -166,6 +190,7 @@ def _safe_alternatives(
             1_800,
             "safe-alternative",
         ),
+        route=route_by_resource[candidate.resource_id],
     )
     request_digest = decision_digest(
         {"snapshot": snapshot.snapshot_digest, "action": action.action_digest}
@@ -207,6 +232,7 @@ def _acquisition_offers(
             "channel": "reference-physical-route-verification-v1",
             "cost": cost.model_dump(mode="json"),
             "snapshot": snapshot.snapshot_digest,
+            "route_catalog": request.route_catalog.route_catalog_digest,
         }
     )
     body = {
@@ -243,15 +269,32 @@ def propose_reference_actions(
         raise ValueError("Reference proposal request does not bind the supplied snapshot")
     if not verify_model_digest(snapshot, digest_field="snapshot_digest"):
         raise ValueError("Reference public snapshot digest is invalid")
+    if not verify_model_digest(request.route_catalog, digest_field="route_catalog_digest"):
+        raise ValueError("Reference route catalog digest is invalid")
+    snapshot_resource_ids = {item.resource_id for item in snapshot.resource_beliefs}
+    route_resource_ids = {item.resource_id for item in request.route_catalog.routes}
+    if not snapshot_resource_ids.issubset(route_resource_ids):
+        raise ValueError("Reference route catalog omits a visible resource")
     physical = _physical_proposals(request, snapshot)
     acquisitions = _acquisition_offers(request, snapshot)
     safe = _safe_alternatives(request, snapshot)
     total = len(physical) + len(acquisitions) + len(safe)
     unsupported = total > 256
     capability = _ACTION_BY_TAXONOMY.get(request.public_taxonomy, (None, None, None, None))[1]
-    compatible_count = (
+    capability_compatible_count = (
         sum(
             capability in item.capabilities and item.reported_state == "available-staged"
+            for item in snapshot.resource_beliefs
+        )
+        if capability is not None
+        else 0
+    )
+    route_by_resource = {item.resource_id: item for item in request.route_catalog.routes}
+    route_unavailable_count = (
+        sum(
+            capability in item.capabilities
+            and item.reported_state == "available-staged"
+            and route_by_resource[item.resource_id].status == ReferenceRouteStatus.UNAVAILABLE
             for item in snapshot.resource_beliefs
         )
         if capability is not None
@@ -263,7 +306,11 @@ def propose_reference_actions(
         "request_digest": request_digest,
         "public_snapshot_digest": snapshot.snapshot_digest,
         "generated_count": total,
-        "semantic_deduplication_count": compatible_count - len(physical),
+        "capability_compatible_count": capability_compatible_count,
+        "route_unavailable_count": route_unavailable_count,
+        "semantic_deduplication_count": (
+            capability_compatible_count - route_unavailable_count - len(physical)
+        ),
         "complete_for_declared_grammar": not unsupported,
         "unsupported_cardinality": unsupported,
     }

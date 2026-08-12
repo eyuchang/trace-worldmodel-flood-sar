@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 
 from trace_jepa.contracts import CommitmentDecision
 from trace_jepa.scenario.delta.domain.base import DeltaModel
+from trace_reference.domain.routing import ReferencePublicRouteCatalog
 
 
 class PublicEnvironmentBelief(DeltaModel):
@@ -110,7 +111,13 @@ class ReferenceActionSpec(DeltaModel):
     actor_crew_id: str | None
     origin_node_id: str | None
     destination_public_id: str
-    route_id: str | None
+    route_id: str = Field(pattern=r"^REF-ROUTE-[0-9a-f]{20}$")
+    route_plan_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    route_crossing_ids: tuple[str, ...]
+    focal_crossing_id: str | None = Field(default=None, pattern=r"^XNG-(0[1-9]|10)$")
+    route_gauge_id: Literal["FPT", "RVB", "SJJ", "ANH", "MRU", "OLD", "MSD"]
+    routed_travel_s: int = Field(ge=0, le=86_400)
+    route_status_at_proposal: Literal["open", "blocked", "unknown"]
     required_capability: str
     execution_not_before_s: int = Field(ge=-172_800)
     execution_not_after_s: int
@@ -135,10 +142,16 @@ class ProposalRequest(DeltaModel):
     public_snapshot_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     target_public_incident_id: str
     public_taxonomy: str
-    route_id: str = Field(pattern=r"^XNG-(0[1-9]|10)$")
+    route_catalog: ReferencePublicRouteCatalog
     decision_deadline_s: int = Field(ge=-172_800, le=345_600)
     policy_version: str
     proposal_namespace: Literal["reference-public-proposal-grammar-v1"]
+
+    @model_validator(mode="after")
+    def validate_target_routes(self) -> ProposalRequest:
+        if not self.route_catalog.routes:
+            raise ValueError("Reference proposal request requires public routes")
+        return self
 
 
 class PhysicalActionProposal(DeltaModel):
@@ -206,6 +219,8 @@ class ProposalEnumerationReceipt(DeltaModel):
     request_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     public_snapshot_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     generated_count: int = Field(ge=0)
+    capability_compatible_count: int = Field(ge=0)
+    route_unavailable_count: int = Field(ge=0)
     semantic_deduplication_count: int = Field(ge=0)
     complete_for_declared_grammar: bool
     unsupported_cardinality: bool
