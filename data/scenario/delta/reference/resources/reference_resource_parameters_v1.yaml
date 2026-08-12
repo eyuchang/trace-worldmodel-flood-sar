@@ -1,0 +1,143 @@
+parameter_version: delta-reference-resource-parameters-v1
+scientific_status: development-synthetic-roster-not-operational-inventory-or-availability
+randomness_namespace: delta-reference-randomness-v1
+telemetry_interval_s: 21600
+
+class_profiles:
+  - resource_class: rescue-boat
+    capabilities: [water-rescue, missing-person-search, animal-rescue]
+    service_units: 2
+    physical_capacity: 6
+    crew_size: 3
+    duty_limit_s: 43200
+    rest_requirement_s: 28800
+    turn_around_s: 1800
+    constraints: [water-route-required, night-capability-is-fixture-specific]
+  - resource_class: airboat
+    capabilities: [water-rescue, missing-person-search, animal-rescue]
+    service_units: 2
+    physical_capacity: 4
+    crew_size: 2
+    duty_limit_s: 28800
+    rest_requirement_s: 28800
+    turn_around_s: 2400
+    constraints: [water-route-required, shallow-debris-capable]
+  - resource_class: high-water-vehicle
+    capabilities: [road-rescue, medical-transport, welfare-check]
+    service_units: 2
+    physical_capacity: 10
+    crew_size: 2
+    duty_limit_s: 43200
+    rest_requirement_s: 28800
+    turn_around_s: 1200
+    constraints: [road-route-required, maximum-synthetic-fording-depth-applies]
+  - resource_class: type-i-engine
+    capabilities: [hazard-control, welfare-check, public-information]
+    service_units: 2
+    physical_capacity: 0
+    crew_size: 4
+    duty_limit_s: 86400
+    rest_requirement_s: 28800
+    turn_around_s: 1800
+    constraints: [road-route-required, not-water-rescue-capable]
+  - resource_class: rotary-hoist
+    capabilities: [water-rescue, medical-transport, missing-person-search]
+    service_units: 4
+    physical_capacity: 4
+    crew_size: 3
+    duty_limit_s: 21600
+    rest_requirement_s: 28800
+    turn_around_s: 3600
+    constraints: [minimum-ceiling-700-ft, maximum-wind-45-kt]
+  - resource_class: rotary-recon
+    capabilities: [reconnaissance, levee-inspection, missing-person-search]
+    service_units: 2
+    physical_capacity: 0
+    crew_size: 2
+    duty_limit_s: 28800
+    rest_requirement_s: 28800
+    turn_around_s: 1800
+    constraints: [sensing-only, weather-operability-applies]
+  - resource_class: small-uas
+    capabilities: [reconnaissance, levee-inspection, missing-person-search]
+    service_units: 1
+    physical_capacity: 0
+    crew_size: 1
+    duty_limit_s: 28800
+    rest_requirement_s: 28800
+    turn_around_s: 2700
+    constraints: [maximum-wind-25-kt, simulated-vlos-restriction]
+  - resource_class: ambulance
+    capabilities: [medical-transport, welfare-check]
+    service_units: 2
+    physical_capacity: 2
+    crew_size: 2
+    duty_limit_s: 43200
+    rest_requirement_s: 28800
+    turn_around_s: 1800
+    constraints: [road-route-required, hospital-destination-required]
+  - resource_class: law-enforcement
+    capabilities: [road-rescue, welfare-check, missing-person-search, public-information]
+    service_units: 1
+    physical_capacity: 2
+    crew_size: 2
+    duty_limit_s: 43200
+    rest_requirement_s: 28800
+    turn_around_s: 900
+    constraints: [road-route-required]
+  - resource_class: swiftwater-team
+    capabilities: [water-rescue, missing-person-search]
+    service_units: 4
+    physical_capacity: 0
+    crew_size: 6
+    duty_limit_s: 43200
+    rest_requirement_s: 43200
+    turn_around_s: 3600
+    constraints: [compatible-watercraft-or-access-required]
+  - resource_class: flood-fight-crew
+    capabilities: [levee-inspection, hazard-control]
+    service_units: 4
+    physical_capacity: 0
+    crew_size: 20
+    duty_limit_s: 43200
+    rest_requirement_s: 43200
+    turn_around_s: 3600
+    constraints: [levee-access-route-required, material-supply-required]
+
+holdings:
+  - {holding_id: HLD-01, base_id: BASE-ISLETON-WALNUT, base_label: Isleton and Walnut Grove, staging_node_id: ISL-01, owning_authority_id: AUTH-01, tier: T0-local, resource_class: type-i-engine, baseline_count: 1, maximum_count: 2, nominal_travel_s: 600, nominal_staging_s: 300, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-02, base_id: BASE-ISLETON-WALNUT, base_label: Isleton and Walnut Grove, staging_node_id: ISL-01, owning_authority_id: AUTH-04, tier: T0-local, resource_class: rescue-boat, baseline_count: 1, maximum_count: 2, nominal_travel_s: 900, nominal_staging_s: 300, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-03, base_id: BASE-RIO-VISTA, base_label: Rio Vista, staging_node_id: BND-RIO-VISTA, owning_authority_id: AUTH-01, tier: T1-county, resource_class: type-i-engine, baseline_count: 2, maximum_count: 4, nominal_travel_s: 1200, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-04, base_id: BASE-RIO-VISTA, base_label: Rio Vista, staging_node_id: BND-RIO-VISTA, owning_authority_id: AUTH-04, tier: T1-county, resource_class: rescue-boat, baseline_count: 2, maximum_count: 4, nominal_travel_s: 2100, nominal_staging_s: 1200, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-05, base_id: BASE-RIO-VISTA, base_label: Rio Vista, staging_node_id: BND-RIO-VISTA, owning_authority_id: AUTH-01, tier: T1-county, resource_class: ambulance, baseline_count: 1, maximum_count: 2, nominal_travel_s: 1200, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-06, base_id: BASE-OAKLEY-BRENTWOOD, base_label: Oakley and Brentwood, staging_node_id: BND-BETHEL, owning_authority_id: AUTH-01, tier: T1-county, resource_class: type-i-engine, baseline_count: 3, maximum_count: 6, nominal_travel_s: 1800, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-07, base_id: BASE-OAKLEY-BRENTWOOD, base_label: Oakley and Brentwood, staging_node_id: BND-BETHEL, owning_authority_id: AUTH-04, tier: T1-county, resource_class: rescue-boat, baseline_count: 2, maximum_count: 4, nominal_travel_s: 2700, nominal_staging_s: 1200, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-08, base_id: BASE-OAKLEY-BRENTWOOD, base_label: Oakley and Brentwood, staging_node_id: BND-BETHEL, owning_authority_id: AUTH-01, tier: T1-county, resource_class: ambulance, baseline_count: 2, maximum_count: 4, nominal_travel_s: 1800, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-09, base_id: BASE-ANTIOCH, base_label: Antioch, staging_node_id: BND-ANTIOCH, owning_authority_id: AUTH-01, tier: T1-county, resource_class: type-i-engine, baseline_count: 5, maximum_count: 10, nominal_travel_s: 2100, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-10, base_id: BASE-ANTIOCH, base_label: Antioch, staging_node_id: BND-ANTIOCH, owning_authority_id: AUTH-04, tier: T1-county, resource_class: rescue-boat, baseline_count: 3, maximum_count: 6, nominal_travel_s: 3300, nominal_staging_s: 1200, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-11, base_id: BASE-ANTIOCH, base_label: Antioch, staging_node_id: BND-ANTIOCH, owning_authority_id: AUTH-01, tier: T1-county, resource_class: ambulance, baseline_count: 4, maximum_count: 8, nominal_travel_s: 2100, nominal_staging_s: 900, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-12, base_id: BASE-STOCKTON, base_label: Stockton, staging_node_id: BND-WOODWARD, owning_authority_id: AUTH-01, tier: T2-regional, resource_class: type-i-engine, baseline_count: 8, maximum_count: 16, nominal_travel_s: 2700, nominal_staging_s: 1800, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-13, base_id: BASE-STOCKTON, base_label: Stockton, staging_node_id: BND-WOODWARD, owning_authority_id: AUTH-04, tier: T2-regional, resource_class: rescue-boat, baseline_count: 4, maximum_count: 8, nominal_travel_s: 4200, nominal_staging_s: 1800, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-14, base_id: BASE-STOCKTON, base_label: Stockton, staging_node_id: BND-WOODWARD, owning_authority_id: AUTH-01, tier: T2-regional, resource_class: ambulance, baseline_count: 6, maximum_count: 12, nominal_travel_s: 2700, nominal_staging_s: 1800, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-15, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-03, tier: T3-state, resource_class: high-water-vehicle, baseline_count: 2, maximum_count: 4, nominal_travel_s: 3300, nominal_staging_s: 3600, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-16, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-04, tier: T3-state, resource_class: airboat, baseline_count: 2, maximum_count: 4, nominal_travel_s: 5400, nominal_staging_s: 3600, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-17, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-03, tier: T3-state, resource_class: small-uas, baseline_count: 2, maximum_count: 4, nominal_travel_s: 3300, nominal_staging_s: 1800, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-18, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-03, tier: T3-state, resource_class: law-enforcement, baseline_count: 2, maximum_count: 4, nominal_travel_s: 3300, nominal_staging_s: 1800, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-19, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-04, tier: T3-state, resource_class: swiftwater-team, baseline_count: 1, maximum_count: 2, nominal_travel_s: 5400, nominal_staging_s: 3600, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-20, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-02, tier: T3-state, resource_class: flood-fight-crew, baseline_count: 2, maximum_count: 4, nominal_travel_s: 5400, nominal_staging_s: 3600, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-21, base_id: BASE-SACRAMENTO, base_label: Sacramento regional cache, staging_node_id: BND-NORTH, owning_authority_id: AUTH-04, tier: T3-state, resource_class: rotary-recon, baseline_count: 1, maximum_count: 2, nominal_travel_s: 3600, nominal_staging_s: 2700, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-22, base_id: BASE-TRAVIS, base_label: Travis synthetic aviation source, staging_node_id: BND-RIO-VISTA, owning_authority_id: AUTH-04, tier: T3-state, resource_class: rotary-hoist, baseline_count: 1, maximum_count: 2, nominal_travel_s: 2700, nominal_staging_s: 2700, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+  - {holding_id: HLD-23, base_id: BASE-USCG-SF, base_label: USCG San Francisco synthetic aviation source, staging_node_id: BND-ANTIOCH, owning_authority_id: AUTH-04, tier: T4-federal, resource_class: rotary-hoist, baseline_count: 1, maximum_count: 2, nominal_travel_s: 3600, nominal_staging_s: 3600, fixture_semantics: synthetic-planning-fixture-from-source-sketch-not-current-inventory-claim}
+
+tier_activation_midpoint_s:
+  T0-local: 300
+  T1-county: 2700
+  T2-regional: 10800
+  T3-state: 32400
+  T4-federal: 64800
+
+limitations:
+  - Every holding is a synthetic scenario-design input derived from the source sketch, not a verified current inventory.
+  - Inclusion does not establish legal eligibility, staffing, request approval, real-time operability, or response time.
+  - The four owning authorities are logical evidence partitions and do not model incident command or statutory authority.
+  - Resource-class service units are analytical matching units, not NIMS typing or a field dispatch recommendation.

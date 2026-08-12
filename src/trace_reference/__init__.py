@@ -20,6 +20,7 @@ from .loading import (
 from .models import ReferenceScenarioConfig
 from .physical_loading import load_reference_physical_parameters
 from .protocol import REFERENCE_PROTOCOL
+from .resource_loading import load_reference_resource_parameters
 from .seeds import derive_study_seed
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "load_reference_gauge_research",
     "load_reference_governance",
     "load_reference_physical_parameters",
+    "load_reference_resource_parameters",
     "load_reference_source_requirements",
     "load_reference_source_research",
     "load_reference_topology_design",
