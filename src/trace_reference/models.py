@@ -184,8 +184,8 @@ class ReferenceScenarioConfig(DeltaModel):
 
     status: Literal["approved-decisions-development-only"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    scenario_schema_version: Literal["trace-delta-reference-scenario-v3"]
-    generator_version: Literal["delta-reference-generator-v1"]
+    scenario_schema_version: Literal["trace-delta-reference-scenario-v4"]
+    generator_version: Literal["delta-reference-generator-v2"]
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")

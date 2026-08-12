@@ -119,9 +119,19 @@ class ReferenceTruthIncident(DeltaModel):
 
 class ReferenceTruthScenario(DeltaModel):
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    schema_version: Literal["delta-reference-ground-truth-v1"]
-    coefficient_version: Literal["delta-reference-truth-development-coefficients-v1"]
-    scientific_status: Literal["development-coefficients-not-frozen-for-validation"]
+    schema_version: Literal[
+        "delta-reference-ground-truth-v1",
+        "delta-reference-ground-truth-v2",
+    ]
+    coefficient_version: Literal[
+        "delta-reference-truth-development-coefficients-v1",
+        "delta-reference-truth-development-coefficients-v2",
+    ]
+    coefficient_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    scientific_status: Literal[
+        "development-coefficients-not-frozen-for-validation",
+        "frozen-spent-development-fit-not-validation-evidence",
+    ]
     seed: int = Field(ge=0)
     incidents: tuple[ReferenceTruthIncident, ...]
     candidate_audit: tuple[ReferenceIncidentCandidateAudit, ...]
@@ -129,6 +139,14 @@ class ReferenceTruthScenario(DeltaModel):
 
     @model_validator(mode="after")
     def validate_episode_uniqueness(self) -> ReferenceTruthScenario:
+        frozen = self.schema_version.endswith("v2")
+        if frozen != (self.coefficient_digest is not None):
+            raise ValueError("Reference truth coefficient digest does not match its schema")
+        if frozen and (
+            self.coefficient_version != "delta-reference-truth-development-coefficients-v2"
+            or self.scientific_status != "frozen-spent-development-fit-not-validation-evidence"
+        ):
+            raise ValueError("Reference frozen truth provenance is inconsistent")
         incident_ids = tuple(item.truth_incident_id for item in self.incidents)
         if len(set(incident_ids)) != len(incident_ids):
             raise ValueError("Reference truth incident identifiers must be unique")

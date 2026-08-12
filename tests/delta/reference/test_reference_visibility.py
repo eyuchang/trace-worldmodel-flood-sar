@@ -199,3 +199,10 @@ def test_snapshot_uses_only_durably_delivered_activation_phase() -> None:
     activation_belief = through_mobilized.resource_beliefs[0]
     assert activation_belief.reported_state == "mobilizing"
     assert activation_belief.availability_evidence_id == "RME-0000000000000003"
+
+
+def test_authority_evidence_is_latest_bounded_delivery() -> None:
+    snapshot = _snapshot(delivered_ids=frozenset({"CD-0000000000000001"}))
+
+    assert len(snapshot.authority_evidence) == 1
+    assert snapshot.authority_evidence[0].coordination_delivery_ids == ("CD-0000000000000001",)

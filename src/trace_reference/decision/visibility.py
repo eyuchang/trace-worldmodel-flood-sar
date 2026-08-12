@@ -162,9 +162,14 @@ def build_controller_visible_snapshot(
     delivered_telemetry_ids = frozenset(
         item.evidence_id for item in delivered if item.evidence_kind == "resource-telemetry"
     )
-    by_source_authority: dict[str, list[str]] = {}
+    latest_authority_delivery: dict[str, tuple[int, str]] = {}
     for item in delivered:
-        by_source_authority.setdefault(item.source_authority_id, []).append(item.delivery_id)
+        if item.evidence_kind != "resource-telemetry":
+            continue
+        candidate = (item.delivered_at_s, item.delivery_id)
+        current = latest_authority_delivery.get(item.source_authority_id)
+        if current is None or candidate > current:
+            latest_authority_delivery[item.source_authority_id] = candidate
     body = {
         "schema_version": "delta-reference-public-snapshot-v2",
         "scenario_id": "WF-DFLD-01-REFERENCE",
@@ -193,9 +198,9 @@ def build_controller_visible_snapshot(
         "authority_evidence": [
             PublicAuthorityEvidence(
                 authority_id=authority_id,
-                coordination_delivery_ids=tuple(sorted(delivery_ids)),
+                coordination_delivery_ids=(latest[1],),
             ).model_dump(mode="json")
-            for authority_id, delivery_ids in sorted(by_source_authority.items())
+            for authority_id, latest in sorted(latest_authority_delivery.items())
         ],
         "active_commitments": [
             item.model_dump(mode="json")

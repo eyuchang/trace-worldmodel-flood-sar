@@ -24,7 +24,12 @@ def test_reference_pipeline_executes_approved_causal_order_offline() -> None:
     )
     assert len(scenario.geography.islands) == 8
     assert len(scenario.exposure.people) == 1_400
-    assert scenario.truth.scientific_status == "development-coefficients-not-frozen-for-validation"
+    assert scenario.truth.scientific_status == (
+        "frozen-spent-development-fit-not-validation-evidence"
+    )
+    assert scenario.truth.coefficient_digest == (
+        "63fa9591c17a1208cfa45c46a76997785aa9a9a15e00a074a1e62fe22540b25a"
+    )
     assert scenario.observations.raw.scientific_status == (
         "development-coefficients-not-frozen-for-validation"
     )

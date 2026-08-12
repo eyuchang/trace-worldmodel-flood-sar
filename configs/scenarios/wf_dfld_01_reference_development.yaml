@@ -1,7 +1,7 @@
 status: approved-decisions-development-only
 scenario_id: WF-DFLD-01-REFERENCE
-scenario_schema_version: trace-delta-reference-scenario-v3
-generator_version: delta-reference-generator-v1
+scenario_schema_version: trace-delta-reference-scenario-v4
+generator_version: delta-reference-generator-v2
 randomness_namespace_version: delta-reference-randomness-v1
 protocol_document_sha256: 03c407ceb1b87041e36f0c58c352840e94bab6cec73a1f69eacd80173e77a552
 protocol_amendment_sha256: 9ebe678e38a0360a3ebbef8ad55a9e334e77269c74c0065adbcc83e813d9f6ac

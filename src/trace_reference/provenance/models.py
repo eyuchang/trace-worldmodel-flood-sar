@@ -44,7 +44,7 @@ class ReferenceReplayManifest(DeltaModel):
     schema_version: Literal["delta-reference-replay-manifest-v1"]
     scientific_status: Literal["development-only-not-validation-evidence"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    generator_version: Literal["delta-reference-generator-v1"]
+    generator_version: Literal["delta-reference-generator-v2"]
     seed: int = Field(ge=0)
     randomness_namespace: Literal["delta-reference-randomness-v1"]
     generation_order: tuple[str, ...]

@@ -13,6 +13,7 @@ from trace_reference import (
     load_reference_physical_parameters,
     load_reference_resource_parameters,
 )
+from trace_reference.calibration.loading import load_reference_truth_coefficients
 from trace_reference.domain.scenario import (
     ReferencePriorProfile,
     ReferenceScenarioArtifacts,
@@ -37,6 +38,9 @@ _ACTIVATIONS = Path(
     "data/scenario/delta/reference/resources/reference_activation_parameters_v1.yaml"
 )
 _GEOGRAPHY = Path("data/scenario/delta/reference/geography")
+_TRUTH_COEFFICIENTS = Path(
+    "data/scenario/delta/reference/calibration/reference_truth_coefficients_v2.json"
+)
 
 
 def generate_reference_scenario(
@@ -55,6 +59,7 @@ def generate_reference_scenario(
     exposure_parameters = load_reference_exposure_parameters(root, _EXPOSURE)
     resource_parameters = load_reference_resource_parameters(root, _RESOURCES)
     activation_parameters = load_reference_activation_parameters(root, _ACTIVATIONS)
+    truth_coefficients = load_reference_truth_coefficients(root, _TRUTH_COEFFICIENTS)
     physical = generate_reference_physical_scenario(
         physical_parameters,
         sigma=resolved.axes.sigma,
@@ -64,7 +69,15 @@ def generate_reference_scenario(
         geography,
         seed=seed,
     )
-    truth = generate_reference_truth(physical, exposure, seed=seed)
+    truth = generate_reference_truth(
+        physical,
+        exposure,
+        seed=seed,
+        coefficient_intercepts={
+            item.incident_type: item.intercept_micros for item in truth_coefficients.selected
+        },
+        coefficient_digest=truth_coefficients.coefficient_digest,
+    )
     observations = generate_reference_observations(
         truth,
         exposure,

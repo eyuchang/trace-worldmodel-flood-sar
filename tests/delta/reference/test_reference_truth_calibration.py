@@ -5,12 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from trace_reference.calibration import (
-    benchmark_reference_truth_fit,
-    load_reference_truth_fit_protocol,
-)
+from trace_reference.calibration.loading import load_reference_truth_coefficients
 from trace_reference.calibration.truth_fit import (
+    benchmark_reference_truth_fit,
     load_reference_truth_fit_benchmark,
+    load_reference_truth_fit_protocol,
     write_reference_truth_fit_benchmark,
 )
 from trace_reference.domain.truth import ReferenceIncidentType
@@ -24,6 +23,9 @@ FAILED_BENCHMARK_V2 = Path(
 )
 PASSING_BENCHMARK_V3 = Path(
     "data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_v3.json"
+)
+TRUTH_COEFFICIENTS = Path(
+    "data/scenario/delta/reference/calibration/reference_truth_coefficients_v2.json"
 )
 
 
@@ -66,6 +68,15 @@ def test_separately_instrumented_benchmark_authorizes_the_fit() -> None:
     assert receipt.wall_time_margin_micros == 1_100_000
     assert receipt.projected_full_fit_ms == 230_582
     assert receipt.within_registered_bounds
+
+
+def test_frozen_truth_coefficients_are_digest_validated_and_complete() -> None:
+    coefficients = load_reference_truth_coefficients(ROOT, TRUTH_COEFFICIENTS)
+
+    assert coefficients.coefficient_digest == (
+        "63fa9591c17a1208cfa45c46a76997785aa9a9a15e00a074a1e62fe22540b25a"
+    )
+    assert {item.incident_type for item in coefficients.selected} == set(ReferenceIncidentType)
 
 
 def test_truth_fit_benchmark_is_digest_bound_and_tamper_evident(tmp_path: Path) -> None:

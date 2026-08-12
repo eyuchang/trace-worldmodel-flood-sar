@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -682,11 +682,18 @@ def generate_reference_truth(
     exposure: ReferenceExposureScenario,
     *,
     seed: int,
+    coefficient_intercepts: Mapping[ReferenceIncidentType, int] | None = None,
+    coefficient_digest: str | None = None,
 ) -> ReferenceTruthScenario:
-    """Generate truth before observations using development-only intercepts."""
+    """Generate truth before observations using one global coefficient vector."""
 
     accumulator = _TruthAccumulator(seed=seed)
     incident_types = tuple(ReferenceIncidentType)
+    intercepts = coefficient_intercepts or _DEVELOPMENT_INTERCEPTS_MICROS
+    if set(intercepts) != set(incident_types):
+        raise ValueError("Reference truth coefficients do not cover every incident type")
+    if (coefficient_intercepts is None) != (coefficient_digest is None):
+        raise ValueError("Reference truth coefficient values and digest must be supplied together")
     for at_s, structure, state, is_levee_anchor in _iter_structure_tick_states(
         physical,
         exposure,
@@ -716,7 +723,7 @@ def generate_reference_truth(
                     incident_type=incident_type,
                 ),
                 probability=probability_micros(
-                    _DEVELOPMENT_INTERCEPTS_MICROS[incident_type],
+                    intercepts[incident_type],
                     factors.probability_numerator_factor,
                 ),
                 severity=factors.severity_micros,
@@ -727,11 +734,23 @@ def generate_reference_truth(
     accumulator.audit.sort(
         key=lambda item: (item.eligible_start_s, item.incident_type.value, item.anchor_id)
     )
+    frozen = coefficient_digest is not None
     body = {
         "scenario_id": "WF-DFLD-01-REFERENCE",
-        "schema_version": "delta-reference-ground-truth-v1",
-        "coefficient_version": "delta-reference-truth-development-coefficients-v1",
-        "scientific_status": "development-coefficients-not-frozen-for-validation",
+        "schema_version": (
+            "delta-reference-ground-truth-v2" if frozen else "delta-reference-ground-truth-v1"
+        ),
+        "coefficient_version": (
+            "delta-reference-truth-development-coefficients-v2"
+            if frozen
+            else "delta-reference-truth-development-coefficients-v1"
+        ),
+        "coefficient_digest": coefficient_digest,
+        "scientific_status": (
+            "frozen-spent-development-fit-not-validation-evidence"
+            if frozen
+            else "development-coefficients-not-frozen-for-validation"
+        ),
         "seed": seed,
         "incidents": [item.model_dump(mode="json") for item in accumulator.incidents],
         "candidate_audit": [item.model_dump(mode="json") for item in accumulator.audit],

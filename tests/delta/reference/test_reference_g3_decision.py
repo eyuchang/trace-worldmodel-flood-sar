@@ -200,6 +200,7 @@ def decision_fixture():
         coordination,
         ToyActionPrefixPredictor().provenance(),
     )
+    assert all(len(item.coordination_delivery_ids) == 1 for item in snapshot.authority_evidence)
     geography = load_reference_geography(
         geography_root=ROOT / "data/scenario/delta/reference/geography"
     )
