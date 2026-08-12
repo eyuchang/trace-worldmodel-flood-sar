@@ -6,6 +6,7 @@ import hashlib
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from typing import Literal
 
 from trace_jepa.support import canonical_json_bytes
 from trace_reference.domain.exposure import (
@@ -62,6 +63,41 @@ class _CandidateContext:
     incident_type: ReferenceIncidentType
 
 
+@dataclass(frozen=True)
+class _StructureTickState:
+    """Factors shared by every incident type at one structure/tick."""
+
+    physical: ReferencePhysicalSample
+    structure: ReferenceSyntheticStructure
+    occupants: tuple[ReferenceSyntheticPerson, ...]
+    away_people: tuple[ReferenceSyntheticPerson, ...]
+    hazard_micros: int
+    maximum_vulnerability_micros: int
+    access_impaired: bool
+    occupant_signature: str
+    away_signature: str
+
+
+@dataclass(frozen=True)
+class _CandidateAttemptMaterial:
+    """Unvalidated hot-path representation converted once per completed episode."""
+
+    candidate_digest: str
+    at_s: int
+    probability_micros: int
+    draw_micros: int
+    disposition: Literal["draw-rejected", "accepted-new-episode"]
+
+    def body(self) -> dict[str, object]:
+        return {
+            "candidate_digest": self.candidate_digest,
+            "at_s": self.at_s,
+            "probability_micros": self.probability_micros,
+            "draw_micros": self.draw_micros,
+            "disposition": self.disposition,
+        }
+
+
 @dataclass
 class _EpisodeDraft:
     incident_type: ReferenceIncidentType
@@ -73,7 +109,7 @@ class _EpisodeDraft:
     attempt_count: int = 0
     rejected_attempt_count: int = 0
     attempt_trace_sha256: str = "0" * 64
-    representative_attempt: ReferenceIncidentCandidateAttempt | None = None
+    representative_attempt: _CandidateAttemptMaterial | None = None
     accepted_truth_incident_id: str | None = None
     suppressed_eligible_ticks: int = 0
 
@@ -101,10 +137,10 @@ class _EpisodeDraft:
     def _representative_attempt(self) -> ReferenceIncidentCandidateAttempt:
         if self.representative_attempt is None:
             raise RuntimeError("eligible Reference episode has no keyed candidate attempt")
-        return self.representative_attempt
+        return ReferenceIncidentCandidateAttempt(**self.representative_attempt.body())
 
-    def record(self, attempt: ReferenceIncidentCandidateAttempt) -> None:
-        attempt_bytes = canonical_json_bytes(attempt.model_dump(mode="json"))
+    def record(self, attempt: _CandidateAttemptMaterial) -> None:
+        attempt_bytes = canonical_json_bytes(attempt.body())
         self.attempt_trace_sha256 = hashlib.sha256(
             bytes.fromhex(self.attempt_trace_sha256) + attempt_bytes
         ).hexdigest()
@@ -126,16 +162,11 @@ class _TruthAccumulator:
         self,
         context: _CandidateContext,
         *,
-        eligible: bool,
         probability: int,
         severity: int,
         signature: str,
     ) -> None:
-        at_s = context.physical.at_s
         anchor_key = (context.incident_type, _anchor_id(context))
-        if not eligible:
-            self._close(anchor_key, at_s)
-            return
         draft = self._episode(context, anchor_key, signature)
         if draft.accepted_truth_incident_id is not None:
             draft.suppressed_eligible_ticks += 1
@@ -151,6 +182,16 @@ class _TruthAccumulator:
             )
             self.incidents.append(incident)
             draft.accepted_truth_incident_id = incident.truth_incident_id
+
+    def close_ineligible(
+        self,
+        incident_type: ReferenceIncidentType,
+        anchor_id: str,
+        at_s: int,
+    ) -> None:
+        """Close a previously eligible episode without constructing a candidate context."""
+
+        self._close((incident_type, anchor_id), at_s)
 
     def _episode(
         self,
@@ -179,7 +220,7 @@ class _TruthAccumulator:
         self,
         context: _CandidateContext,
         probability: int,
-    ) -> ReferenceIncidentCandidateAttempt:
+    ) -> _CandidateAttemptMaterial:
         at_s = context.physical.at_s
         identifier_parts = (
             at_s,
@@ -198,7 +239,7 @@ class _TruthAccumulator:
             "truth-candidate-draw",
             *identifier_parts,
         )
-        return ReferenceIncidentCandidateAttempt(
+        return _CandidateAttemptMaterial(
             candidate_digest=candidate_digest,
             at_s=at_s,
             probability_micros=probability,
@@ -242,20 +283,28 @@ def _hazard_micros(sample: ReferencePhysicalSample, island_id: str) -> int:
     return min(1_000_000, 100_000 + rain + wind + flood + crossing_loss)
 
 
-def _subjects_signature(people: Iterable[ReferenceSyntheticPerson]) -> str:
+def _subjects_signature(
+    people: Iterable[ReferenceSyntheticPerson],
+    cache: dict[tuple[str, ...], str] | None = None,
+) -> str:
     ids = tuple(sorted(item.truth_person_id for item in people))
-    return hashlib.sha256(canonical_json_bytes(ids)).hexdigest()[:16]
+    if cache is None:
+        return hashlib.sha256(canonical_json_bytes(ids)).hexdigest()[:16]
+    cached = cache.get(ids)
+    if cached is None:
+        cached = hashlib.sha256(canonical_json_bytes(ids)).hexdigest()[:16]
+        cache[ids] = cached
+    return cached
 
 
 def _person_centered_factors(
-    context: _CandidateContext,
-    *,
-    hazard: int,
-    access_impaired: bool,
+    state: _StructureTickState,
+    incident_type: ReferenceIncidentType,
 ) -> tuple[bool, int, int | None]:
-    occupants = context.occupants
-    away_people = context.away_people
-    incident_type = context.incident_type
+    occupants = state.occupants
+    away_people = state.away_people
+    hazard = state.hazard_micros
+    access_impaired = state.access_impaired
     if incident_type == ReferenceIncidentType.STRANDED_STRUCTURE:
         return (
             bool(occupants) and hazard >= 450_000,
@@ -291,20 +340,18 @@ def _person_centered_factors(
     return False, 0, None
 
 
-def _eligible_and_factors(context: _CandidateContext) -> tuple[bool, int, int, str]:
-    sample = context.physical
-    structure = context.structure
-    occupants = context.occupants
-    away_people = context.away_people
-    hazard = _hazard_micros(sample, structure.island_id)
-    maximum_vulnerability = max(
-        (person.vulnerability_micros for person in (*occupants, *away_people)),
-        default=structure.vulnerability_micros,
-    )
-    access_impaired = any(item.status != "open" for item in sample.crossings)
-    incident_type = context.incident_type
+def _eligible_and_factors(
+    state: _StructureTickState,
+    incident_type: ReferenceIncidentType,
+) -> tuple[bool, int, int, str]:
+    sample = state.physical
+    structure = state.structure
+    hazard = state.hazard_micros
+    maximum_vulnerability = state.maximum_vulnerability_micros
+    access_impaired = state.access_impaired
     eligible, subject_factor, person_access_factor = _person_centered_factors(
-        context, hazard=hazard, access_impaired=access_impaired
+        state,
+        incident_type,
     )
     if person_access_factor is not None:
         access_factor = person_access_factor
@@ -327,16 +374,12 @@ def _eligible_and_factors(context: _CandidateContext) -> tuple[bool, int, int, s
         maximum_vulnerability = structure.vulnerability_micros
         access_factor = 900_000 if access_impaired else 650_000
     subject_factor = min(1_000_000, subject_factor)
-    subject_people = (
-        away_people
+    subject_signature = (
+        state.away_signature
         if incident_type
-        in {
-            ReferenceIncidentType.VEHICLE_RESCUE,
-            ReferenceIncidentType.MISSING_PERSON,
-        }
-        else occupants
+        in {ReferenceIncidentType.VEHICLE_RESCUE, ReferenceIncidentType.MISSING_PERSON}
+        else state.occupant_signature
     )
-    subject_signature = _subjects_signature(subject_people)
     probability = round(
         _DEVELOPMENT_INTERCEPTS_MICROS[incident_type]
         * hazard
@@ -346,6 +389,40 @@ def _eligible_and_factors(context: _CandidateContext) -> tuple[bool, int, int, s
         / 10**24
     )
     return eligible, min(1_000_000, probability), hazard, subject_signature
+
+
+def _structure_tick_state(
+    physical: ReferencePhysicalSample,
+    structure: ReferenceSyntheticStructure,
+    home_people: tuple[ReferenceSyntheticPerson, ...],
+    *,
+    hazard_micros: int,
+    access_impaired: bool,
+    signature_cache: dict[tuple[str, ...], str],
+) -> _StructureTickState:
+    occupant_ids = {
+        person.truth_person_id
+        for person in home_people
+        if _person_at(person, physical.at_s) == structure.truth_structure_id
+    }
+    occupants = tuple(person for person in home_people if person.truth_person_id in occupant_ids)
+    away_people = tuple(
+        person for person in home_people if person.truth_person_id not in occupant_ids
+    )
+    return _StructureTickState(
+        physical=physical,
+        structure=structure,
+        occupants=occupants,
+        away_people=away_people,
+        hazard_micros=hazard_micros,
+        maximum_vulnerability_micros=max(
+            (person.vulnerability_micros for person in home_people),
+            default=structure.vulnerability_micros,
+        ),
+        access_impaired=access_impaired,
+        occupant_signature=_subjects_signature(occupants, signature_cache),
+        away_signature=_subjects_signature(away_people, signature_cache),
+    )
 
 
 def _episode_key(context: _CandidateContext, subject_signature: str, start_s: int) -> str:
@@ -419,38 +496,56 @@ def generate_reference_truth(
         people_by_home[person.home_structure_id].append(person)
     sample_by_time = {sample.at_s: sample for sample in physical.samples}
     accumulator = _TruthAccumulator(seed=seed)
+    signature_cache: dict[tuple[str, ...], str] = {}
     incident_types = tuple(ReferenceIncidentType)
     levee_anchor_structure_id = next(
         item.truth_structure_id for item in exposure.structures if item.island_id == "ISL-01"
     )
     for at_s in range(-172_800, 345_600, _CANDIDATE_TICK_S):
         sample = sample_by_time[at_s]
+        hazard_by_island = {
+            f"ISL-{index:02d}": _hazard_micros(sample, f"ISL-{index:02d}") for index in range(1, 9)
+        }
+        access_impaired = any(item.status != "open" for item in sample.crossings)
         for structure in exposure.structures:
-            home_people = tuple(people_by_home[structure.truth_structure_id])
-            occupants = tuple(
-                person
-                for person in home_people
-                if _person_at(person, at_s) == structure.truth_structure_id
+            state = _structure_tick_state(
+                sample,
+                structure,
+                tuple(people_by_home[structure.truth_structure_id]),
+                hazard_micros=hazard_by_island[structure.island_id],
+                access_impaired=access_impaired,
+                signature_cache=signature_cache,
             )
-            away_people = tuple(person for person in home_people if person not in occupants)
             for incident_type in incident_types:
                 if (
                     incident_type == ReferenceIncidentType.LEVEE_INSPECTION
                     and structure.truth_structure_id != levee_anchor_structure_id
                 ):
                     continue
-                context = _CandidateContext(
-                    seed=seed,
-                    physical=sample,
-                    structure=structure,
-                    occupants=occupants,
-                    away_people=away_people,
-                    incident_type=incident_type,
+                eligible, probability, severity, signature = _eligible_and_factors(
+                    state,
+                    incident_type,
                 )
-                eligible, probability, severity, signature = _eligible_and_factors(context)
+                if not eligible:
+                    accumulator.close_ineligible(
+                        incident_type,
+                        (
+                            "SIM-RD407-WEST-01"
+                            if incident_type == ReferenceIncidentType.LEVEE_INSPECTION
+                            else structure.truth_structure_id
+                        ),
+                        at_s,
+                    )
+                    continue
                 accumulator.observe(
-                    context,
-                    eligible=eligible,
+                    _CandidateContext(
+                        seed=seed,
+                        physical=sample,
+                        structure=structure,
+                        occupants=state.occupants,
+                        away_people=state.away_people,
+                        incident_type=incident_type,
+                    ),
                     probability=probability,
                     severity=severity,
                     signature=signature,

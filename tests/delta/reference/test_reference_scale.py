@@ -5,6 +5,7 @@ from pathlib import Path
 from trace_reference import load_reference_config
 from trace_reference.scale import (
     benchmark_reference_event_ordering,
+    benchmark_reference_workload_scale,
     characterize_reference_scale,
 )
 
@@ -31,3 +32,16 @@ def test_reference_event_ordering_digest_is_deterministic() -> None:
     assert first.ordered_key_sha256 == second.ordered_key_sha256
     assert first.event_count == characterization.minimum_scheduled_event_count
     assert first.status == "descriptive-local-engineering-benchmark"
+
+
+def test_constructed_workload_benchmark_is_bounded_and_non_scientific() -> None:
+    result = benchmark_reference_workload_scale(
+        latent_incident_target=100,
+        public_report_target=200,
+        authority_count=4,
+    )
+
+    assert result.processed_graph_observations == 800
+    assert result.status == "constructed-engineering-proxy-not-simulator-evidence"
+    assert result.projected_bundle_bytes_conservative < 1024**3
+    assert result.projected_peak_memory_bytes_conservative < 2 * 1024**3

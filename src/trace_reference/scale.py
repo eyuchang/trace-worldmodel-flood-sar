@@ -5,12 +5,20 @@ from __future__ import annotations
 import hashlib
 import statistics
 import time
+import tracemalloc
 from dataclasses import dataclass
 
 from pydantic import Field
 
 from trace_jepa.scenario.delta.domain.base import DeltaModel
 from trace_jepa.support import canonical_json_bytes, sha256_bytes
+from trace_reference.domain.observations import (
+    ReferenceAuthorityId,
+    ReferencePublicLocation,
+    ReferencePublicTaxonomy,
+    ReferenceRawReport,
+)
+from trace_reference.reconciliation import ReferenceEvidenceGraph
 
 from .models import ReferenceScenarioConfig
 
@@ -38,6 +46,22 @@ class ReferenceEventOrderingBenchmark(DeltaModel):
     repeats: int = Field(gt=0)
     median_elapsed_ms: float = Field(ge=0.0)
     ordered_key_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ReferenceWorkloadScaleBenchmark(DeltaModel):
+    """Constructed high-volume engineering proxy; never a scientific result."""
+
+    schema_version: str = "delta-reference-workload-scale-benchmark-v1"
+    status: str = "constructed-engineering-proxy-not-simulator-evidence"
+    latent_incident_target: int = Field(gt=0)
+    public_report_target: int = Field(gt=0)
+    authority_count: int = Field(gt=0)
+    processed_graph_observations: int = Field(gt=0)
+    elapsed_ms: float = Field(ge=0)
+    traced_python_peak_bytes: int = Field(ge=0)
+    projected_bundle_bytes_conservative: int = Field(gt=0)
+    projected_peak_memory_bytes_conservative: int = Field(gt=0)
+    projection_basis: tuple[str, ...]
 
 
 @dataclass(frozen=True, order=True)
@@ -125,4 +149,89 @@ def benchmark_reference_event_ordering(
         repeats=repeats,
         median_elapsed_ms=statistics.median(elapsed_ms),
         ordered_key_sha256=ordered_digest,
+    )
+
+
+def _scale_report(index: int, count: int) -> ReferenceRawReport:
+    at_s = index * 345_300 // max(1, count - 1)
+    island = index % 8
+    taxonomy = tuple(ReferencePublicTaxonomy)[index % len(ReferencePublicTaxonomy)]
+    return ReferenceRawReport(
+        call_id=f"RC-{index + 1:016x}",
+        observed_at_s=at_s,
+        channel="911",
+        callback_token=None,
+        callback_failed=False,
+        call_dropped=False,
+        third_party=False,
+        language_access="english",
+        location=ReferencePublicLocation(
+            easting_mm_epsg26910=620_000_000 + island * 10_000_000,
+            northing_mm_epsg26910=4_220_000_000 + island * 10_000_000,
+            precision_m=75,
+            method="gps",
+            stated_descriptor="constructed scale fixture",
+        ),
+        taxonomy=taxonomy,
+        reported_occupants=1,
+        medical_descriptors=(),
+        descriptor_tokens=("nonunique-scale-token",),
+    )
+
+
+def benchmark_reference_workload_scale(
+    *,
+    latent_incident_target: int = 2_000,
+    public_report_target: int = 2_900,
+    authority_count: int = 4,
+) -> ReferenceWorkloadScaleBenchmark:
+    """Exercise bounded reconciliation at design scale and conservatively project storage."""
+
+    if latent_incident_target <= 0 or public_report_target <= 0:
+        raise ValueError("Reference scale targets must be positive")
+    authorities: tuple[ReferenceAuthorityId, ...] = (
+        "AUTH-01",
+        "AUTH-02",
+        "AUTH-03",
+        "AUTH-04",
+    )
+    if not 1 <= authority_count <= len(authorities):
+        raise ValueError("Reference scale authority count must be between one and four")
+    graphs = tuple(ReferenceEvidenceGraph(item) for item in authorities[:authority_count])
+    tracemalloc.start()
+    started = time.perf_counter_ns()
+    for index in range(public_report_target):
+        report = _scale_report(index, public_report_target)
+        for graph in graphs:
+            graph.process(report, delivered_at_s=report.observed_at_s)
+    elapsed_ms = (time.perf_counter_ns() - started) / 1_000_000
+    _, traced_peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    invariant_bundle_bytes = 32 * 1024 * 1024
+    incident_bytes = 16 * 1024 * latent_incident_target
+    report_authority_bytes = 24 * 1024 * public_report_target * authority_count
+    projected_bundle = invariant_bundle_bytes + incident_bytes + report_authority_bytes
+    projected_memory = (
+        512 * 1024 * 1024
+        + 32 * 1024 * latent_incident_target
+        + 64 * 1024 * public_report_target
+        + traced_peak
+    )
+    return ReferenceWorkloadScaleBenchmark(
+        latent_incident_target=latent_incident_target,
+        public_report_target=public_report_target,
+        authority_count=authority_count,
+        processed_graph_observations=public_report_target * authority_count,
+        elapsed_ms=elapsed_ms,
+        traced_python_peak_bytes=traced_peak,
+        projected_bundle_bytes_conservative=projected_bundle,
+        projected_peak_memory_bytes_conservative=projected_memory,
+        projection_basis=(
+            "32 MiB invariant bundle allowance",
+            "16 KiB per latent incident",
+            "24 KiB per report-authority runtime projection",
+            "512 MiB invariant process allowance plus 32 KiB/incident and 64 KiB/report",
+            "constructed reports span 96 hours and exercise four independent evidence graphs",
+        ),
     )

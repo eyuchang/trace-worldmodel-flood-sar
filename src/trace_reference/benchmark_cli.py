@@ -7,7 +7,11 @@ import json
 from pathlib import Path
 
 from .loading import load_reference_config
-from .scale import benchmark_reference_event_ordering, characterize_reference_scale
+from .scale import (
+    benchmark_reference_event_ordering,
+    benchmark_reference_workload_scale,
+    characterize_reference_scale,
+)
 
 
 def main() -> int:
@@ -26,11 +30,13 @@ def main() -> int:
         characterization,
         repeats=arguments.repeats,
     )
+    workload = benchmark_reference_workload_scale()
     print(
         json.dumps(
             {
                 "characterization": characterization.model_dump(mode="json"),
                 "benchmark": benchmark.model_dump(mode="json"),
+                "workload": workload.model_dump(mode="json"),
             },
             sort_keys=True,
             separators=(",", ":"),

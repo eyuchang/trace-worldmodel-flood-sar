@@ -21,6 +21,7 @@ _ALGORITHM_ID = "reference-visible-evidence-graph-q075-v1"
 _SPATIAL_MULTIPLIER = 0.75
 _MAX_LINK_TIME_S = 1_500
 _MAX_CLUSTER_SPAN_S = 1_800
+_TIME_BUCKET_S = 300
 _LinkStatus: TypeAlias = Literal["confirmed", "suspected", "rejected"]
 _StepStatus: TypeAlias = Literal["new", "confirmed", "suspected"]
 
@@ -97,6 +98,9 @@ class ReferenceEvidenceGraph:
         self._cluster_by_call: dict[str, str] = {}
         self._members_by_cluster: dict[str, list[str]] = defaultdict(list)
         self._links: list[ReferenceReconciliationLink] = []
+        self._time_buckets: dict[int, list[str]] = defaultdict(list)
+        self._callback_index: dict[str, list[str]] = defaultdict(list)
+        self._processing_order: dict[str, int] = {}
 
     def process(
         self,
@@ -176,9 +180,8 @@ class ReferenceEvidenceGraph:
             return self._reports[revision], ("explicit_visible_revision_pointer",)
         if _callback_available(report):
             matches = [
-                item
-                for item in self._reports.values()
-                if _callback_available(item) and item.callback_token == report.callback_token
+                self._reports[call_id]
+                for call_id in self._callback_index.get(report.callback_token or "", ())
             ]
             if len({self._cluster_by_call[item.call_id] for item in matches}) == 1 and matches:
                 return min(matches, key=lambda item: item.call_id), ("exact_shared_callback_token",)
@@ -189,7 +192,7 @@ class ReferenceEvidenceGraph:
         report: ReferenceRawReport,
     ) -> list[tuple[ReferenceRawReport, tuple[str, ...]]]:
         candidates = []
-        for previous in self._reports.values():
+        for previous in self._temporal_candidates(report):
             accepted, families, _ = _soft_evidence(report, previous)
             if accepted and not _visible_contradiction(report, previous):
                 candidates.append((previous, families))
@@ -211,7 +214,7 @@ class ReferenceEvidenceGraph:
         delivered_at_s: int,
     ) -> tuple[ReferenceReconciliationLink, ...]:
         links = []
-        for previous in self._reports.values():
+        for previous in self._temporal_candidates(report):
             _accepted, families, plausible = _soft_evidence(report, previous)
             if plausible:
                 status: _LinkStatus = (
@@ -240,9 +243,29 @@ class ReferenceEvidenceGraph:
         return ReferenceReconciliationLink(**body, link_digest=decision_digest(body))
 
     def _insert(self, report: ReferenceRawReport, cluster_id: str) -> None:
+        self._processing_order[report.call_id] = len(self._processing_order)
         self._reports[report.call_id] = report
         self._cluster_by_call[report.call_id] = cluster_id
         self._members_by_cluster[cluster_id].append(report.call_id)
+        self._time_buckets[report.observed_at_s // _TIME_BUCKET_S].append(report.call_id)
+        if _callback_available(report):
+            self._callback_index[report.callback_token or ""].append(report.call_id)
+
+    def _temporal_candidates(self, report: ReferenceRawReport) -> tuple[ReferenceRawReport, ...]:
+        """Return exactly the prior reports inside the hard temporal window."""
+
+        lower = (report.observed_at_s - _MAX_LINK_TIME_S) // _TIME_BUCKET_S
+        upper = (report.observed_at_s + _MAX_LINK_TIME_S) // _TIME_BUCKET_S
+        call_ids = {
+            call_id
+            for bucket in range(lower, upper + 1)
+            for call_id in self._time_buckets.get(bucket, ())
+            if abs(self._reports[call_id].observed_at_s - report.observed_at_s) <= _MAX_LINK_TIME_S
+        }
+        return tuple(
+            self._reports[call_id]
+            for call_id in sorted(call_ids, key=self._processing_order.__getitem__)
+        )
 
     def _step(
         self,

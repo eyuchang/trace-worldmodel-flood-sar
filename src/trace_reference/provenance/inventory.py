@@ -44,6 +44,7 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
     "data/scenario/delta/reference_protocol/small_baseline_v1.json",
     "docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md",
+    "docs/delta/reference/REFERENCE_CALIBRATION_FEASIBILITY_V1.md",
     "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md",

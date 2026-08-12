@@ -5,6 +5,21 @@ from __future__ import annotations
 import hashlib
 import math
 from collections.abc import Iterable
+from functools import lru_cache
+
+
+def _append_encoded(payload: bytearray, value: object) -> None:
+    encoded = str(value).encode("utf-8")
+    payload.extend(len(encoded).to_bytes(8, "big"))
+    payload.extend(encoded)
+
+
+@lru_cache(maxsize=1_024)
+def _prefix(seed: int, namespace: str) -> bytes:
+    payload = bytearray()
+    for value in ("WF-DFLD-01-REFERENCE", namespace, seed):
+        _append_encoded(payload, value)
+    return bytes(payload)
 
 
 def keyed_digest(seed: int, namespace: str, *parts: object) -> bytes:
@@ -12,12 +27,10 @@ def keyed_digest(seed: int, namespace: str, *parts: object) -> bytes:
 
     if seed < 0:
         raise ValueError("Reference generation seeds must be nonnegative")
-    digest = hashlib.sha256()
-    for value in ("WF-DFLD-01-REFERENCE", namespace, seed, *parts):
-        encoded = str(value).encode("utf-8")
-        digest.update(len(encoded).to_bytes(8, "big"))
-        digest.update(encoded)
-    return digest.digest()
+    payload = bytearray(_prefix(seed, namespace))
+    for value in parts:
+        _append_encoded(payload, value)
+    return hashlib.sha256(payload).digest()
 
 
 def uniform_micros(seed: int, namespace: str, *parts: object) -> int:
