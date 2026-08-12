@@ -236,8 +236,16 @@ class ReferenceTraceRepository(TraceRepository):
         trusted_root: Path,
         relative_name: Path = Path("trace_records.jsonl"),
     ) -> None:
-        self.path = _prepare_file(trusted_root, relative_name, "Reference TRACE repository")
-        self._trusted_root = Path(trusted_root)
+        self._trusted_root = safe_directory(
+            trusted_root,
+            declared_root=trusted_root,
+            label="Reference TRACE repository root",
+        )
+        self.path = _prepare_file(
+            self._trusted_root,
+            relative_name,
+            "Reference TRACE repository",
+        )
         self._cache = _load_json_lines(
             self.path,
             maximum_bytes=_MAX_LEDGER_BYTES,
@@ -351,8 +359,16 @@ class ReferenceCommitmentLog(CommitmentLog):
         trusted_root: Path,
         relative_name: Path = Path("commitments.jsonl"),
     ) -> None:
-        self.path = _prepare_file(trusted_root, relative_name, "Reference commitment log")
-        self._trusted_root = Path(trusted_root)
+        self._trusted_root = safe_directory(
+            trusted_root,
+            declared_root=trusted_root,
+            label="Reference commitment-log root",
+        )
+        self.path = _prepare_file(
+            self._trusted_root,
+            relative_name,
+            "Reference commitment log",
+        )
         self._cache = _load_json_lines(
             self.path,
             maximum_bytes=_MAX_LEDGER_BYTES,

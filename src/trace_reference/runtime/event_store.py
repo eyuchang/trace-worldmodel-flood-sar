@@ -20,6 +20,7 @@ _PUBLIC_MISSION_EVENT_TYPES = frozenset(
     {
         ReferenceEventType.CALL_DELIVERED,
         ReferenceEventType.COORDINATION_MESSAGE_DELIVERED,
+        ReferenceEventType.RECONCILIATION_UPDATED,
         ReferenceEventType.RESOURCE_STATE_CHANGED,
         ReferenceEventType.TRACE_DECISION_RECORDED,
         ReferenceEventType.COMMITMENT_CREATED,

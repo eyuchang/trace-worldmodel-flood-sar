@@ -159,6 +159,32 @@ def test_reference_trace_storage_rejects_unsafe_ids_and_symlink_roots(tmp_path: 
         ReferenceTraceRepository(alias)
 
 
+def test_reference_trace_storage_uses_one_canonical_trusted_root(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    nested = root / "nested"
+    nested.mkdir(parents=True)
+    equivalent_spelling = nested / ".."
+
+    runtime = _runtime(equivalent_spelling)
+    record, _evaluation = runtime.assess(
+        claim=Claim(
+            claim_id="reference-canonical-root-claim",
+            layer=ClaimLayer.PREDICTIVE,
+            text="Canonical path spellings bind one trusted runtime root.",
+            created_at=NOW,
+        ),
+        evidence=_evidence(),
+        action_name="inspect_levee",
+        reversible=False,
+        authority_present=True,
+        lineage_key="reference-canonical-root-lineage",
+        created_at=NOW,
+    )
+
+    assert ReferenceTraceRepository(root).get(record.record_id) == record
+    assert ReferenceEvidenceLedger(root).get("reference-evidence-001") == _evidence()
+
+
 def test_reference_evidence_index_detects_content_tampering_and_orphans(tmp_path: Path) -> None:
     ledger = ReferenceEvidenceLedger(tmp_path)
     ledger.put(_evidence())

@@ -406,8 +406,13 @@ class ReferenceDecisionEngine:
             raise ValueError("Reference response decisions begin at evaluation T0")
         if values.report.call_id != values.envelope.call_id:
             raise ValueError("Reference report and envelope identifiers disagree")
-        if values.envelope.initial_authority_id != values.controller_authority_id:
-            raise ValueError("Reference initial decision authority disagrees with envelope")
+        expected_authority = (
+            "AUTH-01"
+            if self.dependencies.scenario.coordination.public.phi == 1
+            else values.envelope.initial_authority_id
+        )
+        if expected_authority != values.controller_authority_id:
+            raise ValueError("Reference initial decision authority disagrees with coordination")
         if values.reconciliation.call_id != values.report.call_id:
             raise ValueError("Reference reconciliation step names another public report")
         if values.reconciliation.controller_authority_id != values.controller_authority_id:
