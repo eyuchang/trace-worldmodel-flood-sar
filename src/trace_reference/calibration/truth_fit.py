@@ -102,7 +102,6 @@ def benchmark_reference_truth_fit(
     if not 1 <= pilot_seed_count <= 10:
         raise ValueError("Reference truth-fit pilot must contain between one and ten seeds")
     seeds = derive_seed_prefix("development", pilot_seed_count)
-    tracemalloc.start()
     started = time.perf_counter_ns()
     physical, exposure_parameters, geography = _scenario_inputs(repository_root)
     episodes = 0
@@ -113,9 +112,19 @@ def benchmark_reference_truth_fit(
         episodes += summary.eligible_episode_count
         intervals += len(summary.evaluation_intervals)
     elapsed_ms = round((time.perf_counter_ns() - started) / 1_000_000)
+    memory_seed = seeds[0]
+    tracemalloc.start()
+    memory_exposure = generate_reference_exposure(
+        exposure_parameters,
+        geography,
+        seed=memory_seed,
+    )
+    build_reference_truth_fit_seed_summary(physical, memory_exposure, seed=memory_seed)
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    projected_ms = math.ceil(elapsed_ms * protocol.seed_count / pilot_seed_count)
+    projected_ms = math.ceil(
+        elapsed_ms * protocol.seed_count / pilot_seed_count * 1_100_000 / 1_000_000
+    )
     projected_disk = 64 * 1024 * 1024
     within = (
         projected_ms <= protocol.resource_stop_bounds.maximum_wall_time_s * 1_000
@@ -123,9 +132,11 @@ def benchmark_reference_truth_fit(
         and projected_disk <= protocol.resource_stop_bounds.maximum_additional_disk_bytes
     )
     body = {
-        "schema_version": "delta-reference-truth-fit-benchmark-v2",
+        "schema_version": "delta-reference-truth-fit-benchmark-v3",
         "scientific_status": "development-resource-gate-not-fit-evidence",
         "kernel_id": "compact-primitive-exact-v2",
+        "measurement_method": "separate-wall-and-tracemalloc-v2",
+        "wall_time_margin_micros": 1_100_000,
         "protocol_sha256": _protocol_sha256(repository_root),
         "seed_indices": tuple(range(pilot_seed_count)),
         "elapsed_ms": elapsed_ms,

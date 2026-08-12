@@ -80,9 +80,18 @@ class ReferenceTruthFitBenchmarkReceipt(DeltaModel):
     schema_version: Literal[
         "delta-reference-truth-fit-benchmark-v1",
         "delta-reference-truth-fit-benchmark-v2",
+        "delta-reference-truth-fit-benchmark-v3",
     ]
     scientific_status: Literal["development-resource-gate-not-fit-evidence"]
     kernel_id: Literal["compact-primitive-exact-v2"] | None = None
+    measurement_method: (
+        Literal[
+            "combined-tracemalloc-wall-v1",
+            "separate-wall-and-tracemalloc-v2",
+        ]
+        | None
+    ) = None
+    wall_time_margin_micros: Literal[1_100_000] | None = None
     protocol_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     seed_indices: tuple[int, ...] = Field(min_length=1)
     elapsed_ms: int = Field(ge=0)
@@ -96,8 +105,16 @@ class ReferenceTruthFitBenchmarkReceipt(DeltaModel):
 
     @model_validator(mode="after")
     def validate_digest(self) -> ReferenceTruthFitBenchmarkReceipt:
-        if (self.schema_version.endswith("v2")) != (self.kernel_id is not None):
+        if self.schema_version.endswith("v1") and self.kernel_id is not None:
             raise ValueError("Reference truth benchmark kernel version is inconsistent")
+        if self.schema_version.endswith("v3"):
+            if (
+                self.measurement_method != "separate-wall-and-tracemalloc-v2"
+                or self.wall_time_margin_micros != 1_100_000
+            ):
+                raise ValueError("Reference truth benchmark v3 measurement contract is invalid")
+        elif self.measurement_method is not None or self.wall_time_margin_micros is not None:
+            raise ValueError("Legacy Reference benchmark has unexpected measurement metadata")
         body = self.model_dump(
             mode="json",
             exclude={"receipt_digest"},

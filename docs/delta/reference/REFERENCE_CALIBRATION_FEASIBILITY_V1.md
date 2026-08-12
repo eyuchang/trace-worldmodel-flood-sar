@@ -90,3 +90,14 @@ rather than a memory or storage limitation. The digest-bound receipt is
 preserved at
 `data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_failed_v1.json`.
 No coefficients were selected from this aborted run.
+
+The exact compact-kernel correction then reduced the combined traced five-seed
+time to 49,270 ms, but its 985,400 ms (16.4 minute) projection still exceeded
+the wall-time gate. Its second digest-bound failure receipt is preserved as
+`reference_truth_fit_benchmark_failed_v2.json`; no fit followed it either. The
+allocation tracer was the dominant remaining observer cost, so benchmark v3
+freezes separate measurements: the five-seed wall clock is measured without
+allocation tracing, a distinct repeated seed measures traced peak memory, and
+the wall-time projection receives a fixed 10% upward margin. This separation
+does not change generation, sufficient statistics, resource bounds, seeds, or
+the pass threshold.
