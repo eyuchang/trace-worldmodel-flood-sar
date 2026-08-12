@@ -123,8 +123,9 @@ def benchmark_reference_truth_fit(
         and projected_disk <= protocol.resource_stop_bounds.maximum_additional_disk_bytes
     )
     body = {
-        "schema_version": "delta-reference-truth-fit-benchmark-v1",
+        "schema_version": "delta-reference-truth-fit-benchmark-v2",
         "scientific_status": "development-resource-gate-not-fit-evidence",
+        "kernel_id": "compact-primitive-exact-v2",
         "protocol_sha256": _protocol_sha256(repository_root),
         "seed_indices": tuple(range(pilot_seed_count)),
         "elapsed_ms": elapsed_ms,

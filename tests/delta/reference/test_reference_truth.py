@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from trace_jepa.support import canonical_json_bytes
 from trace_reference import (
     load_reference_exposure_parameters,
     load_reference_physical_parameters,
@@ -12,11 +13,13 @@ from trace_reference import (
 from trace_reference.domain.truth import ReferenceIncidentType
 from trace_reference.generation import (
     build_reference_truth_fit_seed_summary,
+    build_reference_truth_fit_seed_summary_exact,
     generate_reference_exposure,
     generate_reference_physical_scenario,
     generate_reference_truth,
 )
 from trace_reference.geography import load_reference_geography
+from trace_reference.seeds import derive_study_seed
 
 ROOT = Path(__file__).resolve().parents[3]
 GEOGRAPHY_ROOT = ROOT / "data/scenario/delta/reference/geography"
@@ -124,3 +127,49 @@ def test_fit_intervals_exactly_reproduce_evaluation_counts(truth_fixture) -> Non
 
     assert actual == expected
     assert summary.eligible_episode_count == len(truth.candidate_audit)
+
+
+@pytest.mark.parametrize("sigma", [0.8, 1.0, 1.2])
+def test_optimized_fit_kernel_matches_exact_reference(truth_fixture, sigma: float) -> None:
+    _, exposure, _ = truth_fixture
+    parameters = load_reference_physical_parameters(ROOT, PHYSICAL_PARAMETERS)
+    physical = generate_reference_physical_scenario(parameters, sigma=sigma)
+
+    optimized = build_reference_truth_fit_seed_summary(physical, exposure, seed=20260812)
+    exact = build_reference_truth_fit_seed_summary_exact(physical, exposure, seed=20260812)
+
+    assert optimized == exact
+
+
+def test_optimized_fit_kernel_matches_exact_for_seed_and_exposure_axis() -> None:
+    seed = derive_study_seed("development", 1)
+    physical_parameters = load_reference_physical_parameters(ROOT, PHYSICAL_PARAMETERS)
+    exposure_parameters = load_reference_exposure_parameters(ROOT, EXPOSURE_PARAMETERS)
+    geography = load_reference_geography(geography_root=GEOGRAPHY_ROOT)
+    physical = generate_reference_physical_scenario(physical_parameters)
+    exposure = generate_reference_exposure(
+        exposure_parameters,
+        geography,
+        seed=seed,
+        epsilon=1.2,
+    )
+
+    optimized = build_reference_truth_fit_seed_summary(physical, exposure, seed=seed)
+    exact = build_reference_truth_fit_seed_summary_exact(physical, exposure, seed=seed)
+    encode = lambda summary: canonical_json_bytes(
+        {
+            "seed": summary.seed,
+            "eligible_episode_count": summary.eligible_episode_count,
+            "evaluation_intervals": [
+                {
+                    "incident_type": item.incident_type.value,
+                    "lower_intercept_inclusive": item.lower_intercept_inclusive,
+                    "upper_intercept_exclusive": item.upper_intercept_exclusive,
+                }
+                for item in summary.evaluation_intervals
+            ],
+        }
+    )
+
+    assert optimized == exact
+    assert encode(optimized) == encode(exact)

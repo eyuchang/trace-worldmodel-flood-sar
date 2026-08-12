@@ -77,8 +77,12 @@ class ReferenceTruthFitProtocol(DeltaModel):
 
 
 class ReferenceTruthFitBenchmarkReceipt(DeltaModel):
-    schema_version: Literal["delta-reference-truth-fit-benchmark-v1"]
+    schema_version: Literal[
+        "delta-reference-truth-fit-benchmark-v1",
+        "delta-reference-truth-fit-benchmark-v2",
+    ]
     scientific_status: Literal["development-resource-gate-not-fit-evidence"]
+    kernel_id: Literal["compact-primitive-exact-v2"] | None = None
     protocol_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     seed_indices: tuple[int, ...] = Field(min_length=1)
     elapsed_ms: int = Field(ge=0)
@@ -92,7 +96,13 @@ class ReferenceTruthFitBenchmarkReceipt(DeltaModel):
 
     @model_validator(mode="after")
     def validate_digest(self) -> ReferenceTruthFitBenchmarkReceipt:
-        body = self.model_dump(mode="json", exclude={"receipt_digest"})
+        if (self.schema_version.endswith("v2")) != (self.kernel_id is not None):
+            raise ValueError("Reference truth benchmark kernel version is inconsistent")
+        body = self.model_dump(
+            mode="json",
+            exclude={"receipt_digest"},
+            exclude_none=True,
+        )
         if hashlib.sha256(canonical_json_bytes(body)).hexdigest() != self.receipt_digest:
             raise ValueError("Reference truth benchmark receipt digest is invalid")
         return self

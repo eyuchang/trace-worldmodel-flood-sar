@@ -25,9 +25,11 @@ from trace_reference.domain.truth import (
 )
 
 from .randomness import keyed_digest, uniform_micros
+from .truth_fit_kernel import build_reference_truth_fit_seed_summary_optimized
+from .truth_fit_types import ReferenceTruthFitInterval, ReferenceTruthFitSeedSummary
+from .truth_probability import minimum_accepting_intercept, probability_micros
 
 _CANDIDATE_TICK_S = 1_800
-_PROBABILITY_DENOMINATOR = 10**24
 
 _DEVELOPMENT_INTERCEPTS_MICROS = {
     ReferenceIncidentType.STRANDED_STRUCTURE: 4_200,
@@ -85,24 +87,6 @@ class _IncidentFactors:
     probability_numerator_factor: int
     severity_micros: int
     subject_signature: str
-
-
-@dataclass(frozen=True)
-class ReferenceTruthFitInterval:
-    """Intercept interval producing one evaluation incident from one episode."""
-
-    incident_type: ReferenceIncidentType
-    lower_intercept_inclusive: int
-    upper_intercept_exclusive: int | None
-
-
-@dataclass(frozen=True)
-class ReferenceTruthFitSeedSummary:
-    """Compact sufficient statistics for one spent development world."""
-
-    seed: int
-    eligible_episode_count: int
-    evaluation_intervals: tuple[ReferenceTruthFitInterval, ...]
 
 
 @dataclass(frozen=True)
@@ -354,7 +338,7 @@ class _FitAccumulator:
             incident_type.value,
             structure_id,
         )
-        draft.record(at_s, _minimum_accepting_intercept(draw, factor))
+        draft.record(at_s, minimum_accepting_intercept(draw, factor))
 
     def close_ineligible(
         self,
@@ -519,22 +503,6 @@ def _eligible_and_factors(
     )
 
 
-def _probability_micros(intercept_micros: int, factor: int) -> int:
-    """Use integer half-up rounding for auditable fixed-point probabilities."""
-
-    rounded = (intercept_micros * factor + _PROBABILITY_DENOMINATOR // 2) // (
-        _PROBABILITY_DENOMINATOR
-    )
-    return min(1_000_000, rounded)
-
-
-def _minimum_accepting_intercept(draw_micros: int, factor: int) -> int:
-    """Invert the fixed-point probability exactly for one keyed draw."""
-
-    required = (draw_micros + 1) * _PROBABILITY_DENOMINATOR - _PROBABILITY_DENOMINATOR // 2
-    return max(0, (required + factor - 1) // factor)
-
-
 def _structure_tick_state(
     physical: ReferencePhysicalSample,
     structure: ReferenceSyntheticStructure,
@@ -661,7 +629,7 @@ def _truth_incident(
     )
 
 
-def build_reference_truth_fit_seed_summary(
+def build_reference_truth_fit_seed_summary_exact(
     physical: ReferencePhysicalScenario,
     exposure: ReferenceExposureScenario,
     *,
@@ -696,6 +664,17 @@ def build_reference_truth_fit_seed_summary(
                 structure.truth_structure_id,
             )
     return accumulator.finish()
+
+
+def build_reference_truth_fit_seed_summary(
+    physical: ReferencePhysicalScenario,
+    exposure: ReferenceExposureScenario,
+    *,
+    seed: int,
+) -> ReferenceTruthFitSeedSummary:
+    """Build exact fit statistics through the allocation-bounded kernel."""
+
+    return build_reference_truth_fit_seed_summary_optimized(physical, exposure, seed=seed)
 
 
 def generate_reference_truth(
@@ -736,7 +715,7 @@ def generate_reference_truth(
                     away_people=state.away_people,
                     incident_type=incident_type,
                 ),
-                probability=_probability_micros(
+                probability=probability_micros(
                     _DEVELOPMENT_INTERCEPTS_MICROS[incident_type],
                     factors.probability_numerator_factor,
                 ),

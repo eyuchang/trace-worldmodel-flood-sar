@@ -11,16 +11,17 @@ from .physical import generate_reference_physical_scenario
 from .pipeline import generate_reference_scenario
 from .resources import generate_reference_resources
 from .truth import (
-    ReferenceTruthFitInterval,
-    ReferenceTruthFitSeedSummary,
     build_reference_truth_fit_seed_summary,
+    build_reference_truth_fit_seed_summary_exact,
     generate_reference_truth,
 )
+from .truth_fit_types import ReferenceTruthFitInterval, ReferenceTruthFitSeedSummary
 
 __all__ = [
     "ReferenceTruthFitInterval",
     "ReferenceTruthFitSeedSummary",
     "build_reference_truth_fit_seed_summary",
+    "build_reference_truth_fit_seed_summary_exact",
     "generate_reference_coordination",
     "generate_reference_exposure",
     "generate_reference_observations",

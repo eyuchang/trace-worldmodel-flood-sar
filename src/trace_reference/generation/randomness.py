@@ -14,6 +14,15 @@ def _append_encoded(payload: bytearray, value: object) -> None:
     payload.extend(encoded)
 
 
+def encode_keyed_parts(*parts: object) -> bytes:
+    """Encode keyed-draw parts once while preserving the canonical byte grammar."""
+
+    payload = bytearray()
+    for value in parts:
+        _append_encoded(payload, value)
+    return bytes(payload)
+
+
 @lru_cache(maxsize=1_024)
 def _prefix(seed: int, namespace: str) -> bytes:
     payload = bytearray()
@@ -31,6 +40,17 @@ def keyed_digest(seed: int, namespace: str, *parts: object) -> bytes:
     for value in parts:
         _append_encoded(payload, value)
     return hashlib.sha256(payload).digest()
+
+
+def uniform_micros_encoded(seed: int, namespace: str, *encoded_parts: bytes) -> int:
+    """Draw from already encoded part groups without changing the keyed payload."""
+
+    if seed < 0:
+        raise ValueError("Reference generation seeds must be nonnegative")
+    digest = hashlib.sha256(_prefix(seed, namespace))
+    for encoded in encoded_parts:
+        digest.update(encoded)
+    return int.from_bytes(digest.digest()[:8], "big") % 1_000_000
 
 
 def uniform_micros(seed: int, namespace: str, *parts: object) -> int:
