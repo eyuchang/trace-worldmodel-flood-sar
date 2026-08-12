@@ -1,0 +1,105 @@
+"""Direct-file and source-tree inventory for Reference replay provenance."""
+
+from __future__ import annotations
+
+import hashlib
+from pathlib import Path
+
+from trace_jepa.support import (
+    ArtifactLocator,
+    canonical_json_bytes,
+    safe_directory,
+    sha256_file,
+)
+
+from .models import ReferenceFileInput, ReferenceValueInput
+
+_MAX_INPUT_BYTES = 256 * 1024 * 1024
+_DIRECT_INPUTS = (
+    "configs/governance/wf_dfld_01_reference_governance_v1.yaml",
+    "configs/scenarios/wf_dfld_01_reference_development.yaml",
+    "data/scenario/delta/environment/python311_linux_amd64_v1.json",
+    "data/scenario/delta/reference/exposure/reference_exposure_parameters_v1.yaml",
+    "data/scenario/delta/reference/geography/derived/reference_geography_build_manifest_v3.json",
+    "data/scenario/delta/reference/geography/derived/reference_geography_catalog_v3.json",
+    "data/scenario/delta/reference/geography/source_lifecycle_erratum_v1.yaml",
+    "data/scenario/delta/reference/geography/source_metadata_v3.yaml",
+    "data/scenario/delta/reference/geography/source_retrieval_receipts_v3.yaml",
+    "data/scenario/delta/reference/geography/sources/caltrans_local_crossings_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/caltrans_state_crossings_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/census_designated_places_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/census_incorporated_places_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/dwr_lma_target_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/usgs_gnis_communities_v1.geojson",
+    "data/scenario/delta/reference/geography/sources/usgs_gnis_woodward_crossing_v1.geojson",
+    "data/scenario/delta/reference/physical/reference_gauge_context_v1.yaml",
+    "data/scenario/delta/reference/physical/reference_physical_parameters_v1.yaml",
+    "data/scenario/delta/reference/resources/reference_activation_parameters_v1.yaml",
+    "data/scenario/delta/reference/resources/reference_resource_parameters_v1.yaml",
+    "data/scenario/delta/reference/sources/entity_source_crosswalk_v1.yaml",
+    "data/scenario/delta/reference/sources/gauge_identity_research_v1.yaml",
+    "data/scenario/delta/reference/sources/requirements_v1.yaml",
+    "data/scenario/delta/reference/sources/source_research_v1.yaml",
+    "data/scenario/delta/reference/topology_design_v1.yaml",
+    "pyproject.toml",
+    "requirements-delta-python311.lock",
+)
+
+
+def reference_file_inputs(repository_root: Path) -> tuple[ReferenceFileInput, ...]:
+    """Resolve and hash every direct file beneath one caller-trusted repository."""
+
+    inputs = []
+    for relative_name in _DIRECT_INPUTS:
+        path = ArtifactLocator(
+            root=repository_root,
+            relative_name=Path(relative_name),
+            maximum_bytes=_MAX_INPUT_BYTES,
+            label=f"Reference scientific input {relative_name}",
+        ).resolve()
+        inputs.append(
+            ReferenceFileInput(
+                name=Path(relative_name).stem,
+                repository_relative_path=relative_name,
+                sha256=sha256_file(path),
+                byte_length=path.stat().st_size,
+            )
+        )
+    return tuple(inputs)
+
+
+def reference_source_tree_sha256(repository_root: Path) -> str:
+    """Hash every Python source file that can supply Reference dependencies."""
+
+    source_root = safe_directory(
+        repository_root / "src",
+        declared_root=repository_root,
+        label="Reference source root",
+    )
+    digest = hashlib.sha256()
+    for path in sorted(source_root.rglob("*.py")):
+        safe = ArtifactLocator.from_path(
+            root=source_root,
+            path=path,
+            maximum_bytes=4 * 1024 * 1024,
+            label="Reference Python source",
+        ).resolve()
+        relative = safe.relative_to(source_root).as_posix().encode("utf-8")
+        payload = safe.read_bytes()
+        digest.update(relative)
+        digest.update(b"\0")
+        digest.update(str(len(payload)).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(payload)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def reference_value_input(name: str, identifier: str, value: object) -> ReferenceValueInput:
+    """Create one content-addressed canonical non-file input."""
+
+    return ReferenceValueInput(
+        name=name,
+        identifier=identifier,
+        sha256=hashlib.sha256(canonical_json_bytes(value)).hexdigest(),
+    )

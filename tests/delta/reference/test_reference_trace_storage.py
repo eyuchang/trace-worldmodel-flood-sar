@@ -114,6 +114,17 @@ def test_reference_trace_storage_round_trips_full_closure(tmp_path: Path) -> Non
     assert commitments.prefix_digest != "GENESIS"
     assert evidence.prefix_digest != "GENESIS"
 
+    trace_export = repository.chain_entries()
+    commitment_export = commitments.chain_entries()
+    trace_payload = trace_export[0]["payload"]
+    commitment_payload = commitment_export[0]["payload"]
+    assert isinstance(trace_payload, dict)
+    assert isinstance(commitment_payload, dict)
+    trace_payload["record_id"] = "tampered-export-only"
+    commitment_payload["commitment_id"] = "tampered-export-only"
+    assert repository.verify_chain()
+    assert commitments.verify_chain()
+
 
 def test_reference_trace_storage_is_idempotent_and_detects_tampering(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)

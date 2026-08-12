@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+from copy import deepcopy
 from pathlib import Path
 
 from trace_jepa.contracts import Commitment, TraceRecord, WorldModelEvidence
@@ -121,6 +122,16 @@ class ReferenceEvidenceLedger(EvidenceLedger):
     @property
     def prefix_digest(self) -> str:
         return str(self._index[-1]["entry_hash"]) if self._index else "GENESIS"
+
+    def all(self) -> tuple[WorldModelEvidence, ...]:
+        """Return immutable evidence in append order for deterministic export."""
+
+        return tuple(self.get(str(item["evidence_id"])) for item in self._index)
+
+    def chain_entries(self) -> tuple[dict[str, object], ...]:
+        """Return defensive copies of the canonical evidence-index envelopes."""
+
+        return tuple(deepcopy(item) for item in self._index)
 
     def verify_chain(self) -> bool:
         previous_hash = "GENESIS"
@@ -318,6 +329,11 @@ class ReferenceTraceRepository(TraceRepository):
     def all(self) -> list[TraceRecord]:
         return list(self._ordered)
 
+    def chain_entries(self) -> tuple[dict[str, object], ...]:
+        """Return defensive copies of the canonical TRACE-chain envelopes."""
+
+        return tuple(deepcopy(item) for item in self._cache)
+
     def verify_chain(self) -> bool:
         previous_hash = "GENESIS"
         seen: set[tuple[str, int]] = set()
@@ -423,6 +439,11 @@ class ReferenceCommitmentLog(CommitmentLog):
 
     def all(self) -> list[Commitment]:
         return [self._commitments[key] for key in sorted(self._commitments)]
+
+    def chain_entries(self) -> tuple[dict[str, object], ...]:
+        """Return defensive copies of the canonical commitment-chain envelopes."""
+
+        return tuple(deepcopy(item) for item in self._cache)
 
     def verify_chain(self) -> bool:
         previous_hash = "GENESIS"
