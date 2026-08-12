@@ -61,6 +61,13 @@ from .resources import (
     ReferenceResourceTelemetryAuditEntry,
     ReferenceResourceTruth,
 )
+from .routing import (
+    ReferencePublicRouteCatalog,
+    ReferencePublicRoutePlan,
+    ReferencePublicTargetAssignment,
+    ReferenceRouteMode,
+    ReferenceRouteStatus,
+)
 from .scenario import ReferencePriorProfile, ReferenceScenarioArtifacts
 from .truth import (
     ReferenceIncidentCandidateAudit,
@@ -104,6 +111,9 @@ __all__ = [
     "ReferencePublicResourceCatalog",
     "ReferencePublicResourceDefinition",
     "ReferencePublicResourceTelemetryScenario",
+    "ReferencePublicRouteCatalog",
+    "ReferencePublicRoutePlan",
+    "ReferencePublicTargetAssignment",
     "ReferencePublicTaxonomy",
     "ReferenceRawObservationScenario",
     "ReferenceRawReport",
@@ -117,6 +127,8 @@ __all__ = [
     "ReferenceResourceTelemetry",
     "ReferenceResourceTelemetryAuditEntry",
     "ReferenceResourceTruth",
+    "ReferenceRouteMode",
+    "ReferenceRouteStatus",
     "ReferenceRuntimeCheckpoint",
     "ReferenceScenarioArtifacts",
     "ReferenceSyntheticPerson",
