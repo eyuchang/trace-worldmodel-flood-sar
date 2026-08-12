@@ -1,0 +1,46 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from trace_reference.generation import generate_reference_scenario
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_reference_pipeline_executes_approved_causal_order_offline() -> None:
+    scenario = generate_reference_scenario(ROOT, seed=20260812)
+    assert scenario.config.generation_order == (
+        "geography",
+        "meteorology",
+        "hydrology_breach_access",
+        "exposure_truth_incidents",
+        "public_observations",
+        "resources_and_telemetry",
+        "coordination_delivery",
+        "predictor_prior",
+        "fault_overlay",
+        "trace_execution_recovery",
+        "offline_evaluation",
+    )
+    assert len(scenario.geography.islands) == 8
+    assert len(scenario.exposure.people) == 1_400
+    assert scenario.truth.scientific_status == "development-coefficients-not-frozen-for-validation"
+    assert scenario.observations.raw.scientific_status == (
+        "development-coefficients-not-frozen-for-validation"
+    )
+    assert scenario.prior.prior_accuracy_milli == 700
+
+
+def test_reference_pipeline_is_byte_deterministic_for_development_seed() -> None:
+    first = generate_reference_scenario(ROOT, seed=20260812)
+    second = generate_reference_scenario(ROOT, seed=20260812)
+    assert first.physical.physical_digest == second.physical.physical_digest
+    assert first.exposure.exposure_digest == second.exposure.exposure_digest
+    assert first.truth.truth_digest == second.truth.truth_digest
+    assert first.observations.raw.raw_reports_digest == second.observations.raw.raw_reports_digest
+    assert first.resources.hidden.hidden_resource_digest == (
+        second.resources.hidden.hidden_resource_digest
+    )
+    assert first.coordination.public.public_coordination_digest == (
+        second.coordination.public.public_coordination_digest
+    )

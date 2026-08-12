@@ -57,6 +57,7 @@ from .resources import (
     ReferenceResourceTelemetryAuditEntry,
     ReferenceResourceTruth,
 )
+from .scenario import ReferencePriorProfile, ReferenceScenarioArtifacts
 from .truth import (
     ReferenceIncidentCandidateAudit,
     ReferenceIncidentType,
@@ -90,6 +91,7 @@ __all__ = [
     "ReferencePhysicalParameters",
     "ReferencePhysicalSample",
     "ReferencePhysicalScenario",
+    "ReferencePriorProfile",
     "ReferencePublicArtifactEnvelope",
     "ReferencePublicCoordinationScenario",
     "ReferencePublicLocation",
@@ -108,6 +110,7 @@ __all__ = [
     "ReferenceResourceTelemetryAuditEntry",
     "ReferenceResourceTruth",
     "ReferenceRuntimeCheckpoint",
+    "ReferenceScenarioArtifacts",
     "ReferenceSyntheticPerson",
     "ReferenceSyntheticStructure",
     "ReferenceTrajectoryChangePoint",
