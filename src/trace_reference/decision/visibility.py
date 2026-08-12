@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from trace_jepa.predictor import PredictorProvenance
 from trace_reference.domain.coordination import ReferencePublicCoordinationScenario
+from trace_reference.domain.observations import ReferenceAuthorityId
 from trace_reference.domain.resources import (
     ReferencePublicResourceTelemetryScenario,
     ReferenceResourceTruth,
@@ -25,6 +26,7 @@ from .domain import (
 class SnapshotInput:
     mission_id: str
     decision_id: str
+    controller_authority_id: ReferenceAuthorityId
     at_s: int
     evidence_prefix_digest: str
     trace_prefix_digest: str
@@ -42,11 +44,12 @@ def _latest_resource_beliefs(
     resources: tuple[ReferenceResourceTruth, ...],
     *,
     at_s: int,
+    delivered_telemetry_ids: frozenset[str],
 ) -> tuple[PublicResourceBelief, ...]:
     resource_by_id = {item.resource_id: item for item in resources}
     latest = {}
     for item in telemetry.telemetry:
-        if item.delivered_at_s <= at_s:
+        if item.delivered_at_s <= at_s and item.telemetry_id in delivered_telemetry_ids:
             latest[item.resource_id] = item
     beliefs = (
         PublicResourceBelief(
@@ -77,6 +80,15 @@ def build_controller_visible_snapshot(
     qualification_digest = predictor.qualification_artifact_sha256
     if qualification_digest is None:
         qualification_digest = "0" * 64
+    delivered = tuple(
+        item
+        for item in coordination.deliveries
+        if item.recipient_authority_id == request.controller_authority_id
+        and item.delivered_at_s <= request.at_s
+    )
+    delivered_telemetry_ids = frozenset(
+        item.evidence_id for item in delivered if item.evidence_kind == "resource-telemetry"
+    )
     body = {
         "schema_version": "delta-reference-public-snapshot-v1",
         "scenario_id": "WF-DFLD-01-REFERENCE",
@@ -92,13 +104,14 @@ def build_controller_visible_snapshot(
         ],
         "resource_beliefs": [
             item.model_dump(mode="json")
-            for item in _latest_resource_beliefs(telemetry, resources, at_s=request.at_s)
+            for item in _latest_resource_beliefs(
+                telemetry,
+                resources,
+                at_s=request.at_s,
+                delivered_telemetry_ids=delivered_telemetry_ids,
+            )
         ],
-        "delivered_coordination_ids": sorted(
-            item.delivery_id
-            for item in coordination.deliveries
-            if item.delivered_at_s <= request.at_s
-        ),
+        "delivered_coordination_ids": sorted(item.delivery_id for item in delivered),
         "active_commitments": [
             item.model_dump(mode="json")
             for item in sorted(request.active_commitments, key=lambda item: item.commitment_id)

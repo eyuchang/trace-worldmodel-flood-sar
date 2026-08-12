@@ -98,16 +98,19 @@ def decision_fixture():
         telemetry=telemetry,
         telemetry_digest="1" * 64,
     )
-    delivery = ReferenceCoordinationDelivery(
-        delivery_id="CD-0000000000000001",
-        evidence_kind="resource-telemetry",
-        evidence_id=telemetry[0].telemetry_id,
-        source_authority_id="AUTH-04",
-        recipient_authority_id="AUTH-01",
-        recipient_partition_id="AUTH-01-P01",
-        source_available_at_s=900,
-        delivered_at_s=900,
-        source_content_digest="2" * 64,
+    deliveries = tuple(
+        ReferenceCoordinationDelivery(
+            delivery_id=f"CD-{index:016x}",
+            evidence_kind="resource-telemetry",
+            evidence_id=item.telemetry_id,
+            source_authority_id=item.owning_authority_id,
+            recipient_authority_id="AUTH-01",
+            recipient_partition_id="AUTH-01-P01",
+            source_available_at_s=900,
+            delivered_at_s=900,
+            source_content_digest="2" * 64,
+        )
+        for index, item in enumerate(telemetry, start=1)
     )
     coordination = ReferencePublicCoordinationScenario(
         scenario_id="WF-DFLD-01-REFERENCE",
@@ -115,13 +118,14 @@ def decision_fixture():
         seed=20260812,
         phi=4,
         authority_registry_version="delta-reference-governance-v1",
-        deliveries=(delivery,),
+        deliveries=deliveries,
         public_coordination_digest="3" * 64,
     )
     snapshot = build_controller_visible_snapshot(
         SnapshotInput(
             mission_id="reference-mission-development",
             decision_id="reference-decision-001",
+            controller_authority_id="AUTH-01",
             at_s=1_000,
             evidence_prefix_digest="4" * 64,
             trace_prefix_digest="GENESIS",
