@@ -312,6 +312,12 @@ def test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs(
     assert applications["duplicated-delivery-retry"].disposition == ("duplicate-effect-suppressed")
     assert applications["stale-acknowledgement-key-rotation"].disposition == ("stale-key-rejected")
     replay = event_log.replay()
+    assert ReferenceEventType.FAULT_APPLIED.value not in replay.public_mission_artifacts
+    fault_events = [
+        item for item in event_log.events if item.event_type == ReferenceEventType.FAULT_APPLIED
+    ]
+    assert fault_events
+    assert all(item.visibility.value == "hidden_evaluation_only" for item in fault_events)
     delivered = replay.public_mission_artifacts[
         ReferenceEventType.COORDINATION_MESSAGE_DELIVERED.value
     ]

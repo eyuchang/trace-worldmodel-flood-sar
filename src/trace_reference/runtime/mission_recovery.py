@@ -100,7 +100,8 @@ class ReferenceMissionRecovery:
     def restore(self, checkpoint: ReferenceMissionRestartCheckpoint) -> ReferenceRecoveryResult:
         self._verify_checkpoint(checkpoint)
         artifacts = self._public_artifacts()
-        seen_deliveries, fault_applications = self._restore_delivery_and_fault_state(artifacts)
+        fault_applications = self._restore_fault_applications()
+        seen_deliveries = self._restore_delivery_state(artifacts, fault_applications)
         self.fault_applications = fault_applications
         self._restore_decisions_and_reconciliation(artifacts)
         self._restore_provider_state(artifacts)
@@ -173,10 +174,22 @@ class ReferenceMissionRecovery:
             restored.setdefault(event.event_type, []).append(value)
         return restored
 
+    def _restore_fault_applications(self) -> list[ReferenceFaultApplication]:
+        applications = [
+            ReferenceFaultApplication.model_validate_json(event.payload_json)
+            for event in self.event_log.events
+            if event.event_type == ReferenceEventType.FAULT_APPLIED
+        ]
+        for application in applications:
+            if not verify_model_digest(application, digest_field="application_digest"):
+                raise ValueError("Reference restored fault application digest is invalid")
+        return applications
+
     @staticmethod
-    def _restore_delivery_and_fault_state(
+    def _restore_delivery_state(
         artifacts: dict[ReferenceEventType, list[dict[str, object]]],
-    ) -> tuple[set[str], list[ReferenceFaultApplication]]:
+        applications: list[ReferenceFaultApplication],
+    ) -> set[str]:
         seen = {
             ReferenceCoordinationDelivery.model_validate(value["delivery"]).delivery_id
             for value in artifacts.get(
@@ -184,19 +197,13 @@ class ReferenceMissionRecovery:
                 (),
             )
         }
-        applications = [
-            ReferenceFaultApplication.model_validate(value)
-            for value in artifacts.get(ReferenceEventType.FAULT_APPLIED, ())
-        ]
         for application in applications:
-            if not verify_model_digest(application, digest_field="application_digest"):
-                raise ValueError("Reference restored fault application digest is invalid")
             if (
                 application.disposition == "duplicate-effect-suppressed"
                 and application.target_public_id not in seen
             ):
                 raise ValueError("Reference restored duplicate suppression lacks prior effect")
-        return seen, applications
+        return seen
 
     def _restore_decisions_and_reconciliation(
         self,

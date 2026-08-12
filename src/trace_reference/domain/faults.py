@@ -112,7 +112,7 @@ class ReferenceFaultSchedule(DeltaModel):
 
 
 class ReferenceFaultApplication(DeltaModel):
-    """One controller-visible fault effect or explicit duplicate suppression."""
+    """Evaluator-visible binding from one registered fault to its realized target."""
 
     schema_version: Literal["delta-reference-fault-application-v1"]
     application_id: str = Field(pattern=r"^reference-fault-application-[0-9a-f]{20}$")

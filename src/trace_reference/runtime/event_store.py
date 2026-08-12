@@ -31,7 +31,6 @@ _PUBLIC_MISSION_EVENT_TYPES = frozenset(
         ReferenceEventType.ACQUISITION_OUTCOME_RECORDED,
         ReferenceEventType.ACQUISITION_REQUESTED,
         ReferenceEventType.DECISION_MANIFEST_RECORDED,
-        ReferenceEventType.FAULT_APPLIED,
     }
 )
 _CONTROLLER_VISIBLE_EVENT_TYPES = _PUBLIC_MISSION_EVENT_TYPES | {
@@ -40,6 +39,7 @@ _CONTROLLER_VISIBLE_EVENT_TYPES = _PUBLIC_MISSION_EVENT_TYPES | {
 }
 _HIDDEN_EVENT_TYPES = {
     ReferenceEventType.BREACH_ACTIVATED,
+    ReferenceEventType.FAULT_APPLIED,
     ReferenceEventType.HIDDEN_PHYSICAL_TRUTH,
 }
 
@@ -258,6 +258,21 @@ class ReferenceEventLog:
             event_type=event_type,
             visibility=ReferenceEventVisibility.CONTROLLER_VISIBLE,
             payload=envelope.model_dump(mode="json"),
+        )
+
+    def append_fault_application(
+        self,
+        *,
+        at_s: int,
+        artifact: Mapping[str, object],
+    ) -> ReferenceEvent:
+        """Persist registered-fault audit evidence outside controller-visible state."""
+
+        return self.append(
+            at_s=at_s,
+            event_type=ReferenceEventType.FAULT_APPLIED,
+            visibility=ReferenceEventVisibility.HIDDEN_EVALUATION_ONLY,
+            payload=artifact,
         )
 
     def append_existing(self, event: ReferenceEvent) -> None:

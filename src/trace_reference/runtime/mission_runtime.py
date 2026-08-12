@@ -407,11 +407,8 @@ class ReferenceMissionRuntime:
             disposition=disposition,
             reason=reason,
         )
-        self.event_log.append_public_artifact(
+        self.event_log.append_fault_application(
             at_s=attempt.at_s,
-            event_type=ReferenceEventType.FAULT_APPLIED,
-            artifact_id=application.application_id,
-            artifact_schema_version=application.schema_version,
             artifact=application.model_dump(mode="json"),
         )
         self._fault_applications.append(application)
@@ -588,11 +585,8 @@ class ReferenceMissionRuntime:
                     "client timeout followed by a later authenticated provider success."
                 ),
             )
-            self.event_log.append_public_artifact(
+            self.event_log.append_fault_application(
                 at_s=request.requested_at_s,
-                event_type=ReferenceEventType.FAULT_APPLIED,
-                artifact_id=application.application_id,
-                artifact_schema_version=application.schema_version,
                 artifact=application.model_dump(mode="json"),
             )
             self._fault_applications.append(application)
