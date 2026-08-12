@@ -78,3 +78,15 @@ Truth fitting may proceed only through a compact, streaming sufficient-
 statistics pass whose measured 100-seed projection is below 15 minutes. The
 observation fit starts only after the global truth coefficients and complete
 truth-fit audit are frozen.
+
+## First registered compact-fit benchmark
+
+The first five-seed benchmark of that exact compact path failed the wall-time
+gate and therefore stopped the fit before any 100-seed coefficient search. It
+took 144,249 ms and projected 2,884,980 ms (48.1 minutes) for 100 seeds. Traced
+Python peak memory was 78,634,855 bytes and projected additional disk was
+67,108,864 bytes, so the adverse result is specifically a runtime limitation
+rather than a memory or storage limitation. The digest-bound receipt is
+preserved at
+`data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_failed_v1.json`.
+No coefficients were selected from this aborted run.

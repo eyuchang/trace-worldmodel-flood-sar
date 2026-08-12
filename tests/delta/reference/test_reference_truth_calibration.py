@@ -16,6 +16,9 @@ from trace_reference.calibration.truth_fit import (
 from trace_reference.domain.truth import ReferenceIncidentType
 
 ROOT = Path(__file__).resolve().parents[3]
+FAILED_BENCHMARK = Path(
+    "data/scenario/delta/reference/calibration/reference_truth_fit_benchmark_failed_v1.json"
+)
 
 
 def test_truth_fit_protocol_freezes_spent_development_scope() -> None:
@@ -32,6 +35,15 @@ def test_truth_fit_protocol_freezes_spent_development_scope() -> None:
     assert protocol.target_shares[0].incident_type == ReferenceIncidentType.INFORMATION_NEED
     assert protocol.target_shares[-1].incident_type == ReferenceIncidentType.MEDICAL_ACCESS
     assert protocol.solver.per_seed_normalization == "forbidden"
+
+
+def test_failed_benchmark_is_preserved_as_adverse_evidence() -> None:
+    receipt = load_reference_truth_fit_benchmark(ROOT, FAILED_BENCHMARK)
+
+    assert receipt.seed_indices == (0, 1, 2, 3, 4)
+    assert receipt.projected_full_fit_ms == 2_884_980
+    assert receipt.traced_python_peak_bytes == 78_634_855
+    assert not receipt.within_registered_bounds
 
 
 def test_truth_fit_benchmark_is_digest_bound_and_tamper_evident(tmp_path: Path) -> None:
