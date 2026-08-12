@@ -44,6 +44,10 @@ def test_reference_cli_exposes_run_replay_and_publish() -> None:
     assert publish.command == "publish"
     assert publish.output == Path("publication-output")
 
+    g3 = parser.parse_args(["verify-g3", "--seed", "20260812", "--output", "g3-output"])
+    assert g3.command == "verify-g3"
+    assert g3.seed == 20260812
+
 
 def test_reference_cli_has_no_validation_or_holdout_surface() -> None:
     parser = build_parser()

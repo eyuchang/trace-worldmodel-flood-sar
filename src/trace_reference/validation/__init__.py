@@ -7,6 +7,7 @@ from .capacity import (
     maximum_strict_matched_units,
 )
 from .capacity_models import ReferenceCapacityEvaluation, ReferenceCapacityWindow
+from .g3_execution import run_reference_g3_integrity
 from .g3_integrity import ReferenceG3IntegrityInput, build_reference_g3_integrity_report
 from .models import ReferenceG3IntegrityReport, ReferenceRuntimeCounts
 from .statistics import (
@@ -31,4 +32,5 @@ __all__ = [
     "exact_median_interval",
     "maximum_divisible_capped_units",
     "maximum_strict_matched_units",
+    "run_reference_g3_integrity",
 ]

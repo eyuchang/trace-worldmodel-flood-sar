@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .provenance import execute_reference_scenario, verify_exact_reference_replay
 from .publication import publish_reference_bundle
+from .validation import run_reference_g3_integrity
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,9 @@ def build_parser() -> argparse.ArgumentParser:
     """Build a CLI that cannot invoke an unregistered statistical study."""
 
     parser = argparse.ArgumentParser(
-        description=("Run, exactly replay, and publish WF-DFLD-01-REFERENCE development scenarios.")
+        description=(
+            "Run, exactly replay, publish, and verify WF-DFLD-01-REFERENCE development scenarios."
+        )
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
@@ -75,6 +78,18 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Existing empty caller-controlled publication directory.",
     )
+    g3 = commands.add_parser(
+        "verify-g3",
+        help="Run the registered non-LEAP fault/restart integrity characterization.",
+    )
+    _add_common(g3)
+    g3.add_argument("--seed", type=int, required=True)
+    g3.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="Existing empty caller-controlled G3 output directory.",
+    )
     return parser
 
 
@@ -113,6 +128,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_root=arguments.output,
         )
         LOGGER.info("Reference publication artifacts=%d", len(manifest.artifacts))
+    elif arguments.command == "verify-g3":
+        report = run_reference_g3_integrity(
+            arguments.repository_root,
+            arguments.output,
+            seed=arguments.seed,
+        )
+        LOGGER.info(
+            "Reference G3 integrity checks=%s faults=%d compensations=%d debts=%d",
+            "pass" if report.all_checks_pass else "fail",
+            len(report.observed_fault_families),
+            report.faulted_counts.compensations,
+            report.faulted_counts.consistency_debts,
+        )
     else:  # pragma: no cover - argparse restricts the command set.
         raise RuntimeError(f"unsupported Reference command: {arguments.command}")
     LOGGER.info("elapsed_seconds=%.3f", time.perf_counter() - started)

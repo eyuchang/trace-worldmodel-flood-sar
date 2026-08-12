@@ -41,6 +41,8 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference/sources/requirements_v1.yaml",
     "data/scenario/delta/reference/sources/source_research_v1.yaml",
     "data/scenario/delta/reference/topology_design_v1.yaml",
+    "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
+    "data/scenario/delta/reference_protocol/small_baseline_v1.json",
     "docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md",
     "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
