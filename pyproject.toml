@@ -77,6 +77,7 @@ trace-jepa-build-geography = "trace_jepa.workbench.geography_builder:main"
 trace-jepa-d04 = "trace_jepa.workbench.d04_server:main"
 trace-jepa-d05 = "trace_jepa.workbench.d05_server:main"
 trace-jepa-delta-small = "trace_jepa.scenario.delta.cli:main"
+trace-jepa-delta-reference = "trace_reference.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
