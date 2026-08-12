@@ -11,6 +11,12 @@ from .decision_engine import (
     ReferenceDecisionInput,
 )
 from .event_store import ReferenceEventLog, ReferenceWorldState
+from .factory import (
+    REFERENCE_ENVIRONMENT_VERSION,
+    REFERENCE_POLICY_VERSION,
+    ReferenceRuntimeBundle,
+    build_reference_runtime,
+)
 from .mission_runtime import ReferenceMissionRuntime
 from .mission_state import ReferenceMissionRun
 from .predictor_evidence import (
@@ -35,6 +41,8 @@ from .trace_storage import (
 )
 
 __all__ = [
+    "REFERENCE_ENVIRONMENT_VERSION",
+    "REFERENCE_POLICY_VERSION",
     "AssessedReferenceProposal",
     "ProposalAssessmentInput",
     "ReferenceClosureResult",
@@ -51,6 +59,7 @@ __all__ = [
     "ReferencePublicPhysicalView",
     "ReferenceRouteProviderInput",
     "ReferenceRouteService",
+    "ReferenceRuntimeBundle",
     "ReferenceScenarioIndex",
     "ReferenceTraceGateway",
     "ReferenceTraceRepository",
@@ -59,5 +68,6 @@ __all__ = [
     "build_reference_predictor_evidence",
     "build_reference_route_provider_receipt",
     "build_reference_route_provider_timeout",
+    "build_reference_runtime",
     "core_action_from_proposal",
 ]
