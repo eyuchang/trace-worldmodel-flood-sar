@@ -68,7 +68,7 @@ fails closed. Runtime and replay use no network access.
 The following remain outside this development protocol:
 
 - the unresolved latent-incident burden and observation-volume calibration;
-- a complete scientific-input import-closure manifest and canonical OCI receipt;
+- a canonical OCI execution receipt proving the actual runtime matched the bound contract;
 - a registered development/confirmatory statistical report;
-- publication figures and a committed Reference bundle;
+- a committed, calibrated Reference bundle and its registered publication figures;
 - LEAP policy, search, scoring, or budget behavior.

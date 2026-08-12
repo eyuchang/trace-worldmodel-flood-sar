@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .provenance import execute_reference_scenario, verify_exact_reference_replay
+from .publication import publish_reference_bundle
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Build a CLI that cannot invoke an unregistered statistical study."""
 
     parser = argparse.ArgumentParser(
-        description="Run and exactly replay WF-DFLD-01-REFERENCE development scenarios."
+        description=("Run, exactly replay, and publish WF-DFLD-01-REFERENCE development scenarios.")
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
@@ -61,6 +62,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="Existing empty caller-controlled replay directory.",
+    )
+    publish = commands.add_parser(
+        "publish",
+        help="Regenerate development figures and the result table from a verified replay bundle.",
+    )
+    publish.add_argument("--trusted-reference-root", type=Path, required=True)
+    publish.add_argument("--reference-relative-path", type=Path, required=True)
+    publish.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="Existing empty caller-controlled publication directory.",
     )
     return parser
 
@@ -93,6 +106,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             replay_output_root=arguments.output,
         )
         LOGGER.info("Reference replay is byte-identical")
+    elif arguments.command == "publish":
+        manifest = publish_reference_bundle(
+            trusted_reference_root=arguments.trusted_reference_root,
+            reference_relative_path=arguments.reference_relative_path,
+            output_root=arguments.output,
+        )
+        LOGGER.info("Reference publication artifacts=%d", len(manifest.artifacts))
     else:  # pragma: no cover - argparse restricts the command set.
         raise RuntimeError(f"unsupported Reference command: {arguments.command}")
     LOGGER.info("elapsed_seconds=%.3f", time.perf_counter() - started)

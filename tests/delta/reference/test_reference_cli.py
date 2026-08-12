@@ -7,7 +7,7 @@ import pytest
 from trace_reference.cli import build_parser
 
 
-def test_reference_cli_exposes_only_run_and_replay() -> None:
+def test_reference_cli_exposes_run_replay_and_publish() -> None:
     parser = build_parser()
 
     run = parser.parse_args(["run", "--seed", "20260812", "--output", "run-output"])
@@ -29,6 +29,20 @@ def test_reference_cli_exposes_only_run_and_replay() -> None:
     assert replay.command == "replay"
     assert replay.trusted_reference_root == Path("reference-parent")
     assert replay.reference_relative_path == Path("bundle")
+
+    publish = parser.parse_args(
+        [
+            "publish",
+            "--trusted-reference-root",
+            "reference-parent",
+            "--reference-relative-path",
+            "bundle",
+            "--output",
+            "publication-output",
+        ]
+    )
+    assert publish.command == "publish"
+    assert publish.output == Path("publication-output")
 
 
 def test_reference_cli_has_no_validation_or_holdout_surface() -> None:
