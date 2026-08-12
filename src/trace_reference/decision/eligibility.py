@@ -175,6 +175,7 @@ def _bundle(
         deadline = proposal.action.execution_not_after_s
     body = {
         "schema_version": "delta-reference-response-bundle-v1",
+        "decision_id": snapshot.decision_id,
         "bundle_id": _id("bundle", proposal.proposal_id, classification.classification_digest),
         "kind": kind.value,
         "proposal_digest": proposal.proposal_digest,

@@ -8,7 +8,23 @@ from pydantic import ValidationError
 from trace_jepa.contracts import CommitmentDecision, WorldModelEvidence
 from trace_jepa.predictor import ToyActionPrefixPredictor
 from trace_reference import load_reference_resource_parameters
+from trace_reference.decision.acquisition import (
+    EvidenceAcquisitionExecutor,
+    ProviderReceiptInput,
+    sign_provider_receipt,
+)
+from trace_reference.decision.artifacts import (
+    CommitmentEnvelopeInput,
+    ServiceOutcomeInput,
+    build_commitment_envelope,
+    build_service_outcome,
+)
 from trace_reference.decision.canonical import decision_digest
+from trace_reference.decision.costs import (
+    CostDeltaInput,
+    DecisionCostLedger,
+    build_cost_delta,
+)
 from trace_reference.decision.counterfactual import ReferencePublicCounterfactualModel
 from trace_reference.decision.domain import (
     BaseSelectionRequest,
@@ -337,3 +353,206 @@ def test_g3_decision_package_contains_no_forbidden_policy_implementation() -> No
         "successor_expansion",
     ):
         assert forbidden not in source
+
+
+def test_g3_physical_acquisition_is_idempotent_authenticated_and_non_authorizing(
+    decision_fixture,
+) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = next(item for item in catalog.bundles if item.acquisition is not None)
+    executor = EvidenceAcquisitionExecutor()
+    request = executor.request(bundle)
+    assert executor.request(bundle) == request
+
+    provider = sign_provider_receipt(
+        ProviderReceiptInput(
+            receipt_id="provider-receipt-001",
+            request=request,
+            status="success",
+            started_at_s=request.requested_at_s,
+            observed_at_s=request.requested_at_s + 30,
+            delivered_at_s=request.requested_at_s + 60,
+            payload_json='{"crossing":"XNG-04","state":"open"}',
+        )
+    )
+    outcome, evidence = executor.ingest(provider)
+    assert outcome.outcome_status == "evidence-accepted"
+    assert outcome.expected_physical_cost == bundle.acquisition.physical_cost
+    assert outcome.charged_physical_cost == bundle.acquisition.physical_cost
+    assert outcome.expected_latency_s == bundle.acquisition.expected_latency_s
+    assert evidence is not None
+    assert evidence.semantic_role == "physical_observation"
+    with pytest.raises(ValidationError):
+        WorldModelEvidence.model_validate(evidence.model_dump(mode="json"))
+
+    replay, replay_evidence = executor.ingest(provider)
+    assert replay.outcome_status == "duplicate-receipt-ignored"
+    assert replay_evidence is None
+    assert not hasattr(executor, "commit")
+
+
+@pytest.mark.parametrize("status", ["timeout", "partial", "malformed", "failed"])
+def test_g3_provider_failure_never_produces_physical_evidence(decision_fixture, status) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = next(item for item in catalog.bundles if item.acquisition is not None)
+    executor = EvidenceAcquisitionExecutor()
+    request = executor.request(bundle)
+    provider = sign_provider_receipt(
+        ProviderReceiptInput(
+            receipt_id=f"provider-receipt-{status}",
+            request=request,
+            status=status,
+            started_at_s=request.requested_at_s,
+            observed_at_s=None,
+            delivered_at_s=request.requested_at_s + 60,
+            payload_json=None,
+        )
+    )
+    outcome, evidence = executor.ingest(provider)
+    assert outcome.outcome_status == f"provider-{status}"
+    assert evidence is None
+
+
+def test_g3_provider_timing_and_receipt_identity_fail_closed(decision_fixture) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = next(item for item in catalog.bundles if item.acquisition is not None)
+    executor = EvidenceAcquisitionExecutor()
+    request = executor.request(bundle)
+    valid = sign_provider_receipt(
+        ProviderReceiptInput(
+            receipt_id="provider-receipt-late",
+            request=request,
+            status="success",
+            started_at_s=request.requested_at_s,
+            observed_at_s=request.requested_at_s + 30,
+            delivered_at_s=request.latest_useful_delivery_s + 1,
+            payload_json='{"crossing":"XNG-04","state":"open"}',
+        )
+    )
+    late, evidence = executor.ingest(valid)
+    assert late.outcome_status == "late-after-useful-deadline"
+    assert evidence is None
+
+    changed = valid.model_copy(update={"delivered_at_s": valid.delivered_at_s + 1})
+    rejected, changed_evidence = executor.ingest(changed)
+    assert rejected.outcome_status == "invalid-authentication"
+    assert changed_evidence is None
+
+
+def test_g3_signed_but_malformed_provider_payload_cannot_create_evidence(
+    decision_fixture,
+) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = next(item for item in catalog.bundles if item.acquisition is not None)
+    executor = EvidenceAcquisitionExecutor()
+    request = executor.request(bundle)
+    malformed = sign_provider_receipt(
+        ProviderReceiptInput(
+            receipt_id="provider-receipt-malformed-json",
+            request=request,
+            status="success",
+            started_at_s=request.requested_at_s,
+            observed_at_s=request.requested_at_s + 30,
+            delivered_at_s=request.requested_at_s + 60,
+            payload_json="not-json",
+        )
+    )
+    outcome, evidence = executor.ingest(malformed)
+    assert outcome.outcome_status == "provider-malformed"
+    assert evidence is None
+
+
+def test_g3_unknown_request_records_no_invented_cost_or_latency(decision_fixture) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = next(item for item in catalog.bundles if item.acquisition is not None)
+    request = EvidenceAcquisitionExecutor().request(bundle)
+    provider = sign_provider_receipt(
+        ProviderReceiptInput(
+            receipt_id="provider-receipt-unknown-request",
+            request=request,
+            status="timeout",
+            started_at_s=request.requested_at_s,
+            observed_at_s=None,
+            delivered_at_s=request.requested_at_s + 60,
+            payload_json=None,
+        )
+    ).model_copy(update={"request_id": "missing-request"})
+    outcome, evidence = EvidenceAcquisitionExecutor().ingest(provider)
+    assert outcome.outcome_status == "unknown-request"
+    assert outcome.request_digest is None
+    assert outcome.expected_physical_cost is None
+    assert outcome.charged_physical_cost is None
+    assert outcome.expected_latency_s is None
+    assert outcome.realized_latency_s is None
+    assert evidence is None
+
+
+def test_g3_cost_ledger_conserves_receipts_without_double_counting(
+    decision_fixture,
+) -> None:
+    _, _, catalog = _catalog(decision_fixture)
+    offer = next(item.acquisition for item in catalog.bundles if item.acquisition is not None)
+    assert offer is not None
+    first = build_cost_delta(
+        CostDeltaInput(
+            receipt_id="cost-receipt-001",
+            physical_acquisition_costs=(offer.physical_cost,),
+            predictor_inference_count=1,
+            bytes_read=64,
+        )
+    )
+    second = build_cost_delta(
+        CostDeltaInput(
+            receipt_id="cost-receipt-002",
+            planning_transition_count=1,
+            service_delay_s=30,
+        )
+    )
+    ledger = DecisionCostLedger()
+    ledger.append(first)
+    ledger.append(first)
+    ledger.append(second)
+    totals = ledger.totals()
+    assert totals.physical_acquisition_costs == (offer.physical_cost,)
+    assert totals.predictor_inference_count == 1
+    assert totals.planning_transition_count == 1
+    assert totals.bytes_read == 64
+    assert totals.service_delay_s == 30
+    assert totals.receipt_ids == ("cost-receipt-001", "cost-receipt-002")
+
+    conflicting = build_cost_delta(
+        CostDeltaInput(
+            receipt_id="cost-receipt-001",
+            planning_transition_count=2,
+        )
+    )
+    with pytest.raises(ValueError, match="reused with different content"):
+        ledger.append(conflicting)
+
+
+def test_g3_service_outcomes_preserve_completion_beyond_censoring() -> None:
+    commitment = build_commitment_envelope(
+        CommitmentEnvelopeInput(
+            commitment_id="reference-commitment-001",
+            authorizing_trace_record_id="trace-reference-001",
+            authorizing_trace_record_version=2,
+            selected_bundle_id="bundle-reference-001",
+            selected_bundle_digest="1" * 64,
+            selection_digest="2" * 64,
+            public_snapshot_digest="3" * 64,
+            committed_at_s=345_000,
+        )
+    )
+    outcome = build_service_outcome(
+        ServiceOutcomeInput(
+            outcome_id="reference-outcome-001",
+            commitment_id=commitment.commitment_id,
+            status="active_at_scenario_censoring",
+            scheduled_completion_s=348_600,
+            observed_completion_s=None,
+            authorizing_trace_record_id=commitment.authorizing_trace_record_id,
+            authorizing_trace_record_version=commitment.authorizing_trace_record_version,
+        )
+    )
+    assert outcome.scheduled_completion_s == 348_600
+    assert outcome.observed_completion_s is None

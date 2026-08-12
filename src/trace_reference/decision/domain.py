@@ -257,6 +257,7 @@ class ResponseBundleKind(str, Enum):
 
 class ResponseBundle(DeltaModel):
     schema_version: Literal["delta-reference-response-bundle-v1"]
+    decision_id: str
     bundle_id: str
     kind: ResponseBundleKind
     proposal_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
