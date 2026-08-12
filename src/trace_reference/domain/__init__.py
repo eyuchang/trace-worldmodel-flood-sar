@@ -22,6 +22,12 @@ from .physical import (
     ReferencePhysicalScenario,
     ReferenceWeatherSample,
 )
+from .truth import (
+    ReferenceIncidentCandidateAudit,
+    ReferenceIncidentType,
+    ReferenceTruthIncident,
+    ReferenceTruthScenario,
+)
 
 __all__ = [
     "ReferenceBreachSample",
@@ -32,6 +38,8 @@ __all__ = [
     "ReferenceExposureParameters",
     "ReferenceExposureScenario",
     "ReferenceGaugeStageSample",
+    "ReferenceIncidentCandidateAudit",
+    "ReferenceIncidentType",
     "ReferencePhysicalParameters",
     "ReferencePhysicalSample",
     "ReferencePhysicalScenario",
@@ -39,5 +47,7 @@ __all__ = [
     "ReferenceSyntheticPerson",
     "ReferenceSyntheticStructure",
     "ReferenceTrajectoryChangePoint",
+    "ReferenceTruthIncident",
+    "ReferenceTruthScenario",
     "ReferenceWeatherSample",
 ]
