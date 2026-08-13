@@ -1,0 +1,101 @@
+{
+  "changed_product_reason": "timeout-fixture-now-binds-required-post-outcome-reassessment",
+  "execution_python": "3.13.1",
+  "final_products_match_pre_completion": false,
+  "implementation_files": [
+    {
+      "content_sha256": "12d51f21658ff7378a631972609f39a34f25e0e32a04fc2bf4c757329f912e32",
+      "relative_path": "src/trace_reference/runtime/decision_engine.py",
+      "semantic_digest": "12d51f21658ff7378a631972609f39a34f25e0e32a04fc2bf4c757329f912e32"
+    },
+    {
+      "content_sha256": "a2c6d4922687dabcdbd8ce985eeff0e35bbc5760fbc1c706e8de2f41e0470aff",
+      "relative_path": "src/trace_reference/runtime/mission_runtime.py",
+      "semantic_digest": "a2c6d4922687dabcdbd8ce985eeff0e35bbc5760fbc1c706e8de2f41e0470aff"
+    },
+    {
+      "content_sha256": "4c311fbd23104c23baee19c3c3966c5b07fcd0284b4a189f5e02bbc0ce407e8f",
+      "relative_path": "src/trace_reference/validation/g3_characterization.py",
+      "semantic_digest": "4c311fbd23104c23baee19c3c3966c5b07fcd0284b4a189f5e02bbc0ce407e8f"
+    },
+    {
+      "content_sha256": "aa378e161a68acc3428fe769895bf41ae874e7e723cf731052ddb628cc2de53e",
+      "relative_path": "src/trace_reference/validation/g3_characterization_models.py",
+      "semantic_digest": "aa378e161a68acc3428fe769895bf41ae874e7e723cf731052ddb628cc2de53e"
+    }
+  ],
+  "pre_completion_characterization_sha256": "5a66722092810f92a6814fcacbf6f9b19fcc5030133f142511ba2555ab37dca1",
+  "pre_completion_products_byte_identical": true,
+  "products": [
+    {
+      "content_sha256": "c797600c2ef36f8c79b59674aeb4aad13f12632eff1686d102cd39967a0da25b",
+      "relative_path": "acquisition-success_fixture_manifest.json",
+      "semantic_digest": "9bf0886afe6220d62a6e8f2a635c8637c6aa411f14b3b48df07ad8eaf19b00f1"
+    },
+    {
+      "content_sha256": "0473f62c7438953f2a754dd8fe6293a705a083667f6f4edf7f6dcf546676ad08",
+      "relative_path": "acquisition-timeout_fixture_manifest.json",
+      "semantic_digest": "05cb3edc1156207382f7b80bfe8cddcb3085606eb07091222ff1a416815e7eee"
+    },
+    {
+      "content_sha256": "620a1cb34422871ce85f9f4ca486340266ac2e27f73c19a121a805c97ee91329",
+      "relative_path": "empty-catalog-fallback_fixture_manifest.json",
+      "semantic_digest": "f22a74a1d60b93fc71475e06e1a455e81f66271d561bf8916ff4af34c62de20e"
+    },
+    {
+      "content_sha256": "f6269097f8c6446ec4153031b0945d0687e97c0000ce7e1721d217047e7e4626",
+      "relative_path": "faulted-restart_fixture_manifest.json",
+      "semantic_digest": "50505db7595ea52ef8f17094ed43c0ef09c7734f4a030507719f14753747ac29"
+    },
+    {
+      "content_sha256": "2c9da229e558710dc5543039b1103ab00faf9fe8933282d089f0ce47ef8c8430",
+      "relative_path": "g3_characterization_index.json",
+      "semantic_digest": "c697192757f6c8d7f5719e01d14f1557ad4184f5a8916508de3068de61ca2846"
+    },
+    {
+      "content_sha256": "d03d1882ca4fe6433efdae608f8d690709f479694a58dfb1ca7573b72296aa83",
+      "relative_path": "nominal_fixture_manifest.json",
+      "semantic_digest": "d0cc9e87ea3893ed35ea2fa079a628cd2615711cd9855b772fa2652b21594627"
+    }
+  ],
+  "receipt_digest": "db1831fd6697221537841e37ce4850909db8481eae0a4f4a8053e0d745ffca4e",
+  "runs": [
+    {
+      "elapsed_milliseconds": 371270,
+      "execution_succeeded": true,
+      "memory_measurement_note": "direct-peak-memory-unavailable-sandboxed-macos-sysctl",
+      "peak_memory_bytes": null,
+      "role": "pre-streaming-contract-test",
+      "transient_output_bytes": 119287273
+    },
+    {
+      "elapsed_milliseconds": 363142,
+      "execution_succeeded": true,
+      "memory_measurement_note": "direct-peak-memory-unavailable-sandboxed-macos-sysctl",
+      "peak_memory_bytes": null,
+      "role": "pre-streaming-independent-reproduction",
+      "transient_output_bytes": 119287273
+    },
+    {
+      "elapsed_milliseconds": 397025,
+      "execution_succeeded": true,
+      "memory_measurement_note": "direct-peak-memory-unavailable-sandboxed-macos-sysctl",
+      "peak_memory_bytes": null,
+      "role": "streaming-equivalence",
+      "transient_output_bytes": 119287273
+    },
+    {
+      "elapsed_milliseconds": 379095,
+      "execution_succeeded": true,
+      "memory_measurement_note": "direct-peak-memory-unavailable-sandboxed-macos-sysctl",
+      "peak_memory_bytes": null,
+      "role": "complete-timeout-reassessment",
+      "transient_output_bytes": 119287291
+    }
+  ],
+  "runtime_base_commit": "11ab2b62590c6d3106fa6929cd7273729e30a342",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "scenario_seed": 20260812,
+  "schema_version": "delta-reference-g3-characterization-benchmark-v2",
+  "scientific_status": "development-characterization-not-validation-evidence"
+}

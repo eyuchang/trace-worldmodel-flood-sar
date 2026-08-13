@@ -904,20 +904,28 @@ class ReferenceMissionRuntime:
         )
         outcome, evidence = self.engine.dependencies.acquisition_executor.ingest(receipt)
         self._record_acquisition_outcome(outcome, at_s)
-        if value.behavior == "client-timeout":
-            if evidence is not None or outcome.outcome_status != "provider-timeout":
-                raise RuntimeError("Reference client timeout produced an invalid provider result")
-            return
-        if evidence is None:
-            return
-        self._validate_acquired_targets(context.request, evidence)
-        self.event_log.append_public_artifact(
-            at_s=at_s,
-            event_type=ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED,
-            artifact_id=evidence.evidence_id,
-            artifact_schema_version=evidence.schema_version,
-            artifact=evidence.model_dump(mode="json"),
-        )
+        if value.behavior == "client-timeout" and (
+            evidence is not None or outcome.outcome_status != "provider-timeout"
+        ):
+            raise RuntimeError("Reference client timeout produced an invalid provider result")
+        if evidence is not None:
+            self._validate_acquired_targets(context.request, evidence)
+            self.event_log.append_public_artifact(
+                at_s=at_s,
+                event_type=ReferenceEventType.PHYSICAL_EVIDENCE_RECORDED,
+                artifact_id=evidence.evidence_id,
+                artifact_schema_version=evidence.schema_version,
+                artifact=evidence.model_dump(mode="json"),
+            )
+        self._reassess_after_acquisition(context, outcome, evidence, at_s)
+
+    def _reassess_after_acquisition(
+        self,
+        context: ReferenceAcquisitionContext,
+        outcome: AcquisitionOutcomeReceipt,
+        evidence: ReferencePhysicalEvidence | None,
+        at_s: int,
+    ) -> None:
         reassessment = self.engine.execute(
             ReferenceDecisionInput(
                 report=context.report,

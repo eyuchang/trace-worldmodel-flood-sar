@@ -46,6 +46,11 @@ def test_reference_cli_exposes_run_replay_and_publish() -> None:
 
     g3 = parser.parse_args(["verify-g3", "--seed", "20260812", "--output", "g3-output"])
     assert g3.command == "verify-g3"
+
+    characterize = parser.parse_args(
+        ["characterize-g3", "--seed", "20260812", "--output", "g3-fixtures"]
+    )
+    assert characterize.command == "characterize-g3"
     assert g3.seed == 20260812
 
 

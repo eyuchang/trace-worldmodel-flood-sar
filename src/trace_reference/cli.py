@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .provenance import execute_reference_scenario, verify_exact_reference_replay
 from .publication import publish_reference_bundle
-from .validation import run_reference_g3_integrity
+from .validation import run_reference_g3_characterization, run_reference_g3_integrity
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,18 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Existing empty caller-controlled G3 output directory.",
     )
+    characterize = commands.add_parser(
+        "characterize-g3",
+        help="Write the five bounded feature-off G3 fixture manifests.",
+    )
+    _add_common(characterize)
+    characterize.add_argument("--seed", type=int, required=True)
+    characterize.add_argument(
+        "--output",
+        type=Path,
+        required=True,
+        help="Existing empty caller-controlled characterization directory.",
+    )
     return parser
 
 
@@ -140,6 +152,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             len(report.observed_fault_families),
             report.faulted_counts.compensations,
             report.faulted_counts.consistency_debts,
+        )
+    elif arguments.command == "characterize-g3":
+        index = run_reference_g3_characterization(
+            arguments.repository_root,
+            arguments.output,
+            seed=arguments.seed,
+        )
+        LOGGER.info(
+            "Reference G3 feature-off characterization fixtures=%d digest=%s",
+            len(index.fixtures),
+            index.index_digest,
         )
     else:  # pragma: no cover - argparse restricts the command set.
         raise RuntimeError(f"unsupported Reference command: {arguments.command}")

@@ -177,11 +177,7 @@ class ReferenceDecisionEngine:
 
     def execute(self, values: ReferenceDecisionInput) -> ReferenceDecisionExecution:
         self._validate_input(values)
-        decision_id = (
-            f"reference-reassessment-{values.physical_evidence.evidence_id}"
-            if values.physical_evidence is not None
-            else f"reference-decision-{values.envelope.envelope_id}"
-        )
+        decision_id = self._decision_id(values)
         snapshot = build_controller_visible_snapshot(
             SnapshotInput(
                 mission_id="reference-mission-development-v1",
@@ -229,7 +225,7 @@ class ReferenceDecisionEngine:
             decision_deadline_s=min(345_600, values.at_s + 3_600),
             policy_version=self.dependencies.policy_version,
             proposal_namespace="reference-public-proposal-grammar-v1",
-            acquisition_allowed=values.physical_evidence is None,
+            acquisition_allowed=values.acquisition_outcome is None,
         )
         unbound = propose_reference_actions(request, snapshot)
         packages = self._predict(
@@ -409,6 +405,16 @@ class ReferenceDecisionEngine:
             handoff_artifact=handoff,
         )
 
+    @staticmethod
+    def _decision_id(values: ReferenceDecisionInput) -> str:
+        if values.physical_evidence is not None:
+            return f"reference-reassessment-{values.physical_evidence.evidence_id}"
+        if values.acquisition_outcome is not None:
+            return (
+                f"reference-reassessment-outcome-{values.acquisition_outcome.outcome_digest[:20]}"
+            )
+        return f"reference-decision-{values.envelope.envelope_id}"
+
     def _assess_proposals(
         self,
         packages: dict[str, ReferencePredictorEvidencePackage],
@@ -521,7 +527,7 @@ class ReferenceDecisionEngine:
     def _validate_input(self, values: ReferenceDecisionInput) -> None:
         from trace_reference.generation import verify_reference_envelope
 
-        reassessing = values.physical_evidence is not None
+        reassessing = values.acquisition_outcome is not None
         self._validate_delivery_time(values, reassessing=reassessing)
         if values.at_s < 0:
             raise ValueError("Reference response decisions begin at evaluation T0")
@@ -540,15 +546,31 @@ class ReferenceDecisionEngine:
             raise ValueError("Reference reconciliation authority disagrees with decision authority")
         if not verify_reference_envelope(values.report, values.envelope):
             raise ValueError("Reference report envelope authentication failed")
-        if reassessing != (values.acquisition_outcome is not None):
-            raise ValueError("Reference acquisition reassessment requires an exact outcome")
+        if values.physical_evidence is not None and not reassessing:
+            raise ValueError("Reference physical evidence requires an exact acquisition outcome")
         if reassessing != (values.reassessment_of_decision_id is not None):
             raise ValueError("Reference acquisition reassessment requires its prior decision")
+        if values.acquisition_outcome is not None:
+            self._validate_acquisition_outcome(values)
         if (
             values.physical_evidence is not None
             and values.physical_evidence.delivered_at_s != values.at_s
         ):
             raise ValueError("Reference acquisition reassessment must occur at evidence delivery")
+
+    @staticmethod
+    def _validate_acquisition_outcome(values: ReferenceDecisionInput) -> None:
+        outcome = values.acquisition_outcome
+        if outcome is None:
+            raise RuntimeError("Reference acquisition reassessment lacks its outcome")
+        if not verify_model_digest(outcome, digest_field="outcome_digest"):
+            raise ValueError("Reference acquisition outcome digest is invalid")
+        if outcome.delivered_at_s != values.at_s or outcome.ingested_at_s != values.at_s:
+            raise ValueError("Reference acquisition reassessment must occur at outcome ingestion")
+        if values.physical_evidence is None and (
+            outcome.evidence_id is not None or outcome.outcome_status == "evidence-accepted"
+        ):
+            raise ValueError("Reference accepted evidence outcome lacks physical evidence")
 
     @staticmethod
     def _validate_delivery_time(

@@ -7,6 +7,13 @@ from .capacity import (
     maximum_strict_matched_units,
 )
 from .capacity_models import ReferenceCapacityEvaluation, ReferenceCapacityWindow
+from .g3_characterization import run_reference_g3_characterization
+from .g3_characterization_models import (
+    ReferenceG3ArtifactFamilyDigest,
+    ReferenceG3CharacterizationBenchmarkReceipt,
+    ReferenceG3CharacterizationFixtureManifest,
+    ReferenceG3CharacterizationIndex,
+)
 from .g3_execution import run_reference_g3_integrity
 from .g3_integrity import ReferenceG3IntegrityInput, build_reference_g3_integrity_report
 from .models import ReferenceG3IntegrityReport, ReferenceRuntimeCounts
@@ -22,6 +29,10 @@ __all__ = [
     "ReferenceCapacityEvaluator",
     "ReferenceCapacityWindow",
     "ReferenceClusterInterval",
+    "ReferenceG3ArtifactFamilyDigest",
+    "ReferenceG3CharacterizationBenchmarkReceipt",
+    "ReferenceG3CharacterizationFixtureManifest",
+    "ReferenceG3CharacterizationIndex",
     "ReferenceG3IntegrityInput",
     "ReferenceG3IntegrityReport",
     "ReferenceRuntimeCounts",
@@ -32,5 +43,6 @@ __all__ = [
     "exact_median_interval",
     "maximum_divisible_capped_units",
     "maximum_strict_matched_units",
+    "run_reference_g3_characterization",
     "run_reference_g3_integrity",
 ]

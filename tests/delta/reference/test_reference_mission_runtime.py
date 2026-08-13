@@ -271,10 +271,7 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
         assert artifact["decision"]["reassessment_of_decision_id"] is not None
         assert handoff.manifest.cost_delta_digest == handoff.cost_delta.cost_delta_digest
         assert handoff.catalog.catalog_digest == handoff.selection.catalog_digest
-        assert (
-            handoff.public_snapshot.snapshot_digest
-            == handoff.eligibility.public_snapshot_digest
-        )
+        assert handoff.public_snapshot.snapshot_digest == handoff.eligibility.public_snapshot_digest
     public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
     for forbidden in ("truth_incident_id", "truth_person_id", "candidate_digest"):
         assert forbidden not in public_json
@@ -495,20 +492,6 @@ def test_silent_provider_success_reconciles_after_client_timeout(
         "provider-timeout",
         "evidence-accepted",
     ]
-    assert (
-        len(
-            [
-                item
-                for item in result.decisions
-                if item.reassessment_of_decision_id is not None
-                and item.acquisition_request_id is None
-            ]
-        )
-        >= 1
-    )
-    assert runtime.engine.dependencies.trace_repository.verify_chain()
-    assert runtime.engine.dependencies.evidence_ledger.verify_chain()
-
     request = next(
         AcquisitionRequestReceipt.model_validate_json(value)
         for value in replay.public_mission_artifacts[
@@ -516,6 +499,25 @@ def test_silent_provider_success_reconciles_after_client_timeout(
         ].values()
         if json.loads(value)["request_id"] == application.target_public_id
     )
+    targeted_reassessments = tuple(
+        item for item in result.decisions if item.reassessment_of_decision_id == request.decision_id
+    )
+    assert len(targeted_reassessments) == 2
+    assert all(item.acquisition_request_id is None for item in targeted_reassessments)
+    handoffs = tuple(
+        ReferenceDecisionHandoffArtifact.model_validate_json(value)
+        for value in replay.public_mission_artifacts[
+            ReferenceEventType.DECISION_MANIFEST_RECORDED.value
+        ].values()
+    )
+    assert {item["outcome_digest"] for item in targeted} == {
+        item.manifest.acquisition_outcome_digest
+        for item in handoffs
+        if item.decision.reassessment_of_decision_id == request.decision_id
+    }
+    assert runtime.engine.dependencies.trace_repository.verify_chain()
+    assert runtime.engine.dependencies.evidence_ledger.verify_chain()
+
     restarted_root = tmp_path / "restarted"
     restarted_root.mkdir()
     before_restart, prefix_log = _mission_runtime(
