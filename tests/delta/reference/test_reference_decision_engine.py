@@ -22,6 +22,7 @@ from trace_reference.runtime import (
     ReferenceScenarioIndex,
     ReferenceTraceGateway,
     ReferenceTraceRepository,
+    reference_public_decision_inputs,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -80,9 +81,7 @@ def test_reference_decision_engine_closes_one_authenticated_public_report(
     tmp_path: Path,
 ) -> None:
     report = next(
-        item
-        for item in scenario.observations.raw.reports
-        if 0 <= item.observed_at_s < 180_000
+        item for item in scenario.observations.raw.reports if 0 <= item.observed_at_s < 180_000
     )
     envelope = next(
         item for item in scenario.observations.delivery.envelopes if item.call_id == report.call_id
@@ -101,7 +100,7 @@ def test_reference_decision_engine_closes_one_authenticated_public_report(
     )
     engine = ReferenceDecisionEngine(
         ReferenceDecisionEngineDependencies(
-            scenario=scenario,
+            public_inputs=reference_public_decision_inputs(scenario),
             index=index,
             route_service=ReferenceRouteService(index),
             predictor=predictor,
@@ -173,7 +172,7 @@ def test_reference_decision_engine_rejects_tampered_delivery_before_writes(
     )
     engine = ReferenceDecisionEngine(
         ReferenceDecisionEngineDependencies(
-            scenario=scenario,
+            public_inputs=reference_public_decision_inputs(scenario),
             index=index,
             route_service=ReferenceRouteService(index),
             predictor=predictor,

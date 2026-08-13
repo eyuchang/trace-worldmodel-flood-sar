@@ -17,7 +17,11 @@ from trace_reference.domain import (
     ReferenceScenarioArtifacts,
 )
 
-from .decision_engine import ReferenceDecisionEngine, ReferenceDecisionEngineDependencies
+from .decision_engine import (
+    ReferenceDecisionEngine,
+    ReferenceDecisionEngineDependencies,
+    ReferenceDecisionPublicInputs,
+)
 from .event_store import ReferenceEventLog
 from .mission_runtime import ReferenceMissionRuntime
 from .routing import ReferenceRouteService
@@ -42,6 +46,20 @@ class ReferenceRuntimeBundle:
     trace_repository: ReferenceTraceRepository
     evidence_ledger: ReferenceEvidenceLedger
     commitment_log: ReferenceCommitmentLog
+
+
+def reference_public_decision_inputs(
+    scenario: ReferenceScenarioArtifacts,
+) -> ReferenceDecisionPublicInputs:
+    """Project the full event-machine scenario onto the decision engine allowlist."""
+
+    return ReferenceDecisionPublicInputs(
+        resource_telemetry=scenario.resources.public,
+        resource_catalog=scenario.resources.public_catalog,
+        coordination=scenario.coordination.public,
+        resource_activations=scenario.coordination.activations,
+        prior=scenario.prior,
+    )
 
 
 def build_reference_runtime(
@@ -100,7 +118,7 @@ def build_reference_runtime(
     )
     engine = ReferenceDecisionEngine(
         ReferenceDecisionEngineDependencies(
-            scenario=scenario,
+            public_inputs=reference_public_decision_inputs(scenario),
             index=index,
             route_service=ReferenceRouteService(index),
             predictor=selected_predictor,

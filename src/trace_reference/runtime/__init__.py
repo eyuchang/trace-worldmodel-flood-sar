@@ -9,6 +9,7 @@ from .decision_engine import (
     ReferenceDecisionEngine,
     ReferenceDecisionEngineDependencies,
     ReferenceDecisionInput,
+    ReferenceDecisionPublicInputs,
 )
 from .event_store import ReferenceEventLog, ReferenceWorldState
 from .factory import (
@@ -16,6 +17,7 @@ from .factory import (
     REFERENCE_POLICY_VERSION,
     ReferenceRuntimeBundle,
     build_reference_runtime,
+    reference_public_decision_inputs,
 )
 from .mission_runtime import ReferenceMissionRuntime
 from .mission_state import ReferenceMissionRun
@@ -50,6 +52,7 @@ __all__ = [
     "ReferenceDecisionEngine",
     "ReferenceDecisionEngineDependencies",
     "ReferenceDecisionInput",
+    "ReferenceDecisionPublicInputs",
     "ReferenceEventLog",
     "ReferenceEvidenceLedger",
     "ReferenceMissionRun",
@@ -70,4 +73,5 @@ __all__ = [
     "build_reference_route_provider_timeout",
     "build_reference_runtime",
     "core_action_from_proposal",
+    "reference_public_decision_inputs",
 ]

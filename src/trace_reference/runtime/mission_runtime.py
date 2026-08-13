@@ -51,7 +51,11 @@ from .acquisition_provider import (
     build_reference_route_provider_receipt,
     build_reference_route_provider_timeout,
 )
-from .decision_engine import ReferenceDecisionEngine, ReferenceDecisionInput
+from .decision_engine import (
+    ReferenceDecisionEngine,
+    ReferenceDecisionInput,
+    ReferenceDecisionPublicInputs,
+)
 from .event_store import ReferenceEventLog, verify_reference_event
 from .fault_overlay import (
     ReferenceCoordinationOverlay,
@@ -154,8 +158,15 @@ class ReferenceMissionRuntime:
         fault_schedule: ReferenceFaultSchedule | None = None,
         restart_checkpoint: ReferenceMissionRestartCheckpoint | None = None,
     ) -> None:
-        if decision_engine.dependencies.scenario is not scenario:
-            raise ValueError("Reference decision engine must bind the exact scenario object")
+        expected_public_inputs = ReferenceDecisionPublicInputs(
+            resource_telemetry=scenario.resources.public,
+            resource_catalog=scenario.resources.public_catalog,
+            coordination=scenario.coordination.public,
+            resource_activations=scenario.coordination.activations,
+            prior=scenario.prior,
+        )
+        if decision_engine.dependencies.public_inputs != expected_public_inputs:
+            raise ValueError("Reference decision engine must bind the exact public projection")
         if scenario.config.timeline.evaluation_end_s != EVALUATION_END_S:
             raise ValueError("Reference runtime requires the registered 96-hour horizon")
         if fault_schedule is not None and (
@@ -180,12 +191,16 @@ class ReferenceMissionRuntime:
             sorted(runtime_envelopes, key=lambda item: (item.delivered_at_s, item.envelope_id))
         )
         self._reports = {item.call_id: item for item in runtime_reports}
-        self._envelopes = {item.envelope_id: item for item in self._runtime_envelopes}
+        self._envelopes: dict[str, ReferenceReportEnvelope] = {
+            item.envelope_id: item for item in self._runtime_envelopes
+        }
         self._envelope_by_call = {item.call_id: item for item in self._runtime_envelopes}
         self._injected_fault_by_envelope = {
             item.envelope.envelope_id: item.fault_id for item in self._report_fault_overlay.reports
         }
-        self._telemetry = {item.telemetry_id: item for item in scenario.resources.public.telemetry}
+        self._telemetry: dict[str, ReferenceResourceTelemetry] = {
+            item.telemetry_id: item for item in scenario.resources.public.telemetry
+        }
         self._graphs: dict[ReferenceAuthorityId, ReferenceEvidenceGraph] = {
             cast(ReferenceAuthorityId, authority.authority_id): ReferenceEvidenceGraph(
                 cast(ReferenceAuthorityId, authority.authority_id)
@@ -332,7 +347,7 @@ class ReferenceMissionRuntime:
         if not isinstance(value, ReferenceReportEnvelope):
             raise TypeError("Reference report queue payload has the wrong type")
         report = self._reports[value.call_id]
-        from trace_reference.generation import verify_reference_envelope
+        from trace_reference.domain.report_authentication import verify_reference_envelope
 
         if not verify_reference_envelope(report, value):
             raise ValueError("Reference report envelope authentication failed before delivery")
@@ -586,7 +601,7 @@ class ReferenceMissionRuntime:
             previous = event.event_digest
 
     def _validate_public_sources(self) -> None:
-        from trace_reference.generation import verify_reference_envelope
+        from trace_reference.domain.report_authentication import verify_reference_envelope
 
         for envelope in self._envelopes.values():
             report = self._reports[envelope.call_id]

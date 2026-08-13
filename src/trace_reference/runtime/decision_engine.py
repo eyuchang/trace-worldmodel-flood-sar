@@ -52,11 +52,16 @@ from trace_reference.domain import (
     ReferenceDecisionHandoffArtifact,
     ReferenceEventType,
     ReferenceMissionDecision,
+    ReferencePriorProfile,
+    ReferencePublicCoordinationScenario,
+    ReferencePublicResourceCatalog,
+    ReferencePublicResourceTelemetryScenario,
     ReferenceRawReport,
     ReferenceReportEnvelope,
-    ReferenceScenarioArtifacts,
+    ReferenceResourceActivationSchedule,
 )
 from trace_reference.domain.observations import ReferenceAuthorityId
+from trace_reference.domain.report_authentication import verify_reference_envelope
 from trace_reference.domain.routing import ReferencePublicRouteCatalog, ReferencePublicRoutePlan
 from trace_reference.reconciliation import ReferenceReconciliationStep
 
@@ -90,8 +95,19 @@ def _action_proposals(
 
 
 @dataclass(frozen=True)
+class ReferenceDecisionPublicInputs:
+    """Complete public scenario surface reachable by the decision engine."""
+
+    resource_telemetry: ReferencePublicResourceTelemetryScenario
+    resource_catalog: ReferencePublicResourceCatalog
+    coordination: ReferencePublicCoordinationScenario
+    resource_activations: ReferenceResourceActivationSchedule
+    prior: ReferencePriorProfile
+
+
+@dataclass(frozen=True)
 class ReferenceDecisionEngineDependencies:
-    scenario: ReferenceScenarioArtifacts
+    public_inputs: ReferenceDecisionPublicInputs
     index: ReferenceScenarioIndex
     route_service: ReferenceRouteService
     predictor: ActionPrefixPredictor
@@ -198,19 +214,19 @@ class ReferenceDecisionEngine:
                 environment_beliefs=self._environment_beliefs(values.at_s),
                 active_commitments=values.active_commitments,
                 known_outcomes=values.known_outcomes,
-                prior_profile_id=self.dependencies.scenario.prior.profile_id,
+                prior_profile_id=self.dependencies.public_inputs.prior.profile_id,
                 policy_version=self.dependencies.policy_version,
                 environment_contract_version=self.dependencies.environment_contract_version,
             ),
-            self.dependencies.scenario.resources.public,
-            self.dependencies.scenario.resources.public_catalog,
-            self.dependencies.scenario.coordination.public,
+            self.dependencies.public_inputs.resource_telemetry,
+            self.dependencies.public_inputs.resource_catalog,
+            self.dependencies.public_inputs.coordination,
             self.dependencies.predictor.provenance(),
-            self.dependencies.scenario.coordination.activations,
+            self.dependencies.public_inputs.resource_activations,
         )
         routes = self.dependencies.route_service.build_catalog(
             values.report,
-            self.dependencies.scenario.resources.public_catalog,
+            self.dependencies.public_inputs.resource_catalog,
             at_s=values.at_s,
         )
         if values.physical_evidence is not None:
@@ -458,8 +474,8 @@ class ReferenceDecisionEngine:
                     snapshot=snapshot,
                     report=values.report,
                     route_catalog=routes,
-                    resource_catalog=self.dependencies.scenario.resources.public_catalog,
-                    prior=self.dependencies.scenario.prior,
+                    resource_catalog=self.dependencies.public_inputs.resource_catalog,
+                    prior=self.dependencies.public_inputs.prior,
                     index=self.dependencies.index,
                     predictor=self.dependencies.predictor,
                     at_s=values.at_s,
@@ -476,7 +492,7 @@ class ReferenceDecisionEngine:
             return values.coordination_latency_s
         delivery = next(
             item
-            for item in self.dependencies.scenario.coordination.public.deliveries
+            for item in self.dependencies.public_inputs.coordination.deliveries
             if item.evidence_id == values.envelope.envelope_id
             and item.recipient_authority_id == values.controller_authority_id
             and item.delivered_at_s <= values.at_s
@@ -525,8 +541,6 @@ class ReferenceDecisionEngine:
         return tuple(sorted(values, key=lambda item: item.belief_id))
 
     def _validate_input(self, values: ReferenceDecisionInput) -> None:
-        from trace_reference.generation import verify_reference_envelope
-
         reassessing = values.acquisition_outcome is not None
         self._validate_delivery_time(values, reassessing=reassessing)
         if values.at_s < 0:
@@ -535,7 +549,7 @@ class ReferenceDecisionEngine:
             raise ValueError("Reference report and envelope identifiers disagree")
         expected_authority = (
             "AUTH-01"
-            if self.dependencies.scenario.coordination.public.phi == 1
+            if self.dependencies.public_inputs.coordination.phi == 1
             else values.envelope.initial_authority_id
         )
         if expected_authority != values.controller_authority_id:
@@ -636,7 +650,7 @@ class ReferenceDecisionEngine:
         if catalog is None:
             catalog = self.dependencies.route_service.build_catalog(
                 report,
-                self.dependencies.scenario.resources.public_catalog,
+                self.dependencies.public_inputs.resource_catalog,
                 at_s=observed_at_s,
             )
             catalog_cache[observed_at_s] = catalog

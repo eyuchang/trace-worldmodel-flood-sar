@@ -1,12 +1,13 @@
 """Deterministic generation stages for Reference."""
 
-from .coordination import generate_reference_coordination
-from .exposure import generate_reference_exposure
-from .observations import (
-    generate_reference_observations,
+from trace_reference.domain.report_authentication import (
     sign_reference_envelope,
     verify_reference_envelope,
 )
+
+from .coordination import generate_reference_coordination
+from .exposure import generate_reference_exposure
+from .observations import generate_reference_observations
 from .physical import generate_reference_physical_scenario
 from .pipeline import generate_reference_scenario
 from .resources import generate_reference_resources

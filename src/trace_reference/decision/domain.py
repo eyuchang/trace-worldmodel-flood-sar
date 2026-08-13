@@ -252,6 +252,30 @@ class ProposalSet(DeltaModel):
     enumeration_receipt: ProposalEnumerationReceipt
     proposal_set_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
+    @model_validator(mode="after")
+    def validate_complete_canonical_enumeration(self) -> ProposalSet:
+        groups = (
+            self.physical_actions,
+            self.acquisition_offers,
+            self.safe_alternatives,
+        )
+        if any(
+            group != tuple(sorted(group, key=lambda item: item.proposal_id)) for group in groups
+        ):
+            raise ValueError("Reference proposals must be canonically ordered within kind")
+        ids = tuple(item.proposal_id for group in groups for item in group)
+        if len(set(ids)) != len(ids):
+            raise ValueError("Reference proposal identifiers must be unique across the grammar")
+        count = len(ids)
+        unsupported = count > 256
+        if self.enumeration_receipt.generated_count != count:
+            raise ValueError("Reference proposal count disagrees with its enumeration receipt")
+        if self.enumeration_receipt.unsupported_cardinality != unsupported or (
+            self.enumeration_receipt.complete_for_declared_grammar == unsupported
+        ):
+            raise ValueError("Reference proposal cardinality disposition is inconsistent")
+        return self
+
 
 class ReferenceTraceAssessment(DeltaModel):
     proposal_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -291,6 +315,17 @@ class EligibilityReceipt(DeltaModel):
     classified_at_s: int = Field(ge=-172_800, le=345_600)
     classifications: tuple[ProposalEligibility, ...]
     eligibility_receipt_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_classification_order(self) -> EligibilityReceipt:
+        if self.classifications != tuple(
+            sorted(self.classifications, key=lambda item: item.proposal_id)
+        ):
+            raise ValueError("Reference eligibility classifications must be canonically ordered")
+        ids = tuple(item.proposal_id for item in self.classifications)
+        if len(set(ids)) != len(ids):
+            raise ValueError("Reference eligibility classifies a proposal more than once")
+        return self
 
 
 class ResponseBundleKind(str, Enum):
@@ -341,6 +376,39 @@ class ResponseBundleCatalog(DeltaModel):
     complete_for_declared_grammar: bool
     trace_prefix_digest: str = Field(pattern=r"^(GENESIS|[0-9a-f]{64})$")
     catalog_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_catalog_order_and_cardinality(self) -> ResponseBundleCatalog:
+        consequence_order = {"low": 0, "moderate": 1, "high": 2}
+        kind_order = {
+            ResponseBundleKind.ACT_NOW: 0,
+            ResponseBundleKind.SAFE_ALTERNATIVE: 1,
+            ResponseBundleKind.ACQUIRE_THEN_REASSESS: 2,
+        }
+        ordered = tuple(
+            sorted(
+                self.bundles,
+                key=lambda item: (
+                    consequence_order[item.consequence_class],
+                    item.deadline_s,
+                    kind_order[item.kind],
+                    item.bundle_id,
+                ),
+            )
+        )
+        if self.bundles != ordered:
+            raise ValueError("Reference response bundles must use canonical policy-neutral order")
+        if len({item.bundle_id for item in self.bundles}) != len(self.bundles) or len(
+            {item.proposal_digest for item in self.bundles}
+        ) != len(self.bundles):
+            raise ValueError("Reference response catalog contains duplicate roots")
+        if self.excluded_classification_digests != tuple(
+            sorted(set(self.excluded_classification_digests))
+        ):
+            raise ValueError("Reference excluded classifications must be unique and ordered")
+        if not self.complete_for_declared_grammar and self.bundles:
+            raise ValueError("An unsupported Reference catalog must fail closed without bundles")
+        return self
 
 
 class BaseSelectionRequest(DeltaModel):

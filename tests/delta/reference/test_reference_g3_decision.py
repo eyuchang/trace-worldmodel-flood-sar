@@ -50,8 +50,10 @@ from trace_reference.decision.counterfactual import ReferencePublicCounterfactua
 from trace_reference.decision.domain import (
     BaseSelectionRequest,
     CounterfactualStepRequest,
+    ProposalEnumerationReceipt,
     ProposalRequest,
     ProposalSet,
+    PublicCommitmentBelief,
     PublicEnvironmentBelief,
     ReferenceTraceAssessment,
 )
@@ -928,3 +930,161 @@ def test_g3_predictor_binding_requires_complete_exact_action_coverage(
     _, _, proposals = decision_fixture
     with pytest.raises(ValueError, match="cover every action exactly"):
         bind_predictor_evidence(proposals, {})
+
+
+def test_g3_bundle_models_enforce_payload_order_and_complete_enumeration(
+    decision_fixture,
+) -> None:
+    snapshot, _, proposals = decision_fixture
+    _, _, catalog = _catalog(decision_fixture)
+    acquisition = next(item for item in catalog.bundles if item.acquisition is not None)
+    action = next(item.action for item in catalog.bundles if item.action is not None)
+    with pytest.raises(ValueError, match="exactly one payload"):
+        acquisition.model_validate(
+            {
+                **acquisition.model_dump(mode="json"),
+                "action": action.model_dump(mode="json"),
+            }
+        )
+    if len(catalog.bundles) > 1:
+        with pytest.raises(ValueError, match="canonical policy-neutral order"):
+            catalog.model_validate(
+                {
+                    **catalog.model_dump(mode="json"),
+                    "bundles": [item.model_dump(mode="json") for item in reversed(catalog.bundles)],
+                }
+            )
+
+    receipt_body = proposals.enumeration_receipt.model_dump(mode="json", exclude={"receipt_digest"})
+    receipt_body["generated_count"] += 1
+    receipt = ProposalEnumerationReceipt(
+        **receipt_body,
+        receipt_digest=decision_digest(receipt_body),
+    )
+    set_body = proposals.model_dump(mode="json", exclude={"proposal_set_digest"})
+    set_body["enumeration_receipt"] = receipt.model_dump(mode="json")
+    with pytest.raises(ValueError, match="proposal count"):
+        ProposalSet(**set_body, proposal_set_digest=decision_digest(set_body))
+
+    assert snapshot.snapshot_digest == catalog.bundles[0].public_snapshot_digest
+
+
+def test_g3_unsupported_catalog_cardinality_fails_closed_without_shortlisting(
+    decision_fixture,
+) -> None:
+    snapshot, _, proposals = decision_fixture
+    template = proposals.physical_actions[0]
+    physical = []
+    for index in range(257):
+        action_body = template.action.model_dump(mode="json", exclude={"action_digest"})
+        action_body["action_id"] = f"reference-action-overflow-{index:03d}"
+        action = template.action.model_validate(
+            {**action_body, "action_digest": decision_digest(action_body)}
+        )
+        proposal_body = template.model_dump(mode="json", exclude={"proposal_digest"})
+        proposal_body.update(
+            {
+                "proposal_id": f"proposal-overflow-{index:03d}",
+                "action": action.model_dump(mode="json"),
+            }
+        )
+        physical.append(
+            template.model_validate(
+                {**proposal_body, "proposal_digest": decision_digest(proposal_body)}
+            )
+        )
+    receipt_body = proposals.enumeration_receipt.model_dump(mode="json", exclude={"receipt_digest"})
+    receipt_body.update(
+        {
+            "generated_count": 257,
+            "capability_compatible_count": 257,
+            "route_unavailable_count": 0,
+            "semantic_deduplication_count": 0,
+            "complete_for_declared_grammar": False,
+            "unsupported_cardinality": True,
+        }
+    )
+    receipt = ProposalEnumerationReceipt(
+        **receipt_body,
+        receipt_digest=decision_digest(receipt_body),
+    )
+    set_body = {
+        "schema_version": "delta-reference-proposal-set-v1",
+        "decision_id": proposals.decision_id,
+        "physical_actions": [item.model_dump(mode="json") for item in physical],
+        "acquisition_offers": [],
+        "safe_alternatives": [],
+        "enumeration_receipt": receipt.model_dump(mode="json"),
+    }
+    overflow = ProposalSet(**set_body, proposal_set_digest=decision_digest(set_body))
+    assessments = {
+        item.proposal_digest: _assessment(item.proposal_digest, CommitmentDecision.CLEAR)
+        for item in overflow.physical_actions
+    }
+
+    eligibility = classify_reference_proposals(snapshot, overflow, assessments)
+    catalog = build_response_bundle_catalog(snapshot, overflow, eligibility)
+
+    assert len(eligibility.classifications) == 257
+    assert not any(item.eligible for item in eligibility.classifications)
+    assert not catalog.complete_for_declared_grammar
+    assert catalog.bundles == ()
+
+
+def test_g3_active_resource_is_excluded_from_proposals_and_model_is_offline_bounded(
+    decision_fixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    snapshot, request, proposals = decision_fixture
+    assigned = proposals.physical_actions[0].action.actor_resource_id
+    assert assigned is not None
+    commitment = PublicCommitmentBelief(
+        commitment_id="reference-active-g3",
+        resource_id=assigned,
+        action_class=proposals.physical_actions[0].action.action_class,
+        active_from_s=900,
+        active_until_s=4_000,
+        authorizing_trace_record_id="trace-reference-active-g3",
+        authorizing_trace_record_version=1,
+    )
+    snapshot_body = snapshot.model_dump(mode="json", exclude={"snapshot_digest"})
+    snapshot_body["active_commitments"] = [commitment.model_dump(mode="json")]
+    occupied_snapshot = snapshot.model_validate(
+        {**snapshot_body, "snapshot_digest": decision_digest(snapshot_body)}
+    )
+    request_body = request.model_dump(mode="json")
+    request_body["public_snapshot_digest"] = occupied_snapshot.snapshot_digest
+    occupied_request = ProposalRequest.model_validate(request_body)
+    occupied_proposals = propose_reference_actions(occupied_request, occupied_snapshot)
+    assert assigned not in {
+        item.action.actor_resource_id
+        for item in (*occupied_proposals.physical_actions, *occupied_proposals.safe_alternatives)
+    }
+
+    _, _, catalog = _catalog(decision_fixture)
+    bundle = catalog.bundles[0]
+    model = ReferencePublicCounterfactualModel()
+    state = model.fork(snapshot)
+    valid = CounterfactualStepRequest(
+        state_digest=state.state_digest,
+        bundle_digest=bundle.bundle_digest,
+        horizon_increment_s=300,
+        maximum_primitive_operations=10_000,
+        model_version=model.model_id,
+    )
+
+    def reject_network(*_args, **_kwargs):
+        raise AssertionError("counterfactual model attempted network access")
+
+    monkeypatch.setattr("socket.socket", reject_network)
+    first = model.step(valid, state, bundle)
+    second = model.step(valid, state, bundle)
+    assert first == second
+    assert first.semantic_role == "simulation_only"
+    assert state == model.fork(snapshot)
+
+    insufficient = valid.model_copy(
+        update={"maximum_primitive_operations": first.primitive_operations - 1}
+    )
+    with pytest.raises(ValueError, match="compute allowance"):
+        model.step(insufficient, state, bundle)

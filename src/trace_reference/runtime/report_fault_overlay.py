@@ -18,7 +18,7 @@ from trace_reference.domain.observations import (
     ReferencePublicLocation,
     ReferencePublicTaxonomy,
 )
-from trace_reference.generation import sign_reference_envelope
+from trace_reference.domain.report_authentication import sign_reference_envelope
 
 from .fault_overlay import ReferenceCoordinationOverlay
 

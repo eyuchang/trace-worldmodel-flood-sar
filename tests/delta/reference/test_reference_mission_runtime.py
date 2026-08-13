@@ -32,6 +32,7 @@ from trace_reference.runtime import (
     ReferenceTraceGateway,
     ReferenceTraceRepository,
     build_reference_route_provider_receipt,
+    reference_public_decision_inputs,
 )
 from trace_reference.runtime.fault_overlay import build_reference_coordination_overlay
 from trace_reference.runtime.report_fault_overlay import build_reference_report_fault_overlay
@@ -98,7 +99,7 @@ def _mission_runtime(
     )
     engine = ReferenceDecisionEngine(
         ReferenceDecisionEngineDependencies(
-            scenario=scenario,
+            public_inputs=reference_public_decision_inputs(scenario),
             index=index,
             route_service=ReferenceRouteService(index),
             predictor=predictor,
