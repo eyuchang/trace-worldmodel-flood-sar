@@ -146,6 +146,40 @@ requirement is that direct source-tree hashing resolve and validate the trusted
 repository root before source enumeration and relative-path conversion, with
 absolute/relative digest equivalence tested directly.
 
+That correction is committed at `2f4c6b3`. The direct source-tree hash now
+resolves the trusted root once, and focused absolute-versus-relative digest
+equivalence, Ruff, formatting, and strict mypy checks passed. The failed partial
+core tree was removed only after the process had exited and no open file handle
+remained.
+
+The five characterization fixtures were then regenerated in 467.084 seconds
+using only spent development seed `20260812`. Their scientific behavior bytes
+were unchanged; only the source-bound characterization index and nested
+integrity report changed. The new characterization-index digest is
+`2c03a0f6229b8aed4c16734bffd2017ca8bb6ffce5732ac8b156c42cc644a7a2`,
+the regenerated integrity-report digest is
+`7a2a22d684dfd54f55de9d0ad486016a9c1c8df0a47d714cfbfcf16129e5c568`,
+and the current uncommitted scientific-input aggregate is
+`9f12ed0993ac11fd3636e0a195fb21ae442829930f94f531135e7e2c0c4194b5`.
+
+On the corrected source, 57 registered low-resource G3 checks, all four exact
+mission-runtime gates, the causal-pipeline gate, the runtime-factory
+hidden-lineage-independence gate, the fault/restart integrity gate, and the
+public-artifact hidden-identifier gate passed in fresh bounded processes. After
+free disk reached 6,078,800 KiB, the exact tamper-detection and byte-identical
+replay gates ran sequentially in isolated roots. Both passed; each root occupied
+859 MiB at its measurement boundary and left about 4.94 GiB free. Each root was
+removed only after its child process exited and no open handle remained.
+
+The complete registered G3 gate set therefore supports regenerated acceptance
+receipt
+`c31931d42e1eea7aebea46d5891d5e66bf2d5af846015aaf8485e82515df8d97`
+and non-LEAP handoff manifest
+`26e4231068d65de55cd9acf2adccf9880982f0d421c29f0e09e3aee6f27fdbc1`.
+Nine handoff reconstruction and binding tests passed after regeneration. The
+handoff explicitly reports `g3_ready=true`, `leap_implementation_present=false`,
+and `effectiveness_evidence_present=false`.
+
 ## Next heavy-run gate
 
 No further generation, runtime, replay, publication, or multi-seed command may
