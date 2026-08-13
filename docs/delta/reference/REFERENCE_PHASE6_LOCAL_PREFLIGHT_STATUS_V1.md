@@ -102,9 +102,7 @@ A fresh exact-replay gate retry was deliberately stopped with exit code `143`
 after another project began a declared disk-using run and projected cumulative
 growth would have crossed the 4-GiB free-disk floor. One test had emitted a pass
 before termination, but the interrupted command has no aggregate pass status.
-The exact-replay gate remains pending until disk headroom permits a new
-source-stable run. No G3 acceptance receipt or handoff may be regenerated until
-that command exits successfully.
+The interrupted attempt was never counted as a gate result.
 
 The subsequent source-stable retry completed all three registered provenance
 gates with exit code `0`: public-artifact hidden-identifier exclusion, artifact
@@ -115,6 +113,38 @@ declared 4-GiB floor. The run had already completed successfully when this peak
 was measured. This resource-projection miss does not change the gate result,
 but future replay notices must use the observed 1.3-GiB peak plus filesystem
 margin rather than the smaller stale-tree estimate.
+
+The source-stable G3 regeneration then completed. The committed scientific
+input aggregate is
+`0b61b09c6fc390de95973c1fc1d815775d205539069e36c3d0f1937c50c70b53`,
+the G3 acceptance-receipt digest is
+`fc09ae6a4fb1413ba5af3a1ac2e5eba40049bd2511fc100f4135964bf2f6bdc6`,
+and the non-LEAP handoff-manifest digest is
+`eece179ed2fb43923eb1b176c6f55aed20aa8748f6cd872489ae3ffa601d1860`.
+The registered handoff and integrity regressions, Ruff, and strict mypy checks
+passed before commit `619779d`.
+
+## Phase 6 source-stable executions
+
+The source-stable Phase 6 fault stage completed with exit code `0` in 266.679
+seconds. It exercised every registered fault family, restart equivalence,
+public/hidden separation, and all event, evidence, TRACE, commitment,
+authorization, correction, and outcome joins. Its receipt digest is
+`a1b3c460684b061ba010abff392b606d3656a408665a98d4660dcde100bb5b74`;
+the nested integrity-report digest is
+`ffe458e524ae2ac0d91e89ed7336db4b172479080e6097bcdfd4394397f95766`.
+
+The next source-stable `phase6-core` attempt used the documented relative
+repository root `.` and stopped before replay or publication after the nominal
+runtime had been written. Artifact-manifest source-tree hashing still compared
+absolute source paths with the unresolved relative root and raised
+`ValueError`. The command exited `1` and produced no core receipt. This exposed
+a second relative-root normalization boundary, distinct from the earlier
+scientific-input-manifest boundary. The partial nominal store is not evidence;
+it may be deleted after the defect and regression are committed. The corrective
+requirement is that direct source-tree hashing resolve and validate the trusted
+repository root before source enumeration and relative-path conversion, with
+absolute/relative digest equivalence tested directly.
 
 ## Next heavy-run gate
 
@@ -127,7 +157,7 @@ the following projection:
    rather than used as an automatic termination rule, while the canonical
    15-minute acceptance ceiling remains unchanged;
 2. the final core and isolation stages run only after source freeze;
-3. core output is expected to approach 0.88 GiB, so at least 2 GiB of free disk
-   should be reserved for one stage plus filesystem overhead;
+3. core output is expected to approach 0.88 GiB and is bounded at 1.10 GiB, so
+   it runs only when that upper bound preserves the 4-GiB free-disk floor;
 4. canonical performance remains pending until the digest-pinned Python 3.11
    Linux environment produces its own verified receipt.

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from trace_reference.provenance import build_reference_scientific_input_manifest
+from trace_reference.provenance.inventory import reference_source_tree_sha256
 from trace_reference.validation import (
     REFERENCE_G3_GATE_IDS,
     ReferenceG3AcceptanceRegistry,
@@ -112,6 +113,16 @@ def test_g3_scientific_manifest_accepts_relative_trusted_repository_root(
     relative = build_reference_scientific_input_manifest(Path(ROOT.name))
 
     assert relative == build_reference_scientific_input_manifest(ROOT)
+
+
+def test_reference_source_tree_hash_accepts_relative_trusted_repository_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(ROOT.parent)
+
+    relative = reference_source_tree_sha256(Path(ROOT.name))
+
+    assert relative == reference_source_tree_sha256(ROOT)
 
 
 def test_g3_committed_characterization_is_complete_and_digest_bound() -> None:

@@ -128,16 +128,21 @@ def reference_file_inputs(repository_root: Path) -> tuple[ReferenceFileInput, ..
 def reference_source_tree_sha256(repository_root: Path) -> str:
     """Hash the complete transitive source closure for base Reference surfaces."""
 
-    safe_directory(repository_root / "src", declared_root=repository_root, label="source root")
+    trusted_root = safe_directory(
+        repository_root,
+        declared_root=repository_root,
+        label="Reference repository root",
+    )
+    safe_directory(trusted_root / "src", declared_root=trusted_root, label="source root")
     digest = hashlib.sha256()
-    for path in reference_source_paths(repository_root):
+    for path in reference_source_paths(trusted_root):
         safe = ArtifactLocator.from_path(
-            root=repository_root,
+            root=trusted_root,
             path=path,
             maximum_bytes=4 * 1024 * 1024,
             label="Reference Python source",
         ).resolve()
-        relative = safe.relative_to(repository_root).as_posix().encode("utf-8")
+        relative = safe.relative_to(trusted_root).as_posix().encode("utf-8")
         payload = safe.read_bytes()
         digest.update(relative)
         digest.update(b"\0")
