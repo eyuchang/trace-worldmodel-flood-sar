@@ -22,6 +22,7 @@ from trace_reference.decision.artifacts import ReferenceCommitmentEnvelope
 from trace_reference.decision.canonical import verify_model_digest
 from trace_reference.decision.domain import PublicCommitmentBelief, PublicOutcomeBelief
 from trace_reference.domain import (
+    ReferenceDecisionHandoffArtifact,
     ReferenceEventType,
     ReferenceEventVisibility,
     ReferenceFaultApplication,
@@ -256,7 +257,8 @@ class ReferenceMissionRecovery:
         if set(self.steps) != set(expected_steps):
             raise ValueError("Reference restored reconciliation history is incomplete")
         for value in artifacts.get(ReferenceEventType.DECISION_MANIFEST_RECORDED, ()):
-            self.decisions.append(ReferenceMissionDecision.model_validate(value["decision"]))
+            handoff = ReferenceDecisionHandoffArtifact.model_validate(value)
+            self.decisions.append(handoff.decision)
 
     def _restore_provider_state(
         self,

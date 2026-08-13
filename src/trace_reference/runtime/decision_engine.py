@@ -8,9 +8,17 @@ from datetime import datetime
 from trace_jepa.predictor import ActionPrefixPredictor
 from trace_reference.decision import (
     AcquisitionOutcomeReceipt,
+    AcquisitionRequestReceipt,
+    BaseSelectionReceipt,
     CostDeltaInput,
+    DecisionCostDelta,
     DecisionManifestInput,
+    EligibilityReceipt,
     EvidenceAcquisitionExecutor,
+    ReferenceCommitmentEnvelope,
+    ReferenceDecisionManifest,
+    ReferenceTraceAssessment,
+    ResponseBundleCatalog,
     build_cost_delta,
     build_decision_manifest,
 )
@@ -24,6 +32,7 @@ from trace_reference.decision.domain import (
     ControllerVisibleSnapshot,
     PhysicalActionProposal,
     ProposalRequest,
+    ProposalSet,
     PublicCommitmentBelief,
     PublicEnvironmentBelief,
     PublicOutcomeBelief,
@@ -40,6 +49,7 @@ from trace_reference.decision.selector import BaseReferenceSelector
 from trace_reference.decision.visibility import SnapshotInput, build_controller_visible_snapshot
 from trace_reference.domain import (
     ReferenceDecisionExecution,
+    ReferenceDecisionHandoffArtifact,
     ReferenceEventType,
     ReferenceMissionDecision,
     ReferenceRawReport,
@@ -109,6 +119,54 @@ class ReferenceDecisionInput:
     acquisition_outcome: AcquisitionOutcomeReceipt | None = None
     physical_evidence: ReferencePhysicalEvidence | None = None
     coordination_latency_s: int | None = None
+
+
+@dataclass(frozen=True)
+class _DecisionHandoffInput:
+    result: ReferenceMissionDecision
+    snapshot: ControllerVisibleSnapshot
+    proposals: ProposalSet
+    assessments: tuple[ReferenceTraceAssessment, ...]
+    eligibility: EligibilityReceipt
+    catalog: ResponseBundleCatalog
+    selection: BaseSelectionReceipt
+    cost: DecisionCostDelta
+    manifest: ReferenceDecisionManifest
+    commitment: ReferenceCommitmentEnvelope | None
+    acquisition_request: AcquisitionRequestReceipt | None
+
+
+@dataclass(frozen=True)
+class _AssessmentArtifacts:
+    by_proposal_digest: dict[str, ReferenceTraceAssessment]
+    by_action_digest: dict[str, ProposalAssessmentInput]
+
+
+def _build_decision_handoff(values: _DecisionHandoffInput) -> ReferenceDecisionHandoffArtifact:
+    body = {
+        "schema_version": "delta-reference-decision-handoff-artifact-v1",
+        "decision": values.result.model_dump(mode="json"),
+        "public_snapshot": values.snapshot.model_dump(mode="json"),
+        "proposals": values.proposals.model_dump(mode="json"),
+        "assessments": [item.model_dump(mode="json") for item in values.assessments],
+        "eligibility": values.eligibility.model_dump(mode="json"),
+        "catalog": values.catalog.model_dump(mode="json"),
+        "selection": values.selection.model_dump(mode="json"),
+        "cost_delta": values.cost.model_dump(mode="json"),
+        "manifest": values.manifest.model_dump(mode="json"),
+        "commitment": (
+            values.commitment.model_dump(mode="json") if values.commitment is not None else None
+        ),
+        "acquisition_request": (
+            values.acquisition_request.model_dump(mode="json")
+            if values.acquisition_request is not None
+            else None
+        ),
+    }
+    return ReferenceDecisionHandoffArtifact(
+        **body,
+        artifact_digest=decision_digest(body),
+    )
 
 
 class ReferenceDecisionEngine:
@@ -192,23 +250,9 @@ class ReferenceDecisionEngine:
                 proposals.safe_alternatives,
             )
         }
-        assessments = {}
-        assessment_inputs = {}
-        for action_digest, package in packages.items():
-            proposal = proposal_by_action[action_digest]
-            assessment_input = ProposalAssessmentInput(
-                proposal=proposal,
-                snapshot=snapshot,
-                predictor_request=package.request,
-                evidence=package.evidence,
-                claim=package.claim,
-                at_s=values.at_s,
-                created_at=values.created_at,
-                lineage_key=f"reference-decision|{snapshot.decision_id}|{action_digest}",
-            )
-            assessed = self.dependencies.trace_gateway.assess(assessment_input)
-            assessments[proposal.proposal_digest] = assessed.assessment
-            assessment_inputs[action_digest] = assessment_input
+        assessed = self._assess_proposals(packages, proposal_by_action, snapshot, values)
+        assessments = assessed.by_proposal_digest
+        assessment_inputs = assessed.by_action_digest
         eligibility = classify_reference_proposals(snapshot, proposals, assessments)
         catalog = build_response_bundle_catalog(snapshot, proposals, eligibility)
         selection = BaseReferenceSelector().select(
@@ -326,28 +370,70 @@ class ReferenceDecisionEngine:
             "reassessment_of_decision_id": values.reassessment_of_decision_id,
         }
         result = ReferenceMissionDecision(**body, decision_digest=decision_digest(body))
+        assessments_ordered = tuple(assessments[key] for key in sorted(assessments))
+        handoff = _build_decision_handoff(
+            _DecisionHandoffInput(
+                result,
+                snapshot,
+                proposals,
+                assessments_ordered,
+                eligibility,
+                catalog,
+                selection,
+                cost,
+                manifest,
+                commitment,
+                acquisition_request,
+            )
+        )
         self.dependencies.event_log.append_public_artifact(
             at_s=values.at_s,
             event_type=ReferenceEventType.DECISION_MANIFEST_RECORDED,
             artifact_id=result.decision_id,
-            artifact_schema_version=result.schema_version,
-            artifact={
-                "decision": result.model_dump(mode="json"),
-                "manifest": manifest.model_dump(mode="json"),
-            },
+            artifact_schema_version=handoff.schema_version,
+            artifact=handoff.model_dump(mode="json"),
         )
         return ReferenceDecisionExecution(
             result=result,
             reconciliation=values.reconciliation,
             proposals=proposals,
-            assessments=tuple(assessments[key] for key in sorted(assessments)),
+            assessments=assessments_ordered,
             eligibility=eligibility,
             catalog=catalog,
             selection=selection,
             commitment=commitment,
             acquisition_request=acquisition_request,
             manifest=manifest,
+            public_snapshot=snapshot,
+            cost_delta=cost,
+            handoff_artifact=handoff,
         )
+
+    def _assess_proposals(
+        self,
+        packages: dict[str, ReferencePredictorEvidencePackage],
+        proposal_by_action: dict[str, ActionProposal],
+        snapshot: ControllerVisibleSnapshot,
+        values: ReferenceDecisionInput,
+    ) -> _AssessmentArtifacts:
+        assessments: dict[str, ReferenceTraceAssessment] = {}
+        inputs: dict[str, ProposalAssessmentInput] = {}
+        for action_digest, package in packages.items():
+            proposal = proposal_by_action[action_digest]
+            assessment_input = ProposalAssessmentInput(
+                proposal=proposal,
+                snapshot=snapshot,
+                predictor_request=package.request,
+                evidence=package.evidence,
+                claim=package.claim,
+                at_s=values.at_s,
+                created_at=values.created_at,
+                lineage_key=f"reference-decision|{snapshot.decision_id}|{action_digest}",
+            )
+            assessed = self.dependencies.trace_gateway.assess(assessment_input)
+            assessments[proposal.proposal_digest] = assessed.assessment
+            inputs[action_digest] = assessment_input
+        return _AssessmentArtifacts(assessments, inputs)
 
     def _predict(
         self,

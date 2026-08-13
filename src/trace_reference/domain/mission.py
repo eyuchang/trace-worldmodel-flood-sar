@@ -11,12 +11,15 @@ from trace_jepa.scenario.delta.domain.base import DeltaModel
 from trace_reference.decision import (
     AcquisitionRequestReceipt,
     BaseSelectionReceipt,
+    ControllerVisibleSnapshot,
+    DecisionCostDelta,
     EligibilityReceipt,
     ReferenceCommitmentEnvelope,
     ReferenceDecisionManifest,
     ReferenceTraceAssessment,
     ResponseBundleCatalog,
 )
+from trace_reference.decision.canonical import model_digest
 from trace_reference.decision.domain import ProposalSet
 from trace_reference.reconciliation import ReferenceReconciliationStep
 
@@ -68,6 +71,34 @@ class ReferenceMissionRestartCheckpoint(DeltaModel):
     checkpoint_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class ReferenceDecisionHandoffArtifact(DeltaModel):
+    """Complete controller-visible decision frame persisted for replay and G3."""
+
+    schema_version: Literal["delta-reference-decision-handoff-artifact-v1"]
+    decision: ReferenceMissionDecision
+    public_snapshot: ControllerVisibleSnapshot
+    proposals: ProposalSet
+    assessments: tuple[ReferenceTraceAssessment, ...]
+    eligibility: EligibilityReceipt
+    catalog: ResponseBundleCatalog
+    selection: BaseSelectionReceipt
+    cost_delta: DecisionCostDelta
+    manifest: ReferenceDecisionManifest
+    commitment: ReferenceCommitmentEnvelope | None
+    acquisition_request: AcquisitionRequestReceipt | None
+    artifact_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_artifact_digest(self) -> ReferenceDecisionHandoffArtifact:
+        if model_digest(self, digest_field="artifact_digest") != self.artifact_digest:
+            raise ValueError("Reference decision handoff artifact digest is invalid")
+        if self.manifest.cost_delta_digest != self.cost_delta.cost_delta_digest:
+            raise ValueError("Reference decision manifest does not bind its cost delta")
+        if self.decision.manifest_digest != self.manifest.manifest_digest:
+            raise ValueError("Reference mission decision does not bind its handoff manifest")
+        return self
+
+
 @dataclass(frozen=True)
 class ReferenceDecisionExecution:
     """Typed in-memory result; durable public identity is ReferenceMissionDecision."""
@@ -82,3 +113,6 @@ class ReferenceDecisionExecution:
     commitment: ReferenceCommitmentEnvelope | None
     acquisition_request: AcquisitionRequestReceipt | None
     manifest: ReferenceDecisionManifest
+    public_snapshot: ControllerVisibleSnapshot
+    cost_delta: DecisionCostDelta
+    handoff_artifact: ReferenceDecisionHandoffArtifact

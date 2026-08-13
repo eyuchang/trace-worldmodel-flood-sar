@@ -33,6 +33,7 @@ from .faults import (
 )
 from .mission import (
     ReferenceDecisionExecution,
+    ReferenceDecisionHandoffArtifact,
     ReferenceMissionDecision,
     ReferenceMissionRestartCheckpoint,
 )
@@ -101,6 +102,7 @@ __all__ = [
     "ReferenceCrewTruth",
     "ReferenceCrossingStateSample",
     "ReferenceDecisionExecution",
+    "ReferenceDecisionHandoffArtifact",
     "ReferenceDeliveryEnvelopeScenario",
     "ReferenceEvent",
     "ReferenceEventType",

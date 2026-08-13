@@ -12,6 +12,7 @@ from trace_jepa.runtime import PolicyConfig, PolicyEngine, TraceRuntime
 from trace_reference import load_reference_fault_schedule
 from trace_reference.decision import AcquisitionRequestReceipt, EvidenceAcquisitionExecutor
 from trace_reference.domain import (
+    ReferenceDecisionHandoffArtifact,
     ReferenceEvent,
     ReferenceEventType,
     ReferenceFaultSchedule,
@@ -265,8 +266,15 @@ def test_reference_mission_runtime_records_completed_and_censored_service_outcom
     ]
     for reassessment in reassessments:
         artifact = json.loads(decision_artifacts[reassessment.decision_id])
+        handoff = ReferenceDecisionHandoffArtifact.model_validate(artifact)
         assert artifact["manifest"]["acquisition_outcome_digest"] is not None
         assert artifact["decision"]["reassessment_of_decision_id"] is not None
+        assert handoff.manifest.cost_delta_digest == handoff.cost_delta.cost_delta_digest
+        assert handoff.catalog.catalog_digest == handoff.selection.catalog_digest
+        assert (
+            handoff.public_snapshot.snapshot_digest
+            == handoff.eligibility.public_snapshot_digest
+        )
     public_json = json.dumps(replay.public_mission_artifacts, sort_keys=True)
     for forbidden in ("truth_incident_id", "truth_person_id", "candidate_digest"):
         assert forbidden not in public_json
