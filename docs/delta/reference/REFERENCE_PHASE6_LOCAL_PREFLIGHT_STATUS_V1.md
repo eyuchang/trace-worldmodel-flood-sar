@@ -180,6 +180,44 @@ Nine handoff reconstruction and binding tests passed after regeneration. The
 handoff explicitly reports `g3_ready=true`, `leap_implementation_present=false`,
 and `effectiveness_evidence_present=false`.
 
+## Final local Phase 6 preflight
+
+The source-frozen Phase 6 core stage completed with exit code `0`. All nominal
+runtime, chain, conservation, capacity, offline, exact-replay, and publication
+regeneration checks passed. The measured local-preflight values were:
+
+| Observation | Value |
+|---|---:|
+| Wall time | 412.448 seconds |
+| Peak resident memory | 1,040,121,856 bytes |
+| Transient output | 867,818,562 bytes |
+| Core receipt digest | `8cf8ccfa6004c269d46cf9147408d3767acc0d185c6207bc1bdc4ac5e3e6aaf6` |
+| Nominal replay-manifest digest | `165b4dc63021e3b6096f661ce91c6e78b02ea33891f1ce33206737807177a686` |
+| Publication-manifest digest | `49486bd58a4dbb5cbefdb6877c0377bb545763e0bdce3ec4d7a8cfef19ae795e` |
+
+The source-frozen isolation stage completed with exit code `0` in 156.776
+seconds. Deleting hidden lineage left public decisions, outcomes,
+reconciliations, public events, TRACE, evidence, and commitments byte-identical.
+All eight registered causal-axis checks passed, including the corrected `phi`
+keyed-draw comparison. The isolation receipt digest is
+`6afd7bef8785c720a719aa24523fdb625cbeed29700b32a33a54b49cd74f2e36`.
+
+The source-frozen fault stage completed with exit code `0` in 219.562 seconds.
+Every registered fault family was exercised, restart public/durable state was
+equivalent, and all registered chains and joins passed. The fault receipt digest
+is `a77cbe4a32ade18bda26eb34dd667be01b221f36b2cdca06803f08c1bc410e41`.
+
+Finalization passed all 14 non-performance checks and all eight axis checks. The
+canonical report digest is
+`e8a6d32c52442bd4513a672e9197edf7a93f15792293f8347858819dcb5c69fa`
+and the report file SHA-256 is
+`52e0a1cd19d48de2f8c6d7ab00dfdda34025e919d6e259bc1d380e94bd75415f`.
+The report is correctly labeled development-only and non-inferential, grants no
+selection, validation, or confirmatory authority, and contains no LEAP
+behavior. Its canonical performance status remains
+`pending-canonical-environment`: the local macOS/Python 3.13 measurements are
+diagnostic even though they fall within the registered ceilings.
+
 ## Next heavy-run gate
 
 No further generation, runtime, replay, publication, or multi-seed command may
