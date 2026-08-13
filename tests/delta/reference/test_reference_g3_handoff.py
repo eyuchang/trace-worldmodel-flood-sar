@@ -11,7 +11,9 @@ from trace_reference.validation import (
     REFERENCE_G3_GATE_IDS,
     ReferenceG3AcceptanceRegistry,
     ReferenceG3CharacterizationIndex,
+    ReferenceG3HandoffManifest,
     build_reference_g3_acceptance_receipt,
+    build_reference_g3_handoff_manifest,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -21,6 +23,9 @@ MECHANISM_AUDIT = Path(
     "docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md"
 )
 CHARACTERIZATION_ROOT = Path("data/scenario/delta/reference/g3_handoff_v1")
+SCIENTIFIC_INPUT = CHARACTERIZATION_ROOT / "scientific_input_manifest.json"
+ACCEPTANCE_RECEIPT = CHARACTERIZATION_ROOT / "g3_acceptance_receipt.json"
+HANDOFF_MANIFEST = CHARACTERIZATION_ROOT / "g3_handoff_manifest.json"
 CHARACTERIZATION_SHA256 = {
     "acquisition-success": "c797600c2ef36f8c79b59674aeb4aad13f12632eff1686d102cd39967a0da25b",
     "acquisition-timeout": "0473f62c7438953f2a754dd8fe6293a705a083667f6f4edf7f6dcf546676ad08",
@@ -114,3 +119,20 @@ def test_g3_committed_characterization_is_complete_and_digest_bound() -> None:
         )
     assert all(not item.leap_implementation_present for item in index.fixtures)
     assert all(not item.effectiveness_evidence_present for item in index.fixtures)
+
+
+def test_g3_committed_handoff_manifest_rebuilds_from_every_bound_input() -> None:
+    stored = ReferenceG3HandoffManifest.model_validate_json(
+        (ROOT / HANDOFF_MANIFEST).read_text("utf-8")
+    )
+    rebuilt = build_reference_g3_handoff_manifest(
+        ROOT,
+        scientific_input_relative_path=SCIENTIFIC_INPUT,
+        acceptance_receipt_relative_path=ACCEPTANCE_RECEIPT,
+        characterization_root_relative_path=CHARACTERIZATION_ROOT,
+    )
+    assert rebuilt == stored
+    assert stored.adr.sha256 == CORRECTED_ADR_SHA256
+    assert stored.leap_implementation_present is False
+    assert stored.effectiveness_evidence_present is False
+    assert stored.g3_ready
