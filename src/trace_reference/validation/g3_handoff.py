@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import platform
@@ -110,6 +111,25 @@ def _test_source_aggregate(
     return digest.hexdigest()
 
 
+def _verify_test_node(repository_root: Path, node_id: str) -> None:
+    parts = node_id.split("::")
+    source_path = _resolve(
+        repository_root,
+        Path(parts[0]),
+        f"Reference G3 test source {parts[0]}",
+    )
+    if len(parts) == 1:
+        return
+    if len(parts) != 2 or not parts[1].startswith("test_"):
+        raise ValueError("Reference G3 registry contains an unsupported pytest node ID")
+    try:
+        tree = ast.parse(source_path.read_text("utf-8"), filename=str(source_path))
+    except (OSError, UnicodeError, SyntaxError) as exc:
+        raise ValueError("Reference G3 test source cannot be parsed") from exc
+    if not any(isinstance(node, ast.FunctionDef) and node.name == parts[1] for node in tree.body):
+        raise ValueError(f"Reference G3 test node is absent: {node_id}")
+
+
 def build_reference_g3_acceptance_receipt(
     repository_root: Path,
     *,
@@ -120,6 +140,9 @@ def build_reference_g3_acceptance_receipt(
     if passed_gate_ids != REFERENCE_G3_GATE_IDS:
         raise ValueError("Reference G3 receipt requires every corrected-ADR gate in order")
     registry = _load_registry(repository_root)
+    for gate in registry.gates:
+        for node_id in gate.test_node_ids:
+            _verify_test_node(repository_root, node_id)
     test_paths = tuple(
         sorted(
             {

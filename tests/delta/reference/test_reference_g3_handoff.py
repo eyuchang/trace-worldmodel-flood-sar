@@ -15,6 +15,7 @@ from trace_reference.validation import (
     build_reference_g3_acceptance_receipt,
     build_reference_g3_handoff_manifest,
 )
+from trace_reference.validation.g3_handoff import _verify_test_node
 
 ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = Path("data/scenario/delta/reference_protocol/reference_g3_acceptance_registry_v1.json")
@@ -57,6 +58,20 @@ def test_g3_acceptance_receipt_fails_closed_on_incomplete_gate_results() -> None
         build_reference_g3_acceptance_receipt(
             ROOT,
             passed_gate_ids=REFERENCE_G3_GATE_IDS[:-1],
+        )
+
+
+def test_g3_acceptance_receipt_rejects_absent_registered_test_node(
+    tmp_path: Path,
+) -> None:
+    relative = Path("tests/delta/reference/test_reference_g3_decision.py")
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True)
+    target.write_text("def test_unrelated():\n    pass\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="test node is absent"):
+        _verify_test_node(
+            tmp_path,
+            f"{relative.as_posix()}::test_missing",
         )
 
 
