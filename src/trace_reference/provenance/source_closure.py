@@ -16,6 +16,7 @@ REFERENCE_SOURCE_ENTRY_MODULES = (
     "trace_reference.decision.counterfactual",
     "trace_reference.delivery_history",
     "trace_reference.geography.build_cli",
+    "trace_reference.validation.g3_handoff",
 )
 _MAX_SOURCE_BYTES = 4 * 1024 * 1024
 

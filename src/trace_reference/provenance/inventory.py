@@ -16,6 +16,25 @@ from .models import ReferenceFileInput, ReferenceValueInput
 from .source_closure import reference_source_paths
 
 _MAX_INPUT_BYTES = 256 * 1024 * 1024
+_G3_TEST_INPUTS = (
+    "tests/delta/reference/test_reference_capacity.py",
+    "tests/delta/reference/test_reference_cli.py",
+    "tests/delta/reference/test_reference_decision_engine.py",
+    "tests/delta/reference/test_reference_g3_architecture.py",
+    "tests/delta/reference/test_reference_g3_characterization.py",
+    "tests/delta/reference/test_reference_g3_decision.py",
+    "tests/delta/reference/test_reference_g3_integrity.py",
+    "tests/delta/reference/test_reference_mission_runtime.py",
+    "tests/delta/reference/test_reference_observations.py",
+    "tests/delta/reference/test_reference_offline_sources.py",
+    "tests/delta/reference/test_reference_pipeline.py",
+    "tests/delta/reference/test_reference_predictor_evidence.py",
+    "tests/delta/reference/test_reference_protocol.py",
+    "tests/delta/reference/test_reference_provenance.py",
+    "tests/delta/reference/test_reference_runtime_factory.py",
+    "tests/delta/reference/test_reference_trace_storage.py",
+    "tests/delta/reference/test_reference_visibility.py",
+)
 _DIRECT_INPUTS = (
     "configs/governance/wf_dfld_01_reference_governance_v1.yaml",
     "configs/scenarios/wf_dfld_01_reference_development.yaml",
@@ -48,9 +67,11 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference/sources/source_research_v1.yaml",
     "data/scenario/delta/reference/topology_design_v1.yaml",
     "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
+    "data/scenario/delta/reference_protocol/reference_g3_acceptance_registry_v1.json",
     "data/scenario/delta/reference_protocol/small_baseline_v1.json",
     "docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md",
     "docs/delta/reference/REFERENCE_CALIBRATION_FEASIBILITY_V1.md",
+    "docs/delta/reference/REFERENCE_G3_TRACE_LEAP_HANDOFF_ADR_V2.md",
     "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V2.md",
@@ -60,9 +81,11 @@ _DIRECT_INPUTS = (
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V3.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V4.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md",
+    "docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md",
     "pyproject.toml",
     "requirements-delta-python311.in",
     "requirements-delta-python311.lock",
+    *_G3_TEST_INPUTS,
 )
 
 
