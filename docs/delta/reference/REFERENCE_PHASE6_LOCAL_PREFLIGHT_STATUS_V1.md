@@ -78,6 +78,44 @@ binding. A focused regression must exercise a relative repository root before
 characterization is rerun. The partial runtime stores are temporary failed-run
 outputs and are not retained as evidence after this record is committed.
 
+## Process-control and regenerated G3 status
+
+The local command wrapper may yield a live session identifier before the child
+process exits. Several focused commands were initially treated as complete at
+that yield boundary. An operating-system process audit detected the live
+children before their results were used. Three redundant processes were
+terminated, their incomplete outputs were removed, and none of their partial
+results is counted. Subsequent expensive commands are polled through their
+unified session until an explicit exit code is captured.
+
+After the relative-root correction, the five-fixture non-LEAP G3
+characterization completed with exit code `0` in 417.077 seconds. Its index
+digest is
+`71b74bab0ca029ee89aaa6aa26df907a31dc74f7a332cf65c6642c8b653bb606`;
+its integrity report passed every registered runtime check and binds scientific
+input aggregate
+`0b61b09c6fc390de95973c1fc1d815775d205539069e36c3d0f1937c50c70b53`.
+All four exact registered mission-runtime gate nodes later completed together
+with exit code `0`.
+
+A fresh exact-replay gate retry was deliberately stopped with exit code `143`
+after another project began a declared disk-using run and projected cumulative
+growth would have crossed the 4-GiB free-disk floor. One test had emitted a pass
+before termination, but the interrupted command has no aggregate pass status.
+The exact-replay gate remains pending until disk headroom permits a new
+source-stable run. No G3 acceptance receipt or handoff may be regenerated until
+that command exits successfully.
+
+The subsequent source-stable retry completed all three registered provenance
+gates with exit code `0`: public-artifact hidden-identifier exclusion, artifact
+tamper detection, and byte-identical exact replay. Its temporary pytest root
+peaked at 1.3 GiB, substantially above the 437-MiB stale-tree observation used
+for the retry projection, and free disk briefly reached 3.7 GiB rather than the
+declared 4-GiB floor. The run had already completed successfully when this peak
+was measured. This resource-projection miss does not change the gate result,
+but future replay notices must use the observed 1.3-GiB peak plus filesystem
+margin rather than the smaller stale-tree estimate.
+
 ## Next heavy-run gate
 
 No further generation, runtime, replay, publication, or multi-seed command may
