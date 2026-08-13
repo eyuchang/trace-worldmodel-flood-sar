@@ -34,6 +34,7 @@ class ReferenceG3IntegrityInput:
     """Runtime objects needed to verify one development fault/restart fixture."""
 
     scenario_seed: int
+    scientific_input_aggregate_sha256: str
     faulted_scenario_input_digest: str
     restart_checkpoint_scenario_input_digest: str
     schedule: ReferenceFaultSchedule
@@ -58,7 +59,7 @@ def _counts(run: ReferenceMissionRun) -> ReferenceRuntimeCounts:
     )
 
 
-def _authorization_joins_valid(
+def reference_authorization_joins_valid(
     run: ReferenceMissionRun,
     bundle: ReferenceRuntimeBundle,
 ) -> bool:
@@ -110,7 +111,7 @@ def _authorization_joins_valid(
     return True
 
 
-def _correction_joins_valid(run: ReferenceMissionRun) -> bool:
+def reference_correction_joins_valid(run: ReferenceMissionRun) -> bool:
     compensations = {item.invalidated_commitment_id: item for item in run.compensations}
     debts = {item.invalidated_commitment_id: item for item in run.consistency_debts}
     if len(compensations) != len(run.compensations) or len(debts) != len(run.consistency_debts):
@@ -144,7 +145,7 @@ def _contains_hidden_value(value: object) -> bool:
     return isinstance(value, str) and value.startswith(("RI-", "RP-"))
 
 
-def _public_artifacts_hidden_free(
+def reference_public_events_hidden_free(
     bundle: ReferenceRuntimeBundle,
     schedule: ReferenceFaultSchedule,
 ) -> bool:
@@ -219,15 +220,15 @@ def build_reference_g3_integrity_report(
     )
     restart_public = _restart_public_state_equivalent(values)
     restart_durable = _restart_durable_state_equivalent(values)
-    authorization_joins = _authorization_joins_valid(
+    authorization_joins = reference_authorization_joins_valid(
         values.restarted_run,
         values.restarted_bundle,
     )
-    correction_joins = _correction_joins_valid(values.restarted_run)
-    hidden_free = _public_artifacts_hidden_free(
+    correction_joins = reference_correction_joins_valid(values.restarted_run)
+    hidden_free = reference_public_events_hidden_free(
         values.faulted_bundle,
         values.schedule,
-    ) and _public_artifacts_hidden_free(values.restarted_bundle, values.schedule)
+    ) and reference_public_events_hidden_free(values.restarted_bundle, values.schedule)
     checks = (
         event_chains,
         trace_chains,
@@ -243,9 +244,11 @@ def build_reference_g3_integrity_report(
         hidden_free,
     )
     body = {
-        "schema_version": "delta-reference-g3-runtime-integrity-v1",
+        "schema_version": "delta-reference-g3-runtime-integrity-v2",
         "scenario_id": "WF-DFLD-01-REFERENCE",
         "scenario_seed": values.scenario_seed,
+        "scientific_input_aggregate_sha256": values.scientific_input_aggregate_sha256,
+        "scenario_input_digest": values.faulted_scenario_input_digest,
         "scientific_status": "development-integration-check-not-validation-evidence",
         "fault_profile_id": values.schedule.profile_id,
         "expected_fault_families": expected,

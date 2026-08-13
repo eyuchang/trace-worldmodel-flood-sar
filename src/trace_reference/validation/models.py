@@ -27,9 +27,11 @@ class ReferenceRuntimeCounts(DeltaModel):
 class ReferenceG3IntegrityReport(DeltaModel):
     """Constructed engineering evidence; it is not a statistical validation result."""
 
-    schema_version: Literal["delta-reference-g3-runtime-integrity-v1"]
+    schema_version: Literal["delta-reference-g3-runtime-integrity-v2"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     scenario_seed: int = Field(ge=0, le=2_147_483_647)
+    scientific_input_aggregate_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    scenario_input_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     scientific_status: Literal["development-integration-check-not-validation-evidence"]
     fault_profile_id: Literal["reference-faulted-v1"]
     expected_fault_families: tuple[ReferenceFaultFamily, ...]

@@ -51,6 +51,7 @@ def integrity_fixture(tmp_path_factory: pytest.TempPathFactory):
     restarted_run = restarted_bundle.runtime.run()
     values = ReferenceG3IntegrityInput(
         scenario_seed=20260812,
+        scientific_input_aggregate_sha256="1" * 64,
         faulted_scenario_input_digest=reference_scenario_input_digest(scenario),
         restart_checkpoint_scenario_input_digest=checkpoint.scenario_input_digest,
         schedule=schedule,
@@ -66,6 +67,8 @@ def test_g3_integrity_report_verifies_registered_fault_restart(integrity_fixture
     report = build_reference_g3_integrity_report(integrity_fixture)
 
     assert report.all_checks_pass
+    assert report.scientific_input_aggregate_sha256 == "1" * 64
+    assert report.scenario_input_digest == integrity_fixture.faulted_scenario_input_digest
     assert report.fault_coverage_complete
     assert len(report.expected_fault_families) == 11
     assert report.faulted_counts.allocations > 0

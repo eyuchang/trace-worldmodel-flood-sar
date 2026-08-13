@@ -36,6 +36,7 @@ def test_reference_pipeline_executes_approved_causal_order_offline() -> None:
     assert scenario.observations.raw.coefficient_version.endswith("v2")
     assert sum(item.observed_at_s >= 0 for item in scenario.observations.raw.reports) > 2_000
     assert scenario.prior.prior_accuracy_milli == 700
+    assert scenario.prior.pi_micros == 700_000
 
 
 def test_reference_pipeline_is_byte_deterministic_for_development_seed() -> None:

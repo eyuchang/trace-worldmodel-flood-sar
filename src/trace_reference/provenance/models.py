@@ -44,10 +44,10 @@ class ReferenceValueInput(DeltaModel):
 class ReferenceReplayManifest(DeltaModel):
     """Deterministic development manifest; execution metadata is kept separate."""
 
-    schema_version: Literal["delta-reference-replay-manifest-v2"]
+    schema_version: Literal["delta-reference-replay-manifest-v3"]
     scientific_status: Literal["development-only-not-validation-evidence"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    generator_version: Literal["delta-reference-generator-v3"]
+    generator_version: Literal["delta-reference-generator-v4"]
     seed: int = Field(ge=0)
     randomness_namespace: Literal["delta-reference-randomness-v1"]
     generation_order: tuple[str, ...]

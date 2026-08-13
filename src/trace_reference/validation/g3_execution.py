@@ -25,6 +25,12 @@ def run_reference_g3_integrity(
 ) -> ReferenceG3IntegrityReport:
     """Run the exact development fault path and restarted equivalent sequentially."""
 
+    # Imported after package initialization to avoid coupling the provenance
+    # writer's capacity-model imports back into validation initialization.
+    from trace_reference.provenance.scientific_inputs import (
+        build_reference_scientific_input_manifest,
+    )
+
     output = safe_directory(
         output_root,
         declared_root=output_root,
@@ -64,6 +70,9 @@ def run_reference_g3_integrity(
     report = build_reference_g3_integrity_report(
         ReferenceG3IntegrityInput(
             scenario_seed=seed,
+            scientific_input_aggregate_sha256=(
+                build_reference_scientific_input_manifest(repository_root).aggregate_sha256
+            ),
             faulted_scenario_input_digest=reference_scenario_input_digest(scenario),
             restart_checkpoint_scenario_input_digest=checkpoint.scenario_input_digest,
             schedule=schedule,

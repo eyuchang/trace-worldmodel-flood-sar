@@ -7,9 +7,15 @@ from pathlib import Path
 
 from trace_jepa.predictor import ActionPrefixPredictor, ToyActionPrefixPredictor
 from trace_jepa.support import ArtifactLocator, safe_directory
+from trace_reference.domain import ReferenceScenarioArtifacts
 from trace_reference.generation import generate_reference_scenario
-from trace_reference.runtime import ReferenceMissionRun, build_reference_runtime
-from trace_reference.validation import ReferenceCapacityEvaluation, evaluate_reference_capacity
+from trace_reference.runtime import (
+    ReferenceMissionRun,
+    ReferenceRuntimeBundle,
+    build_reference_runtime,
+)
+from trace_reference.validation.capacity import evaluate_reference_capacity
+from trace_reference.validation.capacity_models import ReferenceCapacityEvaluation
 
 from .artifacts import (
     ReferenceArtifactMismatchError,
@@ -30,6 +36,27 @@ class ReferenceExecution:
     manifest: ReferenceReplayManifest
     run: ReferenceMissionRun
     capacity: ReferenceCapacityEvaluation
+
+
+@dataclass(frozen=True)
+class ReferenceExecutionInspection:
+    """Explicit heavyweight execution details for bounded engineering inspection."""
+
+    execution: ReferenceExecution
+    scenario: ReferenceScenarioArtifacts
+    runtime_bundle: ReferenceRuntimeBundle
+
+    @property
+    def manifest(self) -> ReferenceReplayManifest:
+        return self.execution.manifest
+
+    @property
+    def run(self) -> ReferenceMissionRun:
+        return self.execution.run
+
+    @property
+    def capacity(self) -> ReferenceCapacityEvaluation:
+        return self.execution.capacity
 
 
 def _empty_output_root(output_root: Path) -> Path:
@@ -65,6 +92,23 @@ def execute_reference_scenario(
 ) -> ReferenceExecution:
     """Generate, execute, evaluate, and materialize one nominal development scenario."""
 
+    return execute_reference_scenario_with_inspection(
+        repository_root,
+        output_root,
+        seed=seed,
+        predictor=predictor,
+    ).execution
+
+
+def execute_reference_scenario_with_inspection(
+    repository_root: Path,
+    output_root: Path,
+    *,
+    seed: int,
+    predictor: ActionPrefixPredictor | None = None,
+) -> ReferenceExecutionInspection:
+    """Execute while explicitly retaining heavyweight world and runtime state."""
+
     root = _empty_output_root(output_root)
     runtime_root = root / "runtime_store"
     runtime_root.mkdir()
@@ -88,7 +132,15 @@ def execute_reference_scenario(
             predictor_provenance=selected_predictor.provenance(),
         )
     )
-    return ReferenceExecution(manifest=manifest, run=run, capacity=capacity)
+    return ReferenceExecutionInspection(
+        execution=ReferenceExecution(
+            manifest=manifest,
+            run=run,
+            capacity=capacity,
+        ),
+        scenario=scenario,
+        runtime_bundle=runtime_bundle,
+    )
 
 
 def verify_exact_reference_replay(

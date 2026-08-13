@@ -13,7 +13,7 @@ from trace_jepa.predictor.protocol import PredictorProvenance
 from trace_jepa.support import canonical_json_bytes
 from trace_reference.domain import ReferenceEventVisibility, ReferenceScenarioArtifacts
 from trace_reference.runtime import ReferenceMissionRun, ReferenceRuntimeBundle
-from trace_reference.validation import ReferenceCapacityEvaluation
+from trace_reference.validation.capacity_models import ReferenceCapacityEvaluation
 
 from .models import ReferenceResultSummary
 from .scientific_inputs import build_reference_scientific_input_manifest

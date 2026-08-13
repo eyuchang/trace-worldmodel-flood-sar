@@ -65,9 +65,9 @@ def test_reference_bundle_is_bounded_verified_and_input_bound(
     )
 
     assert verified == execution.manifest
-    assert verified.schema_version == "delta-reference-replay-manifest-v2"
+    assert verified.schema_version == "delta-reference-replay-manifest-v3"
     assert verified.scientific_status == "development-only-not-validation-evidence"
-    assert verified.generator_version == "delta-reference-generator-v3"
+    assert verified.generator_version == "delta-reference-generator-v4"
     assert sum(item.byte_length for item in verified.artifacts) < 512 * 1024 * 1024
     assert {item.name for item in verified.artifacts} >= {
         "full_event_chain",

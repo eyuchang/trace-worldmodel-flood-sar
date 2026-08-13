@@ -31,7 +31,7 @@ from trace_reference.models import ReferenceGovernanceRegistry
 
 from .randomness import uniform_micros
 
-_NAMESPACE = "reference-coordination-v1"
+_NAMESPACE = "reference-coordination-v2"
 
 _PHASE_STATE = {
     ReferenceResourceActivationPhase.REQUESTED: ReferenceResourceState.AWAITING_REQUEST,
@@ -254,17 +254,26 @@ def generate_reference_coordination(
         for recipient in active_authorities:
             partition_id = _partition_id(recipient, evidence.evidence_id, phi)
             local = recipient == evidence.source_authority_id or phi == 1
-            key = (evidence.evidence_id, recipient, partition_id)
-            latency_limit = 0 if local else min(7_200, 300 * phi)
-            latency = (
-                0
-                if latency_limit == 0
-                else uniform_micros(seed, _NAMESPACE, *key, "latency") % (latency_limit + 1)
+            semantic_key = (evidence.evidence_id, recipient)
+            identity_key = (*semantic_key, partition_id)
+            latency_draw_micros = uniform_micros(
+                seed,
+                _NAMESPACE,
+                *semantic_key,
+                "latency",
             )
+            loss_draw_micros = uniform_micros(
+                seed,
+                _NAMESPACE,
+                *semantic_key,
+                "loss",
+            )
+            latency_limit = 0 if local else min(7_200, 300 * phi)
+            latency = 0 if latency_limit == 0 else latency_draw_micros % (latency_limit + 1)
             loss_probability = 0 if local else min(300_000, 20_000 * phi)
-            lost = not local and uniform_micros(seed, _NAMESPACE, *key, "loss") < loss_probability
-            attempt_id = _id("CA", seed, *key)
-            delivery_id = None if lost else _id("CD", seed, *key)
+            lost = not local and loss_draw_micros < loss_probability
+            attempt_id = _id("CA", seed, *identity_key)
+            delivery_id = None if lost else _id("CD", seed, *identity_key)
             attempts.append(
                 ReferenceCoordinationAttemptAudit(
                     attempt_id=attempt_id,
@@ -274,6 +283,8 @@ def generate_reference_coordination(
                     recipient_authority_id=recipient,
                     recipient_partition_id=partition_id,
                     source_available_at_s=evidence.available_at_s,
+                    latency_draw_micros=latency_draw_micros,
+                    loss_draw_micros=loss_draw_micros,
                     latency_s=latency,
                     disposition="lost-before-delivery" if lost else "delivered",
                     delivered_public_id=delivery_id,
@@ -297,7 +308,7 @@ def generate_reference_coordination(
     attempts.sort(key=lambda item: item.attempt_id)
     public_body = {
         "scenario_id": "WF-DFLD-01-REFERENCE",
-        "schema_version": "delta-reference-coordination-v1",
+        "schema_version": "delta-reference-coordination-v2",
         "seed": seed,
         "phi": phi,
         "authority_registry_version": governance.registry_version,
@@ -305,7 +316,7 @@ def generate_reference_coordination(
     }
     hidden_body = {
         "scenario_id": "WF-DFLD-01-REFERENCE",
-        "schema_version": "delta-reference-coordination-audit-v1",
+        "schema_version": "delta-reference-coordination-audit-v2",
         "seed": seed,
         "phi": phi,
         "attempts": [item.model_dump(mode="json") for item in attempts],

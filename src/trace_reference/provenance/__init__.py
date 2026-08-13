@@ -14,7 +14,13 @@ from .models import (
     ReferenceResultSummary,
     ReferenceValueInput,
 )
-from .replay import ReferenceExecution, execute_reference_scenario, verify_exact_reference_replay
+from .replay import (
+    ReferenceExecution,
+    ReferenceExecutionInspection,
+    execute_reference_scenario,
+    execute_reference_scenario_with_inspection,
+    verify_exact_reference_replay,
+)
 from .scientific_inputs import (
     ReferenceScientificInputManifest,
     ReferenceScientificInputMember,
@@ -28,6 +34,7 @@ __all__ = [
     "ReferenceArtifactMismatchError",
     "ReferenceArtifactWriteRequest",
     "ReferenceExecution",
+    "ReferenceExecutionInspection",
     "ReferenceFileInput",
     "ReferenceReplayManifest",
     "ReferenceResultSummary",
@@ -36,6 +43,7 @@ __all__ = [
     "ReferenceValueInput",
     "build_reference_scientific_input_manifest",
     "execute_reference_scenario",
+    "execute_reference_scenario_with_inspection",
     "reference_source_tree_sha256",
     "verify_exact_reference_replay",
     "verify_reference_artifacts",

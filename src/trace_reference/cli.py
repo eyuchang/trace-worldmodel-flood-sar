@@ -10,7 +10,17 @@ from pathlib import Path
 
 from .provenance import execute_reference_scenario, verify_exact_reference_replay
 from .publication import publish_reference_bundle
-from .validation import run_reference_g3_characterization, run_reference_g3_integrity
+from .validation import (
+    run_reference_g3_characterization,
+    run_reference_g3_integrity,
+)
+from .validation.acceptance import (
+    ReferencePhase6FinalizeInput,
+    finalize_reference_phase6_acceptance,
+    run_reference_phase6_core,
+    run_reference_phase6_fault,
+    run_reference_phase6_isolation,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,6 +112,39 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Existing empty caller-controlled characterization directory.",
     )
+    phase6_core = commands.add_parser(
+        "phase6-core",
+        help="Run development-only nominal replay, publication, and resource checks.",
+    )
+    _add_common(phase6_core)
+    phase6_core.add_argument("--output", type=Path, required=True)
+    phase6_isolation = commands.add_parser(
+        "phase6-isolation",
+        help="Run development-only hidden-lineage and causal-axis checks.",
+    )
+    _add_common(phase6_isolation)
+    phase6_isolation.add_argument("--output", type=Path, required=True)
+    phase6_isolation.add_argument("--trusted-nominal-root", type=Path, required=True)
+    phase6_isolation.add_argument("--nominal-relative-path", type=Path, required=True)
+    phase6_fault = commands.add_parser(
+        "phase6-fault",
+        help="Run the development-only registered fault/restart path offline.",
+    )
+    _add_common(phase6_fault)
+    phase6_fault.add_argument("--output", type=Path, required=True)
+    phase6_finalize = commands.add_parser(
+        "phase6-finalize",
+        help="Bind completed development-only Phase 6 stage receipts.",
+    )
+    _add_common(phase6_finalize)
+    phase6_finalize.add_argument("--output", type=Path, required=True)
+    phase6_finalize.add_argument("--core-root", type=Path, required=True)
+    phase6_finalize.add_argument("--core-receipt-relative-path", type=Path, required=True)
+    phase6_finalize.add_argument("--isolation-root", type=Path, required=True)
+    phase6_finalize.add_argument("--isolation-receipt-relative-path", type=Path, required=True)
+    phase6_finalize.add_argument("--fault-root", type=Path, required=True)
+    phase6_finalize.add_argument("--fault-receipt-relative-path", type=Path, required=True)
+    phase6_finalize.add_argument("--g3-handoff-relative-path", type=Path, required=True)
     return parser
 
 
@@ -163,6 +206,57 @@ def main(argv: Sequence[str] | None = None) -> int:
             "Reference G3 feature-off characterization fixtures=%d digest=%s",
             len(index.fixtures),
             index.index_digest,
+        )
+    elif arguments.command == "phase6-core":
+        core_receipt = run_reference_phase6_core(
+            arguments.repository_root,
+            arguments.output,
+        )
+        LOGGER.info(
+            "Reference Phase 6 core checks=%s elapsed_seconds=%.3f output_bytes=%d",
+            "pass" if core_receipt.all_checks_pass else "fail",
+            core_receipt.resource_receipt.elapsed_milliseconds / 1_000,
+            core_receipt.resource_receipt.transient_output_bytes,
+        )
+    elif arguments.command == "phase6-isolation":
+        isolation_receipt = run_reference_phase6_isolation(
+            arguments.repository_root,
+            arguments.output,
+            trusted_nominal_root=arguments.trusted_nominal_root,
+            nominal_relative_path=arguments.nominal_relative_path,
+        )
+        LOGGER.info(
+            "Reference Phase 6 isolation checks=%s axes=%d",
+            "pass" if isolation_receipt.all_checks_pass else "fail",
+            len(isolation_receipt.axis_results),
+        )
+    elif arguments.command == "phase6-fault":
+        fault_receipt = run_reference_phase6_fault(
+            arguments.repository_root,
+            arguments.output,
+        )
+        LOGGER.info(
+            "Reference Phase 6 fault/restart checks=%s",
+            "pass" if fault_receipt.all_checks_pass else "fail",
+        )
+    elif arguments.command == "phase6-finalize":
+        acceptance_report = finalize_reference_phase6_acceptance(
+            ReferencePhase6FinalizeInput(
+                repository_root=arguments.repository_root,
+                output_root=arguments.output,
+                core_root=arguments.core_root,
+                core_receipt_relative_path=arguments.core_receipt_relative_path,
+                isolation_root=arguments.isolation_root,
+                isolation_receipt_relative_path=arguments.isolation_receipt_relative_path,
+                fault_root=arguments.fault_root,
+                fault_receipt_relative_path=arguments.fault_receipt_relative_path,
+                g3_handoff_relative_path=arguments.g3_handoff_relative_path,
+            )
+        )
+        LOGGER.info(
+            "Reference Phase 6 development acceptance=%s canonical_performance=%s",
+            "pass" if acceptance_report.all_nonperformance_checks_pass else "fail",
+            acceptance_report.canonical_performance_status,
         )
     else:  # pragma: no cover - argparse restricts the command set.
         raise RuntimeError(f"unsupported Reference command: {arguments.command}")

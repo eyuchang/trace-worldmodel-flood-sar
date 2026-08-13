@@ -164,7 +164,7 @@ def decision_fixture():
     )
     coordination = ReferencePublicCoordinationScenario(
         scenario_id="WF-DFLD-01-REFERENCE",
-        schema_version="delta-reference-coordination-v1",
+        schema_version="delta-reference-coordination-v2",
         seed=20260812,
         phi=4,
         authority_registry_version="delta-reference-governance-v1",

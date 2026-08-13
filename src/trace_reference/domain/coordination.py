@@ -174,7 +174,7 @@ class ReferenceCoordinationDelivery(DeltaModel):
 
 class ReferencePublicCoordinationScenario(DeltaModel):
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    schema_version: Literal["delta-reference-coordination-v1"]
+    schema_version: Literal["delta-reference-coordination-v2"]
     seed: int = Field(ge=0)
     phi: int = Field(ge=1, le=9)
     authority_registry_version: Literal["delta-reference-governance-v1"]
@@ -202,6 +202,8 @@ class ReferenceCoordinationAttemptAudit(DeltaModel):
     recipient_authority_id: Literal["AUTH-01", "AUTH-02", "AUTH-03", "AUTH-04"]
     recipient_partition_id: str = Field(pattern=r"^AUTH-0[1-4]-P[0-9]{2}$")
     source_available_at_s: int = Field(ge=-172_800, le=352_800)
+    latency_draw_micros: int = Field(ge=0, lt=1_000_000)
+    loss_draw_micros: int = Field(ge=0, lt=1_000_000)
     latency_s: int = Field(ge=0, le=7_200)
     disposition: Literal["delivered", "lost-before-delivery"]
     delivered_public_id: str | None = Field(default=None, pattern=r"^CD-[0-9a-f]{16}$")
@@ -216,7 +218,7 @@ class ReferenceCoordinationAttemptAudit(DeltaModel):
 
 class ReferenceHiddenCoordinationAudit(DeltaModel):
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    schema_version: Literal["delta-reference-coordination-audit-v1"]
+    schema_version: Literal["delta-reference-coordination-audit-v2"]
     seed: int = Field(ge=0)
     phi: int = Field(ge=1, le=9)
     attempts: tuple[ReferenceCoordinationAttemptAudit, ...]

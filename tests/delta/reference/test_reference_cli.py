@@ -53,6 +53,52 @@ def test_reference_cli_exposes_run_replay_and_publish() -> None:
     assert characterize.command == "characterize-g3"
     assert g3.seed == 20260812
 
+    phase6_core = parser.parse_args(["phase6-core", "--output", "phase6-core"])
+    assert phase6_core.command == "phase6-core"
+    assert not hasattr(phase6_core, "seed")
+
+    phase6_isolation = parser.parse_args(
+        [
+            "phase6-isolation",
+            "--output",
+            "phase6-isolation",
+            "--trusted-nominal-root",
+            "phase6-core",
+            "--nominal-relative-path",
+            "nominal",
+        ]
+    )
+    assert phase6_isolation.command == "phase6-isolation"
+    assert not hasattr(phase6_isolation, "seed")
+
+    phase6_fault = parser.parse_args(["phase6-fault", "--output", "phase6-fault"])
+    assert phase6_fault.command == "phase6-fault"
+    assert not hasattr(phase6_fault, "seed")
+
+    phase6_finalize = parser.parse_args(
+        [
+            "phase6-finalize",
+            "--output",
+            "phase6-final",
+            "--core-root",
+            "phase6-core",
+            "--core-receipt-relative-path",
+            "phase6_core_receipt.json",
+            "--isolation-root",
+            "phase6-isolation",
+            "--isolation-receipt-relative-path",
+            "phase6_isolation_receipt.json",
+            "--fault-root",
+            "g3",
+            "--fault-receipt-relative-path",
+            "phase6_fault_receipt.json",
+            "--g3-handoff-relative-path",
+            "data/scenario/delta/reference/g3_handoff_v1/g3_handoff_manifest.json",
+        ]
+    )
+    assert phase6_finalize.command == "phase6-finalize"
+    assert not hasattr(phase6_finalize, "seed")
+
 
 def test_reference_cli_has_no_validation_or_holdout_surface() -> None:
     parser = build_parser()

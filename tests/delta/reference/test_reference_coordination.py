@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import trace_reference.generation.coordination as coordination_module
 from trace_reference import (
     load_reference_activation_parameters,
     load_reference_config,
@@ -246,3 +247,85 @@ def test_higher_phi_adds_queue_partitions_without_new_authority_claims(
     assert any(
         item.recipient_partition_id.endswith("P02") for item in coordinated.public.deliveries
     )
+
+
+def test_phi_preserves_underlying_draws_across_partition_changes(
+    coordination_inputs,
+) -> None:
+    governance, observations, resources, activation_parameters = coordination_inputs
+    baseline = generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=4,
+    )
+    variant = generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=5,
+    )
+    baseline_attempts = {
+        (item.evidence_id, item.recipient_authority_id): item for item in baseline.hidden.attempts
+    }
+    variant_attempts = {
+        (item.evidence_id, item.recipient_authority_id): item for item in variant.hidden.attempts
+    }
+    assert baseline_attempts.keys() == variant_attempts.keys()
+    assert any(
+        baseline_attempts[key].recipient_partition_id
+        != variant_attempts[key].recipient_partition_id
+        for key in baseline_attempts
+    )
+    assert all(
+        (
+            baseline_attempts[key].latency_draw_micros,
+            baseline_attempts[key].loss_draw_micros,
+        )
+        == (
+            variant_attempts[key].latency_draw_micros,
+            variant_attempts[key].loss_draw_micros,
+        )
+        for key in baseline_attempts
+    )
+
+
+def test_phi_preserves_every_coordination_and_activation_draw_key(
+    coordination_inputs,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    governance, observations, resources, activation_parameters = coordination_inputs
+    original = coordination_module.uniform_micros
+    observed: list[tuple[object, ...]] = []
+
+    def record(seed: int, namespace: str, *parts: object) -> int:
+        observed.append((seed, namespace, *parts))
+        return original(seed, namespace, *parts)
+
+    monkeypatch.setattr(coordination_module, "uniform_micros", record)
+    generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=4,
+    )
+    baseline_draw_keys = tuple(observed)
+    observed.clear()
+    generate_reference_coordination(
+        observations.delivery,
+        resources,
+        governance,
+        activation_parameters,
+        seed=20260812,
+        phi=5,
+    )
+
+    assert baseline_draw_keys == tuple(observed)
+    assert baseline_draw_keys
+    assert all("P0" not in str(part) for key in baseline_draw_keys for part in key)

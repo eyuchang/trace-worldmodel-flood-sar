@@ -184,13 +184,13 @@ class ReferenceScenarioConfig(DeltaModel):
 
     status: Literal["approved-decisions-development-only"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    scenario_schema_version: Literal["trace-delta-reference-scenario-v5"]
-    generator_version: Literal["delta-reference-generator-v3"]
+    scenario_schema_version: Literal["trace-delta-reference-scenario-v6"]
+    generator_version: Literal["delta-reference-generator-v4"]
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     geography_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    approved_decision_set: Literal["reference-scientific-decisions-v4"]
+    approved_decision_set: Literal["reference-scientific-decisions-v5"]
     small_baseline_registry: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
     timeline: ReferenceTimelineConfig
     axes: ReferenceAxisConfig
@@ -212,9 +212,9 @@ class ReferenceScenarioConfig(DeltaModel):
         ):
             raise ValueError("Reference configuration does not bind the reviewed draft")
         if self.protocol_amendment_sha256 != (
-            "07b0c901231323d1110ded728c8a1bb67e2a110368ed0644113a25626a7303d5"
+            "dbf486fce39fb50b852ca18f4f11748662cd8d55ae738a39935ac035ecf8c39b"
         ):
-            raise ValueError("Reference configuration does not bind observation amendment v4")
+            raise ValueError("Reference configuration does not bind coordination amendment v5")
         if self.geography_amendment_sha256 != (
             "c4c908436ce18b89dbc5e01486fc7119c7bef5fd4b2b2604ebd9aa2ce70be225"
         ):

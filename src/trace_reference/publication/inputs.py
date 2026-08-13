@@ -24,7 +24,7 @@ from trace_reference.provenance import (
 )
 from trace_reference.provenance.limits import REFERENCE_ARTIFACT_MAX_BYTES
 from trace_reference.reconciliation import ReferenceReconciliationArtifact
-from trace_reference.validation import ReferenceCapacityEvaluation
+from trace_reference.validation.capacity_models import ReferenceCapacityEvaluation
 
 
 @dataclass(frozen=True)
