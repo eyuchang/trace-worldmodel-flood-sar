@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from trace_jepa.scenario.delta.domain.base import DeltaModel
-from trace_jepa.support import ArtifactLocator, canonical_json_bytes, sha256_file
+from trace_jepa.support import ArtifactLocator, canonical_json_bytes, safe_directory, sha256_file
 
 from .inventory import reference_direct_input_paths
 from .source_closure import reference_source_paths
@@ -61,10 +61,15 @@ def build_reference_scientific_input_manifest(
 ) -> ReferenceScientificInputManifest:
     """Build the complete deterministic source/input inventory without outputs."""
 
+    root = safe_directory(
+        repository_root,
+        declared_root=repository_root,
+        label="Reference scientific-input repository root",
+    )
     members = []
-    for relative_name in _member_paths(repository_root):
+    for relative_name in _member_paths(root):
         path = ArtifactLocator(
-            root=repository_root,
+            root=root,
             relative_name=Path(relative_name),
             maximum_bytes=_MAX_MEMBER_BYTES,
             label=f"Reference scientific input member {relative_name}",

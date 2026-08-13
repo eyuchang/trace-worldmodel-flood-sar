@@ -63,6 +63,21 @@ fixtures in separate fresh processes so fixture retention cannot accumulate
 across modules. The capped batch must remain recorded and must not be replaced
 by a claim that the combined batch passed.
 
+## Relative-root characterization failure
+
+The first post-Amendment-V5 G3 characterization command used the documented
+relative repository root `.`. The runtime fixtures completed, but the final
+scientific-input binding raised `ValueError` because the manifest builder
+compared absolute source-closure paths to the unresolved relative root. The
+command exited `1` and produced no eligible characterization receipt. This is a
+CLI/path-normalization defect rather than a scenario-integrity result.
+
+The corrective rule is to resolve and validate the caller-trusted repository
+root once before source-closure calculation, relative-path conversion, or file
+binding. A focused regression must exercise a relative repository root before
+characterization is rerun. The partial runtime stores are temporary failed-run
+outputs and are not retained as evidence after this record is committed.
+
 ## Next heavy-run gate
 
 No further generation, runtime, replay, publication, or multi-seed command may

@@ -104,6 +104,16 @@ def test_g3_scientific_manifest_contains_adr_audit_registry_and_test_sources() -
     assert not any(path.startswith(f"{CHARACTERIZATION_ROOT.as_posix()}/") for path in paths)
 
 
+def test_g3_scientific_manifest_accepts_relative_trusted_repository_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(ROOT.parent)
+
+    relative = build_reference_scientific_input_manifest(Path(ROOT.name))
+
+    assert relative == build_reference_scientific_input_manifest(ROOT)
+
+
 def test_g3_committed_characterization_is_complete_and_digest_bound() -> None:
     index = ReferenceG3CharacterizationIndex.model_validate_json(
         (ROOT / CHARACTERIZATION_ROOT / "g3_characterization_index.json").read_text("utf-8")
