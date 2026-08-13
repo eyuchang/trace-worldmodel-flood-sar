@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
+import os
+import tempfile
+from collections.abc import Iterable
 from dataclasses import asdict
 from pathlib import Path
+
+from pydantic import BaseModel
 
 from trace_jepa.support import (
     ArtifactLocator,
@@ -26,6 +32,7 @@ from .inventory import (
     reference_source_tree_sha256,
     reference_value_input,
 )
+from .limits import REFERENCE_ARTIFACT_MAX_BYTES
 from .models import ReferenceArtifactDescriptor, ReferenceReplayManifest
 from .specifications import (
     ReferenceArtifactSpec,
@@ -33,7 +40,6 @@ from .specifications import (
     build_reference_artifact_specs,
 )
 
-_MAX_ARTIFACT_BYTES = 128 * 1024 * 1024
 _MANIFEST_NAME = "manifest.json"
 
 
@@ -53,10 +59,26 @@ class ReferenceArtifactWriter:
 
     def write(self, spec: ReferenceArtifactSpec) -> ReferenceArtifactDescriptor:
         path = _safe_artifact_destination(self.output_root, spec.file_name)
+        if spec.content_encoding == "canonical-json-gzip-v1":
+            sha256, byte_length = _write_canonical_model_sequence_gzip(
+                path,
+                spec.value,
+                root=self.output_root,
+                label=spec.name,
+            )
+            return ReferenceArtifactDescriptor(
+                name=spec.name,
+                file_name=spec.file_name,
+                sha256=sha256,
+                byte_length=byte_length,
+                contains_hidden_truth=spec.contains_hidden_truth,
+                content_encoding=spec.content_encoding,
+            )
         payload = canonical_json_bytes(spec.value)
-        if len(payload) > _MAX_ARTIFACT_BYTES:
+        if len(payload) > REFERENCE_ARTIFACT_MAX_BYTES:
             raise ReferenceArtifactMismatchError(
-                f"Reference artifact exceeds the registered size bound: {spec.file_name}"
+                "Reference artifact exceeds the registered size bound: "
+                f"{spec.file_name} ({len(payload)} > {REFERENCE_ARTIFACT_MAX_BYTES} bytes)"
             )
         atomic_write_bytes(path, payload, root=self.output_root, label=spec.name)
         return ReferenceArtifactDescriptor(
@@ -65,7 +87,64 @@ class ReferenceArtifactWriter:
             sha256=hashlib.sha256(payload).hexdigest(),
             byte_length=len(payload),
             contains_hidden_truth=spec.contains_hidden_truth,
+            content_encoding=spec.content_encoding,
         )
+
+
+def _write_canonical_model_sequence_gzip(
+    path: Path,
+    value: object,
+    *,
+    root: Path,
+    label: str,
+) -> tuple[str, int]:
+    """Atomically stream one canonical model array through deterministic gzip."""
+
+    if not isinstance(value, Iterable) or isinstance(value, (bytes, str)):
+        raise TypeError("compressed Reference artifact must be an iterable of models")
+    destination = safe_output_file(path, declared_root=root, label=label)
+    temporary_name: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w+b",
+            prefix=f".{destination.name}.",
+            dir=destination.parent,
+            delete=False,
+        ) as temporary:
+            temporary_name = temporary.name
+            with gzip.GzipFile(
+                filename="",
+                mode="wb",
+                compresslevel=9,
+                fileobj=temporary,
+                mtime=0,
+            ) as compressed:
+                compressed.write(b"[")
+                for index, item in enumerate(value):
+                    if not isinstance(item, BaseModel):
+                        raise TypeError("compressed Reference sequence contains a non-model value")
+                    if index:
+                        compressed.write(b",")
+                    compressed.write(
+                        canonical_json_bytes(item.model_dump(mode="json")).rstrip(b"\n")
+                    )
+                compressed.write(b"]\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        temporary_path = Path(temporary_name)
+        byte_length = temporary_path.stat().st_size
+        if byte_length > REFERENCE_ARTIFACT_MAX_BYTES:
+            raise ReferenceArtifactMismatchError(
+                "compressed Reference artifact exceeds the registered size bound: "
+                f"{path.name} ({byte_length} > {REFERENCE_ARTIFACT_MAX_BYTES} bytes)"
+            )
+        sha256 = sha256_file(temporary_path)
+        os.replace(temporary_path, destination)
+        temporary_name = None
+        return sha256, byte_length
+    finally:
+        if temporary_name is not None:
+            Path(temporary_name).unlink(missing_ok=True)
 
 
 def _safe_artifact_destination(root: Path, file_name: str) -> Path:
@@ -182,7 +261,7 @@ def _resolve_artifact(root: Path, descriptor: ReferenceArtifactDescriptor) -> Pa
         return ArtifactLocator(
             root=root,
             relative_name=Path(descriptor.file_name),
-            maximum_bytes=_MAX_ARTIFACT_BYTES,
+            maximum_bytes=REFERENCE_ARTIFACT_MAX_BYTES,
             label=f"Reference artifact {descriptor.name}",
         ).resolve()
     except ValueError as exc:

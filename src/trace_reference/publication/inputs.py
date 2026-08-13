@@ -22,10 +22,9 @@ from trace_reference.provenance import (
     ReferenceResultSummary,
     verify_reference_artifacts,
 )
+from trace_reference.provenance.limits import REFERENCE_ARTIFACT_MAX_BYTES
 from trace_reference.reconciliation import ReferenceReconciliationArtifact
 from trace_reference.validation import ReferenceCapacityEvaluation
-
-_MAX_ARTIFACT_BYTES = 128 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -55,7 +54,7 @@ def _artifact_path(
     return ArtifactLocator(
         root=bundle_root,
         relative_name=Path(descriptor.file_name),
-        maximum_bytes=_MAX_ARTIFACT_BYTES,
+        maximum_bytes=REFERENCE_ARTIFACT_MAX_BYTES,
         label=f"Reference publication source {name}",
     ).resolve()
 

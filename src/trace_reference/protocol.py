@@ -56,6 +56,6 @@ REFERENCE_PROTOCOL = ReferenceProtocolRevision(
     recovery="delta-reference-recovery-v1",
     acceptance="delta-reference-acceptance-v1",
     validation="delta-reference-validation-v1",
-    replay_manifest="delta-reference-replay-manifest-v1",
+    replay_manifest="delta-reference-replay-manifest-v2",
     generation_order=REFERENCE_GENERATION_ORDER,
 )

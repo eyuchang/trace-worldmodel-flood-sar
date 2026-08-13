@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -24,6 +25,7 @@ class ReferenceArtifactSpec:
     file_name: str
     value: object
     contains_hidden_truth: bool = False
+    content_encoding: Literal["canonical-json", "canonical-json-gzip-v1"] = "canonical-json"
 
 
 @dataclass(frozen=True)
@@ -147,9 +149,10 @@ def build_reference_artifact_specs(
         ),
         ReferenceArtifactSpec(
             "full_event_chain",
-            "full_event_chain.json",
-            _model_values(bundle.event_log.events),
+            "full_event_chain.json.gz",
+            bundle.event_log.events,
             True,
+            "canonical-json-gzip-v1",
         ),
         ReferenceArtifactSpec(
             "gauge_context", "gauge_context.json", scenario.gauge_context.model_dump(mode="json")
@@ -174,7 +177,11 @@ def build_reference_artifact_specs(
             "predictor_prior", "predictor_prior.json", scenario.prior.model_dump(mode="json")
         ),
         ReferenceArtifactSpec(
-            "public_event_projection", "public_event_projection.json", _model_values(public_events)
+            "public_event_projection",
+            "public_event_projection.json.gz",
+            public_events,
+            False,
+            "canonical-json-gzip-v1",
         ),
         ReferenceArtifactSpec(
             "raw_reports", "raw_reports.json", scenario.observations.raw.model_dump(mode="json")

@@ -18,6 +18,7 @@ from .artifacts import (
     write_reference_artifacts,
 )
 from .inventory import reference_source_tree_sha256
+from .limits import REFERENCE_ARTIFACT_MAX_BYTES
 from .models import ReferenceReplayManifest
 from .specifications import ReferenceArtifactWriteRequest
 
@@ -126,13 +127,13 @@ def verify_exact_reference_replay(
         reference_path = ArtifactLocator(
             root=reference_bundle,
             relative_name=Path(descriptor.file_name),
-            maximum_bytes=128 * 1024 * 1024,
+            maximum_bytes=REFERENCE_ARTIFACT_MAX_BYTES,
             label=f"Reference replay source {descriptor.name}",
         ).resolve()
         replay_path = ArtifactLocator(
             root=replay_output_root,
             relative_name=Path(descriptor.file_name),
-            maximum_bytes=128 * 1024 * 1024,
+            maximum_bytes=REFERENCE_ARTIFACT_MAX_BYTES,
             label=f"Reference replay result {descriptor.name}",
         ).resolve()
         if not _files_equal(reference_path, replay_path):

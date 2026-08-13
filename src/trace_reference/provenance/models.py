@@ -10,15 +10,18 @@ from pydantic import Field, model_validator
 from trace_jepa.scenario.delta.domain.base import DeltaModel
 from trace_jepa.support import canonical_json_bytes
 
+from .limits import REFERENCE_ARTIFACT_MAX_BYTES, REFERENCE_BUNDLE_MAX_BYTES
+
 
 class ReferenceArtifactDescriptor(DeltaModel):
     """One bounded canonical file in a Reference replay bundle."""
 
     name: str = Field(min_length=1, max_length=80)
-    file_name: str = Field(pattern=r"^[a-z][a-z0-9_]*\.json$")
+    file_name: str = Field(pattern=r"^[a-z][a-z0-9_]*\.json(?:\.gz)?$")
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    byte_length: int = Field(ge=0, le=128 * 1024 * 1024)
+    byte_length: int = Field(ge=0, le=REFERENCE_ARTIFACT_MAX_BYTES)
     contains_hidden_truth: bool
+    content_encoding: Literal["canonical-json", "canonical-json-gzip-v1"]
 
 
 class ReferenceFileInput(DeltaModel):
@@ -41,7 +44,7 @@ class ReferenceValueInput(DeltaModel):
 class ReferenceReplayManifest(DeltaModel):
     """Deterministic development manifest; execution metadata is kept separate."""
 
-    schema_version: Literal["delta-reference-replay-manifest-v1"]
+    schema_version: Literal["delta-reference-replay-manifest-v2"]
     scientific_status: Literal["development-only-not-validation-evidence"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     generator_version: Literal["delta-reference-generator-v3"]
@@ -76,7 +79,7 @@ class ReferenceReplayManifest(DeltaModel):
         value_names = tuple(item.name for item in self.value_inputs)
         if value_names != tuple(sorted(value_names)) or len(set(value_names)) != len(value_names):
             raise ValueError("Reference value inputs must be unique and canonically ordered")
-        if sum(item.byte_length for item in self.artifacts) > 512 * 1024 * 1024:
+        if sum(item.byte_length for item in self.artifacts) > REFERENCE_BUNDLE_MAX_BYTES:
             raise ValueError("Reference replay bundle exceeds its registered size bound")
         body = self.model_dump(mode="json", exclude={"manifest_digest"})
         if hashlib.sha256(canonical_json_bytes(body)).hexdigest() != self.manifest_digest:

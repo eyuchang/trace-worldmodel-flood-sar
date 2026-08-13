@@ -9,9 +9,10 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from trace_jepa.scenario.delta.domain.base import DeltaModel
-from trace_jepa.support import ArtifactLocator, canonical_json_bytes, safe_directory, sha256_file
+from trace_jepa.support import ArtifactLocator, canonical_json_bytes, sha256_file
 
 from .inventory import reference_direct_input_paths
+from .source_closure import reference_source_paths
 
 _MAX_MEMBER_BYTES = 256 * 1024 * 1024
 
@@ -45,13 +46,9 @@ class ReferenceScientificInputManifest(DeltaModel):
 
 
 def _member_paths(repository_root: Path) -> tuple[str, ...]:
-    source_root = safe_directory(
-        repository_root / "src",
-        declared_root=repository_root,
-        label="Reference scientific source root",
-    )
     source_paths = tuple(
-        path.relative_to(repository_root).as_posix() for path in sorted(source_root.rglob("*.py"))
+        path.relative_to(repository_root).as_posix()
+        for path in reference_source_paths(repository_root)
     )
     paths = tuple(sorted({*reference_direct_input_paths(), *source_paths}))
     if len(paths) != len(reference_direct_input_paths()) + len(source_paths):

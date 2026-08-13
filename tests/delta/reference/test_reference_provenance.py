@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import gzip
 import json
 import shutil
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import TextIO
 
 import pytest
 
@@ -17,6 +21,27 @@ from trace_reference.provenance import (
 )
 
 ROOT = Path(__file__).resolve().parents[3]
+_SCAN_CHARS = 1024 * 1024
+
+
+@contextmanager
+def _open_artifact_text(path: Path) -> Iterator[TextIO]:
+    if path.suffix == ".gz":
+        with gzip.open(path, mode="rt", encoding="utf-8") as stream:
+            yield stream
+        return
+    with path.open(mode="r", encoding="utf-8") as stream:
+        yield stream
+
+
+def _assert_artifact_excludes(path: Path, forbidden_values: tuple[str, ...]) -> None:
+    with _open_artifact_text(path) as stream:
+        tail = ""
+        while chunk := stream.read(_SCAN_CHARS):
+            searchable = tail + chunk
+            for forbidden in forbidden_values:
+                assert forbidden not in searchable, (path.name, forbidden)
+            tail = searchable[-max(map(len, forbidden_values)) :]
 
 
 @pytest.fixture(scope="module")
@@ -40,6 +65,7 @@ def test_reference_bundle_is_bounded_verified_and_input_bound(
     )
 
     assert verified == execution.manifest
+    assert verified.schema_version == "delta-reference-replay-manifest-v2"
     assert verified.scientific_status == "development-only-not-validation-evidence"
     assert verified.generator_version == "delta-reference-generator-v3"
     assert sum(item.byte_length for item in verified.artifacts) < 512 * 1024 * 1024
@@ -51,6 +77,10 @@ def test_reference_bundle_is_bounded_verified_and_input_bound(
         "capacity_evaluation",
         "result_summary",
     }
+    descriptors = {item.name: item for item in verified.artifacts}
+    for name in ("full_event_chain", "public_event_projection"):
+        assert descriptors[name].content_encoding == "canonical-json-gzip-v1"
+        assert descriptors[name].file_name.endswith(".json.gz")
     verify_reference_input_inventory(ROOT, verified)
 
 
@@ -61,9 +91,10 @@ def test_public_reference_artifacts_do_not_expose_hidden_entity_ids(
     for descriptor in execution.manifest.artifacts:
         if descriptor.contains_hidden_truth:
             continue
-        payload = (bundle / descriptor.file_name).read_text(encoding="utf-8")
-        for forbidden in ('"truth_incident_id"', '"truth_person_id"', "RI-", "RP-"):
-            assert forbidden not in payload, (descriptor.file_name, forbidden)
+        _assert_artifact_excludes(
+            bundle / descriptor.file_name,
+            ('"truth_incident_id"', '"truth_person_id"', "RI-", "RP-"),
+        )
 
 
 def test_reference_manifest_and_artifacts_detect_tampering(

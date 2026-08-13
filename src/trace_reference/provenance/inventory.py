@@ -13,6 +13,7 @@ from trace_jepa.support import (
 )
 
 from .models import ReferenceFileInput, ReferenceValueInput
+from .source_closure import reference_source_paths
 
 _MAX_INPUT_BYTES = 256 * 1024 * 1024
 _DIRECT_INPUTS = (
@@ -52,6 +53,7 @@ _DIRECT_INPUTS = (
     "docs/delta/reference/REFERENCE_CALIBRATION_FEASIBILITY_V1.md",
     "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
+    "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V2.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V1.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V2.md",
@@ -96,22 +98,18 @@ def reference_file_inputs(repository_root: Path) -> tuple[ReferenceFileInput, ..
 
 
 def reference_source_tree_sha256(repository_root: Path) -> str:
-    """Hash every Python source file that can supply Reference dependencies."""
+    """Hash the complete transitive source closure for base Reference surfaces."""
 
-    source_root = safe_directory(
-        repository_root / "src",
-        declared_root=repository_root,
-        label="Reference source root",
-    )
+    safe_directory(repository_root / "src", declared_root=repository_root, label="source root")
     digest = hashlib.sha256()
-    for path in sorted(source_root.rglob("*.py")):
+    for path in reference_source_paths(repository_root):
         safe = ArtifactLocator.from_path(
-            root=source_root,
+            root=repository_root,
             path=path,
             maximum_bytes=4 * 1024 * 1024,
             label="Reference Python source",
         ).resolve()
-        relative = safe.relative_to(source_root).as_posix().encode("utf-8")
+        relative = safe.relative_to(repository_root).as_posix().encode("utf-8")
         payload = safe.read_bytes()
         digest.update(relative)
         digest.update(b"\0")
