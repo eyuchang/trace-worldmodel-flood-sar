@@ -23,6 +23,7 @@ _G3_TEST_INPUTS = (
     "tests/delta/reference/test_reference_g3_architecture.py",
     "tests/delta/reference/test_reference_g3_characterization.py",
     "tests/delta/reference/test_reference_g3_decision.py",
+    "tests/delta/reference/test_reference_g3_handoff.py",
     "tests/delta/reference/test_reference_g3_integrity.py",
     "tests/delta/reference/test_reference_mission_runtime.py",
     "tests/delta/reference/test_reference_observations.py",

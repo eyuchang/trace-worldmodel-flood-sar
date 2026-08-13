@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from trace_reference.provenance import build_reference_scientific_input_manifest
 from trace_reference.validation import (
     REFERENCE_G3_GATE_IDS,
     ReferenceG3AcceptanceRegistry,
+    ReferenceG3CharacterizationIndex,
     build_reference_g3_acceptance_receipt,
 )
 
@@ -18,6 +20,14 @@ CORRECTED_ADR = Path("docs/delta/reference/REFERENCE_G3_TRACE_LEAP_HANDOFF_ADR_V
 MECHANISM_AUDIT = Path(
     "docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md"
 )
+CHARACTERIZATION_ROOT = Path("data/scenario/delta/reference/g3_handoff_v1")
+CHARACTERIZATION_SHA256 = {
+    "acquisition-success": "c797600c2ef36f8c79b59674aeb4aad13f12632eff1686d102cd39967a0da25b",
+    "acquisition-timeout": "0473f62c7438953f2a754dd8fe6293a705a083667f6f4edf7f6dcf546676ad08",
+    "empty-catalog-fallback": "620a1cb34422871ce85f9f4ca486340266ac2e27f73c19a121a805c97ee91329",
+    "faulted-restart": "f6269097f8c6446ec4153031b0945d0687e97c0000ce7e1721d217047e7e4626",
+    "nominal": "d03d1882ca4fe6433efdae608f8d690709f479694a58dfb1ca7573b72296aa83",
+}
 CORRECTED_ADR_SHA256 = "2af2b3b9e24040cb7fa0efa146b6e5cc9a3ad0805e53050494888a095b54403d"
 
 
@@ -79,3 +89,28 @@ def test_g3_scientific_manifest_contains_adr_audit_registry_and_test_sources() -
     serialized = json.dumps(manifest.model_dump(mode="json"), sort_keys=True)
     assert "g3_handoff.py" in serialized
     assert "g3_handoff_models.py" in serialized
+
+
+def test_g3_committed_characterization_is_complete_and_digest_bound() -> None:
+    index = ReferenceG3CharacterizationIndex.model_validate_json(
+        (ROOT / CHARACTERIZATION_ROOT / "g3_characterization_index.json").read_text("utf-8")
+    )
+    assert index.index_digest == (
+        "c697192757f6c8d7f5719e01d14f1557ad4184f5a8916508de3068de61ca2846"
+    )
+    assert tuple(item.fixture_id for item in index.fixtures) == (
+        "acquisition-success",
+        "acquisition-timeout",
+        "empty-catalog-fallback",
+        "faulted-restart",
+        "nominal",
+    )
+    for fixture in index.fixtures:
+        path = ROOT / CHARACTERIZATION_ROOT / f"{fixture.fixture_id}_fixture_manifest.json"
+        assert json.loads(path.read_text("utf-8")) == fixture.model_dump(mode="json")
+        assert (
+            hashlib.sha256(path.read_bytes()).hexdigest()
+            == CHARACTERIZATION_SHA256[fixture.fixture_id]
+        )
+    assert all(not item.leap_implementation_present for item in index.fixtures)
+    assert all(not item.effectiveness_evidence_present for item in index.fixtures)

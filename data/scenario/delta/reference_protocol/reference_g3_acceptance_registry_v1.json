@@ -41,7 +41,7 @@
     {"gate_id": "G3-SEC-002", "test_node_ids": ["tests/delta/reference/test_reference_provenance.py::test_public_reference_artifacts_do_not_expose_hidden_entity_ids", "tests/delta/reference/test_reference_g3_integrity.py::test_g3_integrity_report_verifies_registered_fault_restart"]},
     {"gate_id": "G3-OFFLINE-001", "test_node_ids": ["tests/delta/reference/test_reference_pipeline.py::test_reference_pipeline_executes_approved_causal_order_offline", "tests/delta/reference/test_reference_g3_decision.py::test_g3_active_resource_is_excluded_from_proposals_and_model_is_offline_bounded"]},
     {"gate_id": "G3-SMALL-001", "test_node_ids": ["tests/delta/reference/test_reference_protocol.py::test_delivered_small_baseline_verifies_and_tampering_fails"]},
-    {"gate_id": "G3-CHAR-001", "test_node_ids": ["tests/delta/reference/test_reference_g3_characterization.py::test_reference_g3_characterization_records_all_feature_off_fixtures", "tests/delta/reference/test_reference_g3_characterization.py::test_reference_g3_characterization_matches_development_benchmark_receipt"]}
+    {"gate_id": "G3-CHAR-001", "test_node_ids": ["tests/delta/reference/test_reference_g3_handoff.py::test_g3_committed_characterization_is_complete_and_digest_bound"]}
   ],
   "registry_version": "delta-reference-g3-acceptance-registry-v1"
 }
