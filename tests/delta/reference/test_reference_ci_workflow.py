@@ -1,20 +1,98 @@
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
-MINIMUM_COMPLETE_QUALITY_TIMEOUT_MINUTES = 45
+SHARD_REGISTRY = ROOT / "data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json"
+MINIMUM_SHARD_TIMEOUT_MINUTES = 45
+UPLOAD_ARTIFACT = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+DOWNLOAD_ARTIFACT = "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093"
 
 
-def test_reference_ci_quality_job_allows_complete_coverage_execution() -> None:
-    workflow = yaml.safe_load(CI_WORKFLOW.read_text(encoding="utf-8"))
-    quality = workflow["jobs"]["quality"]
+def _workflow() -> dict[str, Any]:
+    value = yaml.safe_load(CI_WORKFLOW.read_text(encoding="utf-8"))
+    assert isinstance(value, dict)
+    return value
 
-    assert quality["timeout-minutes"] >= MINIMUM_COMPLETE_QUALITY_TIMEOUT_MINUTES
-    steps = {step.get("name"): step for step in quality["steps"] if "name" in step}
-    coverage = steps["Test with registered branch coverage"]
-    assert "--cov-branch" in coverage["run"]
-    assert not coverage.get("continue-on-error", False)
+
+def _steps(job: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {step["name"]: step for step in job["steps"] if "name" in step}
+
+
+def test_reference_ci_runs_every_test_once_in_bounded_registered_shards() -> None:
+    workflow = _workflow()
+    jobs = workflow["jobs"]
+    registry = json.loads(SHARD_REGISTRY.read_text(encoding="utf-8"))
+    registered_ids = [item["shard_id"] for item in registry["shards"]]
+
+    quality = jobs["quality"]
+    assert quality["timeout-minutes"] >= MINIMUM_SHARD_TIMEOUT_MINUTES
+    assert "Verify complete disjoint test-shard registry" in _steps(quality)
+    assert all("pytest" not in str(step.get("run", "")) for step in quality["steps"])
+
+    shards = jobs["test-shards"]
+    assert shards["needs"] == "quality"
+    assert shards["timeout-minutes"] >= MINIMUM_SHARD_TIMEOUT_MINUTES
+    assert shards["strategy"]["fail-fast"] is False
+    assert shards["strategy"]["matrix"]["shard"] == registered_ids
+    steps = _steps(shards)
+    run = steps["Run registered test shard with branch coverage"]["run"]
+    assert "scripts/run_ci_test_shard.py" in run
+    assert '--shard "${{ matrix.shard }}"' in run
+    upload = steps["Upload branch-coverage fragment"]
+    assert upload["uses"] == UPLOAD_ARTIFACT
+    assert upload["with"]["include-hidden-files"] is True
+    assert upload["with"]["if-no-files-found"] == "error"
+
+
+def test_reference_ci_merges_all_branch_coverage_before_post_test_gates() -> None:
+    jobs = _workflow()["jobs"]
+    coverage = jobs["coverage"]
+    assert coverage["needs"] == "test-shards"
+    steps = _steps(coverage)
+    download = steps["Download every branch-coverage fragment"]
+    assert download["uses"] == DOWNLOAD_ARTIFACT
+    assert download["with"]["pattern"] == "delta-coverage-*"
+    assert download["with"]["merge-multiple"] is True
+    merge = steps["Merge and enforce high-consequence Task 1/2 coverage"]["run"]
+    assert "coverage combine coverage-parts" in merge
+    assert "coverage json -o coverage-delta.json" in merge
+    assert "scripts/check_delta_coverage.py coverage-delta.json" in merge
+
+    post_test = jobs["post-test"]
+    assert set(post_test["needs"]) == {"quality", "coverage"}
+    post_steps = _steps(post_test)
+    assert "Verify the complete Delta scientific input freeze" in post_steps
+    assert "Verify committed Delta book v6 when published" in post_steps
+    assert "Reject whitespace errors across the complete branch diff" in post_steps
+
+
+def test_reference_ci_shard_registry_is_an_exact_disjoint_suite_partition() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_ci_test_shard.py",
+            "--repository-root",
+            ".",
+            "--registry",
+            SHARD_REGISTRY.relative_to(ROOT).as_posix(),
+            "--verify",
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    summary = json.loads(result.stdout)
+
+    assert summary["full_node_count"] == 523
+    assert summary["test_file_count"] == 77
+    assert sum(summary["shard_counts"].values()) == summary["full_node_count"]

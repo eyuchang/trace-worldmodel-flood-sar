@@ -76,6 +76,8 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference/topology_design_v1.yaml",
     "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
     "data/scenario/delta/reference_protocol/reference_g3_acceptance_registry_v1.json",
+    "data/scenario/delta/reference_protocol/reference_g3_characterization_benchmark_v2.json",
+    "data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json",
     "data/scenario/delta/reference_protocol/reference_base_validation_preregistration_draft_v1.json",
     "data/scenario/delta/reference_protocol/reference_base_validation_protocol_v2.json",
     "data/scenario/delta/reference_protocol/small_baseline_v1.json",
@@ -96,6 +98,7 @@ _DIRECT_INPUTS = (
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V5.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V6.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V7.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V8.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md",
     "docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md",
     "pyproject.toml",
@@ -103,6 +106,7 @@ _DIRECT_INPUTS = (
     "requirements-delta-python311.lock",
     "scripts/reference/run_base_validation_original_v2.py",
     "scripts/reference/write_canonical_phase6_receipt.py",
+    "scripts/run_ci_test_shard.py",
     *_G3_TEST_INPUTS,
 )
 

@@ -1,0 +1,159 @@
+{
+  "coverage_sources": [
+    "trace_jepa.scenario.delta",
+    "trace_jepa.predictor",
+    "trace_jepa.experimental.revalidation",
+    "trace_jepa.support"
+  ],
+  "expected_full_node_count": 523,
+  "expected_test_file_count": 77,
+  "schema_version": "delta-reference-ci-test-shards-v1",
+  "shards": [
+    {
+      "shard_id": "delta-small",
+      "targets": [
+        "tests/delta/integration",
+        "tests/delta/protocol",
+        "tests/delta/reproducibility",
+        "tests/delta/security",
+        "tests/delta/unit"
+      ]
+    },
+    {
+      "shard_id": "predictor-governance",
+      "targets": [
+        "tests/predictor",
+        "tests/test_experimental_profile_provenance.py",
+        "tests/test_revalidation_guard.py"
+      ]
+    },
+    {
+      "shard_id": "workbench-legacy",
+      "targets": [
+        "tests/test_closure.py",
+        "tests/test_d04_real_geography.py",
+        "tests/test_d05_concurrent_scheduling.py",
+        "tests/test_d05_predictive_scheduling.py",
+        "tests/test_dynamic_workbench.py",
+        "tests/test_emergency_call.py",
+        "tests/test_end_to_end.py",
+        "tests/test_entity_model.py",
+        "tests/test_formal_regime.py",
+        "tests/test_maplibre_geojson_overlay.py",
+        "tests/test_mock_encoder.py",
+        "tests/test_navigation_and_reasoning.py",
+        "tests/test_policy.py",
+        "tests/test_repository.py",
+        "tests/test_rescue_lifecycle_and_alert_merge.py",
+        "tests/test_rq5_protocol.py",
+        "tests/test_scenario_visualization.py"
+      ]
+    },
+    {
+      "shard_id": "reference-domain",
+      "targets": [
+        "tests/delta/reference/test_reference_artifact_writer.py",
+        "tests/delta/reference/test_reference_capacity.py",
+        "tests/delta/reference/test_reference_ci_workflow.py",
+        "tests/delta/reference/test_reference_cli.py",
+        "tests/delta/reference/test_reference_coordination.py",
+        "tests/delta/reference/test_reference_decision_engine.py",
+        "tests/delta/reference/test_reference_delivery_history.py",
+        "tests/delta/reference/test_reference_environment.py",
+        "tests/delta/reference/test_reference_event_machine.py",
+        "tests/delta/reference/test_reference_exposure.py",
+        "tests/delta/reference/test_reference_g3_architecture.py",
+        "tests/delta/reference/test_reference_g3_decision.py",
+        "tests/delta/reference/test_reference_g3_handoff.py",
+        "tests/delta/reference/test_reference_geography_catalog.py",
+        "tests/delta/reference/test_reference_observation_calibration.py",
+        "tests/delta/reference/test_reference_observations.py",
+        "tests/delta/reference/test_reference_offline_sources.py",
+        "tests/delta/reference/test_reference_physical_runtime.py",
+        "tests/delta/reference/test_reference_predictor_evidence.py",
+        "tests/delta/reference/test_reference_protocol.py",
+        "tests/delta/reference/test_reference_publication.py",
+        "tests/delta/reference/test_reference_randomness_encoding.py",
+        "tests/delta/reference/test_reference_reconciliation.py",
+        "tests/delta/reference/test_reference_resources.py",
+        "tests/delta/reference/test_reference_routing.py",
+        "tests/delta/reference/test_reference_scale.py",
+        "tests/delta/reference/test_reference_scientific_inputs.py",
+        "tests/delta/reference/test_reference_statistics.py",
+        "tests/delta/reference/test_reference_trace_storage.py",
+        "tests/delta/reference/test_reference_truth.py",
+        "tests/delta/reference/test_reference_truth_calibration.py",
+        "tests/delta/reference/test_reference_validation_preregistration_draft.py",
+        "tests/delta/reference/test_reference_validation_v2_registration.py",
+        "tests/delta/reference/test_reference_visibility.py"
+      ]
+    },
+    {
+      "shard_id": "reference-pipeline",
+      "targets": [
+        "tests/delta/reference/test_reference_pipeline.py",
+        "tests/delta/reference/test_reference_runtime_factory.py"
+      ]
+    },
+    {
+      "shard_id": "reference-g3-characterization",
+      "targets": [
+        "tests/delta/reference/test_reference_g3_characterization.py"
+      ]
+    },
+    {
+      "shard_id": "reference-g3-execution",
+      "targets": [
+        "tests/delta/reference/test_reference_g3_execution.py"
+      ]
+    },
+    {
+      "shard_id": "reference-g3-integrity",
+      "targets": [
+        "tests/delta/reference/test_reference_g3_integrity.py"
+      ]
+    },
+    {
+      "shard_id": "reference-mission-basic",
+      "targets": [
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_merges_public_streams_and_executes_initial_decision",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_does_not_decide_twice_for_one_local_cluster",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_validates_coordination_sources_before_events",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_binds_activation_schedule_to_resource_roster",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_is_single_use"
+      ]
+    },
+    {
+      "shard_id": "reference-mission-outcomes",
+      "targets": [
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_runtime_records_completed_and_censored_service_outcomes"
+      ]
+    },
+    {
+      "shard_id": "reference-mission-faults",
+      "targets": [
+        "tests/delta/reference/test_reference_mission_runtime.py::test_registered_delivery_faults_are_reachable_and_preserve_exogenous_inputs",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_silent_provider_success_reconciles_after_client_timeout"
+      ]
+    },
+    {
+      "shard_id": "reference-mission-restart",
+      "targets": [
+        "tests/delta/reference/test_reference_mission_runtime.py::test_reference_mission_restart_matches_uninterrupted_continuation",
+        "tests/delta/reference/test_reference_mission_runtime.py::test_registered_crash_restart_matches_faulted_continuation"
+      ]
+    },
+    {
+      "shard_id": "reference-provenance",
+      "targets": [
+        "tests/delta/reference/test_reference_provenance.py"
+      ]
+    },
+    {
+      "shard_id": "reference-phase6",
+      "targets": [
+        "tests/delta/reference/test_reference_phase6_acceptance.py"
+      ]
+    }
+  ]
+}

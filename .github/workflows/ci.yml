@@ -38,6 +38,7 @@ jobs:
           scripts/download_vjepa.py
           scripts/measure_delta_performance.py
           scripts/run_delta_vjepa_offline.py
+          scripts/run_ci_test_shard.py
           scripts/select_delta_v8_reconciliation.py
           scripts/verify_delta_refactor_equivalence.py
           scripts/verify_delta_reference_environment.py
@@ -65,6 +66,7 @@ jobs:
           scripts/download_vjepa.py
           scripts/measure_delta_performance.py
           scripts/run_delta_vjepa_offline.py
+          scripts/run_ci_test_shard.py
           scripts/select_delta_v8_reconciliation.py
           scripts/verify_delta_refactor_equivalence.py
           scripts/verify_delta_reference_environment.py
@@ -85,17 +87,108 @@ jobs:
           src/trace_reference
           src/trace_jepa/experimental/revalidation.py
           src/trace_jepa/support
-      - name: Test with registered branch coverage
+      - name: Verify complete disjoint test-shard registry
         run: >-
-          python -m pytest
-          --cov=trace_jepa.scenario.delta
-          --cov=trace_jepa.predictor
-          --cov=trace_jepa.experimental.revalidation
-          --cov=trace_jepa.support
-          --cov-branch
-          --cov-report=json:coverage-delta.json
-      - name: Enforce high-consequence Task 1/2 coverage
-        run: python scripts/check_delta_coverage.py coverage-delta.json
+          python scripts/run_ci_test_shard.py
+          --repository-root .
+          --registry data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json
+          --verify
+
+  test-shards:
+    needs: quality
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - delta-small
+          - predictor-governance
+          - workbench-legacy
+          - reference-domain
+          - reference-pipeline
+          - reference-g3-characterization
+          - reference-g3-execution
+          - reference-g3-integrity
+          - reference-mission-basic
+          - reference-mission-outcomes
+          - reference-mission-faults
+          - reference-mission-restart
+          - reference-provenance
+          - reference-phase6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Install development dependencies
+        run: |
+          python -m pip install --require-hashes -r requirements-delta-python311.lock
+          python -m pip install -e . --no-deps
+      - name: Run registered test shard with branch coverage
+        run: |
+          mkdir -p coverage-parts
+          python scripts/run_ci_test_shard.py \
+            --repository-root . \
+            --registry data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json \
+            --shard "${{ matrix.shard }}" \
+            --coverage-output "coverage-parts/.coverage.${{ matrix.shard }}"
+      - name: Upload branch-coverage fragment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: delta-coverage-${{ matrix.shard }}
+          path: coverage-parts/.coverage.${{ matrix.shard }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  coverage:
+    needs: test-shards
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install development dependencies
+        run: |
+          python -m pip install --require-hashes -r requirements-delta-python311.lock
+          python -m pip install -e . --no-deps
+      - name: Download every branch-coverage fragment
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: delta-coverage-*
+          path: coverage-parts
+          merge-multiple: true
+      - name: Merge and enforce high-consequence Task 1/2 coverage
+        run: |
+          python -m coverage combine coverage-parts
+          python -m coverage json -o coverage-delta.json
+          python scripts/check_delta_coverage.py coverage-delta.json
+
+  post-test:
+    needs:
+      - quality
+      - coverage
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Install development dependencies
+        run: |
+          python -m pip install --require-hashes -r requirements-delta-python311.lock
+          python -m pip install -e . --no-deps
+      - name: Verify exact Delta reference environment
+        run: >-
+          python scripts/verify_delta_reference_environment.py
+          --contract data/scenario/delta/environment/python311_linux_amd64_v1.json
+          --lock requirements-delta-python311.lock
+          --require-match
       - name: Verify the complete Delta scientific input freeze
         run: >-
           python -c "from pathlib import Path;
