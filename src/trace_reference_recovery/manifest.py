@@ -10,15 +10,15 @@ from trace_jepa.support import (
     atomic_write_bytes,
     canonical_json_bytes,
     safe_directory,
-    sha256_file,
 )
+from trace_jepa.support import sha256_file as _sha256_file
 from trace_reference.provenance import (
     ReferenceScientificInputManifest,
     verify_reference_scientific_input_manifest,
 )
 from trace_reference.validation.registration import verify_reference_validation_freeze
-from trace_reference.validation.registration_models import ReferenceValidationBinding
 
+from .bindings import bind_artifact
 from .models import RecoveryGovernanceManifest, RecoveryManifestMember
 
 RECOVERY_MANIFEST_PATH = Path(
@@ -41,25 +41,24 @@ RECOVERY_MEMBER_PATHS = (
     "recovery_tests/reference/test_recovery_workflow.py",
     "scripts/reference/run_base_validation_recovery_v1.py",
     "src/trace_reference_recovery/__init__.py",
+    "src/trace_reference_recovery/aggregation.py",
+    "src/trace_reference_recovery/bindings.py",
     "src/trace_reference_recovery/execution.py",
+    "src/trace_reference_recovery/frozen_compatibility.py",
+    "src/trace_reference_recovery/lifecycle.py",
     "src/trace_reference_recovery/manifest.py",
     "src/trace_reference_recovery/models.py",
+    "src/trace_reference_recovery/protected_plan.py",
     "src/trace_reference_recovery/registration.py",
+    "src/trace_reference_recovery/shards.py",
 )
 _MAX_MEMBER_BYTES = 16 * 1024 * 1024
 
 
-def _binding(repository_root: Path, relative_path: Path) -> ReferenceValidationBinding:
-    path = ArtifactLocator(
-        root=repository_root,
-        relative_name=relative_path,
-        maximum_bytes=_MAX_MEMBER_BYTES,
-        label=f"recovery binding {relative_path}",
-    ).resolve()
-    return ReferenceValidationBinding(
-        repository_relative_path=relative_path.as_posix(),
-        sha256=sha256_file(path),
-    )
+def hash_recovery_member(path: Path, chunk_size: int = 1024 * 1024) -> str:
+    """Hash one recovery member through the testable provenance boundary."""
+
+    return _sha256_file(path, chunk_size)
 
 
 def _load_base_manifest(repository_root: Path) -> ReferenceScientificInputManifest:
@@ -95,19 +94,25 @@ def build_recovery_governance_manifest(repository_root: Path) -> RecoveryGoverna
             RecoveryManifestMember(
                 repository_relative_path=relative_name,
                 byte_length=path.stat().st_size,
-                sha256=sha256_file(path),
+                sha256=hash_recovery_member(path),
             )
         )
     body = {
         "schema_version": "delta-reference-validation-recovery-governance-manifest-v1",
         "scenario_id": "WF-DFLD-01-REFERENCE",
         "scientific_source_commit": "2cb58539425af467ac068ba7ef7500891e2fbe78",
-        "base_scientific_manifest": _binding(root, BASE_SCIENTIFIC_MANIFEST_PATH).model_dump(
-            mode="json"
-        ),
+        "base_scientific_manifest": bind_artifact(
+            root,
+            BASE_SCIENTIFIC_MANIFEST_PATH,
+            maximum_bytes=_MAX_MEMBER_BYTES,
+        ).model_dump(mode="json"),
         "base_scientific_manifest_aggregate_sha256": base_manifest.aggregate_sha256,
         "base_scientific_member_count": len(base_manifest.members),
-        "base_freeze": _binding(root, BASE_FREEZE_PATH).model_dump(mode="json"),
+        "base_freeze": bind_artifact(
+            root,
+            BASE_FREEZE_PATH,
+            maximum_bytes=_MAX_MEMBER_BYTES,
+        ).model_dump(mode="json"),
         "base_freeze_digest": base_freeze.freeze_digest,
         "base_scientific_members_unchanged": True,
         "protected_seed_values": [],

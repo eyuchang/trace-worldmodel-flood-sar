@@ -9,11 +9,11 @@
   },
   "amendment": {
     "repository_relative_path": "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_AMENDMENT_V1.md",
-    "sha256": "eda83d7302aab17907c777b452b6fee5a85e6d83c8f59567c1073d67b37b88f0"
+    "sha256": "ef4f293adbcbac62290ed0be082dcbad60789c5e2d26e7c2a254ca99e8ccf0fd"
   },
   "architecture_decision_record": {
     "repository_relative_path": "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_ADR_V1.md",
-    "sha256": "439bbf4ab487fb4fed894544517945145ee7b7142295fa1439b5d9f830308f44"
+    "sha256": "5bb4ac94a4e9d0a4575ad21f9ab5a5944476736099f0ead83fdbe6dcd9ac21cf"
   },
   "base_freeze": {
     "repository_relative_path": "data/scenario/delta/reference_protocol/reference_base_validation_freeze_v2.json",

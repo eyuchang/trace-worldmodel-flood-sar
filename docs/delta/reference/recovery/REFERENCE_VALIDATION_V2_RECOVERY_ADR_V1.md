@@ -1,6 +1,6 @@
 # ADR: Private seed-plan recovery for Reference validation-v2
 
-Status: accepted locally; remote execution requires a separately approved tag  
+Status: accepted locally; remote execution requires a separately approved tag
 Decision date: 2026-08-14
 
 ## Context
@@ -43,10 +43,14 @@ between jobs.
 - If infrastructure interrupts mission execution, continuation is limited to
   missing shards under a new authorization. It is not a general workflow
   rerun.
-- Recovery reuses the immutable base mission runner, adverse-receipt factory,
-  and aggregate-gate helper as its narrow frozen-mechanics seam. Recovery owns
-  its identity, file bindings, plan privacy, shard envelopes, report schema,
-  and workflow lifecycle; it does not fork the scientific mission mechanics.
+- Recovery reuses the immutable base mission runner and adverse-receipt factory
+  through one hash-bound compatibility adapter. The recovery layer implements
+  the already frozen aggregate-gate formula locally and tests it against the
+  registered gate semantics, avoiding another private cross-package dependency.
+- Recovery code is separated into protected-plan, shard, interruption,
+  aggregation, binding, and authorization modules. A thin execution facade
+  preserves the recovery command surface without concentrating these concerns
+  in one large orchestrator.
 
 ## Rejected alternatives
 

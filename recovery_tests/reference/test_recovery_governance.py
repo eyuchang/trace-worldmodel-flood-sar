@@ -13,8 +13,9 @@ from trace_reference.validation.registration_models import (
     ReferenceValidationGateResult,
     ReferenceValidationMissionReceipt,
 )
-from trace_reference_recovery import execution
+from trace_reference_recovery import execution, shards
 from trace_reference_recovery import manifest as recovery_manifest
+from trace_reference_recovery.bindings import bind_artifact
 from trace_reference_recovery.manifest import verify_recovery_governance_manifest
 from trace_reference_recovery.models import (
     RecoveryContinuationPlan,
@@ -146,7 +147,7 @@ def test_recovery_boundary_precedes_protected_derivation(
         calls.append("plan")
         raise AssertionError("protected derivation must not be reached")
 
-    monkeypatch.setattr(execution, "require_recovery_boundary", blocked_boundary)
+    monkeypatch.setattr(shards, "require_recovery_boundary", blocked_boundary)
     with pytest.raises(ValueError, match="blocked before protected derivation"):
         execution.run_recovery_shard(
             ROOT,
@@ -169,20 +170,22 @@ def test_recovery_manifest_is_separate_complete_and_detects_mutation(
     assert paths == set(recovery_manifest.RECOVERY_MEMBER_PATHS)
     assert recovery_manifest.RECOVERY_MANIFEST_PATH.as_posix() not in paths
     assert "src/trace_reference_recovery/execution.py" in paths
+    assert "src/trace_reference_recovery/frozen_compatibility.py" in paths
+    assert "src/trace_reference_recovery/aggregation.py" in paths
     assert ".github/workflows/reference-base-validation-v2-recovery.yml" in paths
     assert (
         "data/scenario/delta/reference_protocol/reference_scientific_input_manifest_v2.json"
         not in paths
     )
 
-    original = recovery_manifest.sha256_file
+    original = recovery_manifest.hash_recovery_member
 
     def changed(path: Path, chunk_size: int = 1024 * 1024) -> str:
         if path.name == "recovery_protocol_v1.json":
             return "0" * 64
         return original(path, chunk_size)
 
-    monkeypatch.setattr(recovery_manifest, "sha256_file", changed)
+    monkeypatch.setattr(recovery_manifest, "hash_recovery_member", changed)
     with pytest.raises(ValueError, match="manifest is not current"):
         verify_recovery_governance_manifest(ROOT)
 
@@ -238,7 +241,7 @@ def test_source_security_gate_retains_phase6_requirement() -> None:
         "all_nonperformance_checks_pass": False,
     }
 
-    gates = execution._aggregate_fixed_gates(
+    gates = execution.aggregate_fixed_gates(
         (_mission(),),
         phase6=phase6,
         canonical=canonical,
@@ -249,3 +252,58 @@ def test_source_security_gate_retains_phase6_requirement() -> None:
     source_security = next(item for item in gates if item.gate_id == "RV-SOURCE-SECURITY")
     assert not source_security.passed
     assert source_security.adverse_finding is not None
+
+
+def test_private_frozen_helpers_are_confined_to_one_compatibility_adapter() -> None:
+    package = ROOT / "src/trace_reference_recovery"
+    private_users = []
+    for path in sorted(package.glob("*.py")):
+        text = path.read_text("utf-8")
+        if "frozen_execution._" in text:
+            private_users.append(path.name)
+
+    assert private_users == ["frozen_compatibility.py"]
+    compatibility = (package / "frozen_compatibility.py").read_text("utf-8")
+    assert "frozen_execution._run_mission" in compatibility
+    assert "frozen_execution._failed_mission_receipt" in compatibility
+    assert "frozen_execution._aggregate_gate" not in compatibility
+
+
+def test_recovery_aggregate_gate_matches_frozen_registered_formula() -> None:
+    from trace_reference.validation.registration import load_reference_validation_protocol
+
+    protocol = load_reference_validation_protocol(ROOT)
+    mission = _mission()
+    gates = execution.aggregate_fixed_gates(
+        (mission,),
+        phase6={
+            "checks": [{"check_id": "P6-AXIS-ISOLATION", "passed": True}],
+            "all_nonperformance_checks_pass": True,
+        },
+        canonical={
+            "execution_role": "canonical-development-preflight",
+            "environment_verification_matches": True,
+            "registered_resource_ceilings_observed_within_limits": True,
+            "exact_replay_byte_identical": True,
+            "publication_regeneration_byte_identical": True,
+        },
+        protocol=protocol,
+        freeze_digest="b401b976fd22c19d6f2f81100e011946b566a48443ccd21a62d525bf9da820b3",
+    )
+
+    source = next(item for item in mission.gates if item.gate_id == "RV-CHAIN-INTEGRITY")
+    aggregated = next(item for item in gates if item.gate_id == "RV-CHAIN-INTEGRITY")
+    expected = hashlib.sha256(canonical_json_bytes((source.evidence_sha256,))).hexdigest()
+    assert aggregated.passed
+    assert aggregated.evidence_sha256 == expected
+    assert aggregated.adverse_finding is None
+
+
+def test_recovery_binding_rejects_symlinked_artifacts(tmp_path: Path) -> None:
+    target = tmp_path / "target.json"
+    target.write_text("{}", encoding="utf-8")
+    link = tmp_path / "link.json"
+    link.symlink_to(target)
+
+    with pytest.raises(ValueError):
+        bind_artifact(tmp_path, Path("link.json"))

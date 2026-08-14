@@ -28,7 +28,25 @@ def test_recovery_workflow_is_distinct_tag_only_and_once_only() -> None:
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in text
     assert "verified-no-prior-recovery-attempt" in text
     assert "cancel-in-progress: false" in text
+    prior_guard = text.split("- name: Refuse any prior recovery attempt", maxsplit=1)[1].split(
+        "- name: Build the source-bound recovery image", maxsplit=1
+    )[0]
+    assert "gh api --paginate" in prior_guard
+    assert "set -euo pipefail" in prior_guard
+    assert "|| true" not in prior_guard
+    assert '> "${prior_ids}"' in prior_guard
+    assert "|| true" not in text
     assert workflow["jobs"]
+
+    jobs = workflow["jobs"]
+    assert isinstance(jobs, dict)
+    authorize = jobs["authorize"]
+    assert isinstance(authorize, dict)
+    steps = authorize["steps"]
+    assert isinstance(steps, list)
+    assert all(
+        not isinstance(step, dict) or step.get("continue-on-error") is not True for step in steps
+    )
 
 
 def test_recovery_workflow_verifies_exact_failed_pre_evaluation_lifecycle() -> None:

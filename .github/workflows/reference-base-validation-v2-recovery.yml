@@ -100,11 +100,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          prior="$({
-            gh api --paginate \
-              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_REFERENCE_WORKFLOW_FILE}/runs?event=push&per_page=100" \
-              --jq ".workflow_runs[] | select(.head_branch == \"${TRACE_REFERENCE_AUTHORIZATION_TAG}\" and .id != ${GITHUB_RUN_ID}) | .id"
-          } | wc -l | tr -d ' ')"
+          prior_ids="${RUNNER_TEMP}/reference-recovery-prior-run-ids.txt"
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_REFERENCE_WORKFLOW_FILE}/runs?event=push&per_page=100" \
+            --jq ".workflow_runs[] | select(.head_branch == \"${TRACE_REFERENCE_AUTHORIZATION_TAG}\" and .id != ${GITHUB_RUN_ID}) | .id" \
+            > "${prior_ids}"
+          prior="$(wc -l < "${prior_ids}" | tr -d ' ')"
           test "${prior}" = "0"
           printf 'TRACE_REFERENCE_PRIOR_RECOVERY_GUARD=%s\n' \
             'verified-no-prior-recovery-attempt' >> "${GITHUB_ENV}"

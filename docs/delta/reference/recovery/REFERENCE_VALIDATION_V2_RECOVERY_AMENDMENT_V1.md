@@ -1,7 +1,7 @@
 # Reference validation-v2 recovery amendment v1
 
-Status: locally frozen; separate recovery-tag authorization required  
-Recorded: 2026-08-14  
+Status: locally frozen; separate recovery-tag authorization required
+Recorded: 2026-08-14
 Scientific scenario: `WF-DFLD-01-REFERENCE`
 
 ## Trigger
