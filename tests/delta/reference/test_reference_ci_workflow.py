@@ -11,7 +11,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 SHARD_REGISTRY = ROOT / "data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json"
-MINIMUM_SHARD_TIMEOUT_MINUTES = 45
+MINIMUM_SHARD_TIMEOUT_MINUTES = 60
 UPLOAD_ARTIFACT = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
 DOWNLOAD_ARTIFACT = "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093"
 
@@ -33,7 +33,7 @@ def test_reference_ci_runs_every_test_once_in_bounded_registered_shards() -> Non
     registered_ids = [item["shard_id"] for item in registry["shards"]]
 
     quality = jobs["quality"]
-    assert quality["timeout-minutes"] >= MINIMUM_SHARD_TIMEOUT_MINUTES
+    assert quality["timeout-minutes"] >= 45
     assert "Verify complete disjoint test-shard registry" in _steps(quality)
     assert all("pytest" not in str(step.get("run", "")) for step in quality["steps"])
 

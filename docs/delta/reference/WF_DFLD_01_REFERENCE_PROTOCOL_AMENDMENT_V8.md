@@ -41,7 +41,13 @@ source set. CI uploads each hidden coverage data file, combines every fragment
 only after all shards pass, enforces the unchanged coverage thresholds, and
 then runs the scientific-input, committed-Small-replay, and full-diff gates.
 
-The 45-minute limit now applies independently to each bounded shard. This is an
+The 60-minute limit applies independently to each bounded shard. The slowest
+observed GitHub characterization shard required approximately 38 minutes under
+coverage, so a 45-minute limit would have left inadequate runner-variance
+margin. Characterization, G3 execution and integrity, provenance/replay,
+mission restart/fault/outcome, and Phase 6 tests are each isolated rather than
+stacked in one process. The 60-minute infrastructure ceiling leaves a material
+margin for these bounded families while still failing a stalled job. This is an
 execution-orchestration change, not a relaxation of test or coverage scope. The
 Reference Phase 6 canonical performance contract continues to require the
 registered generate/run/replay operation to complete within 900 seconds in the

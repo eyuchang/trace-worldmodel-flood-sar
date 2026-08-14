@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
