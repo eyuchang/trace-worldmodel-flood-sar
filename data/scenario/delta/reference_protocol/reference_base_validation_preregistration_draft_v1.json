@@ -1,0 +1,272 @@
+{
+  "schema_version": "delta-reference-base-validation-preregistration-draft-v1",
+  "status": "awaiting-owner-approval-no-untouched-seed-access",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "scientific_role": "base-non-leap-integration-validation-not-policy-effectiveness",
+  "current_development_source_commit": "a0c84a892e94db7198ffd8de7c5b9ad242c813f6",
+  "scientific_input_aggregate_sha256": "9f12ed0993ac11fd3636e0a195fb21ae442829930f94f531135e7e2c0c4194b5",
+  "canonical_scenario_axes": "sigma=1.0,kappa=1.0,mu=1.0,iota=0.7,phi=4,pi=0.7,epsilon=reference-exposure-v1,delta=0.2",
+  "registered_scarcity_sensitivity": "reference-kappa-0p5-scarcity-v1",
+  "bindings": [
+    {
+      "name": "reference-development-config",
+      "repository_relative_path": "configs/scenarios/wf_dfld_01_reference_development.yaml",
+      "sha256": "4ac755dfc88a85a345c974f30dc7b7b43ce8b967c2447e5b834fbf583947aef7"
+    },
+    {
+      "name": "observation-development-fit",
+      "repository_relative_path": "data/scenario/delta/reference/calibration/reference_observation_fit_report_v1.json",
+      "sha256": "a7064bf6252e83eef03176d177ca47867b045cfdf69dbd89a1a5fe656b9cf737"
+    },
+    {
+      "name": "truth-development-fit",
+      "repository_relative_path": "data/scenario/delta/reference/calibration/reference_truth_fit_report_v1.json",
+      "sha256": "b38bf51639b3ccf86e93bc7098e4d70743ecfa516c22b76110535b339ead74bb"
+    },
+    {
+      "name": "canonical-environment-contract",
+      "repository_relative_path": "data/scenario/delta/reference/environment/reference_python311_linux_amd64_v1.json",
+      "sha256": "5fbbb91bc556ab8483b0db19563cf28117ac24a5c142eda200c48d86d501019d"
+    },
+    {
+      "name": "non-leap-g3-handoff",
+      "repository_relative_path": "data/scenario/delta/reference/g3_handoff_v1/g3_handoff_manifest.json",
+      "sha256": "c5a82ebc63aa6c1b7d4fea7580fe04ac80563353cac58715784f70d568e1f054"
+    },
+    {
+      "name": "phase6-development-acceptance",
+      "repository_relative_path": "data/scenario/delta/reference/phase6_acceptance_v1/phase6_development_acceptance_report.json",
+      "sha256": "52e0a1cd19d48de2f8c6d7ab00dfdda34025e919d6e259bc1d380e94bd75415f"
+    },
+    {
+      "name": "phase6-canonical-execution",
+      "repository_relative_path": "data/scenario/delta/reference/phase6_canonical_v1/canonical_execution_receipt.json",
+      "sha256": "5932902de036cc174932070e2b28b424658ad63350c5a9c268052b378f20ef22"
+    },
+    {
+      "name": "registered-fault-schedule",
+      "repository_relative_path": "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
+      "sha256": "b6a8b4b8f6e8509cdb0c3d9649fad44bab49a7ba7167004d766d5d4f512277ea"
+    },
+    {
+      "name": "approved-reference-decisions",
+      "repository_relative_path": "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V1.md",
+      "sha256": "6be6e4a6b4766fb9e66bf7de31924e545503df9202c929587471089076867cca"
+    }
+  ],
+  "study_roles": [
+    {
+      "role": "development",
+      "namespace_template": "WF-DFLD-01-REFERENCE|development-v1|index",
+      "planned_mission_count": 100,
+      "status": "spent-development",
+      "execution_boundary": "local-development-only",
+      "contains_seed_values": false,
+      "rationale": "All 100 development seeds were consumed for coefficient fitting and diagnostics; the draft records only their namespace and committed list digest."
+    },
+    {
+      "role": "selection-v1-exposed",
+      "namespace_template": "WF-DFLD-01-REFERENCE|selection-v1|index",
+      "planned_mission_count": null,
+      "status": "superseded-before-scientific-use",
+      "execution_boundary": "never-use",
+      "contains_seed_values": false,
+      "rationale": "A development unit test materialized a prefix from this namespace. No scenario result used it, but it is no longer eligible to serve as untouched evidence."
+    },
+    {
+      "role": "validation-v1-exposed",
+      "namespace_template": "WF-DFLD-01-REFERENCE|validation-v1|index",
+      "planned_mission_count": null,
+      "status": "superseded-before-scientific-use",
+      "execution_boundary": "never-use",
+      "contains_seed_values": false,
+      "rationale": "A development unit test materialized a prefix from this namespace. No scenario result used it, but it is no longer eligible to serve as untouched evidence."
+    },
+    {
+      "role": "selection-v2-proposed",
+      "namespace_template": "WF-DFLD-01-REFERENCE|selection-v2|index",
+      "planned_mission_count": null,
+      "status": "proposed-not-derived-not-materialized",
+      "execution_boundary": "disabled",
+      "contains_seed_values": false,
+      "rationale": "The base integration study selects no policy or operating point. This replacement namespace remains reserved and inaccessible unless a later approved selection protocol needs it."
+    },
+    {
+      "role": "validation-v2-proposed",
+      "namespace_template": "WF-DFLD-01-REFERENCE|validation-v2|index",
+      "planned_mission_count": 100,
+      "status": "proposed-not-derived-not-materialized",
+      "execution_boundary": "remote-original-once-only-after-approval",
+      "contains_seed_values": false,
+      "rationale": "One hundred mission seeds support the approved deterministic integration gate and descriptive mission-cluster intervals without making a policy-effectiveness claim."
+    },
+    {
+      "role": "future-confirmatory",
+      "namespace_template": "UNASSIGNED|requires-separate-powered-protocol|index",
+      "planned_mission_count": null,
+      "status": "deferred-pending-separate-powered-protocol",
+      "execution_boundary": "disabled",
+      "contains_seed_values": false,
+      "rationale": "A confirmatory namespace and count require separately approved policy endpoints, margins, multiplicity, power, and workflow. This base integration draft does not create them."
+    }
+  ],
+  "seed_derivation_procedure": "After approval only: hash UTF-8 WF-DFLD-01-REFERENCE|{role}-v2|{index} with SHA-256, read the first four bytes big-endian, apply bitmask 0x7fffffff, and reject any collision. The draft performs none of these operations.",
+  "exact_gates": [
+    {
+      "gate_id": "RV-AXIS-ISOLATION",
+      "requirement": "All eight approved causal axes preserve keyed common random numbers and their declared upstream invariants.",
+      "scope": "study-aggregate"
+    },
+    {
+      "gate_id": "RV-CANONICAL-PERFORMANCE",
+      "requirement": "Runtime, memory, and transient output remain within the frozen ceilings in the exact registered environment.",
+      "scope": "canonical-environment"
+    },
+    {
+      "gate_id": "RV-CHAIN-INTEGRITY",
+      "requirement": "Event, evidence, TRACE, commitment, authorization, outcome, revision, and compensation chains verify exactly.",
+      "scope": "every-mission"
+    },
+    {
+      "gate_id": "RV-CONSERVATION",
+      "requirement": "Resources, crews, actions, commitments, outcomes, and strict capacity accounting satisfy all conservation invariants.",
+      "scope": "every-mission"
+    },
+    {
+      "gate_id": "RV-EXACT-REPLAY",
+      "requirement": "Generation, runtime continuation, replay, and deterministic publication reproduce every registered byte.",
+      "scope": "every-mission"
+    },
+    {
+      "gate_id": "RV-FAULT-REACHABILITY",
+      "requirement": "The registered fault profile exercises every declared fault family, with no silent exclusion of an unreachable family.",
+      "scope": "study-aggregate"
+    },
+    {
+      "gate_id": "RV-HIDDEN-TRUTH",
+      "requirement": "Online components and public outputs never read or expose hidden truth or lineage; deletion leaves public decisions unchanged.",
+      "scope": "every-mission"
+    },
+    {
+      "gate_id": "RV-RECOVERY-EQUIVALENCE",
+      "requirement": "Registered crash and retry points preserve uninterrupted-versus-restarted durable and public continuation equivalence.",
+      "scope": "study-aggregate"
+    },
+    {
+      "gate_id": "RV-SMALL-PRESERVATION",
+      "requirement": "Every protected Small artifact and digest remains byte-identical to its approved baseline.",
+      "scope": "study-aggregate"
+    },
+    {
+      "gate_id": "RV-SOURCE-SECURITY",
+      "requirement": "Scientific inputs, source licenses, safe-path boundaries, offline execution, and complete provenance all verify.",
+      "scope": "study-aggregate"
+    }
+  ],
+  "report_only_estimands": [
+    {
+      "estimand_id": "reference-allocation-refusal-hold",
+      "unit": "mission-seed",
+      "method": "Mission-cluster means and intervals reported separately for allocation, refusal, HOLD, BLOCK, and ESCALATE.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-censoring-outcomes",
+      "unit": "mission-seed",
+      "method": "Mission-level completed, active, partial, failed, and unknown service counts with explicit scenario censoring.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-consistency-audit",
+      "unit": "mission-seed",
+      "method": "Mission-level stale execution, consistency debt, validity slack, guard status, and audit attribution summaries.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-coverage",
+      "unit": "mission-seed",
+      "method": "Incident coverage and report coverage are summarized separately with mission-cluster intervals.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-evidence-cost",
+      "unit": "mission-seed",
+      "method": "Verification channels, evidence age, latency, and cost are summarized without an efficacy comparison.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-load-sensitivity",
+      "unit": "mission-seed",
+      "method": "Strict finite load and unserviceable windows are reported for canonical kappa=1 and paired kappa=0.5; no ratio is targeted.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-reconciliation",
+      "unit": "mission-seed",
+      "method": "Pairwise identity, false-merge, missed-link, false-report, revision, and dispute summaries use hidden truth only after runtime.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-recovery",
+      "unit": "mission-seed",
+      "method": "Detection, affected-set, compensation, retry, restoration, and residual-debt summaries are reported by fault family.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-route-failure",
+      "unit": "mission-seed",
+      "method": "Crossing state, reachability, route failure, travel, and authority activation delays are reported descriptively.",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-utilization",
+      "unit": "mission-seed",
+      "method": "Resource and crew utilization, arrival, service, and completion distributions use seed-cluster summaries.",
+      "numerical_acceptance_gate": false
+    }
+  ],
+  "inference_unit": "mission-seed",
+  "interval_method": "deterministic-10000-resample-mission-cluster-bootstrap",
+  "precision_rationale": {
+    "proposed_validation_missions": 100,
+    "development_missions": 100,
+    "observed_report_total_sd": 123.15576734486709,
+    "projected_report_mean_95_half_width": 24.13853039959395,
+    "observed_seed_breach_hour_mean_sd": 6.510190147574474,
+    "projected_breach_hour_mean_95_half_width": 1.2759972689245969,
+    "zero_failure_one_sided_95_upper_bound": 0.029513049607039932,
+    "interpretation": "Using only the 100 spent development missions, 100 validation missions project a normal-approximation 95% half-width of about 24.14 reports for the evaluation-total mean and 1.28 reports/hour for the per-mission breach-phase hourly mean. If no exact-gate failure is observed, the exact one-sided binomial upper bound is about 2.95%; this is a sampling statement, not an operational reliability guarantee."
+  },
+  "remote_original": {
+    "execution_role": "original-base-reference-validation",
+    "authorization": "disabled-awaiting-owner-approval",
+    "source_identity": "immutable-annotated-tag-and-checked-out-sha",
+    "run_attempt": 1,
+    "prior_success_guard": "workflow-tag-source-commit-registry",
+    "concurrency_cancellation": false,
+    "environment_verification": "exact-contract-lock-oci-index-and-platform-manifest",
+    "network_during_scientific_execution": false,
+    "failure_policy": "publish-without-retuning-or-seed-replacement",
+    "output_identity_fields": [
+      "environment_contract_sha256",
+      "execution_role",
+      "lock_sha256",
+      "protocol_sha256",
+      "scientific_input_aggregate_sha256",
+      "seed_list_sha256",
+      "source_commit",
+      "tag",
+      "workflow_run_attempt",
+      "workflow_run_id"
+    ]
+  },
+  "open_approval_decisions": [
+    "Approve superseding the development-exposed selection-v1 and validation-v1 namespaces with inaccessible v2 namespaces.",
+    "Approve correcting canonical resource-receipt role derivation from exact verified environment identity and rerunning canonical Phase 6 after the scientific manifest changes.",
+    "Approve a 100-mission remote original base validation with only deterministic integration gates and descriptive mission-cluster intervals.",
+    "Approve the immutable tag, checked-out SHA, run-attempt-one, prior-success registry, no-cancel concurrency, and publish-failure remote workflow design."
+  ],
+  "selection_validation_confirmatory_seed_values": [],
+  "leap_behavior_present": false,
+  "policy_effectiveness_claim_present": false
+}
