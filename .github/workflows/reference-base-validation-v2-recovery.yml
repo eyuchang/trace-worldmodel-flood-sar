@@ -1,0 +1,552 @@
+name: Reference base validation-v2 recovery (tag-authorized, once-only)
+
+on:
+  push:
+    tags:
+      - wf-dfld-01-reference-validation-v2-recovery-v1
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: wf-dfld-01-reference-validation-v2-recovery-v1
+  cancel-in-progress: false
+
+env:
+  TRACE_REFERENCE_AUTHORIZATION_TAG: wf-dfld-01-reference-validation-v2-recovery-v1
+  TRACE_REFERENCE_EXECUTION_ROLE: original-base-reference-validation-recovery
+  TRACE_REFERENCE_WORKFLOW_FILE: reference-base-validation-v2-recovery.yml
+  TRACE_REFERENCE_FAILED_ORIGINAL_RUN_ID: "31833291955"
+  TRACE_REFERENCE_CANONICAL_BASE: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
+  TRACE_REFERENCE_OCI_INDEX: docker.io/library/python@sha256:3b3706a90cb23f04fabb0d255824f9a70ceb46177041898133dd5a35f3a50f0a
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - name: Check out the immutable recovery tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify recovery tag and run identity
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test "${GITHUB_REF}" = "refs/tags/${TRACE_REFERENCE_AUTHORIZATION_TAG}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git cat-file -t "${TRACE_REFERENCE_AUTHORIZATION_TAG}")" = "tag"
+          test "$(git rev-parse "${TRACE_REFERENCE_AUTHORIZATION_TAG}^{}")" = "${GITHUB_SHA}"
+          printf 'sha=%s\n' "${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify the immutable failed original lifecycle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${RUNNER_TEMP}/failed-original-metadata"
+          install -d -m 700 "${root}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/31833291955" > "${root}/run.json"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/31833291955/jobs?filter=all&per_page=100" > "${root}/jobs.json"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/31833291955/artifacts" > "${root}/artifacts.json"
+          gh run view 31833291955 --repo "${GITHUB_REPOSITORY}" --log > "${root}/run.log"
+          jq -e '
+            .id == 31833291955 and
+            .workflow_id == 334574314 and
+            .event == "push" and
+            .head_branch == "wf-dfld-01-reference-validation-v2-original" and
+            .head_sha == "2cb58539425af467ac068ba7ef7500891e2fbe78" and
+            .run_attempt == 1 and
+            .path == ".github/workflows/reference-base-validation-v2-original.yml" and
+            .created_at == "2026-08-14T19:26:58Z" and
+            .updated_at == "2026-08-14T19:27:52Z" and
+            .conclusion == "failure"
+          ' "${root}/run.json" >/dev/null
+          jq -e '
+            any(.jobs[];
+              .id == 94873822352 and
+              .conclusion == "failure" and
+              any(.steps[];
+                .name == "Derive the protected validation-v2 list once" and
+                .conclusion == "success") and
+              any(.steps[];
+                .name == "Upload the protected plan for this workflow only" and
+                .conclusion == "failure")) and
+            any(.jobs[]; .name == "shards" and .conclusion == "skipped") and
+            any(.jobs[]; .name == "aggregate" and .conclusion == "skipped")
+          ' "${root}/jobs.json" >/dev/null
+          jq -e '.total_count == 0 and (.artifacts | length) == 0' \
+            "${root}/artifacts.json" >/dev/null
+          grep -Fq \
+            'protected seed plan prepared: digest=2be02697a2379a974d709fda7b7285935227ae58a8ebe51fc38c0c48020ffa87' \
+            "${root}/run.log"
+          test "$(git rev-parse refs/tags/wf-dfld-01-reference-validation-v2-original)" = \
+            "c32e0db30510f9165cdb891861cf9680b4a33c4e"
+          test "$(git rev-parse refs/tags/wf-dfld-01-reference-validation-v2-original^{})" = \
+            "2cb58539425af467ac068ba7ef7500891e2fbe78"
+          printf 'TRACE_REFERENCE_FAILED_ORIGINAL_GUARD=%s\n' \
+            'verified-run-31833291955-pre-evaluation-failure' >> "${GITHUB_ENV}"
+
+      - name: Refuse any prior recovery attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          prior="$({
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_REFERENCE_WORKFLOW_FILE}/runs?event=push&per_page=100" \
+              --jq ".workflow_runs[] | select(.head_branch == \"${TRACE_REFERENCE_AUTHORIZATION_TAG}\" and .id != ${GITHUB_RUN_ID}) | .id"
+          } | wc -l | tr -d ' ')"
+          test "${prior}" = "0"
+          printf 'TRACE_REFERENCE_PRIOR_RECOVERY_GUARD=%s\n' \
+            'verified-no-prior-recovery-attempt' >> "${GITHUB_ENV}"
+          printf 'TRACE_REFERENCE_ANNOTATED_TAG_GUARD=%s\n' \
+            'verified-annotated-tag-points-to-sha' >> "${GITHUB_ENV}"
+
+      - name: Build the source-bound recovery image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "${TRACE_REFERENCE_OCI_INDEX}"
+          docker pull "${TRACE_REFERENCE_CANONICAL_BASE}"
+          docker image inspect "${TRACE_REFERENCE_CANONICAL_BASE}" >/dev/null
+          docker build \
+            --build-arg "BASE=${TRACE_REFERENCE_CANONICAL_BASE}" \
+            --tag "trace-reference-recovery:${GITHUB_SHA}" \
+            --file - . <<'DOCKERFILE'
+          ARG BASE
+          FROM ${BASE}
+          WORKDIR /workspace
+          COPY requirements-delta-python311.lock pyproject.toml README.md ./
+          COPY src ./src
+          COPY scripts ./scripts
+          COPY recovery_tests ./recovery_tests
+          RUN python -m pip install --require-hashes -r requirements-delta-python311.lock \
+              && python -m pip install -e . --no-deps
+          DOCKERFILE
+
+      - name: Verify governance and authorization without deriving seeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            sh -ceu '
+              python -m pytest -q recovery_tests/reference
+              python scripts/reference/run_base_validation_recovery_v1.py \
+                --repository-root /workspace verify-manifest
+              python scripts/reference/run_base_validation_recovery_v1.py \
+                --repository-root /workspace authorize
+            '
+
+  shards:
+    needs: authorize
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - name: Check out the immutable recovery tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify shard source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_SHA}" = "${{ needs.authorize.outputs.source_sha }}"
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+
+      - name: Build the source-bound recovery image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "${TRACE_REFERENCE_CANONICAL_BASE}"
+          docker build \
+            --build-arg "BASE=${TRACE_REFERENCE_CANONICAL_BASE}" \
+            --tag "trace-reference-recovery:${GITHUB_SHA}" \
+            --file - . <<'DOCKERFILE'
+          ARG BASE
+          FROM ${BASE}
+          WORKDIR /workspace
+          COPY requirements-delta-python311.lock pyproject.toml README.md ./
+          COPY src ./src
+          COPY scripts ./scripts
+          RUN python -m pip install --require-hashes -r requirements-delta-python311.lock \
+              && python -m pip install -e . --no-deps
+          DOCKERFILE
+
+      - name: Execute five registered missions with a private plan
+        shell: bash
+        env:
+          TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
+          TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+        run: |
+          set -euo pipefail
+          umask 077
+          install -d -m 700 "${RUNNER_TEMP}/reference-recovery-shard"
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --volume "${RUNNER_TEMP}/reference-recovery-shard:/output" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            python scripts/reference/run_base_validation_recovery_v1.py \
+              --repository-root /workspace shard \
+              --shard-index "${{ matrix.shard }}" \
+              --output "/output/shard-$(printf '%02d' '${{ matrix.shard }}').json"
+
+      - name: Verify seed-concealing shard artifact ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="${RUNNER_TEMP}/reference-recovery-shard/shard-$(printf '%02d' '${{ matrix.shard }}').json"
+          test -f "${file}"
+          test ! -L "${file}"
+          test -r "${file}"
+          test "$(stat -c '%u' "${file}")" = "$(id -u)"
+          bytes="$(stat -c '%s' "${file}")"
+          test "${bytes}" -gt 0
+          test "${bytes}" -le 67108864
+          ! grep -q '"seeds"' "${file}"
+
+      - name: Upload seed-concealing shard evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reference-validation-v2-recovery-shard-${{ matrix.shard }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/reference-recovery-shard/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  aggregate:
+    needs: [authorize, shards]
+    if: ${{ always() && needs.authorize.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out the immutable recovery tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Download every available seed-concealing shard
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        continue-on-error: true
+        with:
+          pattern: reference-validation-v2-recovery-shard-*-${{ github.run_id }}
+          path: ${{ runner.temp }}/downloaded-shards
+
+      - name: Normalize and classify shard completeness
+        id: completeness
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          install -d -m 700 \
+            "${RUNNER_TEMP}/downloaded-shards" \
+            "${RUNNER_TEMP}/recovery-shards" \
+            "${RUNNER_TEMP}/recovery-report" \
+            "${RUNNER_TEMP}/recovery-continuation"
+          normalization_valid=true
+          while IFS= read -r source; do
+            destination="${RUNNER_TEMP}/recovery-shards/$(basename "${source}")"
+            if test -e "${destination}"; then
+              normalization_valid=false
+              continue
+            fi
+            cp "${source}" "${destination}"
+          done < <(find "${RUNNER_TEMP}/downloaded-shards" -type f -name 'shard-*.json' | sort)
+          count="$(find "${RUNNER_TEMP}/recovery-shards" -type f -name 'shard-*.json' | wc -l | tr -d ' ')"
+          test "${count}" -le 20
+          printf 'normalization_valid=%s\n' "${normalization_valid}" >> "${GITHUB_OUTPUT}"
+          if test "${normalization_valid}" = "true" && test "${count}" = "20"; then
+            printf 'complete=true\n' >> "${GITHUB_OUTPUT}"
+          else
+            printf 'complete=false\n' >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build the source-bound recovery image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "${TRACE_REFERENCE_CANONICAL_BASE}"
+          docker build \
+            --build-arg "BASE=${TRACE_REFERENCE_CANONICAL_BASE}" \
+            --tag "trace-reference-recovery:${GITHUB_SHA}" \
+            --file - . <<'DOCKERFILE'
+          ARG BASE
+          FROM ${BASE}
+          WORKDIR /workspace
+          COPY requirements-delta-python311.lock pyproject.toml README.md ./
+          COPY src ./src
+          COPY scripts ./scripts
+          RUN python -m pip install --require-hashes -r requirements-delta-python311.lock \
+              && python -m pip install -e . --no-deps
+          DOCKERFILE
+
+      - name: Aggregate complete recovery evidence privately
+        id: aggregate_execution
+        if: ${{ steps.completeness.outputs.complete == 'true' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
+          TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --volume "${RUNNER_TEMP}/recovery-shards:/shards:ro" \
+            --volume "${RUNNER_TEMP}/recovery-report:/output" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            python scripts/reference/run_base_validation_recovery_v1.py \
+              --repository-root /workspace aggregate \
+              --shard-root /shards \
+              --output /output/reference_base_validation_recovery_report_v1.json \
+              --disclosed-plan-output /output/reference_validation_v2_seed_plan.json
+
+      - name: Preserve a seed-free interruption plan
+        if: ${{ steps.completeness.outputs.complete != 'true' && steps.completeness.outputs.normalization_valid == 'true' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
+          TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --volume "${RUNNER_TEMP}/recovery-shards:/shards:ro" \
+            --volume "${RUNNER_TEMP}/recovery-continuation:/output" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            python scripts/reference/run_base_validation_recovery_v1.py \
+              --repository-root /workspace continuation \
+              --shard-root /shards \
+              --output /output/reference_validation_recovery_continuation_plan_v1.json
+
+      - name: Verify final recovery artifact ownership
+        id: artifact_preflight
+        if: ${{ steps.completeness.outputs.complete == 'true' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            "${RUNNER_TEMP}/recovery-report/reference_base_validation_recovery_report_v1.json" \
+            "${RUNNER_TEMP}/recovery-report/reference_validation_v2_seed_plan.json"; do
+            test -f "${file}"
+            test ! -L "${file}"
+            test -r "${file}"
+            test "$(stat -c '%u' "${file}")" = "$(id -u)"
+            bytes="$(stat -c '%s' "${file}")"
+            test "${bytes}" -gt 0
+            test "${bytes}" -le 67108864
+          done
+
+      - name: Preserve seed-free aggregate failure evidence
+        if: ${{ always() && (steps.completeness.outputs.complete != 'true' || steps.aggregate_execution.outcome != 'success' || steps.artifact_preflight.outcome != 'success') }}
+        shell: bash
+        env:
+          TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
+          TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+        run: |
+          set -euo pipefail
+          stage=aggregation
+          if test "${{ steps.completeness.outputs.normalization_valid }}" != "true"; then
+            stage=normalization
+          elif test "${{ steps.completeness.outputs.complete }}" != "true"; then
+            stage=incomplete-shards
+          elif test "${{ steps.aggregate_execution.outcome }}" != "success"; then
+            stage=aggregation
+          elif test "${{ steps.artifact_preflight.outcome }}" != "success"; then
+            stage=artifact-preflight
+          fi
+          flags=()
+          shard_root=/shards
+          if test "${stage}" = "normalization"; then
+            shard_root=/downloaded
+          fi
+          test ! -f "${RUNNER_TEMP}/recovery-report/reference_base_validation_recovery_report_v1.json" || \
+            flags+=(--final-report-written)
+          test ! -f "${RUNNER_TEMP}/recovery-report/reference_validation_v2_seed_plan.json" || \
+            flags+=(--raw-plan-written)
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --volume "${RUNNER_TEMP}/downloaded-shards:/downloaded:ro" \
+            --volume "${RUNNER_TEMP}/recovery-shards:/shards:ro" \
+            --volume "${RUNNER_TEMP}/recovery-continuation:/output" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            python scripts/reference/run_base_validation_recovery_v1.py \
+              --repository-root /workspace failure \
+              --shard-root "${shard_root}" \
+              --failure-stage "${stage}" \
+              --output /output/reference_validation_recovery_interruption_record_v1.json \
+              "${flags[@]}"
+
+      - name: Upload completed recovery report and post-evaluation plan
+        id: completed_upload
+        if: ${{ steps.completeness.outputs.complete == 'true' && steps.aggregate_execution.outcome == 'success' && steps.artifact_preflight.outcome == 'success' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reference-base-validation-v2-recovery-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/recovery-report/reference_base_validation_recovery_report_v1.json
+            ${{ runner.temp }}/recovery-report/reference_validation_v2_seed_plan.json
+            ${{ runner.temp }}/recovery-shards/*.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload interrupted recovery evidence without raw seeds
+        if: ${{ always() && (steps.completeness.outputs.complete != 'true' || steps.aggregate_execution.outcome != 'success' || steps.artifact_preflight.outcome != 'success') }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reference-base-validation-v2-recovery-interrupted-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/recovery-continuation/reference_validation_recovery_continuation_plan_v1.json
+            ${{ runner.temp }}/recovery-continuation/reference_validation_recovery_interruption_record_v1.json
+            ${{ runner.temp }}/recovery-shards/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Preserve seed-free evidence when completed upload fails
+        if: ${{ steps.completed_upload.outcome == 'failure' }}
+        shell: bash
+        env:
+          TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
+          TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            --env GITHUB_ACTIONS=true \
+            --env GITHUB_REF="${GITHUB_REF}" \
+            --env GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            --env GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}" \
+            --env GITHUB_RUN_ID="${GITHUB_RUN_ID}" \
+            --env GITHUB_SHA="${GITHUB_SHA}" \
+            --env PYTHONDONTWRITEBYTECODE=1 \
+            --env TRACE_REFERENCE_ANNOTATED_TAG_GUARD="${TRACE_REFERENCE_ANNOTATED_TAG_GUARD}" \
+            --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
+            --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
+            --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
+            --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
+            --volume "${RUNNER_TEMP}/recovery-shards:/shards:ro" \
+            --volume "${RUNNER_TEMP}/recovery-continuation:/output" \
+            --workdir /workspace \
+            "trace-reference-recovery:${GITHUB_SHA}" \
+            python scripts/reference/run_base_validation_recovery_v1.py \
+              --repository-root /workspace failure \
+              --shard-root /shards \
+              --failure-stage artifact-upload \
+              --final-report-written \
+              --raw-plan-written \
+              --output /output/reference_validation_recovery_upload_failure_v1.json
+
+      - name: Upload seed-free completed-transfer failure evidence
+        if: ${{ steps.completed_upload.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reference-base-validation-v2-recovery-upload-failure-${{ github.sha }}-run-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/recovery-continuation/reference_validation_recovery_upload_failure_v1.json
+            ${{ runner.temp }}/recovery-shards/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail after any incomplete recovery lifecycle
+        if: ${{ always() && (steps.completeness.outputs.complete != 'true' || steps.aggregate_execution.outcome != 'success' || steps.artifact_preflight.outcome != 'success' || steps.completed_upload.outcome != 'success') }}
+        run: exit 1
