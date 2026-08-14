@@ -44,18 +44,30 @@ then runs the scientific-input, committed-Small-replay, and full-diff gates.
 The 60-minute limit applies independently to each bounded shard. The slowest
 observed GitHub characterization shard required approximately 38 minutes under
 coverage, so a 45-minute limit would have left inadequate runner-variance
-margin. Characterization, G3 execution and integrity, provenance/replay,
-mission restart/fault/outcome, and Phase 6 tests are each isolated rather than
-stacked in one process. The 60-minute infrastructure ceiling leaves a material
-margin for these bounded families while still failing a stalled job. This is an
-execution-orchestration change, not a relaxation of test or coverage scope. The
-Reference Phase 6 canonical performance contract continues to require the
-registered generate/run/replay operation to complete within 900 seconds in the
-canonical environment.
+margin. A complete fixture-level timing audit is bound in
+`reference_ci_shard_timing_risk_audit_v1.json`. It separates publication and
+capacity execution from the domain checks and separates provenance bundle,
+hidden-data scan, tamper, and exact-replay fixtures so each expensive module
+fixture is constructed in an isolated job. Characterization, G3 execution and
+integrity, mission restart/fault/outcome, and Phase 6 retain distinct bounded
+jobs. The mission-restart pair remains together: its two registered executions
+required approximately 414 and 421 seconds without coverage, leaving a
+substantial margin under the infrastructure ceiling even after coverage
+instrumentation and runner variance. Pipeline and calibration checks do not
+execute a complete replay, while publication and capacity each own only one
+full scenario/runtime fixture.
+
+The timing audit distinguishes observed measurements from fixture-semantic
+projections and supplies a conservative bound below 60 minutes for all 20
+shards. The 60-minute infrastructure ceiling leaves a material margin while
+still failing a stalled job. This is an execution-orchestration change, not a
+relaxation of test or coverage scope. The Reference Phase 6 canonical
+performance contract continues to require the registered generate/run/replay
+operation to complete within 900 seconds in the canonical environment.
 
 ## Provenance consequence
 
-The workflow, shard registry, shard runner, this amendment, historical
+The workflow, shard registry, timing-risk audit, shard runner, this amendment, historical
 lifecycle test, and workflow-completeness tests are scientific inputs. Their
 new bytes require a new source commit, complete scientific-input inventory,
 G3/Phase 6 regeneration, canonical execution receipt, and validation-freeze

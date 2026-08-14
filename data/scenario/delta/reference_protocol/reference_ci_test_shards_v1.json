@@ -5,7 +5,7 @@
     "trace_jepa.experimental.revalidation",
     "trace_jepa.support"
   ],
-  "expected_full_node_count": 523,
+  "expected_full_node_count": 524,
   "expected_test_file_count": 77,
   "schema_version": "delta-reference-ci-test-shards-v1",
   "shards": [
@@ -50,10 +50,9 @@
       ]
     },
     {
-      "shard_id": "reference-domain",
+      "shard_id": "reference-domain-core",
       "targets": [
         "tests/delta/reference/test_reference_artifact_writer.py",
-        "tests/delta/reference/test_reference_capacity.py",
         "tests/delta/reference/test_reference_ci_workflow.py",
         "tests/delta/reference/test_reference_cli.py",
         "tests/delta/reference/test_reference_coordination.py",
@@ -66,26 +65,42 @@
         "tests/delta/reference/test_reference_g3_decision.py",
         "tests/delta/reference/test_reference_g3_handoff.py",
         "tests/delta/reference/test_reference_geography_catalog.py",
-        "tests/delta/reference/test_reference_observation_calibration.py",
         "tests/delta/reference/test_reference_observations.py",
         "tests/delta/reference/test_reference_offline_sources.py",
         "tests/delta/reference/test_reference_physical_runtime.py",
         "tests/delta/reference/test_reference_predictor_evidence.py",
         "tests/delta/reference/test_reference_protocol.py",
-        "tests/delta/reference/test_reference_publication.py",
-        "tests/delta/reference/test_reference_randomness_encoding.py",
         "tests/delta/reference/test_reference_reconciliation.py",
         "tests/delta/reference/test_reference_resources.py",
         "tests/delta/reference/test_reference_routing.py",
-        "tests/delta/reference/test_reference_scale.py",
         "tests/delta/reference/test_reference_scientific_inputs.py",
-        "tests/delta/reference/test_reference_statistics.py",
         "tests/delta/reference/test_reference_trace_storage.py",
         "tests/delta/reference/test_reference_truth.py",
-        "tests/delta/reference/test_reference_truth_calibration.py",
         "tests/delta/reference/test_reference_validation_preregistration_draft.py",
         "tests/delta/reference/test_reference_validation_v2_registration.py",
         "tests/delta/reference/test_reference_visibility.py"
+      ]
+    },
+    {
+      "shard_id": "reference-capacity",
+      "targets": [
+        "tests/delta/reference/test_reference_capacity.py"
+      ]
+    },
+    {
+      "shard_id": "reference-publication",
+      "targets": [
+        "tests/delta/reference/test_reference_publication.py"
+      ]
+    },
+    {
+      "shard_id": "reference-calibration",
+      "targets": [
+        "tests/delta/reference/test_reference_observation_calibration.py",
+        "tests/delta/reference/test_reference_randomness_encoding.py",
+        "tests/delta/reference/test_reference_scale.py",
+        "tests/delta/reference/test_reference_statistics.py",
+        "tests/delta/reference/test_reference_truth_calibration.py"
       ]
     },
     {
@@ -144,9 +159,29 @@
       ]
     },
     {
-      "shard_id": "reference-provenance",
+      "shard_id": "reference-provenance-bundle",
       "targets": [
-        "tests/delta/reference/test_reference_provenance.py"
+        "tests/delta/reference/test_reference_provenance.py::test_reference_bundle_is_bounded_verified_and_input_bound"
+      ]
+    },
+    {
+      "shard_id": "reference-provenance-hidden",
+      "targets": [
+        "tests/delta/reference/test_reference_provenance.py::test_public_reference_artifacts_do_not_expose_hidden_entity_ids"
+      ]
+    },
+    {
+      "shard_id": "reference-provenance-tamper",
+      "targets": [
+        "tests/delta/reference/test_reference_provenance.py::test_reference_manifest_and_artifacts_detect_tampering",
+        "tests/delta/reference/test_reference_provenance.py::test_reference_manifest_model_detects_internal_tampering",
+        "tests/delta/reference/test_reference_provenance.py::test_reference_bundle_rejects_symlink_boundary"
+      ]
+    },
+    {
+      "shard_id": "reference-provenance-replay",
+      "targets": [
+        "tests/delta/reference/test_reference_provenance.py::test_reference_exact_replay_is_byte_identical"
       ]
     },
     {

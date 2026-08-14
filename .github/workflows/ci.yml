@@ -107,7 +107,10 @@ jobs:
           - delta-small
           - predictor-governance
           - workbench-legacy
-          - reference-domain
+          - reference-domain-core
+          - reference-capacity
+          - reference-publication
+          - reference-calibration
           - reference-pipeline
           - reference-g3-characterization
           - reference-g3-execution
@@ -116,7 +119,10 @@ jobs:
           - reference-mission-outcomes
           - reference-mission-faults
           - reference-mission-restart
-          - reference-provenance
+          - reference-provenance-bundle
+          - reference-provenance-hidden
+          - reference-provenance-tamper
+          - reference-provenance-replay
           - reference-phase6
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

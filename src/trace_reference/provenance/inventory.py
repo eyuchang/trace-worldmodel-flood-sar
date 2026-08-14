@@ -78,6 +78,7 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference_protocol/reference_g3_acceptance_registry_v1.json",
     "data/scenario/delta/reference_protocol/reference_g3_characterization_benchmark_v2.json",
     "data/scenario/delta/reference_protocol/reference_ci_test_shards_v1.json",
+    "data/scenario/delta/reference_protocol/reference_ci_shard_timing_risk_audit_v1.json",
     "data/scenario/delta/reference_protocol/reference_base_validation_preregistration_draft_v1.json",
     "data/scenario/delta/reference_protocol/reference_base_validation_protocol_v2.json",
     "data/scenario/delta/reference_protocol/small_baseline_v1.json",
