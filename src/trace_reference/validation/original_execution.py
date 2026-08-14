@@ -120,7 +120,9 @@ def prepare_protected_seed_plan(
         seeds=seeds,
         seed_list_sha256=hashlib.sha256(canonical_json_bytes(digest_body)).hexdigest(),
     )
-    root = safe_directory(output_path.parent, declared_root=output_path.parent, label="seed plan root")
+    root = safe_directory(
+        output_path.parent, declared_root=output_path.parent, label="seed plan root"
+    )
     atomic_write_bytes(
         output_path,
         canonical_json_bytes(plan.model_dump(mode="json")),
@@ -198,7 +200,9 @@ def _hidden_lineage_independent(execution_root: Path, execution: object) -> bool
     )
 
 
-def _scarcity_metrics(repository_root: Path, mission_root: Path, seed: int) -> tuple[int, int, bool]:
+def _scarcity_metrics(
+    repository_root: Path, mission_root: Path, seed: int
+) -> tuple[int, int, bool]:
     config = load_reference_config(repository_root, _CONFIG)
     scarcity = config.model_copy(update={"axes": config.axes.model_copy(update={"kappa": 0.5})})
     canonical = generate_reference_scenario(repository_root, seed=seed, config=config)
@@ -245,9 +249,7 @@ def _mission_metrics(execution: object, scarcity: tuple[int, int, bool]) -> dict
         ),
         "refusal_count": sum(item.disposition == "refused" for item in run.decisions),
         "scarcity_strict_unserviceable_window_count": scarcity[1],
-        "strict_unserviceable_window_count": (
-            execution.capacity.strict_unserviceable_window_count
-        ),
+        "strict_unserviceable_window_count": (execution.capacity.strict_unserviceable_window_count),
     }
     ratio_values = {
         "scarcity_peak_finite_strict_load_ratio": scarcity[0],
@@ -341,7 +343,10 @@ def _run_mission(
                 _gate(
                     "RV-EXACT-REPLAY",
                     publication_equal,
-                    {"manifest": execution.manifest.manifest_digest, "publication": first.manifest_digest},
+                    {
+                        "manifest": execution.manifest.manifest_digest,
+                        "publication": first.manifest_digest,
+                    },
                 ),
                 _gate(
                     "RV-FAULT-REACHABILITY",
@@ -551,9 +556,7 @@ def _load_shards(
                 )
             )
             continue
-        values.append(
-            ReferenceValidationShardReceipt.model_validate_json(path.read_text("utf-8"))
-        )
+        values.append(ReferenceValidationShardReceipt.model_validate_json(path.read_text("utf-8")))
     return tuple(values)
 
 
@@ -564,9 +567,15 @@ def _aggregate_gate(
     fixed_pass: bool | None = None,
     fixed_evidence: object | None = None,
 ) -> ReferenceValidationGateResult:
-    matches = tuple(gate for item in mission_receipts for gate in item.gates if gate.gate_id == gate_id)
+    matches = tuple(
+        gate for item in mission_receipts for gate in item.gates if gate.gate_id == gate_id
+    )
     passed = all(item.passed for item in matches) if fixed_pass is None else fixed_pass
-    evidence = fixed_evidence if fixed_evidence is not None else tuple(item.evidence_sha256 for item in matches)
+    evidence = (
+        fixed_evidence
+        if fixed_evidence is not None
+        else tuple(item.evidence_sha256 for item in matches)
+    )
     return _gate(gate_id, passed, evidence, "one or more mission-level checks failed")
 
 
@@ -614,16 +623,24 @@ def aggregate_reference_validation_report(
         for item in shards
     )
     seed_hashes_valid = all(
-        item.mission_seed_sha256 == hashlib.sha256(str(plan.seeds[index]).encode("ascii")).hexdigest()
+        item.mission_seed_sha256
+        == hashlib.sha256(str(plan.seeds[index]).encode("ascii")).hexdigest()
         for index, item in enumerate(missions)
     )
-    phase6 = json.loads((repository_root / freeze.phase6_development_acceptance.repository_relative_path).read_text("utf-8"))
-    canonical = json.loads((repository_root / freeze.canonical_phase6_execution_receipt.repository_relative_path).read_text("utf-8"))
+    phase6 = json.loads(
+        (repository_root / freeze.phase6_development_acceptance.repository_relative_path).read_text(
+            "utf-8"
+        )
+    )
+    canonical = json.loads(
+        (
+            repository_root / freeze.canonical_phase6_execution_receipt.repository_relative_path
+        ).read_text("utf-8")
+    )
     verify_small_baseline(repository_root, _SMALL_REGISTRY)
     fixed = {
         "RV-AXIS-ISOLATION": any(
-            item["check_id"] == "P6-AXIS-ISOLATION" and item["passed"]
-            for item in phase6["checks"]
+            item["check_id"] == "P6-AXIS-ISOLATION" and item["passed"] for item in phase6["checks"]
         ),
         "RV-CANONICAL-PERFORMANCE": (
             canonical["execution_role"] == "canonical-development-preflight"
@@ -634,9 +651,7 @@ def aggregate_reference_validation_report(
         ),
         "RV-SMALL-PRESERVATION": True,
         "RV-SOURCE-SECURITY": (
-            phase6["all_nonperformance_checks_pass"]
-            and shard_bindings_valid
-            and seed_hashes_valid
+            phase6["all_nonperformance_checks_pass"] and shard_bindings_valid and seed_hashes_valid
         ),
     }
     gates = tuple(
@@ -655,7 +670,9 @@ def aggregate_reference_validation_report(
     for metric_name in metric_names:
         interval = cluster_bootstrap_mean_interval(
             tuple(
-                ReferenceSeedMetric(seed=item.mission_index, value_micros=item.metric_micros[metric_name])
+                ReferenceSeedMetric(
+                    seed=item.mission_index, value_micros=item.metric_micros[metric_name]
+                )
                 for item in missions
             ),
             protocol_hash=protocol_sha,
@@ -682,8 +699,12 @@ def aggregate_reference_validation_report(
         "schema_version": "delta-reference-base-validation-original-report-v2",
         "execution_role": "original-base-reference-validation",
         "execution": identity.model_dump(mode="json"),
-        "protocol": _binding(repository_root, REFERENCE_VALIDATION_PROTOCOL).model_dump(mode="json"),
-        "freeze_record": _binding(repository_root, REFERENCE_VALIDATION_FREEZE).model_dump(mode="json"),
+        "protocol": _binding(repository_root, REFERENCE_VALIDATION_PROTOCOL).model_dump(
+            mode="json"
+        ),
+        "freeze_record": _binding(repository_root, REFERENCE_VALIDATION_FREEZE).model_dump(
+            mode="json"
+        ),
         "freeze_digest": freeze.freeze_digest,
         "scientific_input_aggregate_sha256": freeze.scientific_input_aggregate_sha256,
         "environment_contract_sha256": freeze.environment_contract.sha256,

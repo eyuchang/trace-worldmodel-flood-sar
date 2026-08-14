@@ -102,7 +102,7 @@ def test_original_workflow_is_tag_only_once_only_and_offline() -> None:
     assert "wf-dfld-01-reference-validation-v2-original" in text
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in text
     assert "git rev-parse HEAD" in text
-    assert ".object.type'\n          })\" = \"tag\"" in text
+    assert '.object.type\'\n          })" = "tag"' in text
     assert '.conclusion == \\"success\\"' in text
     assert "cancel-in-progress: false" in text
     assert text.count("--network none") == 3

@@ -156,9 +156,7 @@ def load_reference_fault_schedule(
     try:
         schedule = ReferenceFaultSchedule.model_validate(payload)
     except ValueError as exc:
-        raise ReferenceConfigurationError(
-            "Reference fault schedule violates its schema"
-        ) from exc
+        raise ReferenceConfigurationError("Reference fault schedule violates its schema") from exc
     body = schedule.model_dump(mode="json", exclude={"schedule_digest"})
     expected = hashlib.sha256(canonical_json_bytes(body)).hexdigest()
     if schedule.schedule_digest != expected:

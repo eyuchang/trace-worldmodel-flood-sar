@@ -109,9 +109,7 @@ class ReferenceBaseValidationProtocol(DeltaModel):
     shard_count: Literal[20]
     missions_per_shard: Literal[5]
     exact_gates: tuple[ReferenceValidationGateDefinition, ...] = Field(min_length=8)
-    report_only_estimands: tuple[ReferenceValidationEstimandDefinition, ...] = Field(
-        min_length=8
-    )
+    report_only_estimands: tuple[ReferenceValidationEstimandDefinition, ...] = Field(min_length=8)
     inference_unit: Literal["mission-seed"]
     interval_method: Literal["deterministic-10000-resample-mission-cluster-bootstrap"]
     authorization_tag: Literal["wf-dfld-01-reference-validation-v2-original"]
@@ -255,7 +253,9 @@ class ReferenceProtectedSeedPlan(DeltaModel):
 
     @model_validator(mode="after")
     def validate_seed_plan(self) -> ReferenceProtectedSeedPlan:
-        if len(set(self.seeds)) != 100 or any(not 0 <= item <= 2_147_483_647 for item in self.seeds):
+        if len(set(self.seeds)) != 100 or any(
+            not 0 <= item <= 2_147_483_647 for item in self.seeds
+        ):
             raise ValueError("Reference protected seed plan is incomplete or contains a collision")
         body = {
             "namespace": self.namespace,
@@ -358,9 +358,7 @@ class ReferenceBaseValidationOriginalReport(DeltaModel):
     mission_count: Literal[100]
     shard_digests: tuple[str, ...] = Field(min_length=20, max_length=20)
     exact_gates: tuple[ReferenceValidationGateResult, ...] = Field(min_length=8)
-    descriptive_intervals: tuple[ReferenceValidationDescriptiveInterval, ...] = Field(
-        min_length=8
-    )
+    descriptive_intervals: tuple[ReferenceValidationDescriptiveInterval, ...] = Field(min_length=8)
     adverse_findings: tuple[str, ...]
     all_exact_gates_pass: bool
     report_digest: str = Field(pattern=r"^[0-9a-f]{64}$")

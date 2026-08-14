@@ -33,12 +33,8 @@ REFERENCE_VALIDATION_FREEZE = Path(
 REFERENCE_SCIENTIFIC_MANIFEST = Path(
     "data/scenario/delta/reference_protocol/reference_scientific_input_manifest_v2.json"
 )
-REFERENCE_VALIDATION_WORKFLOW = Path(
-    ".github/workflows/reference-base-validation-v2-original.yml"
-)
-REFERENCE_G3_HANDOFF = Path(
-    "data/scenario/delta/reference/g3_handoff_v1/g3_handoff_manifest.json"
-)
+REFERENCE_VALIDATION_WORKFLOW = Path(".github/workflows/reference-base-validation-v2-original.yml")
+REFERENCE_G3_HANDOFF = Path("data/scenario/delta/reference/g3_handoff_v1/g3_handoff_manifest.json")
 REFERENCE_PHASE6_ACCEPTANCE = Path(
     "data/scenario/delta/reference/phase6_acceptance_v1/phase6_development_acceptance_report.json"
 )
@@ -156,8 +152,7 @@ def build_reference_validation_freeze(
         canonical_payload.get("scientific_input_aggregate_sha256") != current.aggregate_sha256
         or canonical_payload.get("execution_role") != "canonical-development-preflight"
         or canonical_payload.get("raw_runner_measurement_role") != "canonical"
-        or canonical_payload.get("raw_runner_canonical_gate_status")
-        != "passed"
+        or canonical_payload.get("raw_runner_canonical_gate_status") != "passed"
         or not canonical_payload.get("environment_verification_matches")
         or not canonical_payload.get("registered_resource_ceilings_observed_within_limits")
         or not canonical_payload.get("exact_replay_byte_identical")
