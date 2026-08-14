@@ -1,0 +1,21 @@
+{
+  "schema_version": "delta-reference-g3-gate-batch-adverse-v2",
+  "scientific_status": "development-execution-adverse-not-validation-evidence",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "source_commit": "c244e6a1286bc9556f2385d04ee498aa0148a262",
+  "environment_contract_sha256": "5fbbb91bc556ab8483b0db19563cf28117ac24a5c142eda200c48d86d501019d",
+  "derived_reference_image_digest": "sha256:4ce5a72b8141ee77c4a66cd34b600a9cbf07aaf2a6921af3fe4dd0b4f46011ad",
+  "container_memory_limit_bytes": 2147483648,
+  "execution_mode": "all-registered-nodes-one-pytest-process",
+  "observed_completed_test_markers_before_termination": 37,
+  "exit_code": 137,
+  "classification": "test-process-memory-accumulation",
+  "remediation": "rerun exact registered nodes in sequential file-level pytest subprocesses without changing tests, inputs, gates, or resource ceiling",
+  "second_adverse_execution": {
+    "execution_mode": "one-pytest-subprocess-per-registered-source-file",
+    "failed_group": "tests/delta/reference/test_reference_mission_runtime.py",
+    "completed_test_markers_in_failed_group": 2,
+    "exit_code": 247,
+    "next_remediation": "isolate each registered mission-runtime node in its own subprocess under the same ceiling"
+  }
+}
