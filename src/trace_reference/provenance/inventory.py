@@ -17,6 +17,7 @@ from .source_closure import reference_source_paths
 
 _MAX_INPUT_BYTES = 256 * 1024 * 1024
 _G3_TEST_INPUTS = (
+    "tests/delta/reference/test_reference_ci_workflow.py",
     "tests/delta/reference/test_reference_capacity.py",
     "tests/delta/reference/test_reference_cli.py",
     "tests/delta/reference/test_reference_coordination.py",
@@ -41,6 +42,7 @@ _G3_TEST_INPUTS = (
     "tests/delta/reference/test_reference_visibility.py",
 )
 _DIRECT_INPUTS = (
+    ".github/workflows/ci.yml",
     ".github/workflows/reference-base-validation-v2-original.yml",
     "configs/governance/wf_dfld_01_reference_governance_v1.yaml",
     "configs/scenarios/wf_dfld_01_reference_development.yaml",
@@ -93,6 +95,7 @@ _DIRECT_INPUTS = (
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V4.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V5.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V6.md",
+    "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V7.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md",
     "docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md",
     "pyproject.toml",
