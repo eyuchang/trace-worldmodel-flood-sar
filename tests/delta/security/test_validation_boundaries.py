@@ -14,6 +14,7 @@ from trace_jepa.scenario.delta.artifacts import (
 )
 from trace_jepa.scenario.delta.cli import build_parser
 from trace_jepa.scenario.delta.loading import load_acceptance_config
+from trace_jepa.scenario.delta.scientific_manifest import ScientificInputManifest
 from trace_jepa.scenario.delta.validation.models import (
     RegisteredEvidenceIdentity,
     RegisteredEvidenceRegistry,
@@ -29,6 +30,9 @@ from trace_jepa.scenario.delta.validation_v8 import (
     canonical_v10_paths,
     run_v10_development_validation,
     verify_registered_v10_inputs,
+)
+from trace_reference.provenance.historical_small import (
+    verify_historical_small_scientific_manifest,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -59,6 +63,19 @@ def test_development_mode_uses_only_declared_development_seeds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     observed: dict[str, list[int]] = {}
+    historical_manifest = verify_historical_small_scientific_manifest(
+        ROOT,
+        CANONICAL["scientific_manifest"].relative_to(ROOT),
+    )
+
+    def verified_historical_inputs(**kwargs: object) -> ScientificInputManifest:
+        assert kwargs == {
+            "config_path": CANONICAL["config"],
+            "geography_path": CANONICAL["geography"],
+            "policy_path": CANONICAL["policy"],
+            "scientific_manifest_path": CANONICAL["scientific_manifest"],
+        }
+        return historical_manifest
 
     def fake_study(**kwargs: object) -> dict[str, object]:
         observed["study"] = list(kwargs["seeds"])  # type: ignore[arg-type]
@@ -76,6 +93,10 @@ def test_development_mode_uses_only_declared_development_seeds(
     monkeypatch.setattr(
         "trace_jepa.scenario.delta.validation.registered.paired_reconciliation_report",
         fake_paired,
+    )
+    monkeypatch.setattr(
+        "trace_jepa.scenario.delta.validation.registered.verify_registered_v10_inputs",
+        verified_historical_inputs,
     )
     report = run_v10_development_validation(
         config_path=CANONICAL["config"],
