@@ -1,12 +1,13 @@
 status: approved-decisions-development-only
 scenario_id: WF-DFLD-01-REFERENCE
-scenario_schema_version: trace-delta-reference-scenario-v6
+scenario_schema_version: trace-delta-reference-scenario-v7
 generator_version: delta-reference-generator-v4
 randomness_namespace_version: delta-reference-randomness-v1
 protocol_document_sha256: 03c407ceb1b87041e36f0c58c352840e94bab6cec73a1f69eacd80173e77a552
 protocol_amendment_sha256: dbf486fce39fb50b852ca18f4f11748662cd8d55ae738a39935ac035ecf8c39b
+validation_amendment_sha256: 3dc3f748a0d03dd2d52b0a9c9d7bd47214363f44004b692e00b0641546755f96
 geography_amendment_sha256: c4c908436ce18b89dbc5e01486fc7119c7bef5fd4b2b2604ebd9aa2ce70be225
-approved_decision_set: reference-scientific-decisions-v5
+approved_decision_set: reference-scientific-decisions-v6
 small_baseline_registry: data/scenario/delta/reference_protocol/small_baseline_v1.json
 
 timeline:
@@ -75,10 +76,10 @@ study_namespaces:
     namespace: "WF-DFLD-01-REFERENCE|development-v1|index"
     materialized: false
   selection:
-    namespace: "WF-DFLD-01-REFERENCE|selection-v1|index"
+    namespace: "WF-DFLD-01-REFERENCE|selection-v2|index"
     materialized: false
   validation:
-    namespace: "WF-DFLD-01-REFERENCE|validation-v1|index"
+    namespace: "WF-DFLD-01-REFERENCE|validation-v2|index"
     materialized: false
 
 registered_sensitivities:

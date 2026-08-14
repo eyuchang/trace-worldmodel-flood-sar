@@ -145,7 +145,10 @@ class ReferenceFaultProfiles(DeltaModel):
 
 class ReferenceStudyNamespace(DeltaModel):
     namespace: str = Field(
-        pattern=r"^WF-DFLD-01-REFERENCE\|(development|selection|validation)-v1\|index$"
+        pattern=(
+            r"^WF-DFLD-01-REFERENCE\|"
+            r"(development-v1|selection-v2|validation-v2)\|index$"
+        )
     )
     materialized: Literal[False]
 
@@ -184,13 +187,14 @@ class ReferenceScenarioConfig(DeltaModel):
 
     status: Literal["approved-decisions-development-only"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
-    scenario_schema_version: Literal["trace-delta-reference-scenario-v6"]
+    scenario_schema_version: Literal["trace-delta-reference-scenario-v7"]
     generator_version: Literal["delta-reference-generator-v4"]
     randomness_namespace_version: Literal["delta-reference-randomness-v1"]
     protocol_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     protocol_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    validation_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     geography_amendment_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    approved_decision_set: Literal["reference-scientific-decisions-v5"]
+    approved_decision_set: Literal["reference-scientific-decisions-v6"]
     small_baseline_registry: str = Field(pattern=r"^[a-zA-Z0-9_./-]+\.json$")
     timeline: ReferenceTimelineConfig
     axes: ReferenceAxisConfig
@@ -215,6 +219,10 @@ class ReferenceScenarioConfig(DeltaModel):
             "dbf486fce39fb50b852ca18f4f11748662cd8d55ae738a39935ac035ecf8c39b"
         ):
             raise ValueError("Reference configuration does not bind coordination amendment v5")
+        if self.validation_amendment_sha256 != (
+            "3dc3f748a0d03dd2d52b0a9c9d7bd47214363f44004b692e00b0641546755f96"
+        ):
+            raise ValueError("Reference configuration does not bind validation amendment v6")
         if self.geography_amendment_sha256 != (
             "c4c908436ce18b89dbc5e01486fc7119c7bef5fd4b2b2604ebd9aa2ce70be225"
         ):
@@ -229,8 +237,8 @@ class ReferenceScenarioConfig(DeltaModel):
             raise ValueError("declared Reference generation order disagrees with execution design")
         expected_namespaces = {
             "development": "WF-DFLD-01-REFERENCE|development-v1|index",
-            "selection": "WF-DFLD-01-REFERENCE|selection-v1|index",
-            "validation": "WF-DFLD-01-REFERENCE|validation-v1|index",
+            "selection": "WF-DFLD-01-REFERENCE|selection-v2|index",
+            "validation": "WF-DFLD-01-REFERENCE|validation-v2|index",
         }
         for role, expected in expected_namespaces.items():
             actual = getattr(self.study_namespaces, role).namespace

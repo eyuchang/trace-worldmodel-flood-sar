@@ -152,10 +152,22 @@ class ReferencePhase6CheckResult(DeltaModel):
 class ReferencePhase6ResourceReceipt(DeltaModel):
     """Bounded execution observation separated from scientific outputs."""
 
-    schema_version: Literal["delta-reference-phase6-resource-receipt-v1"]
+    schema_version: Literal[
+        "delta-reference-phase6-resource-receipt-v1",
+        "delta-reference-phase6-resource-receipt-v2",
+    ]
     measurement_role: Literal["local-preflight", "canonical"]
     platform: str = Field(min_length=3, max_length=160)
     python_version: str = Field(pattern=r"^3\.[0-9]+\.[0-9]+$")
+    environment_contract_sha256: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    dependency_lock_sha256: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+    )
+    environment_mismatches: tuple[str, ...] = ()
     elapsed_milliseconds: int = Field(gt=0)
     peak_resident_memory_bytes: int | None = Field(default=None, gt=0)
     transient_output_bytes: int = Field(ge=0)
@@ -170,6 +182,20 @@ class ReferencePhase6ResourceReceipt(DeltaModel):
 
     @model_validator(mode="after")
     def validate_receipt(self) -> ReferencePhase6ResourceReceipt:
+        if self.schema_version == "delta-reference-phase6-resource-receipt-v2":
+            if self.environment_contract_sha256 is None or self.dependency_lock_sha256 is None:
+                raise ValueError("Reference v2 resource receipt requires exact environment hashes")
+            if self.environment_mismatches != tuple(sorted(set(self.environment_mismatches))):
+                raise ValueError("Reference environment mismatches must be unique and ordered")
+            expected_role = "canonical" if not self.environment_mismatches else "local-preflight"
+            if self.measurement_role != expected_role:
+                raise ValueError("Reference resource role disagrees with environment verification")
+        elif (
+            self.environment_contract_sha256 is not None
+            or self.dependency_lock_sha256 is not None
+            or self.environment_mismatches
+        ):
+            raise ValueError("Historical v1 resource receipt cannot claim v2 environment identity")
         if self.wall_time_within_limit != (self.elapsed_milliseconds <= 900_000):
             raise ValueError("Reference Phase 6 wall-time status is inconsistent")
         expected_memory = (

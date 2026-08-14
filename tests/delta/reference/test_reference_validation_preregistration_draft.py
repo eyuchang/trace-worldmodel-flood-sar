@@ -24,12 +24,17 @@ def test_draft_binds_current_development_inputs_without_seed_values() -> None:
     draft = _draft()
 
     assert draft.scientific_input_aggregate_sha256 == (
+        "9f12ed0993ac11fd3636e0a195fb21ae442829930f94f531135e7e2c0c4194b5"
+    )
+    assert (
         build_reference_scientific_input_manifest(ROOT).aggregate_sha256
+        != draft.scientific_input_aggregate_sha256
     )
     assert draft.selection_validation_confirmatory_seed_values == ()
     assert all(not item.contains_seed_values for item in draft.study_roles)
-    for binding in draft.bindings:
-        assert sha256_file(ROOT / binding.repository_relative_path) == binding.sha256
+    assert sha256_file(ROOT / DRAFT_PATH) == (
+        "fc80c92d95347affcecc6460c3001828641d190fa2b4adcc3373a856c585b6e6"
+    )
 
 
 def test_draft_preserves_exposed_v1_namespaces_and_protects_v2() -> None:
@@ -42,11 +47,11 @@ def test_draft_preserves_exposed_v1_namespaces_and_protects_v2() -> None:
     assert roles["validation-v2-proposed"].execution_boundary == (
         "remote-original-once-only-after-approval"
     )
-    existing_test = (ROOT / "tests/delta/reference/test_reference_protocol.py").read_text(
-        encoding="utf-8"
-    )
-    assert 'derive_seed_prefix("selection", 100)' in existing_test
-    assert 'derive_seed_prefix("validation", 100)' in existing_test
+    amendment = (
+        ROOT / "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V6.md"
+    ).read_text(encoding="utf-8")
+    assert 'derive_seed_prefix("selection", 100)' in amendment
+    assert 'derive_seed_prefix("validation", 100)' in amendment
 
 
 def test_draft_has_only_exact_integration_gates_and_report_only_estimands() -> None:

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from trace_jepa.scenario.delta.environment import EnvironmentVerification
 from trace_reference.decision.canonical import decision_digest
 from trace_reference.generation import generate_reference_scenario
 from trace_reference.provenance import ReferenceExecution, ReferenceExecutionInspection
+from trace_reference.validation import acceptance as phase6_acceptance
 from trace_reference.validation.acceptance_models import (
     REFERENCE_PHASE6_AXIS_IDS,
     REFERENCE_PHASE6_CHECK_IDS,
@@ -39,10 +42,13 @@ def _axis(axis: str) -> ReferencePhase6AxisResult:
 
 def _resource_receipt(role: str = "local-preflight") -> ReferencePhase6ResourceReceipt:
     body: dict[str, Any] = {
-        "schema_version": "delta-reference-phase6-resource-receipt-v1",
+        "schema_version": "delta-reference-phase6-resource-receipt-v2",
         "measurement_role": role,
         "platform": "test-platform",
         "python_version": "3.13.1",
+        "environment_contract_sha256": "a" * 64,
+        "dependency_lock_sha256": "b" * 64,
+        "environment_mismatches": (() if role == "canonical" else ("test environment mismatch",)),
         "elapsed_milliseconds": 1,
         "peak_resident_memory_bytes": 1,
         "transient_output_bytes": 1,
@@ -174,6 +180,48 @@ def test_phase6_resource_gate_is_enforced_only_in_canonical_environment() -> Non
 
     assert local.canonical_gate_status == "pending-canonical-environment"
     assert canonical.canonical_gate_status == "passed"
+
+    payload = canonical.model_dump(mode="json")
+    payload["environment_mismatches"] = ["forged mismatch"]
+    payload["receipt_digest"] = decision_digest(
+        {key: value for key, value in payload.items() if key != "receipt_digest"}
+    )
+    with pytest.raises(ValueError, match="role disagrees"):
+        ReferencePhase6ResourceReceipt.model_validate(payload)
+
+    payload = canonical.model_dump(mode="json")
+    payload["environment_contract_sha256"] = None
+    payload["receipt_digest"] = decision_digest(
+        {key: value for key, value in payload.items() if key != "receipt_digest"}
+    )
+    with pytest.raises(ValueError, match="requires exact environment hashes"):
+        ReferencePhase6ResourceReceipt.model_validate(payload)
+
+
+def test_phase6_runner_derives_canonical_role_from_verified_identity(
+    tmp_path: Path,
+) -> None:
+    verification = EnvironmentVerification(
+        contract_id="trace-reference-python311-development-v1",
+        contract_sha256="a" * 64,
+        lock_sha256="b" * 64,
+        interpreter="3.11.14",
+        platform_system="Linux",
+        platform_machine="x86_64",
+        checked_distributions={},
+        mismatches=[],
+    )
+
+    receipt = phase6_acceptance._resource_receipt(
+        time.perf_counter(),
+        tmp_path,
+        verification,
+    )
+
+    assert receipt.measurement_role == "canonical"
+    assert receipt.environment_contract_sha256 == "a" * 64
+    assert receipt.dependency_lock_sha256 == "b" * 64
+    assert receipt.canonical_gate_status == "passed"
 
 
 def test_phase6_fault_receipt_requires_complete_offline_g3_binding() -> None:

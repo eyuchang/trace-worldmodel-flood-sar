@@ -38,19 +38,22 @@ BASELINE = Path("data/scenario/delta/reference_protocol/small_baseline_v1.json")
 PROTOCOL_DRAFT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md")
 GEOGRAPHY_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md")
 PROTOCOL_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V5.md")
+VALIDATION_AMENDMENT = Path("docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V6.md")
 
 
 def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> None:
     config = load_reference_config(ROOT, CONFIG)
     assert config.status == "approved-decisions-development-only"
-    assert config.approved_decision_set == "reference-scientific-decisions-v5"
+    assert config.approved_decision_set == "reference-scientific-decisions-v6"
     assert config.protocol_amendment_sha256 == REFERENCE_PROTOCOL.protocol_amendment_sha256
+    assert config.validation_amendment_sha256 == REFERENCE_PROTOCOL.validation_amendment_sha256
     assert config.geography_amendment_sha256 == REFERENCE_PROTOCOL.geography_amendment_sha256
     assert REFERENCE_PROTOCOL.geography == "delta-reference-geography-v3"
     assert REFERENCE_PROTOCOL.coordination == "delta-reference-coordination-v3"
     assert REFERENCE_PROTOCOL.demand_capacity == "delta-reference-demand-capacity-v1"
     assert sha256_file(ROOT / PROTOCOL_DRAFT) == config.protocol_document_sha256
     assert sha256_file(ROOT / PROTOCOL_AMENDMENT) == config.protocol_amendment_sha256
+    assert sha256_file(ROOT / VALIDATION_AMENDMENT) == config.validation_amendment_sha256
     assert sha256_file(ROOT / GEOGRAPHY_AMENDMENT) == config.geography_amendment_sha256
     assert config.timeline.burn_in_start_s == -172_800
     assert config.timeline.evaluation_end_s == 345_600
@@ -76,6 +79,8 @@ def test_reference_development_contract_is_explicit_and_nonconfirmatory() -> Non
     payload = yaml.safe_load((ROOT / CONFIG).read_text("utf-8"))
     assert "confirmatory" not in payload["study_namespaces"]
     assert "confirmatory_seeds" not in json.dumps(payload).lower()
+    assert payload["study_namespaces"]["selection"]["namespace"].endswith("|selection-v2|index")
+    assert payload["study_namespaces"]["validation"]["namespace"].endswith("|validation-v2|index")
 
 
 def test_reference_fault_schedule_covers_required_families_without_runtime_ids() -> None:
@@ -130,14 +135,11 @@ def test_reference_config_rejects_scope_and_holdout_substitution(tmp_path: Path)
 
 def test_reference_study_seed_surface_excludes_confirmation() -> None:
     development = derive_seed_prefix("development", 100)
-    selection = derive_seed_prefix("selection", 100)
-    validation = derive_seed_prefix("validation", 100)
     assert len(set(development)) == len(development)
-    assert set(development).isdisjoint(selection)
-    assert set(development).isdisjoint(validation)
     assert derive_study_seed("development", 0) == development[0]
-    with pytest.raises(ValueError, match="only development"):
-        derive_study_seed("confirmatory", 0)
+    for protected_role in ("selection", "validation", "confirmatory"):
+        with pytest.raises(ValueError, match="only development"):
+            derive_study_seed(protected_role, 0)
 
 
 def test_reference_governance_is_four_provisional_simulation_roles() -> None:

@@ -21,6 +21,10 @@ from unittest.mock import patch
 from pydantic import BaseModel
 
 from trace_jepa.predictor import ToyActionPrefixPredictor
+from trace_jepa.scenario.delta.environment import (
+    EnvironmentVerification,
+    inspect_reference_environment,
+)
 from trace_jepa.support import (
     ArtifactLocator,
     atomic_write_bytes,
@@ -84,6 +88,10 @@ _FORBIDDEN_PUBLIC_TOKENS = (
 )
 _SCAN_BYTES = 1024 * 1024
 _PHASE6_PROTOCOL = Path("docs/delta/reference/REFERENCE_PHASE6_DEVELOPMENT_ACCEPTANCE_V1.md")
+_ENVIRONMENT_CONTRACT = Path(
+    "data/scenario/delta/reference/environment/reference_python311_linux_amd64_v1.json"
+)
+_DEPENDENCY_LOCK = Path("requirements-delta-python311.lock")
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
@@ -173,15 +181,45 @@ def _peak_resident_memory_bytes() -> int | None:
     return round(value if sys.platform == "darwin" else value * 1024)
 
 
-def _resource_receipt(started: float, output_root: Path) -> ReferencePhase6ResourceReceipt:
+def _phase6_environment(repository_root: Path) -> EnvironmentVerification:
+    contract = ArtifactLocator(
+        root=repository_root,
+        relative_name=_ENVIRONMENT_CONTRACT,
+        maximum_bytes=_MAX_INPUT_BYTES,
+        label="Reference Phase 6 environment contract",
+    ).resolve()
+    lock = ArtifactLocator(
+        root=repository_root,
+        relative_name=_DEPENDENCY_LOCK,
+        maximum_bytes=_MAX_INPUT_BYTES,
+        label="Reference Phase 6 dependency lock",
+    ).resolve()
+    return inspect_reference_environment(contract, lock)
+
+
+def _resource_receipt(
+    started: float,
+    output_root: Path,
+    environment: EnvironmentVerification,
+) -> ReferencePhase6ResourceReceipt:
     elapsed_ms = max(1, round((time.perf_counter() - started) * 1_000))
     peak_memory = _peak_resident_memory_bytes()
     output_bytes = _directory_bytes(output_root)
+    measurement_role = "canonical" if environment.matches else "local-preflight"
+    limits_pass = (
+        elapsed_ms <= 900_000
+        and peak_memory is not None
+        and peak_memory <= 2_147_483_648
+        and output_bytes <= 1_073_741_824
+    )
     body: dict[str, object] = {
-        "schema_version": "delta-reference-phase6-resource-receipt-v1",
-        "measurement_role": "local-preflight",
+        "schema_version": "delta-reference-phase6-resource-receipt-v2",
+        "measurement_role": measurement_role,
         "platform": platform.platform(),
         "python_version": platform.python_version(),
+        "environment_contract_sha256": environment.contract_sha256,
+        "dependency_lock_sha256": environment.lock_sha256,
+        "environment_mismatches": tuple(sorted(set(environment.mismatches))),
         "elapsed_milliseconds": elapsed_ms,
         "peak_resident_memory_bytes": peak_memory,
         "transient_output_bytes": output_bytes,
@@ -191,7 +229,11 @@ def _resource_receipt(started: float, output_root: Path) -> ReferencePhase6Resou
         "wall_time_within_limit": elapsed_ms <= 900_000,
         "peak_memory_within_limit": (None if peak_memory is None else peak_memory <= 2_147_483_648),
         "transient_output_within_limit": output_bytes <= 1_073_741_824,
-        "canonical_gate_status": "pending-canonical-environment",
+        "canonical_gate_status": (
+            ("passed" if limits_pass else "failed")
+            if measurement_role == "canonical"
+            else "pending-canonical-environment"
+        ),
     }
     return ReferencePhase6ResourceReceipt(
         **body,
@@ -345,6 +387,7 @@ def run_reference_phase6_core(
     """Run nominal generation/execution, clean replay, and publication sequentially."""
 
     output = _output_root(output_root, "Reference Phase 6 core output root")
+    environment = _phase6_environment(repository_root)
     nominal = output / "nominal"
     replay = output / "replay"
     publication_first = output / "publication_first"
@@ -397,7 +440,7 @@ def run_reference_phase6_core(
         )
     if build_reference_scientific_input_manifest(repository_root) != scientific:
         raise RuntimeError("Reference scientific inputs changed during Phase 6 core execution")
-    resource_receipt = _resource_receipt(started, output)
+    resource_receipt = _resource_receipt(started, output, environment)
     body: dict[str, object] = {
         "schema_version": "delta-reference-phase6-core-receipt-v1",
         "scientific_status": "development-integration-check-not-validation-evidence",

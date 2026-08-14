@@ -5,8 +5,8 @@ from __future__ import annotations
 import hashlib
 from typing import Literal
 
-ReferenceStudyRole = Literal["development", "selection", "validation"]
-_ALLOWED_ROLES = frozenset({"development", "selection", "validation"})
+ReferenceStudyRole = Literal["development"]
+_ALLOWED_ROLES = frozenset({"development"})
 
 
 def derive_study_seed(role: str, index: int) -> int:
@@ -21,7 +21,7 @@ def derive_study_seed(role: str, index: int) -> int:
 
 
 def derive_seed_prefix(role: ReferenceStudyRole, count: int) -> tuple[int, ...]:
-    """Materialize an explicitly requested pre-confirmatory prefix for development tooling."""
+    """Materialize an explicitly requested spent-development prefix only."""
 
     if count <= 0:
         raise ValueError("seed count must be positive")
