@@ -380,6 +380,47 @@ def _capacity_accounting_valid(execution: ReferenceExecutionInspection) -> bool:
     )
 
 
+def reference_public_bundle_hidden_free(
+    bundle_root: Path,
+    manifest: ReferenceReplayManifest,
+) -> bool:
+    """Return whether every controller-visible artifact is free of hidden identities."""
+
+    return _public_bundle_hidden_free(bundle_root, manifest)
+
+
+def reference_resource_crew_conservation_valid(
+    execution: ReferenceExecutionInspection,
+) -> bool:
+    """Return whether physical resources and crews are never double consumed."""
+
+    return _resource_crew_conservation(execution)
+
+
+def reference_commitment_conservation_valid(
+    execution: ReferenceExecutionInspection,
+) -> bool:
+    """Return whether commitments and authorization joins conserve exactly."""
+
+    return _commitment_conservation(execution)
+
+
+def reference_outcome_censoring_valid(
+    execution: ReferenceExecutionInspection,
+) -> bool:
+    """Return whether service completion and scenario censoring are distinguished."""
+
+    return _outcome_censoring_valid(execution)
+
+
+def reference_capacity_accounting_valid(
+    execution: ReferenceExecutionInspection,
+) -> bool:
+    """Return whether every strict and sensitivity capacity window balances."""
+
+    return _capacity_accounting_valid(execution)
+
+
 def run_reference_phase6_core(
     repository_root: Path,
     output_root: Path,

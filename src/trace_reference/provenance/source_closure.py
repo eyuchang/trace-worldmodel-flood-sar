@@ -17,6 +17,8 @@ REFERENCE_SOURCE_ENTRY_MODULES = (
     "trace_reference.delivery_history",
     "trace_reference.geography.build_cli",
     "trace_reference.validation.g3_handoff",
+    "trace_reference.validation.canonical_receipt",
+    "trace_reference.validation.original_execution",
 )
 _MAX_SOURCE_BYTES = 4 * 1024 * 1024
 

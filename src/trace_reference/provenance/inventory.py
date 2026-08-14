@@ -37,9 +37,11 @@ _G3_TEST_INPUTS = (
     "tests/delta/reference/test_reference_runtime_factory.py",
     "tests/delta/reference/test_reference_trace_storage.py",
     "tests/delta/reference/test_reference_validation_preregistration_draft.py",
+    "tests/delta/reference/test_reference_validation_v2_registration.py",
     "tests/delta/reference/test_reference_visibility.py",
 )
 _DIRECT_INPUTS = (
+    ".github/workflows/reference-base-validation-v2-original.yml",
     "configs/governance/wf_dfld_01_reference_governance_v1.yaml",
     "configs/scenarios/wf_dfld_01_reference_development.yaml",
     "data/scenario/delta/reference/calibration/reference_truth_coefficients_v2.json",
@@ -73,12 +75,15 @@ _DIRECT_INPUTS = (
     "data/scenario/delta/reference_protocol/reference_fault_schedule_v1.json",
     "data/scenario/delta/reference_protocol/reference_g3_acceptance_registry_v1.json",
     "data/scenario/delta/reference_protocol/reference_base_validation_preregistration_draft_v1.json",
+    "data/scenario/delta/reference_protocol/reference_base_validation_protocol_v2.json",
     "data/scenario/delta/reference_protocol/small_baseline_v1.json",
     "docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md",
+    "docs/delta/reference/REFERENCE_BASE_VALIDATION_PROTOCOL_V2.md",
     "docs/delta/reference/REFERENCE_CALIBRATION_FEASIBILITY_V1.md",
     "docs/delta/reference/REFERENCE_G3_TRACE_LEAP_HANDOFF_ADR_V2.md",
     "docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md",
     "docs/delta/reference/REFERENCE_PHASE6_DEVELOPMENT_ACCEPTANCE_V1.md",
+    "docs/delta/reference/REFERENCE_PHASE6_CANONICAL_EXECUTION_V2.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V1.md",
     "docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V2.md",
     "docs/delta/reference/WF_DFLD_01_REFERENCE_GEOGRAPHY_AMENDMENT_V2.md",
@@ -93,6 +98,8 @@ _DIRECT_INPUTS = (
     "pyproject.toml",
     "requirements-delta-python311.in",
     "requirements-delta-python311.lock",
+    "scripts/reference/run_base_validation_original_v2.py",
+    "scripts/reference/write_canonical_phase6_receipt.py",
     *_G3_TEST_INPUTS,
 )
 

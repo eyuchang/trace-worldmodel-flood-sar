@@ -26,6 +26,9 @@ def test_reference_scientific_manifest_covers_all_python_and_direct_inputs() -> 
     assert expected_source <= paths
     assert "src/trace_reference/decision/counterfactual.py" in expected_source
     assert "src/trace_reference/delivery_history.py" in expected_source
+    assert "src/trace_reference/validation/original_execution.py" in expected_source
+    assert "src/trace_reference/validation/registration.py" in expected_source
+    assert "src/trace_reference/validation/registration_models.py" in expected_source
     assert "src/trace_jepa/workbench/d05_server.py" not in expected_source
     assert "pyproject.toml" in paths
     assert "requirements-delta-python311.lock" in paths

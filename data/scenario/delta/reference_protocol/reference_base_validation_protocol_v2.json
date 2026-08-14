@@ -1,0 +1,215 @@
+{
+  "schema_version": "delta-reference-base-validation-protocol-v2",
+  "status": "approved-frozen-input-awaiting-separate-execution-authorization",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "scientific_role": "base-non-leap-integration-validation-not-policy-effectiveness",
+  "approval_amendment": {
+    "repository_relative_path": "docs/delta/reference/WF_DFLD_01_REFERENCE_PROTOCOL_AMENDMENT_V6.md",
+    "sha256": "3dc3f748a0d03dd2d52b0a9c9d7bd47214363f44004b692e00b0641546755f96"
+  },
+  "canonical_axes": "sigma=1.0,kappa=1.0,mu=1.0,iota=0.7,phi=4,pi=0.7,epsilon=reference-exposure-v1,delta=0.2",
+  "registered_scarcity_sensitivity": "reference-kappa-0p5-scarcity-v1",
+  "study_declarations": [
+    {
+      "role": "development-v1",
+      "namespace_template": "WF-DFLD-01-REFERENCE|development-v1|index",
+      "mission_count": 100,
+      "lifecycle": "spent-development",
+      "execution_boundary": "local-development-only",
+      "contains_seed_values": false
+    },
+    {
+      "role": "selection-v1",
+      "namespace_template": "WF-DFLD-01-REFERENCE|selection-v1|index",
+      "mission_count": null,
+      "lifecycle": "superseded-before-scientific-use",
+      "execution_boundary": "never-use",
+      "contains_seed_values": false
+    },
+    {
+      "role": "validation-v1",
+      "namespace_template": "WF-DFLD-01-REFERENCE|validation-v1|index",
+      "mission_count": null,
+      "lifecycle": "superseded-before-scientific-use",
+      "execution_boundary": "never-use",
+      "contains_seed_values": false
+    },
+    {
+      "role": "selection-v2",
+      "namespace_template": "WF-DFLD-01-REFERENCE|selection-v2|index",
+      "mission_count": null,
+      "lifecycle": "reserved-not-derived-not-materialized",
+      "execution_boundary": "disabled",
+      "contains_seed_values": false
+    },
+    {
+      "role": "validation-v2",
+      "namespace_template": "WF-DFLD-01-REFERENCE|validation-v2|index",
+      "mission_count": 100,
+      "lifecycle": "approved-awaiting-separate-execution-authorization",
+      "execution_boundary": "remote-original-once-only",
+      "contains_seed_values": false
+    },
+    {
+      "role": "future-confirmatory",
+      "namespace_template": "UNASSIGNED|requires-separate-powered-protocol|index",
+      "mission_count": null,
+      "lifecycle": "deferred-requires-separate-powered-protocol",
+      "execution_boundary": "disabled",
+      "contains_seed_values": false
+    }
+  ],
+  "seed_derivation_algorithm": "sha256-utf8-first-u32-big-endian-mask-unsigned31-reject-collision-v1",
+  "protected_seed_values": [],
+  "mission_count": 100,
+  "shard_count": 20,
+  "missions_per_shard": 5,
+  "exact_gates": [
+    {
+      "gate_id": "RV-AXIS-ISOLATION",
+      "requirement": "All eight approved axes preserve keyed common random numbers and their declared upstream invariants.",
+      "scope": "study-aggregate",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-CANONICAL-PERFORMANCE",
+      "requirement": "Runtime, memory, and transient output satisfy the frozen ceilings in the exact registered environment.",
+      "scope": "canonical-environment",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-CHAIN-INTEGRITY",
+      "requirement": "Event, evidence, TRACE, commitment, authorization, correction, outcome, recovery, and compensation chains verify.",
+      "scope": "every-mission",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-CONSERVATION",
+      "requirement": "Resources, crews, actions, commitments, outcomes, service intervals, and capacity accounting conserve exactly.",
+      "scope": "every-mission",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-EXACT-REPLAY",
+      "requirement": "Generation, runtime continuation, exact replay, and deterministic publication reproduce every registered byte.",
+      "scope": "every-mission",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-FAULT-REACHABILITY",
+      "requirement": "Every registered semantic fault family is reachable and observed without silent exclusion.",
+      "scope": "study-aggregate",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-HIDDEN-TRUTH",
+      "requirement": "Online components and public artifacts never read or expose hidden truth or lineage.",
+      "scope": "every-mission",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-RECOVERY-EQUIVALENCE",
+      "requirement": "Registered crash and retry points preserve uninterrupted-versus-restarted public and durable continuation equivalence.",
+      "scope": "study-aggregate",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-SMALL-PRESERVATION",
+      "requirement": "Every protected Small artifact and digest remains byte-identical to its approved baseline.",
+      "scope": "study-aggregate",
+      "numerical_threshold": false
+    },
+    {
+      "gate_id": "RV-SOURCE-SECURITY",
+      "requirement": "Scientific inputs, licenses, safe paths, offline execution, and complete provenance all verify.",
+      "scope": "study-aggregate",
+      "numerical_threshold": false
+    }
+  ],
+  "report_only_estimands": [
+    {
+      "estimand_id": "reference-allocation-refusal-hold",
+      "unit": "mission-seed",
+      "method": "Mission-cluster means and intervals for allocation, refusal, HOLD, BLOCK, ESCALATE, and acquisition requests.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-censoring-outcomes",
+      "unit": "mission-seed",
+      "method": "Mission-level completed, active, partial, failed, and unknown service counts with explicit scenario censoring.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-consistency-audit",
+      "unit": "mission-seed",
+      "method": "Mission-level stale execution, consistency debt, validity slack, guard status, and audit attribution summaries.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-coverage",
+      "unit": "mission-seed",
+      "method": "Incident coverage and report coverage summarized separately over whole missions.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-evidence-cost",
+      "unit": "mission-seed",
+      "method": "Verification-channel use, evidence age, latency, and cost summarized without an efficacy comparison.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-load-sensitivity",
+      "unit": "mission-seed",
+      "method": "Finite strict load and unserviceable windows for canonical kappa one and paired kappa one-half, without a targeted ratio.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-reconciliation",
+      "unit": "mission-seed",
+      "method": "Pairwise identity, false-merge, missed-link, false-report, revision, and dispute summaries scored after runtime.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-recovery",
+      "unit": "mission-seed",
+      "method": "Detection, affected-set, compensation, retry, restoration, and residual-debt summaries by registered fault family.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-route-failure",
+      "unit": "mission-seed",
+      "method": "Crossing state, reachability, route failure, travel, and authority activation delay summaries.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    },
+    {
+      "estimand_id": "reference-utilization",
+      "unit": "mission-seed",
+      "method": "Resource and crew utilization, arrival, service, and completion distributions summarized by mission.",
+      "interval": "deterministic-10000-resample-mission-cluster-bootstrap",
+      "numerical_acceptance_gate": false
+    }
+  ],
+  "inference_unit": "mission-seed",
+  "interval_method": "deterministic-10000-resample-mission-cluster-bootstrap",
+  "authorization_tag": "wf-dfld-01-reference-validation-v2-original",
+  "workflow_file": "reference-base-validation-v2-original.yml",
+  "environment_contract_path": "data/scenario/delta/reference/environment/reference_python311_linux_amd64_v1.json",
+  "dependency_lock_path": "requirements-delta-python311.lock",
+  "scientific_manifest_path": "data/scenario/delta/reference_protocol/reference_scientific_input_manifest_v2.json",
+  "freeze_record_path": "data/scenario/delta/reference_protocol/reference_base_validation_freeze_v2.json",
+  "run_attempt": 1,
+  "concurrency_cancellation": false,
+  "network_during_scientific_execution": false,
+  "failure_policy": "publish-without-retuning-seed-replacement-or-result-suppression",
+  "leap_behavior_present": false,
+  "policy_effectiveness_claim_present": false
+}
