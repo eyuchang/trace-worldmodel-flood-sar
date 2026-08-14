@@ -1,21 +1,63 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from trace_jepa.scenario.delta.artifacts import sha256_file
 from trace_jepa.scenario.delta.loading import load_acceptance_config
+from trace_jepa.scenario.delta.scientific_manifest import ScientificInputError
 from trace_jepa.scenario.delta.validation_v7 import (
     _cluster_fraction_interval,
     _cluster_mean_interval,
     _exact_median_interval,
     run_v7_study,
 )
+from trace_reference.provenance import verify_historical_small_scientific_manifest
 
 ROOT = Path(__file__).resolve().parents[3]
 ACCEPTANCE = ROOT / "configs/scenarios/wf_dfld_01_small_acceptance_v3.yaml"
 CONFIG = ROOT / "configs/scenarios/wf_dfld_01_small_v3.yaml"
 GEOGRAPHY = ROOT / "data/scenario/delta/geography/delta_small_geography_v3.yaml"
 POLICY = ROOT / "configs/policies/trace_delta_small_v1.yaml"
+HISTORICAL_SCIENTIFIC_MANIFEST = Path(
+    "data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json"
+)
+
+
+def test_historical_small_scientific_manifest_is_internally_tamper_evident(
+    tmp_path: Path,
+) -> None:
+    source = ROOT / HISTORICAL_SCIENTIFIC_MANIFEST
+    target = tmp_path / "manifest.json"
+    target.write_bytes(source.read_bytes())
+
+    manifest = verify_historical_small_scientific_manifest(tmp_path, Path("manifest.json"))
+    assert manifest.scope == "WF-DFLD-01-SMALL-v10-artifact-reconstruction"
+
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    payload["members"][0]["byte_length"] += 1
+    target.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ScientificInputError, match="invalid historical Small"):
+        verify_historical_small_scientific_manifest(tmp_path, Path("manifest.json"))
+
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    nested_manifest = nested / "manifest.json"
+    nested_manifest.write_bytes(source.read_bytes())
+    linked_parent = tmp_path / "linked-parent"
+    linked_parent.symlink_to(nested, target_is_directory=True)
+    with pytest.raises(ScientificInputError, match="invalid historical Small"):
+        verify_historical_small_scientific_manifest(
+            tmp_path,
+            Path("linked-parent/manifest.json"),
+        )
+
+    alias = tmp_path / "root-alias"
+    alias.symlink_to(tmp_path, target_is_directory=True)
+    with pytest.raises(ScientificInputError, match="invalid historical Small"):
+        verify_historical_small_scientific_manifest(alias, Path("manifest.json"))
 
 
 def test_confirmatory_v6_protocol_binds_exact_seeds_inputs_and_no_strict_gate() -> None:

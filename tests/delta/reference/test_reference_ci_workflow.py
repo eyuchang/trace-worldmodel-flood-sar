@@ -72,7 +72,14 @@ def test_reference_ci_merges_all_branch_coverage_before_post_test_gates() -> Non
     post_test = jobs["post-test"]
     assert set(post_test["needs"]) == {"quality", "coverage"}
     post_steps = _steps(post_test)
-    assert "Verify the complete Delta scientific input freeze" in post_steps
+    assert "Verify immutable Small receipt and current Reference freeze" in post_steps
+    freeze_command = post_steps["Verify immutable Small receipt and current Reference freeze"][
+        "run"
+    ]
+    assert "verify_historical_small_scientific_manifest" in freeze_command
+    assert "verify_reference_validation_freeze" in freeze_command
+    assert "verify_scientific_input_manifest_receipt" not in freeze_command
+    assert "Verify the complete Delta scientific input freeze" not in post_steps
     assert "Verify committed Delta book v6 when published" in post_steps
     assert "Reject whitespace errors across the complete branch diff" in post_steps
 
@@ -96,7 +103,7 @@ def test_reference_ci_shard_registry_is_an_exact_disjoint_suite_partition() -> N
     )
     summary = json.loads(result.stdout)
 
-    assert summary["full_node_count"] == 524
+    assert summary["full_node_count"] == 525
     assert summary["test_file_count"] == 77
     assert sum(summary["shard_counts"].values()) == summary["full_node_count"]
 

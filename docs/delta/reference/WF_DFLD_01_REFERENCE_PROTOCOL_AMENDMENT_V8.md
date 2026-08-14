@@ -72,3 +72,41 @@ lifecycle test, and workflow-completeness tests are scientific inputs. Their
 new bytes require a new source commit, complete scientific-input inventory,
 G3/Phase 6 regeneration, canonical execution receipt, and validation-freeze
 binding before any validation authorization tag can be created.
+
+## Historical Small freeze verification
+
+The immutable Small v8 manifest binds the source tree used for the delivered
+Small reconstruction; the Reference branch has since added source and package
+metadata. Comparing that historical manifest to the evolved Reference checkout
+therefore rejects legitimate Reference-only changes and does not verify the
+historical source. CI now verifies the historical manifest's sorted path,
+length, member-digest, core-aggregate, and complete-aggregate bindings without
+rewriting it. The current Reference scientific inventory is verified separately
+through its source-bound validation freeze, and the committed Small book is
+still regenerated and compared byte-for-byte. This preserves both historical
+Small immutability and current Reference source substitution detection without
+requiring an unsafe ancestor-object dependency.
+
+## Final pre-regeneration dry audit
+
+Before the final source commit, the non-heavy CI and post-test contracts were
+executed independently of the source-bound scientific regeneration:
+
+- the registered shard inventory was an exact, disjoint partition of all 525
+  collected nodes in 77 test files;
+- workflow parsing, matrix completeness, timing-audit coverage, and post-test
+  command assertions passed;
+- two isolated branch-coverage fragments combined into one readable coverage
+  database and JSON report using the same CI commands;
+- the immutable Small receipt passed schema, aggregate, tamper, trusted-root,
+  and intermediate-symlink checks locally, and its positive verification path
+  also passed in the pinned Linux environment;
+- the independent committed Small book replay was byte-identical;
+- the pinned Python 3.11.14 environment and complete dependency lock matched;
+  and
+- the exact CI Ruff, formatting, mypy, and branch-diff whitespace surfaces
+  passed.
+
+The current Reference freeze correctly rejected the uncommitted source change
+during this dry audit. It must pass only after the final source-bound G3,
+Phase 6, canonical receipt, and freeze regeneration completes.

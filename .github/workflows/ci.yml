@@ -195,12 +195,14 @@ jobs:
           --contract data/scenario/delta/environment/python311_linux_amd64_v1.json
           --lock requirements-delta-python311.lock
           --require-match
-      - name: Verify the complete Delta scientific input freeze
+      - name: Verify immutable Small receipt and current Reference freeze
         run: >-
           python -c "from pathlib import Path;
-          from trace_jepa.scenario.delta.scientific_manifest import verify_scientific_input_manifest;
-          verify_scientific_input_manifest(Path('.'),
-          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json'))"
+          from trace_reference.provenance import verify_historical_small_scientific_manifest;
+          from trace_reference.validation.registration import verify_reference_validation_freeze;
+          verify_historical_small_scientific_manifest(Path('.'),
+          Path('data/scenario/delta/provenance/v8_scientific_input_manifest_v3.json'));
+          verify_reference_validation_freeze(Path('.'))"
       - name: Verify committed Delta book v6 when published
         shell: bash
         run: |

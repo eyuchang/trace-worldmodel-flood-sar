@@ -5,7 +5,7 @@
     "trace_jepa.experimental.revalidation",
     "trace_jepa.support"
   ],
-  "expected_full_node_count": 524,
+  "expected_full_node_count": 525,
   "expected_test_file_count": 77,
   "schema_version": "delta-reference-ci-test-shards-v1",
   "shards": [

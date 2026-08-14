@@ -6,6 +6,7 @@ from .artifacts import (
     verify_reference_input_inventory,
     write_reference_artifacts,
 )
+from .historical_small import verify_historical_small_scientific_manifest
 from .inventory import reference_source_tree_sha256
 from .models import (
     ReferenceArtifactDescriptor,
@@ -46,6 +47,7 @@ __all__ = [
     "execute_reference_scenario_with_inspection",
     "reference_source_tree_sha256",
     "verify_exact_reference_replay",
+    "verify_historical_small_scientific_manifest",
     "verify_reference_artifacts",
     "verify_reference_input_inventory",
     "verify_reference_scientific_input_manifest",
