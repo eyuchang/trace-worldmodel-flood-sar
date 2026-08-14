@@ -1,7 +1,7 @@
 # WF-DFLD-01-REFERENCE Phase 0 status
 
-Date: 2026-08-11  
-Branch: `demo-delta-reference-scenario` (local only)  
+Date: 2026-08-11
+Branch: `demo-delta-reference-scenario` (local only)
 Scientific status: approved decision basis; development only
 
 ## Completed

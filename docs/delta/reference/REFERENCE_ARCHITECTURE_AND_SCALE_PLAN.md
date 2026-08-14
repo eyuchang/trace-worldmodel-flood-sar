@@ -1,7 +1,7 @@
 # WF-DFLD-01-REFERENCE architecture and scale plan
 
-Status: development design; no validation or confirmatory evidence  
-Base: delivered Small commit `3f912bdf3fbacb679063da9ed2ce15a2330b91ab`  
+Status: development design; no validation or confirmatory evidence
+Base: delivered Small commit `3f912bdf3fbacb679063da9ed2ce15a2330b91ab`
 Protocol: `WF_DFLD_01_REFERENCE_PROTOCOL_DRAFT.md`
 
 ## Purpose
