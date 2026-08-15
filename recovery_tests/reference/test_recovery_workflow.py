@@ -23,14 +23,14 @@ def test_recovery_workflow_is_distinct_tag_only_and_once_only() -> None:
     workflow = _workflow()
 
     assert "workflow_dispatch" not in text
-    assert "wf-dfld-01-reference-validation-v2-recovery-v1" in text
+    assert "wf-dfld-01-reference-validation-v2-recovery-v2" in text
     assert "wf-dfld-01-reference-validation-v2-recovery-original" not in text
     assert 'test "${GITHUB_RUN_ATTEMPT}" = "1"' in text
-    assert "verified-no-prior-recovery-attempt" in text
+    assert "verified-only-failed-run-31856190911-before-missions" in text
     assert "cancel-in-progress: false" in text
-    prior_guard = text.split("- name: Refuse any prior recovery attempt", maxsplit=1)[1].split(
-        "- name: Build the source-bound recovery image", maxsplit=1
-    )[0]
+    prior_guard = text.split("- name: Refuse any unregistered prior recovery attempt", maxsplit=1)[
+        1
+    ].split("- name: Build the source-bound recovery image", maxsplit=1)[0]
     assert "gh api --paginate" in prior_guard
     assert "set -euo pipefail" in prior_guard
     assert "|| true" not in prior_guard
@@ -47,6 +47,20 @@ def test_recovery_workflow_is_distinct_tag_only_and_once_only() -> None:
     assert all(
         not isinstance(step, dict) or step.get("continue-on-error") is not True for step in steps
     )
+
+
+def test_recovery_workflow_verifies_remote_annotated_tag_not_checkout_ref() -> None:
+    text = RECOVERY_WORKFLOW.read_text("utf-8")
+    identity = text.split("- name: Verify recovery tag and run identity", maxsplit=1)[1].split(
+        "- name: Verify the immutable failed original lifecycle", maxsplit=1
+    )[0]
+
+    assert "git/ref/tags/${TRACE_REFERENCE_AUTHORIZATION_TAG}" in identity
+    assert "git/tags/${tag_object}" in identity
+    assert '.object.type == "tag"' in identity
+    assert '.object.type == "commit" and .object.sha == $sha' in identity
+    assert "git cat-file -t" not in identity
+    assert 'git rev-parse "${TRACE_REFERENCE_AUTHORIZATION_TAG}^{}"' not in identity
 
 
 def test_recovery_workflow_verifies_exact_failed_pre_evaluation_lifecycle() -> None:
@@ -71,6 +85,23 @@ def test_recovery_workflow_verifies_exact_failed_pre_evaluation_lifecycle() -> N
     assert 'gh run view 31833291955 --repo "${GITHUB_REPOSITORY}" --log' in text
 
 
+def test_recovery_workflow_binds_failed_recovery_v1_before_any_new_attempt() -> None:
+    text = RECOVERY_WORKFLOW.read_text("utf-8")
+
+    assert "31856190911" in text
+    assert "334744574" in text
+    assert "94941304451" in text
+    assert "e89658fb128bd790ad38ef461d449aebd3b60694" in text
+    assert "42ac2e1d46185618573fc1b26c84449f15f5bd07" in text
+    assert '.created_at == "2026-08-15T01:19:27Z"' in text
+    assert '.updated_at == "2026-08-15T01:19:37Z"' in text
+    assert '.name == "Verify recovery tag and run identity" and' in text
+    assert '.name == "shards" and .conclusion == "skipped"' in text
+    assert '.name == "aggregate" and .conclusion == "skipped"' in text
+    assert "verified-run-31856190911-pre-derivation-failure" in text
+    assert 'test "$(cat "${prior_ids}")" = "31856190911"' in text
+
+
 def test_no_raw_seed_plan_crosses_jobs_before_completed_aggregation() -> None:
     text = RECOVERY_WORKFLOW.read_text("utf-8")
     authorize, after_authorize = text.split("\n  shards:\n", maxsplit=1)
@@ -91,6 +122,7 @@ def test_output_containers_and_artifacts_enforce_runner_ownership() -> None:
     text = RECOVERY_WORKFLOW.read_text("utf-8")
 
     assert text.count('--user "$(id -u):$(id -g)"') >= 5
+    assert text.count("TRACE_REFERENCE_FAILED_RECOVERY_GUARD") >= 10
     assert "umask 077" in text
     assert text.count("stat -c '%u'") >= 2
     assert text.count("test ! -L") >= 2

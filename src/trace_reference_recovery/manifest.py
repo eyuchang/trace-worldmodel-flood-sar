@@ -22,7 +22,7 @@ from .bindings import bind_artifact
 from .models import RecoveryGovernanceManifest, RecoveryManifestMember
 
 RECOVERY_MANIFEST_PATH = Path(
-    "data/scenario/delta/reference_recovery/recovery_governance_manifest_v1.json"
+    "data/scenario/delta/reference_recovery/recovery_governance_manifest_v2.json"
 )
 BASE_SCIENTIFIC_MANIFEST_PATH = Path(
     "data/scenario/delta/reference_protocol/reference_scientific_input_manifest_v2.json"
@@ -34,9 +34,12 @@ RECOVERY_MEMBER_PATHS = (
     ".github/workflows/reference-base-validation-v2-recovery.yml",
     ".github/workflows/reference-validation-recovery-governance.yml",
     "data/scenario/delta/reference_recovery/failed_original_authorization_v1.json",
-    "data/scenario/delta/reference_recovery/recovery_protocol_v1.json",
+    "data/scenario/delta/reference_recovery/failed_recovery_authorization_v1.json",
+    "data/scenario/delta/reference_recovery/recovery_protocol_v2.json",
     "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_ADR_V1.md",
     "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_AMENDMENT_V1.md",
+    "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_AMENDMENT_V2.md",
+    "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_TAG_IDENTITY_ADR_V2.md",
     "recovery_tests/reference/test_recovery_governance.py",
     "recovery_tests/reference/test_recovery_workflow.py",
     "scripts/reference/run_base_validation_recovery_v1.py",
@@ -98,7 +101,7 @@ def build_recovery_governance_manifest(repository_root: Path) -> RecoveryGoverna
             )
         )
     body = {
-        "schema_version": "delta-reference-validation-recovery-governance-manifest-v1",
+        "schema_version": "delta-reference-validation-recovery-governance-manifest-v2",
         "scenario_id": "WF-DFLD-01-REFERENCE",
         "scientific_source_commit": "2cb58539425af467ac068ba7ef7500891e2fbe78",
         "base_scientific_manifest": bind_artifact(

@@ -25,6 +25,7 @@ from trace_reference_recovery.registration import (
     EXPECTED_SEED_LIST_SHA256,
     RECOVERY_AUTHORIZATION_TAG,
     load_failed_original_record,
+    load_failed_recovery_record,
     load_recovery_protocol,
     require_recovery_identity,
     verify_recovery_protocol,
@@ -47,7 +48,12 @@ def _identity_environment() -> dict[str, str]:
         "TRACE_REFERENCE_FAILED_ORIGINAL_GUARD": (
             "verified-run-31833291955-pre-evaluation-failure"
         ),
-        "TRACE_REFERENCE_PRIOR_RECOVERY_GUARD": "verified-no-prior-recovery-attempt",
+        "TRACE_REFERENCE_FAILED_RECOVERY_GUARD": (
+            "verified-run-31856190911-pre-derivation-failure"
+        ),
+        "TRACE_REFERENCE_PRIOR_RECOVERY_GUARD": (
+            "verified-only-failed-run-31856190911-before-missions"
+        ),
         "TRACE_REFERENCE_WORKFLOW_FILE": "reference-base-validation-v2-recovery.yml",
     }
 
@@ -101,6 +107,24 @@ def test_failed_original_record_is_pre_evaluation_and_seed_free() -> None:
     assert record.protected_seed_values_recorded == ()
 
 
+def test_failed_recovery_record_is_pre_derivation_and_seed_free() -> None:
+    record = load_failed_recovery_record(ROOT)
+
+    assert record.workflow_run_id == 31856190911
+    assert record.source_commit == "42ac2e1d46185618573fc1b26c84449f15f5bd07"
+    assert record.annotated_tag_object == "e89658fb128bd790ad38ef461d449aebd3b60694"
+    assert record.remote_tag_was_annotated
+    assert record.remote_tag_target_was_source_commit
+    assert not record.original_lifecycle_verification_started
+    assert not record.protected_list_derivation_succeeded
+    assert record.artifact_count == 0
+    assert record.shard_job_status == "skipped"
+    assert record.aggregate_job_status == "skipped"
+    assert not record.mission_execution_started
+    assert not record.scientific_outcomes_observed
+    assert record.protected_seed_values_recorded == ()
+
+
 def test_recovery_protocol_preserves_base_science_and_namespace() -> None:
     assert load_recovery_protocol(ROOT) == verify_recovery_protocol(ROOT)
     protocol = verify_recovery_protocol(ROOT)
@@ -111,6 +135,8 @@ def test_recovery_protocol_preserves_base_science_and_namespace() -> None:
     assert protocol.namespace == "WF-DFLD-01-REFERENCE|validation-v2|index"
     assert protocol.protected_seed_list_sha256 == EXPECTED_SEED_LIST_SHA256
     assert protocol.protected_seed_values == ()
+    assert protocol.failed_original_run_id == 31833291955
+    assert protocol.failed_recovery_run_id == 31856190911
     assert not protocol.scientific_mechanics_changed
     assert not protocol.protected_namespace_changed
     assert not protocol.intermediate_seed_plan_artifact
@@ -123,6 +149,7 @@ def test_recovery_protocol_preserves_base_science_and_namespace() -> None:
         ("GITHUB_REF", "refs/tags/wf-dfld-01-reference-validation-v2-original"),
         ("GITHUB_RUN_ATTEMPT", "2"),
         ("TRACE_REFERENCE_FAILED_ORIGINAL_GUARD", ""),
+        ("TRACE_REFERENCE_FAILED_RECOVERY_GUARD", ""),
         ("TRACE_REFERENCE_PRIOR_RECOVERY_GUARD", ""),
     ),
 )
@@ -181,7 +208,7 @@ def test_recovery_manifest_is_separate_complete_and_detects_mutation(
     original = recovery_manifest.hash_recovery_member
 
     def changed(path: Path, chunk_size: int = 1024 * 1024) -> str:
-        if path.name == "recovery_protocol_v1.json":
+        if path.name == "recovery_protocol_v2.json":
             return "0" * 64
         return original(path, chunk_size)
 

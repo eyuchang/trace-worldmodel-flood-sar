@@ -1,0 +1,52 @@
+{
+  "schema_version": "delta-reference-validation-v2-recovery-protocol-v2",
+  "status": "frozen-awaiting-distinct-tag-authorization",
+  "scenario_id": "WF-DFLD-01-REFERENCE",
+  "scientific_role": "base-non-leap-integration-validation-not-policy-effectiveness",
+  "failure_record": {
+    "repository_relative_path": "data/scenario/delta/reference_recovery/failed_original_authorization_v1.json",
+    "sha256": "b75e2f73a426b836a92d9c7f13b2d0f2579c237f95b0528bc8fee3e89c0b977c"
+  },
+  "failed_recovery_record": {
+    "repository_relative_path": "data/scenario/delta/reference_recovery/failed_recovery_authorization_v1.json",
+    "sha256": "c1acbd3be74abde5b352bb9445564eb49efbff45f8242d110ab80f8cf8f30a80"
+  },
+  "amendment": {
+    "repository_relative_path": "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_AMENDMENT_V2.md",
+    "sha256": "b4fde277710f94990e66bde8af5007f8312c3f55e31dda88a58b48604e4b96ff"
+  },
+  "architecture_decision_record": {
+    "repository_relative_path": "docs/delta/reference/recovery/REFERENCE_VALIDATION_V2_RECOVERY_TAG_IDENTITY_ADR_V2.md",
+    "sha256": "92a0673c4323df0f2bb90cdbb7d1a8d3ac0a70d83bfece028243bcc67c40f35b"
+  },
+  "base_freeze": {
+    "repository_relative_path": "data/scenario/delta/reference_protocol/reference_base_validation_freeze_v2.json",
+    "sha256": "6cbbf5190ad8af1d5d1fe03dfa12dac70f418d8448bf4c515f1eacd7c1651b79"
+  },
+  "base_scientific_manifest": {
+    "repository_relative_path": "data/scenario/delta/reference_protocol/reference_scientific_input_manifest_v2.json",
+    "sha256": "7b34fcf92b36c9a2046a16a8e89c5a07c345fa19acc1b287c2441232cf2dc0be"
+  },
+  "base_freeze_digest": "b401b976fd22c19d6f2f81100e011946b566a48443ccd21a62d525bf9da820b3",
+  "base_scientific_input_aggregate_sha256": "f9cf4103d75b28d9c14aa5fdb7721552a099a0a8dfccde852401c62036ee8b86",
+  "scientific_source_commit": "2cb58539425af467ac068ba7ef7500891e2fbe78",
+  "failed_original_run_id": 31833291955,
+  "failed_recovery_run_id": 31856190911,
+  "namespace": "WF-DFLD-01-REFERENCE|validation-v2|index",
+  "derivation_algorithm": "sha256-utf8-first-u32-big-endian-mask-unsigned31-reject-collision-v1",
+  "protected_seed_list_sha256": "2be02697a2379a974d709fda7b7285935227ae58a8ebe51fc38c0c48020ffa87",
+  "protected_seed_values": [],
+  "mission_count": 100,
+  "shard_count": 20,
+  "missions_per_shard": 5,
+  "execution_role": "original-base-reference-validation-recovery",
+  "authorization_tag": "wf-dfld-01-reference-validation-v2-recovery-v2",
+  "workflow_file": "reference-base-validation-v2-recovery.yml",
+  "run_attempt": 1,
+  "intermediate_seed_plan_artifact": false,
+  "raw_seed_disclosure_before_completed_report": false,
+  "rerun_completed_missions_after_interruption": false,
+  "scientific_mechanics_changed": false,
+  "protected_namespace_changed": false,
+  "leap_behavior_present": false
+}

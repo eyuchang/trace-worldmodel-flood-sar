@@ -3,21 +3,22 @@ name: Reference base validation-v2 recovery (tag-authorized, once-only)
 on:
   push:
     tags:
-      - wf-dfld-01-reference-validation-v2-recovery-v1
+      - wf-dfld-01-reference-validation-v2-recovery-v2
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: wf-dfld-01-reference-validation-v2-recovery-v1
+  group: wf-dfld-01-reference-validation-v2-recovery-v2
   cancel-in-progress: false
 
 env:
-  TRACE_REFERENCE_AUTHORIZATION_TAG: wf-dfld-01-reference-validation-v2-recovery-v1
+  TRACE_REFERENCE_AUTHORIZATION_TAG: wf-dfld-01-reference-validation-v2-recovery-v2
   TRACE_REFERENCE_EXECUTION_ROLE: original-base-reference-validation-recovery
   TRACE_REFERENCE_WORKFLOW_FILE: reference-base-validation-v2-recovery.yml
   TRACE_REFERENCE_FAILED_ORIGINAL_RUN_ID: "31833291955"
+  TRACE_REFERENCE_FAILED_RECOVERY_RUN_ID: "31856190911"
   TRACE_REFERENCE_CANONICAL_BASE: docker.io/library/python@sha256:88b6d3132a0850db3587a4f4ff28d5568e7d65ff99f0ee34f42be864ddb4ca1d
   TRACE_REFERENCE_OCI_INDEX: docker.io/library/python@sha256:3b3706a90cb23f04fabb0d255824f9a70ceb46177041898133dd5a35f3a50f0a
 
@@ -35,14 +36,30 @@ jobs:
 
       - name: Verify recovery tag and run identity
         id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           test "${GITHUB_RUN_ATTEMPT}" = "1"
           test "${GITHUB_REF}" = "refs/tags/${TRACE_REFERENCE_AUTHORIZATION_TAG}"
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
-          test "$(git cat-file -t "${TRACE_REFERENCE_AUTHORIZATION_TAG}")" = "tag"
-          test "$(git rev-parse "${TRACE_REFERENCE_AUTHORIZATION_TAG}^{}")" = "${GITHUB_SHA}"
+          root="${RUNNER_TEMP}/recovery-tag-identity"
+          install -d -m 700 "${root}"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            > "${root}/ref.json"
+          tag_object="$(jq -er \
+            --arg ref "refs/tags/${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            'select(.ref == $ref and .object.type == "tag") | .object.sha' \
+            "${root}/ref.json")"
+          gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object}" \
+            > "${root}/tag.json"
+          jq -e \
+            --arg tag "${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
+            --arg sha "${GITHUB_SHA}" \
+            '.tag == $tag and .object.type == "commit" and .object.sha == $sha' \
+            "${root}/tag.json" >/dev/null
           printf 'sha=%s\n' "${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
 
       - name: Verify the immutable failed original lifecycle
@@ -94,7 +111,73 @@ jobs:
           printf 'TRACE_REFERENCE_FAILED_ORIGINAL_GUARD=%s\n' \
             'verified-run-31833291955-pre-evaluation-failure' >> "${GITHUB_ENV}"
 
-      - name: Refuse any prior recovery attempt
+      - name: Verify the immutable failed recovery-v1 lifecycle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${RUNNER_TEMP}/failed-recovery-v1-metadata"
+          install -d -m 700 "${root}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/31856190911" \
+            > "${root}/run.json"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/31856190911/jobs?filter=all&per_page=100" \
+            > "${root}/jobs.json"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/31856190911/artifacts" \
+            > "${root}/artifacts.json"
+          gh run view 31856190911 --repo "${GITHUB_REPOSITORY}" --log \
+            > "${root}/run.log"
+          jq -e '
+            .id == 31856190911 and
+            .workflow_id == 334744574 and
+            .event == "push" and
+            .head_branch == "wf-dfld-01-reference-validation-v2-recovery-v1" and
+            .head_sha == "42ac2e1d46185618573fc1b26c84449f15f5bd07" and
+            .run_attempt == 1 and
+            .path == ".github/workflows/reference-base-validation-v2-recovery.yml" and
+            .created_at == "2026-08-15T01:19:27Z" and
+            .updated_at == "2026-08-15T01:19:37Z" and
+            .conclusion == "failure"
+          ' "${root}/run.json" >/dev/null
+          jq -e '
+            any(.jobs[];
+              .id == 94941304451 and
+              .conclusion == "failure" and
+              any(.steps[];
+                .name == "Verify recovery tag and run identity" and
+                .conclusion == "failure") and
+              any(.steps[];
+                .name == "Verify the immutable failed original lifecycle" and
+                .conclusion == "skipped")) and
+            any(.jobs[]; .name == "shards" and .conclusion == "skipped") and
+            any(.jobs[]; .name == "aggregate" and .conclusion == "skipped")
+          ' "${root}/jobs.json" >/dev/null
+          jq -e '.total_count == 0 and (.artifacts | length) == 0' \
+            "${root}/artifacts.json" >/dev/null
+          grep -Fq 'e89658fb128bd790ad38ef461d449aebd3b60694' "${root}/run.log"
+          grep -Fq \
+            '42ac2e1d46185618573fc1b26c84449f15f5bd07 -> wf-dfld-01-reference-validation-v2-recovery-v1' \
+            "${root}/run.log"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/git/ref/tags/wf-dfld-01-reference-validation-v2-recovery-v1" \
+            > "${root}/tag-ref.json"
+          jq -e '
+            .object.type == "tag" and
+            .object.sha == "e89658fb128bd790ad38ef461d449aebd3b60694"
+          ' "${root}/tag-ref.json" >/dev/null
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/git/tags/e89658fb128bd790ad38ef461d449aebd3b60694" \
+            > "${root}/tag-object.json"
+          jq -e '
+            .tag == "wf-dfld-01-reference-validation-v2-recovery-v1" and
+            .object.type == "commit" and
+            .object.sha == "42ac2e1d46185618573fc1b26c84449f15f5bd07"
+          ' "${root}/tag-object.json" >/dev/null
+          printf 'TRACE_REFERENCE_FAILED_RECOVERY_GUARD=%s\n' \
+            'verified-run-31856190911-pre-derivation-failure' >> "${GITHUB_ENV}"
+
+      - name: Refuse any unregistered prior recovery attempt
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -103,12 +186,11 @@ jobs:
           prior_ids="${RUNNER_TEMP}/reference-recovery-prior-run-ids.txt"
           gh api --paginate \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/${TRACE_REFERENCE_WORKFLOW_FILE}/runs?event=push&per_page=100" \
-            --jq ".workflow_runs[] | select(.head_branch == \"${TRACE_REFERENCE_AUTHORIZATION_TAG}\" and .id != ${GITHUB_RUN_ID}) | .id" \
+            --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID}) | .id" \
             > "${prior_ids}"
-          prior="$(wc -l < "${prior_ids}" | tr -d ' ')"
-          test "${prior}" = "0"
+          test "$(cat "${prior_ids}")" = "31856190911"
           printf 'TRACE_REFERENCE_PRIOR_RECOVERY_GUARD=%s\n' \
-            'verified-no-prior-recovery-attempt' >> "${GITHUB_ENV}"
+            'verified-only-failed-run-31856190911-before-missions' >> "${GITHUB_ENV}"
           printf 'TRACE_REFERENCE_ANNOTATED_TAG_GUARD=%s\n' \
             'verified-annotated-tag-points-to-sha' >> "${GITHUB_ENV}"
 
@@ -149,6 +231,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
@@ -209,7 +292,8 @@ jobs:
         env:
           TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
           TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
-          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+          TRACE_REFERENCE_FAILED_RECOVERY_GUARD: verified-run-31856190911-pre-derivation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-only-failed-run-31856190911-before-missions
         run: |
           set -euo pipefail
           umask 077
@@ -227,6 +311,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
@@ -335,7 +420,8 @@ jobs:
         env:
           TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
           TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
-          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+          TRACE_REFERENCE_FAILED_RECOVERY_GUARD: verified-run-31856190911-pre-derivation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-only-failed-run-31856190911-before-missions
         run: |
           set -euo pipefail
           docker run --rm --network none \
@@ -351,6 +437,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
@@ -371,7 +458,8 @@ jobs:
         env:
           TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
           TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
-          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+          TRACE_REFERENCE_FAILED_RECOVERY_GUARD: verified-run-31856190911-pre-derivation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-only-failed-run-31856190911-before-missions
         run: |
           set -euo pipefail
           docker run --rm --network none \
@@ -387,6 +475,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
@@ -424,7 +513,8 @@ jobs:
         env:
           TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
           TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
-          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+          TRACE_REFERENCE_FAILED_RECOVERY_GUARD: verified-run-31856190911-pre-derivation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-only-failed-run-31856190911-before-missions
         run: |
           set -euo pipefail
           stage=aggregation
@@ -459,6 +549,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
@@ -506,7 +597,8 @@ jobs:
         env:
           TRACE_REFERENCE_ANNOTATED_TAG_GUARD: verified-annotated-tag-points-to-sha
           TRACE_REFERENCE_FAILED_ORIGINAL_GUARD: verified-run-31833291955-pre-evaluation-failure
-          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-no-prior-recovery-attempt
+          TRACE_REFERENCE_FAILED_RECOVERY_GUARD: verified-run-31856190911-pre-derivation-failure
+          TRACE_REFERENCE_PRIOR_RECOVERY_GUARD: verified-only-failed-run-31856190911-before-missions
         run: |
           set -euo pipefail
           docker run --rm --network none \
@@ -522,6 +614,7 @@ jobs:
             --env TRACE_REFERENCE_AUTHORIZATION_TAG="${TRACE_REFERENCE_AUTHORIZATION_TAG}" \
             --env TRACE_REFERENCE_EXECUTION_ROLE="${TRACE_REFERENCE_EXECUTION_ROLE}" \
             --env TRACE_REFERENCE_FAILED_ORIGINAL_GUARD="${TRACE_REFERENCE_FAILED_ORIGINAL_GUARD}" \
+            --env TRACE_REFERENCE_FAILED_RECOVERY_GUARD="${TRACE_REFERENCE_FAILED_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_PRIOR_RECOVERY_GUARD="${TRACE_REFERENCE_PRIOR_RECOVERY_GUARD}" \
             --env TRACE_REFERENCE_WORKFLOW_FILE="${TRACE_REFERENCE_WORKFLOW_FILE}" \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \

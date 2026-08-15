@@ -75,29 +75,79 @@ class FailedOriginalAuthorizationRecord(DeltaModel):
         return self
 
 
+class FailedRecoveryAuthorizationRecord(DeltaModel):
+    """Immutable evidence that recovery-v1 stopped before seed derivation."""
+
+    schema_version: Literal["delta-reference-validation-v2-failed-recovery-authorization-v1"]
+    classification: Literal["pre-evaluation-checkout-tag-ref-normalization-failure"]
+    repository: Literal["eyuchang/trace-worldmodel-flood-sar"]
+    workflow_name: Literal["Reference base validation-v2 recovery (tag-authorized, once-only)"]
+    workflow_file: Literal[".github/workflows/reference-base-validation-v2-recovery.yml"]
+    workflow_id: Literal[334744574]
+    workflow_run_id: Literal[31856190911]
+    workflow_run_attempt: Literal[1]
+    workflow_run_url: Literal[
+        "https://github.com/eyuchang/trace-worldmodel-flood-sar/actions/runs/31856190911"
+    ]
+    created_at_utc: Literal["2026-08-15T01:19:27Z"]
+    updated_at_utc: Literal["2026-08-15T01:19:37Z"]
+    event: Literal["push"]
+    conclusion: Literal["failure"]
+    authorization_tag: Literal["wf-dfld-01-reference-validation-v2-recovery-v1"]
+    annotated_tag_object: Literal["e89658fb128bd790ad38ef461d449aebd3b60694"]
+    source_commit: Literal["42ac2e1d46185618573fc1b26c84449f15f5bd07"]
+    authorize_job_id: Literal[94941304451]
+    failed_step: Literal["Verify recovery tag and run identity"]
+    error_summary: Literal[
+        "actions/checkout replaced the local annotated tag ref with its peeled commit"
+    ]
+    remote_tag_was_annotated: Literal[True]
+    remote_tag_target_was_source_commit: Literal[True]
+    original_lifecycle_verification_started: Literal[False]
+    protected_list_derivation_succeeded: Literal[False]
+    artifact_count: Literal[0]
+    shard_job_status: Literal["skipped"]
+    aggregate_job_status: Literal["skipped"]
+    mission_execution_started: Literal[False]
+    scientific_outcomes_observed: Literal[False]
+    protected_seed_values_recorded: tuple[int, ...] = ()
+    audit_date_utc: Literal["2026-08-15"]
+    record_digest: str = Field(pattern=_SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def validate_record(self) -> FailedRecoveryAuthorizationRecord:
+        if self.protected_seed_values_recorded:
+            raise ValueError("failed recovery evidence must not contain protected seed values")
+        if _canonical_digest(self, "record_digest") != self.record_digest:
+            raise ValueError("failed recovery authorization record digest is invalid")
+        return self
+
+
 class RecoveryExecutionIdentity(DeltaModel):
     """Exact identity of the first mission-executing recovery attempt."""
 
     execution_role: Literal["original-base-reference-validation-recovery"]
     source_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
     scientific_source_commit: Literal["2cb58539425af467ac068ba7ef7500891e2fbe78"]
-    authorization_tag: Literal["wf-dfld-01-reference-validation-v2-recovery-v1"]
-    git_ref: Literal["refs/tags/wf-dfld-01-reference-validation-v2-recovery-v1"]
+    authorization_tag: Literal["wf-dfld-01-reference-validation-v2-recovery-v2"]
+    git_ref: Literal["refs/tags/wf-dfld-01-reference-validation-v2-recovery-v2"]
     workflow_file: Literal["reference-base-validation-v2-recovery.yml"]
     workflow_run_id: int = Field(ge=1)
     workflow_run_attempt: Literal[1]
     repository: Literal["eyuchang/trace-worldmodel-flood-sar"]
     failed_original_run_id: Literal[31833291955]
+    failed_recovery_run_id: Literal[31856190911]
 
 
 class RecoveryProtocol(DeltaModel):
     """Frozen governance amendment that changes orchestration, not mechanics."""
 
-    schema_version: Literal["delta-reference-validation-v2-recovery-protocol-v1"]
+    schema_version: Literal["delta-reference-validation-v2-recovery-protocol-v2"]
     status: Literal["frozen-awaiting-distinct-tag-authorization"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     scientific_role: Literal["base-non-leap-integration-validation-not-policy-effectiveness"]
     failure_record: ReferenceValidationBinding
+    failed_recovery_record: ReferenceValidationBinding
     amendment: ReferenceValidationBinding
     architecture_decision_record: ReferenceValidationBinding
     base_freeze: ReferenceValidationBinding
@@ -108,6 +158,7 @@ class RecoveryProtocol(DeltaModel):
     ]
     scientific_source_commit: Literal["2cb58539425af467ac068ba7ef7500891e2fbe78"]
     failed_original_run_id: Literal[31833291955]
+    failed_recovery_run_id: Literal[31856190911]
     namespace: Literal["WF-DFLD-01-REFERENCE|validation-v2|index"]
     derivation_algorithm: Literal[
         "sha256-utf8-first-u32-big-endian-mask-unsigned31-reject-collision-v1"
@@ -120,7 +171,7 @@ class RecoveryProtocol(DeltaModel):
     shard_count: Literal[20]
     missions_per_shard: Literal[5]
     execution_role: Literal["original-base-reference-validation-recovery"]
-    authorization_tag: Literal["wf-dfld-01-reference-validation-v2-recovery-v1"]
+    authorization_tag: Literal["wf-dfld-01-reference-validation-v2-recovery-v2"]
     workflow_file: Literal["reference-base-validation-v2-recovery.yml"]
     run_attempt: Literal[1]
     intermediate_seed_plan_artifact: Literal[False]
@@ -195,11 +246,13 @@ class RecoveryShardReceipt(DeltaModel):
 class RecoveryOriginalReport(DeltaModel):
     """First mission-executing report, linked to the failed authorization run."""
 
-    schema_version: Literal["delta-reference-base-validation-recovery-report-v1"]
+    schema_version: Literal["delta-reference-base-validation-recovery-report-v2"]
     execution_role: Literal["original-base-reference-validation-recovery"]
     execution: RecoveryExecutionIdentity
     failed_original_authorization: ReferenceValidationBinding
+    failed_recovery_v1_authorization: ReferenceValidationBinding
     failed_original_run_id: Literal[31833291955]
+    failed_recovery_v1_run_id: Literal[31856190911]
     base_protocol: ReferenceValidationBinding
     base_freeze: ReferenceValidationBinding
     recovery_protocol: ReferenceValidationBinding
@@ -219,6 +272,7 @@ class RecoveryOriginalReport(DeltaModel):
     adverse_findings: tuple[str, ...]
     all_exact_gates_pass: bool
     original_authorization_failed_before_evaluation: Literal[True]
+    recovery_v1_authorization_failed_before_evaluation: Literal[True]
     first_mission_executing_evaluation: Literal[True]
     report_digest: str = Field(pattern=_SHA256_PATTERN)
 
@@ -337,7 +391,7 @@ class RecoveryManifestMember(DeltaModel):
 class RecoveryGovernanceManifest(DeltaModel):
     """Separate recovery inventory layered over the unchanged scientific freeze."""
 
-    schema_version: Literal["delta-reference-validation-recovery-governance-manifest-v1"]
+    schema_version: Literal["delta-reference-validation-recovery-governance-manifest-v2"]
     scenario_id: Literal["WF-DFLD-01-REFERENCE"]
     scientific_source_commit: Literal["2cb58539425af467ac068ba7ef7500891e2fbe78"]
     base_scientific_manifest: ReferenceValidationBinding

@@ -38,6 +38,7 @@ from .models import (
 from .protected_plan import PlanFactory, derive_recovery_plan
 from .registration import (
     EXPECTED_SEED_LIST_SHA256,
+    FAILED_RECOVERY_RECORD_PATH,
     FAILURE_RECORD_PATH,
     RECOVERY_PROTOCOL_PATH,
     require_recovery_boundary,
@@ -230,20 +231,28 @@ def aggregate_recovery_report(
         freeze_digest=base_freeze.freeze_digest,
     )
     intervals = _descriptive_intervals(missions, protocol_sha256=protocol_binding.sha256)
-    adverse = tuple(
-        f"mission-{mission.mission_index:03d}:{gate.gate_id}:{gate.adverse_finding}"
-        for mission in missions
-        for gate in mission.gates
-        if not gate.passed
+    adverse = (
+        "lifecycle:original-authorization-failed-before-evaluation",
+        "lifecycle:recovery-v1-tag-identity-failed-before-derivation",
+        *tuple(
+            f"mission-{mission.mission_index:03d}:{gate.gate_id}:{gate.adverse_finding}"
+            for mission in missions
+            for gate in mission.gates
+            if not gate.passed
+        ),
     )
     body = {
-        "schema_version": "delta-reference-base-validation-recovery-report-v1",
+        "schema_version": "delta-reference-base-validation-recovery-report-v2",
         "execution_role": "original-base-reference-validation-recovery",
         "execution": identity.model_dump(mode="json"),
         "failed_original_authorization": bind_artifact(
             repository_root, FAILURE_RECORD_PATH
         ).model_dump(mode="json"),
+        "failed_recovery_v1_authorization": bind_artifact(
+            repository_root, FAILED_RECOVERY_RECORD_PATH
+        ).model_dump(mode="json"),
         "failed_original_run_id": 31833291955,
+        "failed_recovery_v1_run_id": 31856190911,
         "base_protocol": protocol_binding.model_dump(mode="json"),
         "base_freeze": bind_artifact(repository_root, REFERENCE_VALIDATION_FREEZE).model_dump(
             mode="json"
@@ -269,6 +278,7 @@ def aggregate_recovery_report(
         "adverse_findings": adverse,
         "all_exact_gates_pass": all(item.passed for item in gates),
         "original_authorization_failed_before_evaluation": True,
+        "recovery_v1_authorization_failed_before_evaluation": True,
         "first_mission_executing_evaluation": True,
     }
     report = RecoveryOriginalReport(

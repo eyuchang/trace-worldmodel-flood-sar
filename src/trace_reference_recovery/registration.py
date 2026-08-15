@@ -18,20 +18,25 @@ from trace_reference.validation.registration import (
 from .manifest import verify_recovery_governance_manifest
 from .models import (
     FailedOriginalAuthorizationRecord,
+    FailedRecoveryAuthorizationRecord,
     RecoveryExecutionIdentity,
     RecoveryGovernanceManifest,
     RecoveryProtocol,
 )
 
-RECOVERY_AUTHORIZATION_TAG = "wf-dfld-01-reference-validation-v2-recovery-v1"
+RECOVERY_AUTHORIZATION_TAG = "wf-dfld-01-reference-validation-v2-recovery-v2"
 RECOVERY_EXECUTION_ROLE = "original-base-reference-validation-recovery"
 RECOVERY_WORKFLOW_FILE = "reference-base-validation-v2-recovery.yml"
 FAILED_ORIGINAL_RUN_ID = 31833291955
+FAILED_RECOVERY_RUN_ID = 31856190911
 EXPECTED_SEED_LIST_SHA256 = "2be02697a2379a974d709fda7b7285935227ae58a8ebe51fc38c0c48020ffa87"
 FAILURE_RECORD_PATH = Path(
     "data/scenario/delta/reference_recovery/failed_original_authorization_v1.json"
 )
-RECOVERY_PROTOCOL_PATH = Path("data/scenario/delta/reference_recovery/recovery_protocol_v1.json")
+FAILED_RECOVERY_RECORD_PATH = Path(
+    "data/scenario/delta/reference_recovery/failed_recovery_authorization_v1.json"
+)
+RECOVERY_PROTOCOL_PATH = Path("data/scenario/delta/reference_recovery/recovery_protocol_v2.json")
 _MAX_JSON_BYTES = 16 * 1024 * 1024
 
 
@@ -51,6 +56,13 @@ def load_failed_original_record(repository_root: Path) -> FailedOriginalAuthoriz
     return FailedOriginalAuthorizationRecord.model_validate_json(path.read_text("utf-8"))
 
 
+def load_failed_recovery_record(repository_root: Path) -> FailedRecoveryAuthorizationRecord:
+    """Load the immutable recovery-v1 pre-evaluation failure evidence."""
+
+    path = _resolve(repository_root, FAILED_RECOVERY_RECORD_PATH, "failed recovery authorization")
+    return FailedRecoveryAuthorizationRecord.model_validate_json(path.read_text("utf-8"))
+
+
 def load_recovery_protocol(repository_root: Path) -> RecoveryProtocol:
     """Load recovery governance without deriving the protected plan."""
 
@@ -61,6 +73,7 @@ def load_recovery_protocol(repository_root: Path) -> RecoveryProtocol:
 def _verify_protocol_bindings(repository_root: Path, protocol: RecoveryProtocol) -> None:
     for binding in (
         protocol.failure_record,
+        protocol.failed_recovery_record,
         protocol.amendment,
         protocol.architecture_decision_record,
         protocol.base_freeze,
@@ -99,7 +112,12 @@ def require_recovery_identity(environment: Mapping[str, str]) -> RecoveryExecuti
         "TRACE_REFERENCE_FAILED_ORIGINAL_GUARD": (
             "verified-run-31833291955-pre-evaluation-failure"
         ),
-        "TRACE_REFERENCE_PRIOR_RECOVERY_GUARD": "verified-no-prior-recovery-attempt",
+        "TRACE_REFERENCE_FAILED_RECOVERY_GUARD": (
+            "verified-run-31856190911-pre-derivation-failure"
+        ),
+        "TRACE_REFERENCE_PRIOR_RECOVERY_GUARD": (
+            "verified-only-failed-run-31856190911-before-missions"
+        ),
         "TRACE_REFERENCE_WORKFLOW_FILE": RECOVERY_WORKFLOW_FILE,
     }
     mismatches = tuple(
@@ -125,6 +143,7 @@ def require_recovery_identity(environment: Mapping[str, str]) -> RecoveryExecuti
         workflow_run_attempt=1,
         repository="eyuchang/trace-worldmodel-flood-sar",
         failed_original_run_id=FAILED_ORIGINAL_RUN_ID,
+        failed_recovery_run_id=FAILED_RECOVERY_RUN_ID,
     )
 
 
@@ -136,8 +155,15 @@ def require_recovery_boundary(
 
     protocol = verify_recovery_protocol(repository_root)
     failure = load_failed_original_record(repository_root)
+    failed_recovery = load_failed_recovery_record(repository_root)
     if failure.workflow_run_id != FAILED_ORIGINAL_RUN_ID or failure.mission_execution_started:
         raise ValueError("recovery predecessor is not the registered pre-evaluation failure")
+    if (
+        failed_recovery.workflow_run_id != FAILED_RECOVERY_RUN_ID
+        or failed_recovery.protected_list_derivation_succeeded
+        or failed_recovery.mission_execution_started
+    ):
+        raise ValueError("recovery-v1 predecessor is not the registered pre-derivation failure")
     base_protocol = load_reference_validation_protocol(repository_root)
     base_freeze = verify_reference_validation_freeze(repository_root)
     if base_freeze.freeze_digest != protocol.base_freeze_digest:
