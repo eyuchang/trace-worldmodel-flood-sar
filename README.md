@@ -3,10 +3,11 @@
 
 TRACE-WorldModel is an active TRACE architecture for auditable world models.
 
-The repository has two verified execution surfaces:
+The repository has three verified execution surfaces:
 
 1. **D0.5 Predictive Scheduling**, the browser teaching workbench.
 2. **WF-DFLD-01-SMALL**, the headless Tasks 1 and 2 Delta simulator.
+3. **WF-DFLD-01-REFERENCE**, the event-sourced Task 3 base integration scenario.
 
 ## Naming note
 
@@ -115,6 +116,7 @@ qualified or used by the canonical walkthrough.
 - Geography: OpenStreetMap-derived road and waterway graphs
 - Experimental evaluation layer: **RQ5 revalidation-guard protocol** (optional; off by default in the teaching gate)
 - Delta research surface: **WF-DFLD-01-SMALL generator v8 / protocol v10**, headless and deterministic
+- Reference research surface: **WF-DFLD-01-REFERENCE**, validated non-LEAP base scenario
 - Delta canonical predictor: transparent Toy teaching fixture
 - Delta learned-predictor status: MLP and V-JEPA are **unqualified**
 
@@ -428,6 +430,59 @@ hydrology; and a frozen preauthorized-automatic-aid teaching assumption. It is
 not historically or demographically calibrated, does not establish operational
 readiness, and excludes Task 3 breach, cascade, negotiated mutual aid, crew
 rotation, federation, casualty, full-network, and UI mechanisms.
+
+## WF-DFLD-01-REFERENCE base scenario
+
+The Task 3 Reference scenario is the Medium-scale Flood-SAR configuration. It
+extends Small with eight islands, four logical coordination partitions, a
+96-hour evaluation window after a 48-hour burn-in, a scripted nonforecast breach,
+about 2,000 causal truth episodes and 2,900 lossy public reports per mission,
+staged multilevel resources and crews, event-sourced execution, registered fault
+families, restart recovery, compensation, and deterministic replay. Its geography
+is an offline, simulation-grade fixture curated from government sources; synthetic
+partitions are clearly separated from real legal or operational authority.
+
+The first mission-executing registered base validation completed 100 independent
+missions in [GitHub run `31858415326`](https://github.com/eyuchang/trace-worldmodel-flood-sar/actions/runs/31858415326).
+All ten exact integration gates passed, covering causal-axis isolation, canonical
+performance, chain integrity, conservation, exact replay, fault reachability,
+hidden-truth isolation, restart equivalence, Small preservation, and source
+security. Mean mission counts were 2,891.71 public reports, 1,992.04 latent
+incidents, 406.22 allocations, and 1,887.34 refusals. The mean peak finite strict
+concurrent load ratio was 25.250, with 15.84 strict-unserviceable windows; under
+the registered `kappa=0.5` scarcity sensitivity, those values were 29.376 and
+18.12. These are descriptive stress-workload results, not operational targets or
+policy-effectiveness claims.
+
+The validation is the frozen **non-LEAP baseline**. It does not evaluate LEAP,
+compare TRACE against another controller, qualify a learned predictor, reconstruct
+a historical flood, or establish field reliability. A later TRACE–LEAP study must
+use a separate protocol and matched exogenous worlds so its incremental effect is
+measurable without changing the validated Reference mechanics.
+
+The original report, disclosed seed plan, and all 20 shard receipts are retained
+under `data/scenario/delta/reference_validation/v2_recovery_original`. Verify their
+byte-exact registry from a clean checkout with:
+
+```bash
+python scripts/reference/manage_base_validation_result_v1.py \
+  --repository-root . verify
+```
+
+Reference documentation and evidence:
+
+- [Base validation result and claim limits](docs/delta/reference/validation/REFERENCE_BASE_VALIDATION_V2_RECOVERY_RESULT.md)
+- [Frozen base-validation protocol](docs/delta/reference/REFERENCE_BASE_VALIDATION_PROTOCOL_V2.md)
+- [Physical model card](docs/delta/reference/REFERENCE_PHYSICAL_MODEL_CARD_V1.md)
+- [Capacity protocol](docs/delta/reference/REFERENCE_CAPACITY_PROTOCOL_V1.md)
+- [Replay protocol](docs/delta/reference/REFERENCE_REPLAY_PROTOCOL_V2.md)
+- [G3 handoff architecture](docs/delta/reference/REFERENCE_G3_TRACE_LEAP_HANDOFF_ADR_V2.md)
+- [LEAP mechanism-identity and adaptation audit](docs/delta/reference/TRACE_LEAP_MECHANISM_IDENTITY_AND_ADAPTATION_AUDIT_V1.md)
+- [Committed result registry](data/scenario/delta/reference_validation/v2_recovery_original/reference_base_validation_recovery_registry_v1.json)
+
+The current geography is valid for frozen offline research execution. Public
+redistribution remains fail-closed until the repository-history and source-license
+delivery gate passes; this limits public packaging, not the completed validation.
 
 ## Student installation guide
 
@@ -752,6 +807,9 @@ trace-worldmodel-flood-sar/
 ├── labs/                    student laboratory exercises
 ├── models/                  model manifests and optional external weights
 ├── scripts/                 setup, geography, workbench, and protocol registration
+├── src/trace_reference/     Task 3 Reference generator, runtime, replay, and validation
+├── src/trace_reference_recovery/
+│                            governed validation-recovery and result verification
 ├── src/trace_jepa/
 │   ├── contracts/           evidence, claims, actions, outcomes
 │   ├── experimental/        RQ5 profile, revalidation guard, formal checks
@@ -803,7 +861,10 @@ Begin with:
 - `src/trace_jepa/planning/`
 - `src/trace_jepa/predictor/`
 - `src/trace_jepa/scenario/delta/`
+- `src/trace_reference/`
+- `src/trace_reference_recovery/`
 - `tests/delta/`
+- `recovery_tests/reference/`
 - `tests/predictor/`
 - `CONTRIBUTING.md`
 - `docs/adr/0001-delta-package-boundaries.md`
