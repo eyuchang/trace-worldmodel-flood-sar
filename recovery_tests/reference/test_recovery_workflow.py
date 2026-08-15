@@ -134,6 +134,8 @@ def test_branch_governance_workflow_and_script_cannot_prepare_a_plan() -> None:
 
     assert "recovery_tests/reference" in governance
     assert "verify-manifest" in governance
+    assert "git show --check --format= HEAD" in governance
+    assert "HEAD^" not in governance
     assert "authorize" not in governance
     assert 'commands.add_parser("prepare")' not in script
     assert "prepare_protected_seed_plan" not in script

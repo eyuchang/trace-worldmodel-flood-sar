@@ -54,4 +54,4 @@ jobs:
             --repository-root . verify-manifest
 
       - name: Reject whitespace errors
-        run: git diff --check HEAD^ HEAD
+        run: git show --check --format= HEAD
