@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:40,000
+Welcome. In this lab you will run the delivered TRACE Small Flood-SAR teaching simulator and finish a controller that turns a TRACE consumer action plus visible resource state into an allocation or a refusal.
+
+2
+00:00:40,000 --> 00:01:40,000
+The goal is one complete, understandable rescue path, not a reimplementation of the full research simulator. Small is synthetic and reduced-order, and student variants are not research results.
+
+3
+00:01:40,000 --> 00:02:55,000
+Your code begins at the downstream rescue-controller boundary. It checks whether TRACE permits use and whether compatible, reachable, available capacity exists.
+
+4
+00:02:55,000 --> 00:03:55,000
+Preflight performs no network request and does not write scientific artifacts. Run it before the room starts coding.
+
+5
+00:03:55,000 --> 00:05:00,000
+The fresh deterministic scenario produces eight allocations, twelve refusals, and eight visible-evidence repairs. Replay regenerates the run and compares every byte.
+
+6
+00:05:00,000 --> 00:06:30,000
+The capacity-refusal case is crucial: TRACE clears, but no compatible resource is currently available. Authorization and allocation are different layers.
+
+7
+00:06:30,000 --> 00:07:45,000
+The resource ID tie-break prevents input order from changing dispatch when travel times tie.
+
+8
+00:07:45,000 --> 00:09:15,000
+A consumer action other than CLEAR must refuse before dispatch. With CLEAR, call your resource filter. No eligible resource produces a capacity refusal; otherwise allocate the first deterministic resource.
+
+9
+00:09:15,000 --> 00:10:30,000
+Append-only history lets a reviewer see what the controller represented and why it acted at each time.
+
+10
+00:10:30,000 --> 00:11:30,000
+Your decisions should match the public walkthrough. The scaffold owns artifact loading and contract validation; your code owns downstream controller choices.
+
+11
+00:11:30,000 --> 00:12:45,000
+The variants alter copied lab resource views only. They show the layer boundary without changing TRACE, the canonical book, or a registered result.
+
+12
+00:12:45,000 --> 00:13:45,000
+The retained evidence follows original and recovery artifact-retention failures. Describe that history exactly.
+
+13
+00:13:45,000 --> 00:14:50,000
+The audit chain explains what the controller represented and why it acted. It does not prove real-world truth, optimality, or operational readiness.

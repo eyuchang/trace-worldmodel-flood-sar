@@ -1,0 +1,91 @@
+{
+  "schema_version": "trace-small-sar-lab-cases-v1",
+  "source": {
+    "base_commit": "3f912bdf3fbacb679063da9ed2ce15a2330b91ab",
+    "book_manifest_sha256": "f52ae922a6a91a35816714286430a2bf701f5319c25a5cc01294fcc145dbb8c8",
+    "book_path": "data/scenario/delta/reference/wf_dfld_01_small_book_v6",
+    "scenario_id": "WF-DFLD-01-SMALL",
+    "source_tree_sha256": "7d711f72e809ff4596d32d334e6c93e17737cf3ed2e19cc6840a9e6b9d55109a"
+  },
+  "public_artifacts": [
+    {
+      "file_name": "calls.json",
+      "sha256": "7da712389331a561e73889c7c0e6f9acc36e81bd4aaad7534992c45defce7709"
+    },
+    {
+      "file_name": "resources.json",
+      "sha256": "28a0cad38eca32e702615eb40da1edf9ea5ae0b8184b86f1d831f63a4e51edc1"
+    },
+    {
+      "file_name": "controller_decisions.json",
+      "sha256": "631bee18312f4568fdcf8420f12e9f5e09a29649b7527d0cde154c7e2d9cc5cc"
+    },
+    {
+      "file_name": "controller_reconciliation.json",
+      "sha256": "24883dcf09c72c6c3952de3c06d81f29fd74ba486129e20a891122e99eaf3a8e"
+    },
+    {
+      "file_name": "evidence_ledger.json",
+      "sha256": "d7f0772e24ec6456bedb88abaef8196c0b41a4c8da6e9b97b289c86422c91bfa"
+    },
+    {
+      "file_name": "predictor_requests.json",
+      "sha256": "9aadc15238d54460d0c2166fdfe48ecf05a065462c302f70656540b0febc5a6d"
+    },
+    {
+      "file_name": "trace_records.json",
+      "sha256": "03d6f57214db6e6f039f77e67770d615a005bda59ce03e12020e934dab91d727"
+    },
+    {
+      "file_name": "commitments.json",
+      "sha256": "336034c2f5b5cefbbd93e01d2dd98e0498ea5902129e13c45c0a114bcdb17de4"
+    },
+    {
+      "file_name": "outcomes.json",
+      "sha256": "299ea8ca9654022a3540745830d5785a17ef55005ec0ce86ad9106ce00911a6c"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "allocation",
+      "call_id": "C8-51128dec2bcf690f",
+      "expected_event_type": "allocation",
+      "expected_reason_code": "allocated_compatible_capacity",
+      "expected_resource_id": "RES-ENGINE-01",
+      "expected_trace_decision": "clear",
+      "trace_record_id": "trace-a3a193ed42b86e47471e",
+      "trace_record_version": 2
+    },
+    {
+      "case_id": "evidence_hold",
+      "call_id": "C8-9fd8515db9a47379",
+      "expected_event_type": "refusal",
+      "expected_reason_code": "trace_not_clear",
+      "expected_resource_id": null,
+      "expected_trace_decision": "hold",
+      "trace_record_id": "trace-da3d84d2052a8ef9163a",
+      "trace_record_version": 2
+    },
+    {
+      "case_id": "capacity_refusal",
+      "call_id": "C8-6eb8a02621930b25",
+      "expected_event_type": "refusal",
+      "expected_reason_code": "no_compatible_capacity",
+      "expected_resource_id": null,
+      "expected_trace_decision": "clear",
+      "trace_record_id": "trace-dc2fe125e1e8908043b5",
+      "trace_record_version": 2
+    },
+    {
+      "case_id": "visible_repair",
+      "call_id": "C8-fd76f89d72443d03",
+      "expected_event_type": "repair",
+      "expected_reason_code": "visible_evidence_repair",
+      "expected_resource_id": null,
+      "expected_trace_decision": "hold",
+      "prior_case_id": "allocation",
+      "trace_record_id": "trace-a3a193ed42b86e47471e",
+      "trace_record_version": 4
+    }
+  ]
+}
