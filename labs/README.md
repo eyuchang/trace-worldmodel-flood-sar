@@ -10,9 +10,9 @@ Read [`../docs/MISSION_BRIEF.md`](../docs/MISSION_BRIEF.md) before Lab 1. Studen
 | 4 | trained action-prefix predictor | How do actions condition predicted futures? |
 | 5 | calibrated semantic probes | How does a latent forecast become a grounded claim? |
 | 6 | revision and local repair | How does new evidence supersede a failed claim without erasing history? |
-| 7 | Small end-to-end SAR controller | How do TRACE authorization, visible capacity, commitment, outcome, and repair form one accountable rescue path? |
+| 7 | Small flood-response controller | How does a call become a unit allocation, refusal, or later correction? |
 
 Students do not advance until the preceding artifacts can be replayed from named versions.
 
-For a current, standalone workshop route that does not require the historical
-model labs, use [`07_small_sar_codelab/`](07_small_sar_codelab/).
+For a current, standalone workshop route that requires no earlier labs or SAR
+background, use [`07_small_sar_codelab/`](07_small_sar_codelab/).

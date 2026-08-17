@@ -46,231 +46,224 @@ class Slide:
 
 SLIDES: Final = (
     Slide(
-        "Build an End-to-End TRACE Flood-SAR Controller",
-        40,
+        "A flood call arrives. Should we send a unit?",
+        35,
         (
-            "PUBLIC EVIDENCE → TRACE → DISPATCH → COMMITMENT → OUTCOME → REPAIR",
-            "No GPU  •  No model download  •  Offline execution",
-            "Screen-only review draft — narration supplied as captions",
+            "Your mission: build the controller that makes and explains the decision.",
+            "No previous rescue-system experience required.",
+            "No GPU or model download.",
         ),
         narration=(
-            "Welcome. In this lab you will run the delivered TRACE Small Flood-SAR "
-            "teaching simulator and finish a controller that turns a TRACE consumer "
-            "action plus visible resource state into an allocation or a refusal."
+            "A welfare-check call arrives during a simulated flood. Should the software "
+            "send a response unit? In this lab, you will program that decision."
         ),
     ),
     Slide(
-        "Learning objectives and scientific scope",
-        60,
+        "A call becomes a recorded decision",
+        65,
         (
-            "RUN: fresh deterministic Small scenario and exact replay",
-            "TRACE: follow public evidence and exact record versions",
-            "BUILD: deterministic dispatch, refusal, and append-only repair",
-            "EXPLAIN: why CLEAR is necessary but not sufficient for allocation",
-            "BOUNDARY: synthetic, reduced-order, non-operational teaching system",
-            "Debate and regret are separate workshop components.",
+            "1  CALL — a request for help",
+            "2  EVIDENCE — information the controller is allowed to see",
+            "3  TRACE — is the proposed action ready to move forward?",
+            "4  YOUR CONTROLLER — is a suitable unit available?",
+            "5  SAVED ACTION — allocate or refuse, with a reason",
         ),
         narration=(
-            "The goal is one complete, understandable rescue path, not a "
-            "reimplementation of the full research simulator. Small is synthetic and "
-            "reduced-order, and student variants are not research results."
+            "Search and rescue is the work of finding, reaching, and helping people. "
+            "The simulation has a hidden answer key, but the controller cannot read it. "
+            "A call produces visible evidence, TRACE checks the information, and your "
+            "controller checks the response units before saving an action."
         ),
     ),
     Slide(
-        "Architecture: who owns each decision?",
-        75,
+        "TRACE checks information. You check resources.",
+        70,
         (
-            "1  Synthetic public call",
-            "2  Controller-visible evidence from the Toy teaching predictor",
-            "3  TRACE record: claim, evidence refs, verdict, consumer action",
-            "4  YOUR CODE: authorization + visible capacity → allocate or refuse",
-            "5  Exact record/version → commitment → public observed outcome",
-            "6  Later visible report → append-only repair",
-            "Latent truth is never an input to the student controller.",
+            "TRACE CLEAR — information checks passed; continue to resources",
+            "TRACE HOLD — information is not ready; stop for now",
+            "YOUR CODE — check availability, route, and capability",
+            "CLEAR means 'continue.' It does not mean 'send a unit.'",
         ),
         narration=(
-            "Your code begins at the downstream rescue-controller boundary. It checks "
-            "whether TRACE permits use and whether compatible, reachable, available "
-            "capacity exists."
+            "TRACE is the system's decision notebook. CLEAR permits a resource check. "
+            "HOLD stops the controller. Your code then decides whether a suitable unit "
+            "can actually be sent."
         ),
     ),
     Slide(
-        "Five-minute offline preflight",
-        60,
+        "Three outcomes: allocate, refuse, repair",
+        65,
         (
-            "Checks Python, checkout, complete dependencies, public hashes, and temp output.",
-            "If a hash fails: replace the checkout; never edit a manifest.",
+            "ALLOCATE — select a suitable unit",
+            "REFUSE: INFORMATION — TRACE did not clear the action",
+            "REFUSE: CAPACITY — no suitable unit is free",
+            "REPAIR — append a later correction to the decision history",
+            "A repair updates the record; it is not a physical repair.",
+        ),
+        narration=(
+            "An allocation selects a unit, a refusal selects none and explains why, and a "
+            "repair appends a later correction without erasing the earlier decision."
+        ),
+    ),
+    Slide(
+        "One command checks your setup",
+        55,
+        (
+            "Five PASS lines mean Python, files, packages, examples, and scratch space work.",
+            "Share the first failed line with an instructor.",
         ),
         terminal=(
             "(trace-lab) $ .venv/bin/python labs/07_small_sar_codelab/scripts/preflight.py",
             "[PASS] python: Python 3.11 (preferred workshop version)",
-            "[PASS] checkout: repository checkout and lab files found",
-            "[PASS] dependencies: hash-locked Small runtime dependencies import correctly",
-            "[PASS] public-data: public artifact hashes and four teaching chains verified",
-            "[PASS] temporary-output: per-student temporary output is writable",
+            "[PASS] lab-files: starter code and workshop data found",
+            "[PASS] packages: required Python packages are available",
+            "[PASS] examples: four rescue examples are ready",
+            "[PASS] scratch-space: private practice output is writable",
             "READY: no GPU, model checkpoint, or live data connection is needed.",
         ),
         narration=(
-            "Preflight performs no network request and does not write scientific artifacts. "
-            "Run it before the room starts coding."
+            "Preflight checks the workshop setup. Continue only after five PASS lines and "
+            "READY."
         ),
     ),
     Slide(
-        "Run Small once, then replay every byte",
-        65,
+        "Run once—and prove it repeats",
+        70,
         (
-            "These are synthetic controller events—not counts of real rescues.",
-            "Replay identity does not establish real-world correctness.",
+            "A scenario is one complete simulated flood-response session.",
+            "Replay checks that the same inputs produce the same saved decisions.",
+            "Byte-identical = every saved file matches exactly.",
         ),
         terminal=(
             '(trace-lab) $ sar_work_root="$(mktemp -d)"',
             '(trace-lab) $ trace-jepa-delta-small run --output "$sar_work_root/run"',
-            "INFO completed WF-DFLD-01-SMALL: allocated=8 refused=12 repaired=8",
-            '(trace-lab) $ trace-jepa-delta-small replay --reference "$sar_work_root/run" …',
+            "INFO completed: allocated=8 refused=12 repaired=8",
+            '(trace-lab) $ trace-jepa-delta-small replay --reference "$sar_work_root/run" ...',
             "INFO replay is byte-identical",
         ),
         narration=(
-            "The fresh deterministic scenario produces eight allocations, twelve "
-            "refusals, and eight visible-evidence repairs. Replay regenerates the run "
-            "and compares every byte."
+            "Run one simulated session, then replay it. Byte-identical means every saved "
+            "file matches, so the same inputs produced the same decisions."
         ),
     ),
     Slide(
-        "Four public decision cases",
-        90,
+        "Four cases reveal the decision rule",
+        95,
         (
-            "ALLOCATION — TRACE clear + compatible capacity",
-            "EVIDENCE REFUSAL — TRACE hold, even though capacity exists",
-            "CAPACITY REFUSAL — TRACE clear, but no compatible capacity",
-            "VISIBLE REPAIR — allocation@v2 → repair@v4; no new commitment",
-            "The walkthrough renders public book records; it does not reveal the solution.",
-        ),
-        terminal=(
-            "allocation: TRACE=clear -> allocation, resource=RES-ENGINE-01",
-            "evidence_hold: TRACE=hold -> refusal (trace_not_clear)",
-            "capacity_refusal: TRACE=clear -> refusal (no_compatible_capacity)",
-            "visible_repair: allocation@v2 -> repair@v4 (new commitment=false)",
+            "1  WELFARE CHECK — CLEAR + free unit -> allocate Engine 01",
+            "2  LEVEE INSPECTION — HOLD -> refuse; information is too old",
+            "3  MEDICAL RESPONSE — CLEAR + no free unit -> refuse for capacity",
+            "4  LATER UPDATE — keep allocation v2; append repair v4",
+            "KEY IDEA — CLEAR allows a resource check; it does not dispatch a unit.",
         ),
         narration=(
-            "The capacity-refusal case is crucial: TRACE clears, but no compatible "
-            "resource is currently available. Authorization and allocation are "
-            "different layers."
+            "The four cases show allocation, information refusal, capacity refusal, and "
+            "append-only repair. The medical case proves that CLEAR and allocation are "
+            "not the same thing."
         ),
     ),
     Slide(
-        "TODO 1 — Filter resources deterministically",
+        "TODO 1: Which units can help?",
         75,
         (
-            "Keep only resources that are:",
-            "  YES — currently available",
-            "  YES — route-reachable",
-            "  YES — on the requested route",
-            "  YES — capable of the requested service",
-            "Sort by (routed_travel_s, resource_id). Never hard-code the example engine.",
+            "KEEP a unit only when all four checks pass:",
+            "  available now",
+            "  route is reachable",
+            "  route matches the request",
+            "  unit has the required capability",
+            "SORT by travel time, then resource ID, for repeatable results.",
         ),
         terminal=(
-            "TRACE_SMALL_SAR_CONTROLLER=starter … pytest … -k eligible_resources",
+            "TRACE_SMALL_SAR_CONTROLLER=starter ... pytest ... -k eligible_resources",
             ".                                                                        [100%]",
         ),
         narration=(
-            "The resource ID tie-break prevents input order from changing dispatch when "
-            "travel times tie."
+            "A capability is a task a unit can perform. Keep only available, reachable, "
+            "correct-route units with the needed capability, then sort them deterministically."
         ),
     ),
     Slide(
-        "TODO 2 — TRACE authorization plus capacity",
+        "TODO 2: Should we send one?",
         90,
         (
-            "TRACE not CLEAR  + any capacity   → evidence refusal",
-            "TRACE CLEAR      + no capacity    → capacity refusal",
-            "TRACE CLEAR      + capacity       → allocation",
-            "First validate the call and belief cluster. Then apply checks in this order.",
+            "TRACE not CLEAR + any resources -> refuse: information",
+            "TRACE CLEAR + no eligible unit   -> refuse: capacity",
+            "TRACE CLEAR + eligible unit      -> allocate first unit",
+            "First verify that the request and TRACE record name the same situation.",
         ),
         narration=(
-            "A consumer action other than CLEAR must refuse before dispatch. With CLEAR, "
-            "call your resource filter. No eligible resource produces a capacity refusal; "
-            "otherwise allocate the first deterministic resource."
+            "First reject mismatched calls or situations. Then apply TRACE before capacity. "
+            "With CLEAR, an empty eligible list refuses; otherwise allocate its first unit."
         ),
     ),
     Slide(
-        "TODO 3 — Append visible-evidence repair",
+        "TODO 3: New information, same history",
         75,
         (
-            "Require an existing history.",
-            "Require the same belief cluster and TRACE record chain.",
-            "Require a later version and nonempty visible evidence basis.",
-            "Return: old history + one REPAIR event.",
-            "Do not erase allocation@v2. Do not create a duplicate commitment.",
-        ),
-        terminal=("allocation@v2  ───────────────→  repair@v4", "      retained       appended"),
-        narration=(
-            "Append-only history lets a reviewer see what the controller represented and "
-            "why it acted at each time."
-        ),
-    ),
-    Slide(
-        "Focused tests, then your end-to-end run",
-        60,
-        (
-            "Tests cover normal decisions, malformed links, visible-only access, hashes,",
-            "protected output paths, documentation, and determinism.",
+            "Require the same situation and TRACE record chain.",
+            "Require a larger record version and visible evidence for the update.",
+            "KEEP allocation v2 in history.",
+            "APPEND repair v4.",
+            "Do not select the resource again.",
         ),
         terminal=(
-            "(trace-lab) $ TRACE_SMALL_SAR_CONTROLLER=starter … pytest -q …/tests",
-            "...................                                                      [100%]",
-            "19 passed",
-            "(trace-lab) $ python …/lab_runtime.py --controller starter --case all",
-            "Scope: public Small artifacts; lab-only controller; registered result untouched.",
+            "version 2: allocation stays in history",
+            "version 4: repair is appended",
         ),
         narration=(
-            "Your decisions should match the public walkthrough. The scaffold owns artifact "
-            "loading and contract validation; your code owns downstream controller choices."
+            "A repair is a later correction to the record. Keep the earlier allocation and "
+            "append a new repair only when the update belongs to the same chain."
         ),
     ),
     Slide(
-        "Teaching-only capacity comparisons",
+        "Tests show which rule is missing",
         75,
         (
-            "NO CAPACITY:  TRACE clear → refusal (no_compatible_capacity)",
-            "RESTORED:     TRACE clear → allocation (allocated_compatible_capacity)",
-            "TEACHING-ONLY — copied resource view; canonical TRACE and book unchanged",
-            "Do not pool these outputs or call them an experiment.",
+            "Run one TODO test while coding.",
+            "Run all student tests when the three functions are complete.",
+            "Then run your controller and compare all four decisions.",
+        ),
+        terminal=(
+            "(trace-lab) $ TRACE_SMALL_SAR_CONTROLLER=starter ... pytest -q .../tests",
+            "...................                                                      [100%]",
+            "19 passed",
+            "(trace-lab) $ python .../lab_runtime.py --controller starter --case all",
+            "Key idea: CLEAR lets the controller check resources; it does not dispatch one.",
         ),
         narration=(
-            "The variants alter copied lab resource views only. They show the layer boundary "
-            "without changing TRACE, the canonical book, or a registered result."
+            "A failure name points to the rule that still needs work. When every test passes, "
+            "run your controller and compare it with the completed walkthrough."
         ),
     ),
     Slide(
-        "Replay the committed book",
-        60,
-        (
-            "Reference: wf_dfld_01_small_book_v6",
-            "Bound report: WF_DFLD_01_SMALL_VALIDATION_V6.json",
-            "Expected: replay is byte-identical to the committed book",
-            "Evidence status: authorized artifact-reconstruction replication",
-            "Do not call it untouched confirmation.",
-        ),
-        narration=(
-            "The retained evidence follows original and recovery artifact-retention failures. "
-            "Describe that history exactly."
-        ),
-    ),
-    Slide(
-        "What you built — and what it does not prove",
+        "Change capacity; watch the decision change",
         65,
         (
-            "DONE — Ran real Small teaching code and exact replay",
-            "DONE — Followed public evidence and exact TRACE record versions",
-            "DONE — Implemented dispatch, two refusal pathways, and append-only repair",
-            "LIMIT — Does not prove claims are true or actions are optimal",
-            "LIMIT — Does not establish operational emergency-response validity",
-            "LIMIT — Toy predictor and student variants are not effectiveness evidence",
-            "The retained book is artifact-reconstruction evidence.",
+            "MAKE WELFARE UNITS BUSY:",
+            "  TRACE stays CLEAR -> controller now refuses",
+            "MAKE A MEDICAL UNIT AVAILABLE:",
+            "  TRACE stays CLEAR -> controller now allocates",
+            "Changing capacity can change the result even when TRACE does not change.",
         ),
         narration=(
-            "The audit chain explains what the controller represented and why it acted. It "
-            "does not prove real-world truth, optimality, or operational readiness."
+            "The what-if runs change copied resource snapshots. They isolate the resource "
+            "decision: capacity changes the result while TRACE remains CLEAR."
+        ),
+    ),
+    Slide(
+        "You built the bridge from information to action",
+        55,
+        (
+            "I can explain the path from a flood call to a controller decision.",
+            "I can explain why CLEAR is not the same as allocation.",
+            "I can explain information refusal versus capacity refusal.",
+            "I can append a repair without erasing the earlier decision.",
+            "This workshop uses a simulation for learning.",
+        ),
+        narration=(
+            "You connected evidence, TRACE, resources, and recorded action. You can now explain "
+            "both refusals, deterministic allocation, append-only repair, and exact replay. "
+            "This workshop uses a simulation for learning."
         ),
     ),
 )
@@ -299,42 +292,44 @@ def _wrapped(lines: Sequence[str], width: int) -> list[str]:
 def render_slide(slide: Slide, index: int, output: Path) -> None:
     image = Image.new("RGB", (WIDTH, HEIGHT), BACKGROUND)
     draw = ImageDraw.Draw(image)
-    title_font = _font(FONT_BOLD, 58)
-    body_font = _font(FONT_REGULAR, 34)
-    body_bold = _font(FONT_BOLD, 34)
-    terminal_font = _font(FONT_REGULAR, 26)
+    title_font = _font(FONT_BOLD, 64)
+    body_size = 40 if slide.terminal else 48
+    body_font = _font(FONT_REGULAR, body_size)
+    body_bold = _font(FONT_BOLD, body_size)
+    terminal_font = _font(FONT_REGULAR, 28)
     footer_font = _font(FONT_REGULAR, 24)
 
     draw.rectangle((0, 0, WIDTH, 14), fill=CYAN)
     draw.text((90, 70), slide.title, font=title_font, fill=TEXT)
     draw.text((90, 148), f"{index:02d} / {len(SLIDES):02d}", font=footer_font, fill=CYAN)
 
-    body_lines = _wrapped(slide.body, 82)
-    body_top = 210
-    terminal_height = 330 if slide.terminal else 0
-    body_bottom = HEIGHT - 110 - terminal_height
-    line_height = 48
+    body_lines = _wrapped(slide.body, 70)
+    line_height = 56 if slide.terminal else 70
+    body_area_top = 220
+    body_area_bottom = 605 if slide.terminal else HEIGHT - 105
+    body_height = max(line_height, len(body_lines) * line_height)
+    body_top = body_area_top + max(0, (body_area_bottom - body_area_top - body_height) // 2)
     for line_index, line in enumerate(body_lines):
         y = body_top + line_index * line_height
-        if y > body_bottom:
+        if y > body_area_bottom:
             break
         color = TEXT
         font = body_font
-        if any(token in line for token in ("BOUNDARY:", "TEACHING-ONLY", "not ", "LIMIT")):
+        if any(token in line for token in ("HOLD", "REFUSE", "busy", "not ")):
             color = AMBER
-        if any(token in line for token in ("YES", "DONE", "YOUR CODE", "ALLOCATION")):
+        if any(token in line for token in ("CLEAR", "ALLOCATE", "KEEP", "YOUR CONTROLLER")):
             color = GREEN
-        if line[:2].isdigit() or line.startswith(("RUN:", "TRACE:", "BUILD:", "EXPLAIN:")):
+        if line[:2].isdigit() or line.startswith(("TRACE", "YOU:", "MAKE ")):
             font = body_bold
             color = CYAN
         draw.text((110, y), line, font=font, fill=color)
 
     if slide.terminal:
-        top = HEIGHT - 390
-        draw.rounded_rectangle((85, top, WIDTH - 85, HEIGHT - 82), radius=20, fill=PANEL)
-        draw.text((115, top + 20), "TERMINAL / EXPECTED OUTPUT", font=footer_font, fill=CYAN)
+        top = 630
+        draw.rounded_rectangle((85, top, WIDTH - 85, HEIGHT - 82), radius=24, fill=PANEL)
+        draw.text((115, top + 20), "COMMAND / EXPECTED OUTPUT", font=footer_font, fill=CYAN)
         for line_index, line in enumerate(slide.terminal):
-            y = top + 66 + line_index * 37
+            y = top + 68 + line_index * 38
             if y > HEIGHT - 110:
                 break
             color = GREEN if line.startswith(("[PASS]", "READY", "INFO", "19 passed")) else TEXT
@@ -342,7 +337,7 @@ def render_slide(slide: Slide, index: int, output: Path) -> None:
 
     draw.text(
         (90, HEIGHT - 52),
-        "TRACE Small SAR  •  screen-only local review draft  •  no personal content",
+        "Flood Rescue Controller  •  Student Code Lab",
         font=footer_font,
         fill=MUTED,
     )
@@ -428,7 +423,7 @@ def build_video(output: Path, captions: Path) -> None:
             "+faststart",
             "-an",
             "-metadata",
-            "title=TRACE Small SAR screen-only review draft",
+            "title=Flood Rescue Controller student review video",
             str(temporary_output),
         ]
         subprocess.run(command, check=True, timeout=180)

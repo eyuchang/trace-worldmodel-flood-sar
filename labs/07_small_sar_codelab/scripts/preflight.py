@@ -40,7 +40,7 @@ def _check_checkout() -> str:
     missing = sorted(str(path.relative_to(REPO_ROOT)) for path in expected if not path.is_file())
     if missing:
         raise PreflightFailure("missing checkout files: " + ", ".join(missing))
-    return "repository checkout and lab files found"
+    return "starter code and workshop data found"
 
 
 def _check_dependencies() -> str:
@@ -57,14 +57,14 @@ def _check_dependencies() -> str:
             + ", ".join(missing)
             + "; reinstall requirements-delta-python311.lock"
         )
-    return "hash-locked Small runtime dependencies import correctly"
+    return "required Python packages are available"
 
 
 def _check_public_data() -> str:
     cases = lab_runtime.build_cases()
     if set(cases) != {"allocation", "evidence_hold", "capacity_refusal", "visible_repair"}:
-        raise PreflightFailure("public teaching case set is incomplete")
-    return "public artifact hashes and four teaching chains verified"
+        raise PreflightFailure("the four rescue examples are incomplete")
+    return "four rescue examples are ready"
 
 
 def _check_temporary_output() -> str:
@@ -73,7 +73,7 @@ def _check_temporary_output() -> str:
         path.write_text("ok\n", encoding="utf-8")
         if path.read_text(encoding="utf-8") != "ok\n":
             raise PreflightFailure("temporary output round trip failed")
-    return "per-student temporary output is writable"
+    return "private practice output is writable"
 
 
 def run_preflight() -> list[tuple[str, str]]:
@@ -81,10 +81,10 @@ def run_preflight() -> list[tuple[str, str]]:
 
     return [
         ("python", _check_python()),
-        ("checkout", _check_checkout()),
-        ("dependencies", _check_dependencies()),
-        ("public-data", _check_public_data()),
-        ("temporary-output", _check_temporary_output()),
+        ("lab-files", _check_checkout()),
+        ("packages", _check_dependencies()),
+        ("examples", _check_public_data()),
+        ("scratch-space", _check_temporary_output()),
     ]
 
 

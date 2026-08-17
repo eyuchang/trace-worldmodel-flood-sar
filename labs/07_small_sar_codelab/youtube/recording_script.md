@@ -1,57 +1,78 @@
-# Recording Script: TRACE Small End-to-End Flood-SAR
+# Recording Script: Should We Send a Flood-Response Unit?
 
-Target length: **14:50**. The checked-in review draft is screen-only and silent;
-its condensed chapter narration is supplied as timed captions. This file is the
-full captions-ready transcript. A later human recording may read it without
-improvising commands or scientific claims.
+Target length: **14:50**. This is the complete narration and screen sequence
+for students who have never studied search and rescue or TRACE.
 
-## 00:00–00:40 — Title and promise
+The checked-in review video is silent and uses condensed timed captions. A
+human presenter can read this script without inventing definitions, commands,
+or transitions.
 
-**Screen:** Title card: “Build an End-to-End TRACE Flood-SAR Controller.” Show
-the subtitle “Public evidence → TRACE → dispatch → commitment → outcome →
-repair” and badges “No GPU,” “No model download,” and “Offline execution.”
+## 00:00–00:35 — The mission
 
-**Narration:**
-
-Welcome. In this lab you will run the delivered TRACE Small Flood-SAR teaching
-simulator and finish a controller that turns a TRACE consumer action plus visible
-resource state into an allocation or a refusal. You will also append a later
-visible-evidence repair and verify deterministic replay. The exercise uses no
-GPU, learned-model checkpoint, flood video, or live data.
-
-## 00:40–01:40 — Learning objectives and scope
-
-**Screen:** Student learning objectives on the left; limitations on the right.
+**Screen:** Minimal title card: “A flood call arrives. Should we send a unit?”
+Subtitle: “Build the controller that makes and explains the decision.”
 
 **Narration:**
 
-The goal is one complete, understandable rescue path—not a reimplementation of
-the full research simulator. You will distinguish hidden world state from what
-the controller can see, follow exact TRACE record versions, implement dispatch
-and repair, and explain why CLEAR is not allocation. Small is synthetic and
-reduced-order. It is not an operational emergency-response system. Student
-variants are teaching outputs, not research results. Debate and regret are
-covered separately in the workshop.
+Imagine you are helping a flood-response team. A call asks for a welfare check:
+someone may need help, and a response unit might be able to reach them. Should
+the software send that unit? In this lab, you will program that decision. You
+do not need any previous search-and-rescue or TRACE experience.
 
-## 01:40–02:55 — Architecture and ownership
+## 00:35–01:40 — How a call becomes a decision
 
-**Screen:** Animate or reveal the architecture from the student README one step
-at a time.
+**Screen:** Reveal five steps, one at a time: call, evidence, TRACE, your
+controller, recorded action.
 
 **Narration:**
 
-A synthetic call reaches the controller through a lossy public observation
-stream. The Toy predictor produces controller-visible evidence. TRACE records
-the claim, evidence references, verdict, and consumer action. Your code begins
-at the downstream rescue-controller boundary. It checks whether TRACE permits
-use and whether compatible, reachable, available capacity exists. An allocation
-creates a commitment linked to the exact TRACE record and version. A later
-visible report can append a repair. Latent truth exists for offline scoring but
-is never an input to your controller.
+Search and rescue, shortened to SAR, is the work of finding, reaching, and
+helping people during an emergency. Our simulated team receives calls but has
+limited response units. Each call produces evidence: information the software
+is allowed to use. Because this is a simulation, it also has a hidden answer
+key describing the complete made-up situation. The controller cannot read that
+answer key; it must decide from the visible evidence. TRACE records what the
+system believes from that evidence and whether the proposed action may move
+forward. Then your controller checks the units. It either selects one or
+refuses with a reason. The result is saved so someone can later understand what
+happened.
 
-## 02:55–03:55 — Preflight
+## 01:40–02:50 — TRACE and the controller answer different questions
 
-**Screen:** Clean terminal at repository root, 20-point monospace font.
+**Screen:** Two large questions:
+
+```text
+TRACE: Is the information ready to use?
+YOU:   Is a suitable unit available?
+```
+
+Then reveal `CLEAR` and `HOLD`.
+
+**Narration:**
+
+Think of TRACE as the system's decision notebook. It stores a versioned record
+of a proposal and its supporting evidence. In this lab, CLEAR means the
+proposal passed the information checks, so your controller may continue to the
+resource check. HOLD means the information is not ready to use, perhaps because
+it is too old. A hold stops the controller before it selects a unit. The key
+idea is simple: CLEAR allows the next check. CLEAR does not dispatch anything.
+
+## 02:50–03:55 — The three outcomes students will code
+
+**Screen:** Three plain-language outcomes: allocate, refuse, repair.
+
+**Narration:**
+
+Your controller records three kinds of event. An allocation selects a suitable
+unit. A commitment then reserves that unit for the request. A refusal selects
+no unit and records why: either TRACE did not clear the information, or no
+suitable unit was available. A repair is different. It is not a crew fixing a
+physical object. It is a later correction added to the decision history when
+new information arrives. The earlier decision stays visible.
+
+## 03:55–04:50 — Check the setup
+
+**Screen:** Clean terminal with a generic prompt.
 
 **Command:**
 
@@ -59,23 +80,24 @@ is never an input to your controller.
 .venv/bin/python labs/07_small_sar_codelab/scripts/preflight.py
 ```
 
-**Expected output:** five PASS lines and:
+**Expected ending:**
 
 ```text
+[PASS] examples: four rescue examples are ready
+[PASS] scratch-space: private practice output is writable
 READY: no GPU, model checkpoint, or live data connection is needed.
 ```
 
 **Narration:**
 
-Run preflight before the room starts coding. It checks the supported Python
-version, repository files, complete dependency set, hashes of the public
-teaching inputs, and a private temporary output. It performs no network request
-and does not write scientific artifacts. If a hash check fails, replace the
-checkout; never edit a manifest to make the warning disappear.
+Preflight checks your Python version, the workshop files, the required Python
+packages, the four rescue examples, and a private place for practice output. If
+you see five PASS lines and READY, continue. If a check fails, share that one
+line with an instructor instead of trying to change the supplied data.
 
-## 03:55–05:00 — Fresh run and exact replay
+## 04:50–06:00 — Run and replay the flood scenario
 
-**Screen:** Run the commands, then highlight the event counts and replay line.
+**Screen:** Run the commands and highlight the counts, then the replay result.
 
 **Commands:**
 
@@ -96,82 +118,76 @@ replay is byte-identical
 
 **Narration:**
 
-The fresh deterministic scenario runs quickly and produces eight allocations,
-twelve refusals, and eight visible-evidence repairs. These are synthetic
-controller events, not real rescue counts. Replay regenerates the run in a
-clean directory and compares every byte. Exact replay establishes identity to
-the named inputs and code; it does not establish real-world correctness.
+A scenario is one complete simulated flood-response session. This run records
+eight allocations, twelve refusals, and eight later repairs. Replay runs the
+same scenario again and compares every saved file. Byte-identical means the
+files match exactly. In other words, the same inputs produced the same recorded
+decisions.
 
-## 05:00–06:30 — Four public cases
+## 06:00–07:35 — Walk through four completed cases
 
-**Screen:** Run the public-book walkthrough and reveal each row separately.
+**Screen:** Run the walkthrough. Reveal one case at a time and keep the final
+key idea visible.
 
 **Command:**
 
 ```bash
 .venv/bin/python labs/07_small_sar_codelab/lab_runtime.py \
-  --controller book \
-  --case all
-```
-
-**Expected output:**
-
-```text
-allocation: TRACE=clear -> allocation (allocated_compatible_capacity), resource=RES-ENGINE-01
-evidence_hold: TRACE=hold -> refusal (trace_not_clear), resource=none
-capacity_refusal: TRACE=clear -> refusal (no_compatible_capacity), resource=none
-visible_repair: allocation@v2 -> repair@v4 (new commitment=false)
+  --controller book --case all
 ```
 
 **Narration:**
 
-The first case has both TRACE clearance and available compatible capacity. The
-second has capacity but TRACE holds the action because a hard technical gate
-failed. The third is crucial: TRACE clears, but no compatible resource is
-currently available, so the controller refuses. The fourth appends a repair at
-record version four while retaining the earlier commitment. The walkthrough is
-rendered directly from hash-checked public book events; it does not reveal the
-student solution.
+The first call requests a welfare check. TRACE says CLEAR, Engine 01 is usable,
+and the controller allocates it. The second asks for a levee inspection. A
+levee is a barrier that helps hold back floodwater. A unit exists, but TRACE
+says HOLD because the information is too old, so the controller refuses. The
+third is a medical response. TRACE says CLEAR, but both suitable units are busy,
+so the controller refuses for lack of capacity. Finally, new information about
+the welfare check produces record version four. The system keeps the allocation
+at version two and appends a repair. It does not reserve a second unit.
 
-## 06:30–07:45 — TODO 1: eligible resources
+## 07:35–08:50 — TODO 1: which units can help?
 
-**Screen:** Open `starter/rescue_controller.py` and highlight only TODO 1. Show
-the four predicates and deterministic sort key beside the editor.
+**Screen:** Show the two welfare-check resources and the four eligibility
+questions beside `eligible_resources`.
 
 **Narration:**
 
-Your first function filters the visible resource list. Keep a resource only if
-it is currently available, route-reachable, on the requested route, and has the
-required capability. Then sort by routed travel time and resource ID. That
-second key prevents input order from changing the dispatch when travel times
-tie. Do not hard-code the example engine.
+Your first function reads the dispatch board. A resource is a response unit. A
+capability is a task that unit can perform, such as a welfare check. Keep a unit
+only if it is currently available, its route is reachable, its route matches the
+request, and it has the required capability. Then sort usable units by travel
+time and resource ID. The ID breaks a tie, which makes the result deterministic:
+the same input always produces the same order.
 
 **Test:**
 
 ```bash
 TRACE_SMALL_SAR_CONTROLLER=starter .venv/bin/python -m pytest -q \
-  labs/07_small_sar_codelab/tests/test_controller.py \
-  -k eligible_resources
+  labs/07_small_sar_codelab/tests/test_controller.py -k eligible_resources
 ```
 
-## 07:45–09:15 — TODO 2: authorization and capacity
+## 08:50–10:20 — TODO 2: should we send one?
 
 **Screen:** Decision table:
 
-| TRACE | Compatible capacity | Controller event |
+| TRACE | Eligible unit? | Controller result |
 |---|---|---|
-| not CLEAR | any | evidence refusal |
-| CLEAR | none | capacity refusal |
-| CLEAR | available | allocation |
+| not CLEAR | either | refuse: information |
+| CLEAR | no | refuse: capacity |
+| CLEAR | yes | allocate first unit |
 
 **Narration:**
 
-The second function first validates that the request and authorization name the
-same call and belief cluster. A consumer action other than CLEAR must refuse
-before examining dispatch options. With CLEAR, call your filtering function. No
-eligible resource produces a capacity refusal; otherwise allocate the first
-deterministic resource. This ordering preserves the boundary between evidence
-authorization and scarce-resource commitment.
+Your second function joins the two decisions. First, confirm that the request
+and TRACE authorization refer to the same call and situation. The call ID names
+one report. The belief-cluster ID groups reports that the system believes are
+about the same situation. If TRACE is not CLEAR, refuse before checking units.
+With CLEAR, call your resource filter. An empty result means capacity refusal.
+Otherwise allocate the first eligible unit. The starter already imports the
+event and reason labels you need; focus on the decision order rather than setup
+code.
 
 **Test:**
 
@@ -181,29 +197,35 @@ TRACE_SMALL_SAR_CONTROLLER=starter .venv/bin/python -m pytest -q \
   -k "clear_plus_capacity or hold_refuses or clear_without_capacity or mismatched"
 ```
 
-## 09:15–10:30 — TODO 3: append-only repair
+## 10:20–11:35 — TODO 3: new information, same history
 
-**Screen:** Show `allocation@v2 → repair@v4`, with version 2 remaining visible.
+**Screen:** Timeline with both versions still visible:
+
+```text
+version 2: allocation stays in history
+version 4: repair is appended
+```
 
 **Narration:**
 
-The repair function starts with an existing decision history. Require the same
-belief cluster and TRACE record chain, a later version, and a nonempty visible
-evidence basis. Return the old tuple plus one repair event. Do not replace the
-old allocation and do not create a second commitment. Append-only history lets
-a reviewer see what the controller represented and why it acted at each time.
+Your third function receives an existing history and a later TRACE record. The
+history is a Python tuple: an ordered sequence this lab treats as immutable.
+Require an earlier decision, the same situation group, the same TRACE record
+chain, a larger version number, and a nonempty list of visible evidence behind
+the update. Return the old history plus one repair. Do not replace version two,
+select Engine 01 again, or create a second commitment.
 
 **Test:**
 
 ```bash
 TRACE_SMALL_SAR_CONTROLLER=starter .venv/bin/python -m pytest -q \
-  labs/07_small_sar_codelab/tests/test_controller.py \
-  -k repair
+  labs/07_small_sar_codelab/tests/test_controller.py -k repair
 ```
 
-## 10:30–11:30 — Focused tests and student run
+## 11:35–12:50 — Test and run the finished controller
 
-**Screen:** All tests pass, then run the four-case student controller.
+**Screen:** Show the full green test summary, then the friendly four-case
+walkthrough produced by the starter controller.
 
 **Commands:**
 
@@ -211,23 +233,21 @@ TRACE_SMALL_SAR_CONTROLLER=starter .venv/bin/python -m pytest -q \
 TRACE_SMALL_SAR_CONTROLLER=starter .venv/bin/python -m pytest -q \
   labs/07_small_sar_codelab/tests
 .venv/bin/python labs/07_small_sar_codelab/lab_runtime.py \
-  --controller starter \
-  --case all
+  --controller starter --case all
 ```
 
 **Narration:**
 
-Run the entire focused suite. It checks normal behavior, malformed links,
-visible-only access, source hashes, protected output paths, documentation, and
-determinism. Then run your controller end to end. Your four decisions should
-match the public walkthrough. Matching does not mean you rebuilt the whole
-simulator; the scaffold owns artifact loading and contract validation, while
-your code owns the downstream controller choices.
+Run every student test. A failure name points to the rule that still needs
+work. When the suite is green, run your controller on all four cases. Your
+output should match the completed walkthrough: welfare-check allocation,
+information refusal, capacity refusal, and an appended repair. The workshop
+runtime supplies the calls, TRACE decisions, and resource snapshots. The three
+functions you wrote supply the final controller decisions.
 
-## 11:30–12:45 — Teaching-only capacity comparisons
+## 12:50–13:55 — Change capacity and watch the result
 
-**Screen:** Side-by-side output: CLEAR plus no capacity refuses; CLEAR plus
-restored capacity allocates. Keep “TEACHING-ONLY” visible throughout.
+**Screen:** Show the two commands followed by their changed decisions.
 
 **Commands:**
 
@@ -240,54 +260,33 @@ restored capacity allocates. Keep “TEACHING-ONLY” visible throughout.
 
 **Narration:**
 
-These comparisons change copied resource views inside the lab only. Removing
-capacity turns the cleared allocation case into a capacity refusal. Restoring
-one visible resource turns the cleared capacity case into a lab allocation.
-Neither command changes TRACE, the canonical book, or a registered result. Do
-not pool these outputs or call them an experiment.
+These two what-if runs change only copied resource snapshots. First, make the
+welfare-check units busy. TRACE still says CLEAR, but the controller now
+refuses. Next, make a medical-response unit available. TRACE still says CLEAR,
+and the controller now allocates it. This isolates the lesson: changing
+capacity can change the controller decision even when TRACE stays the same.
 
-## 12:45–13:45 — Committed-book replay
+## 13:55–14:50 — What you built
 
-**Screen:** Run the committed-book replay and highlight “byte-identical.”
-
-**Command:**
-
-```bash
-.venv/bin/trace-jepa-delta-small replay \
-  --reference data/scenario/delta/reference/wf_dfld_01_small_book_v6 \
-  --output "$sar_work_root/book-replay" \
-  --validation-report docs/delta/validation/WF_DFLD_01_SMALL_VALIDATION_V6.json
-```
+**Screen:** Final learning checklist and one short simulation note.
 
 **Narration:**
 
-Finish by replaying the committed book with its bound report. The expected
-message says the replay is byte-identical to the book directory. The retained
-evidence is an authorized artifact-reconstruction replication after original
-and recovery artifact-retention failures. Describe that history exactly; do not
-call the book untouched confirmation.
+You built the bridge between information and action. A call produced evidence.
+TRACE decided whether that evidence could move forward. Your code checked the
+response units, made an allocation or one of two refusals, and preserved history
+when new information arrived. You also proved that the scenario repeats exactly
+and tested how capacity changes the outcome. The full README ends with the saved
+class replay, reflection questions, troubleshooting, and optional challenges.
+This workshop uses a simulation for learning, not instructions for a real
+emergency.
 
-## 13:45–14:50 — Interpretation and close
+## Final on-screen checklist
 
-**Screen:** Final checklist and limitations statement.
+Keep this card visible through the end:
 
-**Narration:**
-
-You have run the real Small teaching simulator, followed public TRACE evidence
-to an exact record version, implemented dispatch and both refusal pathways,
-preserved a repair, and verified replay. The audit chain explains what the
-controller represented and why it acted. It does not prove that the represented
-claim was true, the action was optimal, or the system is ready for emergencies.
-Small is synthetic and reduced-order, the Toy predictor is a teaching fixture,
-and every student variant remains non-experimental. Use the README for reset,
-troubleshooting, accessibility, and optional extensions.
-
-## Final on-screen limitations statement
-
-Keep this card visible for at least 12 seconds:
-
-> WF-DFLD-01-SMALL is a deterministic, synthetic, reduced-order teaching
-> simulator using controller-visible evidence and simulation-grade geography.
-> It is not operational emergency-response validation. The Toy predictor and
-> student variants are not evidence of learned-model effectiveness or new
-> research results. The retained book is artifact-reconstruction evidence.
+> I can explain the path from a flood call to a controller decision.
+> I can explain why CLEAR is not the same as allocation.
+> I can explain information refusal versus capacity refusal.
+> I can append a repair without erasing the earlier decision.
+> This workshop uses a simulation for learning.

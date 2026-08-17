@@ -2,42 +2,45 @@
 
 ## Title
 
-Build an End-to-End TRACE Flood-SAR Controller in One Lab
+Should We Send a Rescue Unit? Build a TRACE Flood Search-and-Rescue Controller
 
 ## One-sentence description
 
-Run the deterministic TRACE Small Flood-SAR simulator, implement the controller
-that separates evidence authorization from resource allocation, append a
-visible-evidence repair, and verify exact replay—without a GPU or model download.
+Follow a simulated flood call from evidence to TRACE, then write the Python
+controller that allocates a response unit, refuses with a reason, and preserves
+later corrections.
 
 ## Full description
 
-This student code lab uses the delivered `WF-DFLD-01-SMALL` synthetic Flood-SAR
-teaching simulator. You will run a fresh scenario, inspect controller-visible
-TRACE records, implement deterministic rescue allocation/refusal logic, preserve
-append-only repair history, and replay the committed book byte-for-byte.
+A welfare-check call arrives during a simulated flood. The information may be
+ready to use—but is a suitable response unit actually available?
 
-The lab requires Python and a prepared repository checkout. It does not require
-a GPU, learned-model checkpoint, flood video, live external data, debate module,
-or regret implementation.
+This beginner-friendly code lab explains the system from the ground up:
 
-Learning objectives:
+- **Search and rescue (SAR):** coordinating limited response units to reach
+  people who may need help;
+- **TRACE:** the decision notebook that records whether the available
+  information may move forward; and
+- **your controller:** the code that checks available units and returns an
+  allocation or a refusal.
 
-- distinguish latent world state from controller-visible evidence;
-- distinguish TRACE verdicts, TRACE consumer actions, and resource commitments;
-- implement compatible-resource filtering and deterministic dispatch;
-- explain evidence refusal versus CLEAR-without-capacity refusal;
-- append a repair without erasing the prior decision; and
-- explain what deterministic replay proves and what it does not.
+You will run and replay the supplied flood scenario, walk through four completed
+decisions, implement three focused Python functions, pass fast tests, and try
+two resource “what if?” examples.
 
-Scientific scope: Small is a deterministic, headless, synthetic, reduced-order
-teaching simulator using simulation-grade geography. Teaching variants are not
-registered experiments or operational emergency-response evidence. The retained
-book evidence is an authorized artifact-reconstruction replication after
-earlier artifact-retention failures.
+By the end, you will be able to explain:
 
-Repository and workshop links: add only after the reviewed materials are
-published. Do not insert a private repository, local path, or personal account.
+- why TRACE `CLEAR` allows a resource check but does not send a unit;
+- the difference between an information refusal and a capacity refusal;
+- how deterministic resource ordering makes decisions repeatable; and
+- why later information is appended as a repair instead of erasing history.
+
+Requirements: a prepared repository checkout and Python environment. No GPU,
+model download, flood video, or live data connection is required. This workshop
+uses a simulation for learning, not instructions for a real emergency.
+
+Repository and workshop links should be added only after the reviewed materials
+are published. Do not insert private links or local computer paths.
 
 ## Suggested chapters
 
@@ -46,16 +49,21 @@ See [`chapters_and_captions.md`](chapters_and_captions.md). The review draft is
 
 ## Thumbnail concept
 
-A 16:9 dark navy card with a three-stage horizontal path:
+A 16:9 dark navy card with one large question:
 
 ```text
-TRACE CLEAR  →  CAPACITY CHECK  →  COMMITMENT
-                         ↘ NO CAPACITY: REFUSE
+A FLOOD CALL ARRIVES.
+SHOULD WE SEND A UNIT?
 ```
 
-Use large white text, cyan for TRACE, green for commitment, and amber for the
-capacity refusal. Include a small “NO GPU” badge. Do not use emergency-agency
-seals, real disaster photography, or imagery that could imply operational use.
+Under it, show one simple path:
+
+```text
+TRACE CLEAR -> CHECK RESOURCES -> ALLOCATE or REFUSE
+```
+
+Use large white text, cyan for TRACE, green for allocate, and amber for refuse.
+Do not use emergency-agency seals or real disaster photography.
 
 ## Upload state
 

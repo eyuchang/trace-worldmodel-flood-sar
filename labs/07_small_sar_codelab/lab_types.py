@@ -1,7 +1,8 @@
-"""Small, immutable types used by the student SAR controller.
+"""The small set of inputs and outputs used by the student controller.
 
-These types describe a teaching-only controller view.  They intentionally do
-not expose latent incident truth or the registered simulator's internal state.
+The workshop runtime creates these objects for students.  Each object is
+immutable: a function returns a new decision instead of secretly changing an
+earlier one.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from enum import Enum
 
 
 class TraceDecision(str, Enum):
-    """Consumer actions that may appear in a public Small TRACE record."""
+    """What TRACE says another component may do with a proposed action."""
 
     CLEAR = "clear"
     QUALIFY = "qualify"
@@ -21,7 +22,7 @@ class TraceDecision(str, Enum):
 
 
 class RescueEventType(str, Enum):
-    """Controller events taught by this bounded lab."""
+    """The three kinds of event the workshop controller can record."""
 
     ALLOCATION = "allocation"
     REFUSAL = "refusal"
@@ -29,7 +30,7 @@ class RescueEventType(str, Enum):
 
 
 class ReasonCode(str, Enum):
-    """Stable, machine-readable reasons for a teaching decision."""
+    """Short, consistent labels explaining why a decision happened."""
 
     ALLOCATED_COMPATIBLE_CAPACITY = "allocated_compatible_capacity"
     TRACE_NOT_CLEAR = "trace_not_clear"
@@ -39,7 +40,7 @@ class ReasonCode(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class RescueRequest:
-    """Controller-visible action request projected from a public Small plan."""
+    """One requested rescue task, including its route and needed capability."""
 
     call_id: str
     belief_cluster_id: str
@@ -52,7 +53,7 @@ class RescueRequest:
 
 @dataclass(frozen=True, slots=True)
 class ResourceView:
-    """Resource state visible to the controller at one decision time."""
+    """What the controller currently knows about one response unit."""
 
     resource_id: str
     capabilities: tuple[str, ...]
@@ -64,22 +65,19 @@ class ResourceView:
 
 @dataclass(frozen=True, slots=True)
 class TraceAuthorization:
-    """Exact public TRACE record/version used by the teaching controller."""
+    """TRACE's decision plus the record and version that support it."""
 
     call_id: str
     belief_cluster_id: str
     record_id: str
     record_version: int
     decision: TraceDecision
-    failed_gates: tuple[str, ...]
-    supersedes_record_id: str | None
-    supersedes_record_version: int | None
     visible_evidence_basis: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class RescueDecision:
-    """One append-only event emitted by the student controller."""
+    """One allocation, refusal, or repair returned by the student controller."""
 
     call_id: str
     belief_cluster_id: str

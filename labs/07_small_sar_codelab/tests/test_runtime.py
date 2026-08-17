@@ -13,7 +13,7 @@ def test_public_book_walkthrough_needs_no_student_or_solution_code() -> None:
     report = lab_runtime.run_lab("book", "all")
 
     assert report["controller"] == "public-book-records"
-    assert report["registered_result_modified"] is False
+    assert report["scenario_files_modified"] is False
     assert [item["case_id"] for item in report["results"]] == [
         "allocation",
         "evidence_hold",
@@ -25,7 +25,7 @@ def test_public_book_walkthrough_needs_no_student_or_solution_code() -> None:
 def test_solution_runs_all_four_public_cases() -> None:
     report = lab_runtime.run_lab("solution", "all")
 
-    assert report["registered_result_modified"] is False
+    assert report["scenario_files_modified"] is False
     assert [item["case_id"] for item in report["results"]] == [
         "allocation",
         "evidence_hold",
@@ -47,7 +47,7 @@ def test_teaching_variants_change_capacity_not_trace() -> None:
     assert first["reason_code"] == "no_compatible_capacity"
     assert second["trace_decision"] == "clear"
     assert second["event_type"] == "allocation"
-    assert no_capacity["results"][0]["scope"] == "teaching-only variant"
+    assert no_capacity["results"][0]["scope"] == "what-if resource copy"
 
 
 def test_runtime_output_is_deterministic() -> None:
@@ -56,6 +56,19 @@ def test_runtime_output_is_deterministic() -> None:
 
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
     assert lab_runtime.format_report(first) == lab_runtime.format_report(second)
+
+
+def test_human_output_teaches_the_decision_path_in_plain_language() -> None:
+    text = lab_runtime.format_report(lab_runtime.run_lab("solution", "all"))
+
+    assert "1. Welfare check" in text
+    assert "TRACE: CLEAR - continue to the resource check" in text
+    assert "2. Levee inspection" in text
+    assert "TRACE: HOLD - stop before checking resources" in text
+    assert "3. Medical response" in text
+    assert "Why: no suitable unit is currently available" in text
+    assert "keep allocation v2, then append repair v4" in text
+    assert "CLEAR lets the controller check resources; it does not dispatch one" in text
 
 
 def test_write_report_creates_once_and_refuses_overwrite(tmp_path: Path) -> None:

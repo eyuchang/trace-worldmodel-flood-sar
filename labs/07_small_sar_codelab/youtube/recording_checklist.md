@@ -7,8 +7,11 @@
 - [ ] Preflight passes on the recording environment.
 - [ ] Every command in the script rerun from a clean checkout.
 - [ ] Expected outputs match the README and captions.
+- [ ] SAR, evidence, TRACE, CLEAR, HOLD, allocation, refusal, and repair are
+      defined before students must use them.
+- [ ] Each slide answers one student question and advances the same welfare-check story.
 - [ ] No protected study command appears in shell history or suggestions.
-- [ ] Final limitations card matches the reviewed claim language.
+- [ ] Final checklist matches the learning objectives in the student README.
 
 ## Privacy and security
 
@@ -27,7 +30,7 @@
 - [ ] Diagram has spoken and captioned text alternative.
 - [ ] Human narration, if later approved, peaks below clipping and has no room noise.
 - [ ] Silence and cuts do not remove command context.
-- [ ] Final limitations card remains visible for at least 12 seconds.
+- [ ] Final student checklist remains visible through the end.
 
 ## Captions and accessibility
 

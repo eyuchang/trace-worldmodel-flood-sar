@@ -39,33 +39,85 @@ def test_student_commands_exclude_protected_or_obsolete_paths() -> None:
     assert "incident_candidate_audit.json" not in text
 
 
-def test_student_readme_contains_required_claim_boundaries() -> None:
+def test_student_readme_teaches_required_terms_in_plain_language() -> None:
     readme = STUDENT_DOCS[0].read_text(encoding="utf-8")
     normalized = " ".join(readme.split())
     required = (
-        "synthetic Flood-SAR teaching simulator",
-        "artifact-reconstruction replication",
-        "not an operational emergency-response system",
-        "Teaching variants",
-        "not registered experiments or research results",
-        "TRACE `CLEAR` is necessary but not sufficient for allocation",
-        "Debate and regret are separate workshop components",
+        "Search and rescue (SAR)",
+        "TRACE is the system's **decision notebook**",
+        "hidden answer key",
+        "controller-visible evidence",
+        "CLEAR does **not** send a unit",
+        "Capacity",
+        "Repair",
+        "this is not a physical repair",
+        "belief_cluster_id` groups calls",
+        "routed_travel_s` is estimated travel time",
+        "Byte-identical",
+        "An **evidence ledger** is simply the saved log of evidence entries",
+        "Everything happens in a simulation for learning",
     )
 
     for phrase in required:
         assert phrase in normalized
 
 
+def test_student_lesson_is_story_first_and_progressive() -> None:
+    readme = STUDENT_DOCS[0].read_text(encoding="utf-8")
+
+    story = readme.index("Imagine that you are helping a flood-response team")
+    system = readme.index("## Meet the system")
+    setup = readme.index("## Part 1 — Check your setup")
+    run = readme.index("## Part 2 — Run the flood scenario")
+    walkthrough = readme.index("## Part 3 — Walk through four rescue decisions")
+    build = readme.index("## Part 4 — Build the controller")
+
+    assert story < system < setup < run < walkthrough < build
+
+
+def test_student_readme_locates_the_visible_decision_outputs() -> None:
+    readme = STUDENT_DOCS[0].read_text(encoding="utf-8")
+
+    for filename in (
+        "calls",
+        "evidence_ledger",
+        "trace_records",
+        "controller_decisions",
+        "commitments",
+        "outcomes",
+    ):
+        assert filename in readme
+
+
+def test_student_lesson_excludes_research_governance_jargon() -> None:
+    text = _text(STUDENT_DOCS).lower()
+    excluded = (
+        "artifact-reconstruction",
+        "confirmation run",
+        "confirmatory evidence",
+        "descriptive seed",
+        "registered result",
+        "registered experiment",
+        "holdout",
+        "reduced-order",
+    )
+
+    for phrase in excluded:
+        assert phrase not in text
+
+
 def test_documented_walkthrough_matches_runtime_output() -> None:
     readme = STUDENT_DOCS[0].read_text(encoding="utf-8")
     expected_lines = (
-        (
-            "allocation: TRACE=clear -> allocation (allocated_compatible_capacity), "
-            "resource=RES-ENGINE-01"
-        ),
-        "evidence_hold: TRACE=hold -> refusal (trace_not_clear), resource=none",
-        "capacity_refusal: TRACE=clear -> refusal (no_compatible_capacity), resource=none",
-        "visible_repair: allocation@v2 -> repair@v4 (new commitment=false)",
+        "1. Welfare check",
+        "TRACE: CLEAR - continue to the resource check",
+        "Controller: ALLOCATE RES-ENGINE-01",
+        "2. Levee inspection",
+        "TRACE: HOLD - stop before checking resources",
+        "3. Medical response",
+        "Why: no suitable unit is currently available",
+        "History: keep allocation v2, then append repair v4",
+        "CLEAR lets the controller check resources; it does not dispatch one",
     )
 
     for line in expected_lines:

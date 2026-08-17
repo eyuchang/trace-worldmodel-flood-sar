@@ -225,9 +225,6 @@ def _authorization_for_case(
         record_id=record.record_id,
         record_version=record.record_version,
         decision=decision,
-        failed_gates=tuple(record.failed_gates),
-        supersedes_record_id=record.supersedes_record_id,
-        supersedes_record_version=record.supersedes_record_version,
         visible_evidence_basis=tuple(str(item) for item in event["visible_evidence_basis"]),
     )
 
@@ -390,7 +387,7 @@ def _book_case_result(case: PublicCase) -> dict[str, Any]:
         "public_observed_outcome": (
             case.canonical_outcome.get("status") if case.canonical_outcome is not None else None
         ),
-        "scope": "canonical public chain",
+        "scope": "saved workshop case",
     }
 
 
@@ -414,7 +411,7 @@ def _book_repair_result(cases: Mapping[str, PublicCase]) -> dict[str, Any]:
         "student_history": [_decision_dict(before), _decision_dict(after)],
         "prior_public_commitment_retained": allocation.canonical_commitment["commitment_id"],
         "new_commitment_created": False,
-        "scope": "canonical public repair chain",
+        "scope": "saved workshop repair",
     }
 
 
@@ -498,7 +495,7 @@ def run_case(case: PublicCase, controller: ModuleType, *, variant: str = "none")
         "student_decision": _decision_dict(decision),
         "public_commitment_id": commitment.get("commitment_id") if commitment else None,
         "public_observed_outcome": outcome.get("status") if outcome else None,
-        "scope": "canonical public chain" if variant == "none" else "teaching-only variant",
+        "scope": "saved workshop case" if variant == "none" else "what-if resource copy",
     }
 
 
@@ -542,7 +539,7 @@ def run_repair_case(cases: Mapping[str, PublicCase], controller: ModuleType) -> 
         "student_history": [_decision_dict(item) for item in history],
         "prior_public_commitment_retained": allocation.canonical_commitment["commitment_id"],
         "new_commitment_created": False,
-        "scope": "canonical public repair chain",
+        "scope": "saved workshop repair",
     }
 
 
@@ -551,14 +548,9 @@ def _report(controller_name: str, results: Sequence[Mapping[str, Any]]) -> dict[
         "schema_version": "trace-small-sar-teaching-run-v1",
         "scenario_id": "WF-DFLD-01-SMALL",
         "controller": controller_name,
-        "registered_result_modified": False,
+        "scenario_files_modified": False,
         "results": list(results),
-        "limitations": [
-            "synthetic reduced-order teaching simulator",
-            "controller-visible evidence only",
-            "teaching variants are not registered research results",
-            "not evidence of operational emergency-response validity",
-        ],
+        "learning_scope": "simulated flood-response exercise",
     }
 
 
@@ -594,35 +586,65 @@ def run_lab(controller_name: str, case_name: str, variant: str = "none") -> dict
 
 
 def format_report(report: Mapping[str, Any]) -> str:
-    """Render a compact, deterministic terminal walkthrough."""
+    """Render the four decisions as a novice-friendly rescue walkthrough."""
 
     lines = [
-        "TRACE Small SAR teaching loop",
-        "-----------------------------",
+        "TRACE Small SAR walkthrough",
+        "===========================",
     ]
     for result in report["results"]:
         if "student_decision" in result:
             decision = result["student_decision"]
-            selected = decision["selected_resource_id"] or "none"
-            lines.append(
-                f"{result['case_id']}: TRACE={decision['trace_decision']} -> "
-                f"{decision['event_type']} ({decision['reason_code']}), resource={selected}"
+            case_id = result["case_id"]
+            title = {
+                "allocation": "1. Welfare check",
+                "evidence_hold": "2. Levee inspection",
+                "capacity_refusal": "3. Medical response",
+            }[case_id]
+            trace_decision = str(decision["trace_decision"]).upper()
+            trace_explanation = (
+                "continue to the resource check"
+                if trace_decision == "CLEAR"
+                else "stop before checking resources"
             )
-            if result["public_observed_outcome"]:
-                lines.append(
-                    "  public observed outcome: " + str(result["public_observed_outcome"])
+            lines.extend((title, f"   TRACE: {trace_decision} - {trace_explanation}"))
+            if decision["event_type"] == "allocation":
+                lines.extend(
+                    (
+                        f"   Controller: ALLOCATE {decision['selected_resource_id']}",
+                        "   Why: a suitable unit is available and its route is reachable",
+                    )
                 )
+            elif decision["reason_code"] == "trace_not_clear":
+                lines.extend(("   Controller: REFUSE", "   Why: TRACE did not clear the action"))
+            else:
+                lines.extend(
+                    (
+                        "   Controller: REFUSE",
+                        "   Why: no suitable unit is currently available",
+                    )
+                )
+            if result["public_observed_outcome"]:
+                lines.append("   Saved outcome: completed within the scenario window")
         else:
             before, after = result["student_history"]
-            lines.append(
-                f"visible_repair: {before['event_type']}@v{before['trace_record_version']} -> "
-                f"{after['event_type']}@v{after['trace_record_version']} "
-                f"(new commitment={str(result['new_commitment_created']).lower()})"
+            lines.extend(
+                (
+                    "4. New information about the welfare check",
+                    (
+                        f"   History: keep allocation v{before['trace_record_version']}, "
+                        f"then append repair v{after['trace_record_version']}"
+                    ),
+                    "   New resource commitment: no",
+                )
             )
+        lines.append("")
+    if lines[-1] == "":
+        lines.pop()
     lines.extend(
         [
-            "-----------------------------",
-            "Scope: public Small artifacts; lab-only controller; registered result untouched.",
+            "===========================",
+            "Key idea: CLEAR lets the controller check resources; it does not dispatch one.",
         ]
     )
     return "\n".join(lines)

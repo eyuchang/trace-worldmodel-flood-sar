@@ -1,34 +1,35 @@
 # Screen-Capture Shot List
 
 Use a clean local checkout with a generic shell prompt such as `(trace-lab) $`.
-Do not show Finder, a browser account, Git remotes, a home-directory path,
+Do not show Finder, browser accounts, Git remotes, home-directory paths,
 notifications, tokens, email, or private repository information.
 
-| Time | Visual | Capture instruction | Release check |
+| Time | Student question | Visual | Release check |
 |---:|---|---|---|
-| 00:00 | Title card | Full-screen 16:9 card; no desktop chrome | “No GPU” and “Offline execution” visible |
-| 00:40 | Objectives/scope | Two-column card | Synthetic/non-operational visible |
-| 01:40 | Architecture | Reveal public call through repair | Hidden truth shown only as an excluded boundary |
-| 02:55 | Preflight terminal | Run exact README command | Five PASS lines; no personal path |
-| 03:55 | Fresh run/replay | Run in fresh temporary directory | Counts and byte-identical line visible |
-| 05:00 | Public book cases | Use `--controller book --case all` | No solution file shown |
-| 06:30 | TODO 1 | Crop editor to function and type definitions | No solution tab or minimap preview |
-| 07:45 | TODO 2 | Decision table, then starter function | CLEAR and allocation separated |
-| 09:15 | TODO 3 | Version-chain diagram and starter function | Old allocation remains visible |
-| 10:30 | Tests/student run | Show green summary and four decisions | Instructor-only filenames hidden |
-| 11:30 | Variants | Side-by-side terminals | “TEACHING-ONLY” watermark visible |
-| 12:45 | Book replay | Show exact reference and bound report | Do not show protected study commands |
-| 13:45 | Close | Checklist, then limitations card | Limitations card remains at least 12 seconds |
+| 00:00 | What am I building? | Minimal welfare-check mission card | One question and one promise; no jargon |
+| 00:35 | How does a call become an action? | Reveal call → evidence → TRACE → controller → saved action | Define SAR and evidence aloud |
+| 01:40 | What does TRACE do? | TRACE question beside controller question | `CLEAR` visibly means “continue,” not “dispatch” |
+| 02:50 | What can my controller return? | Allocate, two refusal reasons, repair | State that repair means a record update |
+| 03:55 | Is my computer ready? | Run preflight | Five plain-language PASS lines |
+| 04:50 | What does the simulator produce? | Fresh run and replay terminal | Explain counts and `byte-identical` |
+| 06:00 | What do the decisions look like? | Reveal four friendly cases one by one | Welfare, levee, medical, later update all explained |
+| 07:35 | Which units can help? | Two-resource example beside TODO 1 | Define capability and deterministic ordering |
+| 08:50 | Should a unit be sent? | Three-row decision table beside TODO 2 | Information and capacity refusals are distinct |
+| 10:20 | What if information changes later? | Version 2 and version 4 timeline beside TODO 3 | Earlier allocation remains visible |
+| 11:35 | How do I know my code works? | Green tests, then student walkthrough | Failure names remain readable |
+| 12:50 | What changes when capacity changes? | Two what-if results | TRACE remains `CLEAR` in both |
+| 13:55 | What did I learn? | Four-item student checklist | End with one short simulation note |
 
-## Terminal appearance
+## Terminal and editor appearance
 
 - 1920×1080 canvas, 16:9.
 - Terminal font 20–24 pt; editor font 20 pt.
 - Maximum 88 terminal columns.
 - Dark background with at least WCAG AA text contrast.
-- Disable command history suggestions that can reveal personal paths.
+- Disable command-history suggestions that can reveal personal paths.
 - Replace the default hostname and prompt with generic text.
 - Keep the cursor still while narration explains output.
+- Show only one TODO at a time; do not reveal the solution file.
 
 ## Reset sequence before every take
 
@@ -38,5 +39,5 @@ git diff -- labs/07_small_sar_codelab/starter/rescue_controller.py
 sar_work_root="$(mktemp -d)"
 ```
 
-Use a separately prepared solved starter for the later shots. Do not record the
-reference solution file or distribute it with the student overlay.
+Use a separately prepared solved starter for the later shots. Do not record or
+distribute the instructor solution.
