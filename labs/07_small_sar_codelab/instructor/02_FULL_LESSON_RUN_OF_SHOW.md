@@ -5,6 +5,9 @@ Use this document during the full workshop. Complete
 keep [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md) open for room
 triage.
 
+Private answer reference: the complete implementations of all three TODOs are
+in [`solution/rescue_controller.py`](solution/rescue_controller.py).
+
 The teaching job is not to explain all of TRACE. It is to help first-time
 students build one accurate mental model:
 
@@ -27,7 +30,7 @@ The controller asks: Is a suitable response unit available?
 | 2:25–2:50 | Step 4, TODO 3 | 10 | Two repair tests pass |
 | 2:50–3:00 | Step 5 | 11 | All eight tests and full controller run pass |
 | 3:00–3:10 | Step 6 | 12 | Students explain the capacity comparison |
-| 3:10–3:15 | Step 7 and exit check | 13 | Students explain CLEAR versus allocation |
+| 3:10–3:15 | Step 7 | 13 | Both replay checks are byte-identical |
 
 ## Opening — Mission and system
 
@@ -127,7 +130,7 @@ At least 95% of the room is ready and every remaining setup issue is assigned
 to a helper. Move affected students to a prepared machine; do not turn this
 segment into a package-manager lesson.
 
-## Step 2 — Run the complete scenario
+## Step 2 — Preview the complete scenario
 
 **Time:** 0:30–0:45
 **Student README:** Step 2
@@ -138,6 +141,11 @@ segment into a package-manager lesson.
 Connect the small coding exercise to an actual deterministic Small run.
 
 ### Say and show
+
+Tell students that this command runs the supplied completed TRACE Small
+scenario, not their unfinished exercise functions. They will later implement
+the bounded controller rules for four representative decisions; they are not
+rebuilding the full scenario system.
 
 ```bash
 python workshop.py scenario
@@ -390,7 +398,7 @@ python workshop.py what-if
 Students answer: TRACE stayed `CLEAR`; resource capacity changed; therefore the
 controller action changed.
 
-## Step 7 — Replay and exit explanation
+## Step 7 — Replay the saved histories
 
 **Time:** 3:10–3:15
 **Student README:** Step 7
@@ -406,12 +414,8 @@ python workshop.py replay
 
 Both the fresh replay and saved class replay are byte-identical.
 
-### Exit check
+### Close
 
-Ask students to complete one sentence in their own words:
-
-> TRACE checks __________. My controller checks __________. Therefore CLEAR
-> does not necessarily mean __________.
-
-Use the **Explain** status for students whose code passes but who want a final
-concept check.
+End on the successful replay result and restate the practical distinction:
+TRACE permits the resource check; the controller still needs eligible capacity
+before it can allocate a unit. No additional student response is required.

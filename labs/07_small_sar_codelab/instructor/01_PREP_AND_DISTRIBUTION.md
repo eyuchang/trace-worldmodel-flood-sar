@@ -9,6 +9,21 @@ The audience is more than 100 college students who know basic Python but have
 no prior search-and-rescue or TRACE experience. Dr. Chang already knows the
 system; preparation should focus on delivery, not relearning TRACE.
 
+## Instructor answer key
+
+The complete, tested sample implementation of all three student functions is
+[`solution/rescue_controller.py`](solution/rescue_controller.py). Its function
+names, signatures, and order match the student exercise exactly:
+
+1. `eligible_resources`;
+2. `decide_rescue`; and
+3. `apply_visible_repair`.
+
+Keep this file open privately when reviewing student code or demonstrating an
+answer. It passes the same eight behavior tests students run. Do not place it
+inside the student workspace or display it before the relevant coding period
+has ended.
+
 ## 1. Choose the lesson before distributing anything
 
 Choose one route:

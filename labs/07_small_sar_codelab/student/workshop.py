@@ -23,7 +23,7 @@ MENU = """Flood Rescue Controller Workshop
 4. Test your TODOs         python workshop.py test 1
 5. Run your controller     python workshop.py run
 6. Change capacity         python workshop.py what-if
-7. Replay and explain      python workshop.py replay
+7. Replay saved histories python workshop.py replay
 
 Open exercise/rescue_controller.py when Step 4 tells you to start coding.
 """
@@ -231,7 +231,7 @@ def replay_scenario() -> None:
     _replay(saved, "saved-class-replay", report)
     print("Fresh replay: byte-identical.")
     print("Saved class replay: byte-identical.")
-    print("COMPLETE: explain why CLEAR is not the same as allocation.")
+    print("COMPLETE: CLEAR permits a resource check; allocation also requires capacity.")
 
 
 def reset_workshop() -> None:

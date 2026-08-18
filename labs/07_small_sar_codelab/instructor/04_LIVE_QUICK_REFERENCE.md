@@ -3,6 +3,10 @@
 Keep this page open during either lesson. It contains commands, expected
 signals, and room triage—not teaching narration.
 
+Private answer reference:
+[`solution/rescue_controller.py`](solution/rescue_controller.py) contains the
+complete, tested implementation of all three student methods.
+
 ## Command sequence
 
 | Stage | Command | Success signal |

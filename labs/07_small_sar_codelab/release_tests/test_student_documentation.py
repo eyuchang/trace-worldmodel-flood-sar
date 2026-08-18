@@ -63,13 +63,24 @@ def test_student_readme_teaches_terms_before_the_numbered_route() -> None:
         assert text.index(phrase) < route
 
 
-def test_student_lesson_is_sequential_and_has_move_on_checks() -> None:
+def test_student_lesson_is_sequential_with_only_useful_progress_signals() -> None:
     text = README.read_text(encoding="utf-8")
     positions = [text.index(f"## Step {number}") for number in range(1, 8)]
 
     assert positions == sorted(positions)
-    assert text.count("**MOVE ON WHEN:**") == 9  # Seven steps plus TODO 1 and TODO 2.
-    assert text.count("**GOAL:**") == 7
+    assert "**MOVE ON WHEN:**" not in text
+    assert text.count("**READY SIGNAL:**") == 1
+    assert text.count("**WHEN IT PASSES:**") == 2
+    assert text.count("**WHEN ALL TESTS PASS:**") == 1
+
+
+def test_preview_distinguishes_supplied_system_from_student_code() -> None:
+    text = README.read_text(encoding="utf-8")
+
+    assert "supplied, already-completed TRACE Small flood scenario" in text
+    assert "does not call the three unfinished functions" in text
+    assert "four representative decisions" in text
+    assert "an **allocation**, a **refusal**, or an appended **repair**" in text
 
 
 def test_student_readme_locates_the_visible_decision_outputs() -> None:

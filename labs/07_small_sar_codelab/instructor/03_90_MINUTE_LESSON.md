@@ -10,8 +10,9 @@ Total teaching time: **90 minutes**.
 
 - Every machine must already pass `python workshop.py check`.
 - Students must have the same full student workspace and README.
-- Open the instructor solution separately for demonstrations; never distribute
-  it in the student ZIP.
+- Open the complete three-function
+  [`solution/rescue_controller.py`](solution/rescue_controller.py) separately
+  for demonstrations; never distribute it in the student ZIP.
 - Keep [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md) available.
 
 ## Learning outcome

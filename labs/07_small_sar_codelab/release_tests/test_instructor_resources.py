@@ -33,19 +33,34 @@ def test_preparation_covers_scale_distribution_and_novice_rehearsal() -> None:
     assert "Avoid a live dependency" in text
 
 
+def test_complete_solution_is_easy_for_instructors_to_find() -> None:
+    solution = INSTRUCTOR_ROOT / "solution" / "rescue_controller.py"
+    source = solution.read_text(encoding="utf-8")
+
+    assert solution.is_file()
+    for function_name in (
+        "eligible_resources",
+        "decide_rescue",
+        "apply_visible_repair",
+    ):
+        assert f"def {function_name}(" in source
+    for document in (PREP, FULL, SHORT, QUICK):
+        assert "solution/rescue_controller.py" in document.read_text(encoding="utf-8")
+
+
 def test_full_guide_follows_the_student_and_slide_sequence() -> None:
     text = FULL.read_text(encoding="utf-8")
     headings = (
         "## Opening — Mission and system",
         "## Step 1 — Check setup",
-        "## Step 2 — Run the complete scenario",
+        "## Step 2 — Preview the complete scenario",
         "## Step 3 — Four completed decisions",
         "## Step 4A — TODO 1: eligible resources",
         "## Step 4B — TODO 2: allocate or refuse",
         "## Step 4C — TODO 3: append a repair",
         "## Step 5 — Complete tests and controller run",
         "## Step 6 — Capacity comparison",
-        "## Step 7 — Replay and exit explanation",
+        "## Step 7 — Replay the saved histories",
     )
     positions = [text.index(heading) for heading in headings]
 

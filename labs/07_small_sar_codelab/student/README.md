@@ -34,15 +34,11 @@ trace-small-sar-workshop/
 └── _support/                          supplied examples and runtime; do not edit
 ```
 
-You do not need to explore the larger TRACE research repository. Your
-instructor has already prepared the pinned TRACE Small runtime that this
-workspace uses.
+You do not need to explore the larger TRACE research repository.
 
 Run this at any time to see the workshop route:
 
-```bash
 python workshop.py
-```
 
 ## What system are you building?
 
@@ -112,12 +108,12 @@ simulation's answer key.
 | Step | What you do | Approximate time |
 |---:|---|---:|
 | 1 | Check the prepared environment | 5–15 minutes |
-| 2 | Run the complete flood scenario | 15 minutes |
-| 3 | Walk through four decisions | 20–25 minutes |
+| 2 | Preview the supplied complete scenario | 15 minutes |
+| 3 | Study four completed decisions | 20–25 minutes |
 | 4 | Implement and test three functions | 90–120 minutes |
 | 5 | Run your completed controller | 15 minutes |
 | 6 | Change resource capacity | 15–20 minutes |
-| 7 | Replay and explain | 15 minutes |
+| 7 | Replay the saved histories | 15 minutes |
 
 ---
 
@@ -145,23 +141,30 @@ READY: continue to Step 2 with 'python workshop.py scenario'.
 
 Python 3.12 is also supported, so the first line may say `Python 3.12`.
 
-**MOVE ON WHEN:** you see five `PASS` lines and `READY`. If you see `STOP`,
+**READY SIGNAL:** you see five `PASS` lines and `READY`. If you see `STOP`,
 share that one line with an instructor rather than changing the supplied files.
 
 ---
 
-## Step 2 — Run the flood scenario
+## Step 2 — Preview the complete flood scenario
 
-**GOAL:** run one complete simulated flood-response session and locate the
-saved decision path.
+Before you write the controller, preview the larger system it will join. This
+command runs a **supplied, already-completed TRACE Small flood scenario**. It
+does not call the three unfinished functions in your exercise file.
 
-**DO THIS:**
+Think of this run as an end-to-end example. It shows how a simulated call moves
+through evidence, TRACE, a completed controller, a resource commitment, and an
+outcome. In Step 4, you will implement the bounded controller rules for four
+representative decisions from this larger scenario; you are not expected to
+rebuild the rest of TRACE.
+
+Run the supplied scenario:
 
 ```bash
 python workshop.py scenario
 ```
 
-**EXPECTED:**
+You should see:
 
 ```text
 Scenario complete: 8 allocated, 12 refused, 8 repaired.
@@ -187,18 +190,19 @@ commitments.json
 outcomes.json
 ```
 
-An **evidence ledger** is the saved log of evidence entries.
-
-**MOVE ON WHEN:** you can read the six filenames from call to outcome and can
-say that the three counts describe allocations, refusals, and repairs.
+An **evidence ledger** is the saved log of evidence entries. For now, the
+important idea is the order of the six files, not their internal JSON details.
 
 ---
 
-## Step 3 — Walk through four decisions
+## Step 3 — Study four completed controller decisions
 
-**GOAL:** understand the three controller outcomes before writing code.
+Now zoom in on four representative decisions from the supplied scenario. They
+show the three kinds of result a controller can record for a rescue request or
+later update: an **allocation**, a **refusal**, or an appended **repair**. Your
+three exercise functions will implement the rules that produce these results.
 
-**DO THIS:**
+Run the walkthrough:
 
 ```bash
 python workshop.py walkthrough
@@ -258,8 +262,9 @@ History: keep allocation v2, then append repair v4
 New resource commitment: no
 ```
 
-**MOVE ON WHEN:** you can explain why Cases 2 and 3 both refuse for different
-reasons and why Case 4 keeps version 2.
+Before coding, notice the key contrast: Case 2 refuses because TRACE has not
+cleared the information, while Case 3 reaches the resource check but finds no
+eligible unit. Case 4 adds new history instead of replacing version 2.
 
 ---
 
@@ -322,10 +327,10 @@ Test TODO 1:
 python workshop.py test 1
 ```
 
-**MOVE ON WHEN:** the command reports one passing test and tells you to start
+**WHEN IT PASSES:** the command reports one passing test and tells you to start
 TODO 2.
 
-### TODO 2 — Should the controller send one?
+### TODO 2 — Should the controller send a unit?
 
 Implement `decide_rescue` using this table:
 
@@ -353,7 +358,7 @@ Test TODO 2:
 python workshop.py test 2
 ```
 
-**MOVE ON WHEN:** all five allocation/refusal tests pass.
+**WHEN IT PASSES:** all five allocation/refusal tests pass.
 
 ### TODO 3 — How should later information be recorded?
 
@@ -392,43 +397,42 @@ Then run all eight behavior tests:
 python workshop.py test all
 ```
 
-**MOVE ON WHEN:** all eight tests pass and the command tells you to run your
+**WHEN ALL TESTS PASS:** the command tells you to run your
 controller.
 
 ---
 
 ## Step 5 — Run your controller
 
-**GOAL:** connect your three functions to the complete decision path.
+Your three functions are now complete. Connect them to the four teaching cases
+and compare their results with the supplied walkthrough from Step 3.
 
-**DO THIS:**
+Run:
 
 ```bash
 python workshop.py run
 ```
 
-**EXPECTED:** your output matches the four decisions from Step 3:
+Your output should match the four decisions from Step 3:
 
 - welfare check → allocate Engine 01;
 - levee inspection → information refusal;
 - medical response → capacity refusal; and
 - later welfare-check evidence → append repair version 4.
 
-**MOVE ON WHEN:** you can point to the line in your code that separates each
-pair:
-
-- `HOLD` versus `CLEAR`;
-- no eligible unit versus at least one eligible unit; and
-- earlier history versus the appended repair.
+This confirms that the functions you wrote reproduce the completed examples:
+TRACE status separates information refusal from the resource check, capacity
+separates allocation from capacity refusal, and the repair remains appended to
+the earlier history.
 
 ---
 
 ## Step 6 — Change capacity
 
-**GOAL:** see that resource availability can change the controller's result
-even when TRACE does not change.
+Next, change only resource availability and observe how your controller reacts
+while TRACE stays the same.
 
-**DO THIS:**
+Run:
 
 ```bash
 python workshop.py what-if
@@ -439,39 +443,33 @@ The command asks two questions:
 1. What if all welfare-check units become busy?
 2. What if a medical-response unit becomes available?
 
-In both examples TRACE stays `CLEAR`. The first controller result changes from
+In both examples, TRACE stays `CLEAR`. The first controller result changes from
 allocation to capacity refusal. The second changes from capacity refusal to
 allocation.
 
-**MOVE ON WHEN:** you can finish this sentence:
-
-> TRACE checks __________, while my controller checks __________.
-
 ---
 
-## Step 7 — Replay and explain
+## Step 7 — Replay the saved histories
 
-**GOAL:** verify that the fresh run and saved class run can be regenerated
-exactly.
+Finish by checking deterministic replay: the fresh run from Step 2 and the
+saved class run should both regenerate exactly.
 
-**DO THIS:**
+Run:
 
 ```bash
 python workshop.py replay
 ```
 
-**EXPECTED:**
+You should see:
 
 ```text
 Fresh replay: byte-identical.
 Saved class replay: byte-identical.
-COMPLETE: explain why CLEAR is not the same as allocation.
+COMPLETE: CLEAR permits a resource check; allocation also requires capacity.
 ```
 
 “Byte-identical” means every saved file matches exactly. Deterministic replay
 makes it possible to inspect the same decision history again.
-
-**MOVE ON WHEN:** you can explain the complete path in your own words:
 
 ```text
 call -> visible evidence -> TRACE -> resource check -> saved action -> outcome
@@ -481,12 +479,11 @@ call -> visible evidence -> TRACE -> resource check -> saved action -> outcome
 
 ## Completion checklist
 
-- [ ] I can explain what TRACE checks and what my controller checks.
-- [ ] I can distinguish an information refusal from a capacity refusal.
+- [ ] The setup command reports five `PASS` lines and `READY`.
 - [ ] All eight behavior tests pass.
 - [ ] My controller produces the four expected decisions.
-- [ ] I can explain why deterministic ordering and replay matter.
-- [ ] I can explain why a repair keeps the earlier decision.
+- [ ] The capacity comparison changes controller results while TRACE stays `CLEAR`.
+- [ ] Both replay checks report `byte-identical`.
 
 ## Troubleshooting
 
