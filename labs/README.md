@@ -15,4 +15,5 @@ Read [`../docs/MISSION_BRIEF.md`](../docs/MISSION_BRIEF.md) before Lab 1. Studen
 Students do not advance until the preceding artifacts can be replayed from named versions.
 
 For a current, standalone workshop route that requires no earlier labs or SAR
-background, use [`07_small_sar_codelab/`](07_small_sar_codelab/).
+background, open the
+[`07_small_sar_codelab/student/README.md`](07_small_sar_codelab/student/README.md).
