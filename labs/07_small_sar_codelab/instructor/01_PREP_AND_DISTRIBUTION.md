@@ -20,7 +20,7 @@ names, signatures, and order match the student exercise exactly:
 3. `apply_visible_repair`.
 
 Keep this file open privately when reviewing student code or demonstrating an
-answer. It passes the same eight behavior tests students run. Do not place it
+answer. It passes the same twelve behavior tests students run. Do not place it
 inside the student workspace or display it before the relevant coding period
 has ended.
 
@@ -137,7 +137,7 @@ Required outcomes:
 
 - five setup checks pass;
 - the scenario reports 8 allocations, 12 refusals, and 8 repairs;
-- all eight behavior tests pass with the solution;
+- all twelve behavior tests pass with the solution;
 - the four controller decisions match the walkthrough;
 - both replays are byte-identical;
 - reset removes generated output but keeps the exercise code; and

@@ -36,9 +36,30 @@ def test_exercise_scaffold_is_explicit_and_uses_a_provided_helper() -> None:
 
     assert "def _decision_from_trace" in exercise
     assert "Build a collection containing only resources" in exercise
+    assert "Return () when none qualify" in exercise
     assert "both call_id and belief_cluster_id match" in exercise
+    assert "Raise ValueError unless" in exercise
     assert "Compare the update with history[-1]" in exercise
     assert "Use _decision_from_trace(...)" in exercise
+
+
+def test_student_tests_cover_each_documented_error_condition() -> None:
+    tests = (LAB_ROOT / "student" / "tests" / "test_rescue_controller.py").read_text(
+        encoding="utf-8"
+    )
+
+    expected_tests = (
+        "test_decision_rejects_mismatched_call",
+        "test_decision_rejects_mismatched_situation",
+        "test_repair_rejects_empty_history",
+        "test_repair_rejects_a_different_situation",
+        "test_repair_rejects_a_different_trace_record",
+        "test_repair_requires_a_later_version",
+        "test_repair_requires_visible_basis",
+    )
+    for name in expected_tests:
+        assert f"def {name}(" in tests
+    assert tests.count("pytest.raises(ValueError)") == len(expected_tests)
 
 
 def test_student_visible_functions_remain_small_and_single_purpose() -> None:

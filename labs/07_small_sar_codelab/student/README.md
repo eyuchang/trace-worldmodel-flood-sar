@@ -300,9 +300,29 @@ Two identifiers keep information attached to the correct situation:
 
 The workshop supplies these objects. You do not construct them yourself.
 
+### What each function must return
+
+Every TODO has one clear job. The supplied `_decision_from_trace(...)` helper
+builds a `RescueDecision` and automatically copies the shared TRACE fields, so
+you only need to choose the event, reason, and (when allocating) resource ID.
+
+| Function | For valid input, return | For invalid input, do this |
+|---|---|---|
+| `eligible_resources` | A sorted `tuple` of `ResourceView` items. Return `()` when no unit is eligible. | No special error case in this exercise. |
+| `decide_rescue` | One `RescueDecision`: allocation or refusal. | Raise `ValueError` only when the request and TRACE authorization do not name the same call and situation. |
+| `apply_visible_repair` | A new `tuple` containing the original history followed by one repair decision. | Raise `ValueError` when the proposed repair cannot validly extend that history. |
+
+A `HOLD` decision and a lack of capacity are normal controller outcomes. Return
+a refusal for either one; do **not** raise `ValueError`. `ValueError` is only
+for input records that cannot describe one valid decision or repair chain.
+
 ### TODO 1 — Which units can help?
 
 Implement `eligible_resources`.
+
+**Return:** one sorted `tuple[ResourceView, ...]`. Return an empty tuple,
+`()`, when no resource passes all four checks. Do not change the supplied
+`resources` tuple.
 
 Keep a resource only when all four checks pass:
 
@@ -336,9 +356,9 @@ Implement `decide_rescue` using this table:
 
 | TRACE decision | Eligible unit? | Controller result |
 |---|---:|---|
-| anything other than `CLEAR` | either | refuse: information |
-| `CLEAR` | no | refuse: capacity |
-| `CLEAR` | yes | allocate the first eligible unit |
+| anything other than `CLEAR` | either | refusal: `TRACE_NOT_CLEAR`, no selected resource |
+| `CLEAR` | no | refusal: `NO_COMPATIBLE_CAPACITY`, no selected resource |
+| `CLEAR` | yes | allocation: `ALLOCATED_COMPATIBLE_CAPACITY`, first eligible resource ID |
 
 Apply the checks in this order:
 
@@ -348,6 +368,15 @@ Apply the checks in this order:
 3. call your `eligible_resources` function;
 4. refuse with `NO_COMPATIBLE_CAPACITY` when the result is empty; or
 5. allocate the first result with `ALLOCATED_COMPATIBLE_CAPACITY`.
+
+**Return:** one `RescueDecision` in every normal case. For the two refusal
+rows, leave `selected_resource_id` as `None`. For the allocation row, pass the
+first eligible resource's `resource_id` to `_decision_from_trace(...)`.
+
+**When to raise an error:** if either `call_id` or `belief_cluster_id` differs,
+raise `ValueError` instead of returning an allocation or refusal. Those two
+input objects would be describing different situations. The test checks the
+exception type, not the exact wording of its message.
 
 Use the imported `RescueDecision`, `RescueEventType`, and `ReasonCode` types.
 Do not hard-code the welfare-check call or Engine 01.
@@ -363,6 +392,10 @@ python workshop.py test 2
 ### TODO 3 — How should later information be recorded?
 
 Implement `apply_visible_repair`.
+
+**Return:** a new `tuple[RescueDecision, ...]` with every earlier item left in
+place and one new repair at the end. The repair must have event type `REPAIR`,
+reason code `VISIBLE_EVIDENCE_REPAIR`, and `selected_resource_id=None`.
 
 Imagine the decision history as a timeline:
 
@@ -381,6 +414,10 @@ Require:
 - a nonempty `visible_evidence_basis`—the visible information behind the
   update.
 
+If any requirement in this list fails, raise `ValueError`; do not return a
+refusal or a partial history. Each requirement is an input-consistency check,
+not a normal rescue outcome.
+
 The history is a Python **tuple**, an ordered sequence this exercise treats as
 unchangeable. Return the old tuple plus one new `REPAIR` event. Do not replace
 the allocation or select the unit again.
@@ -391,7 +428,7 @@ Test TODO 3:
 python workshop.py test 3
 ```
 
-Then run all eight behavior tests:
+Six repair tests should pass. Then run all twelve behavior tests:
 
 ```bash
 python workshop.py test all
@@ -480,7 +517,7 @@ call -> visible evidence -> TRACE -> resource check -> saved action -> outcome
 ## Completion checklist
 
 - [ ] The setup command reports five `PASS` lines and `READY`.
-- [ ] All eight behavior tests pass.
+- [ ] All twelve behavior tests pass.
 - [ ] My controller produces the four expected decisions.
 - [ ] The capacity comparison changes controller results while TRACE stays `CLEAR`.
 - [ ] Both replay checks report `byte-identical`.

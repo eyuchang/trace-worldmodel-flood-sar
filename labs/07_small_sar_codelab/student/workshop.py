@@ -163,7 +163,7 @@ def run_tests(selection: str) -> None:
     expressions = {
         "1": "eligible_resources",
         "2": "clear_plus_capacity or hold_refuses or clear_without_capacity or mismatched",
-        "3": "visible_repair or repair_requires",
+        "3": "repair",
         "all": "",
     }
     expression = expressions[selection]

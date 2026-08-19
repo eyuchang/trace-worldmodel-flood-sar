@@ -22,7 +22,7 @@ def _decision_from_trace(
     """Build a decision while copying the shared TRACE record fields.
 
     This helper is complete. Use it in TODO 2 and TODO 3 so that your code can
-    focus on *which* decision to make instead of repeatedly copying fields.
+    focus on which decision to make without repeatedly copying fields.
     """
 
     return RescueDecision(
@@ -51,7 +51,8 @@ def eligible_resources(
     # TODO 1
     # 1. Build a collection containing only resources that pass all four rules.
     # 2. Sort that collection by (routed_travel_s, resource_id).
-    # 3. Return the sorted resources as a tuple.
+    # 3. Return the sorted resources as a tuple. Return () when none qualify.
+    # Do not modify the supplied resources tuple.
     raise NotImplementedError("TODO 1: choose which response units are eligible")
 
 
@@ -68,13 +69,15 @@ def decide_rescue(
     """
 
     # TODO 2
-    # 1. Use ValueError unless both call_id and belief_cluster_id match.
-    # 2. If TRACE is not CLEAR, return an information refusal.
+    # 1. Raise ValueError unless both call_id and belief_cluster_id match.
+    # 2. If TRACE is not CLEAR, return a REFUSAL with reason TRACE_NOT_CLEAR.
     # 3. Call eligible_resources exactly once.
-    # 4. If that tuple is empty, return a capacity refusal.
-    # 5. Otherwise allocate the first eligible resource.
+    # 4. If that tuple is empty, return a REFUSAL with reason
+    #    NO_COMPATIBLE_CAPACITY.
+    # 5. Otherwise return an ALLOCATION for the first eligible resource.
     #
-    # Use _decision_from_trace(...) for every returned decision.
+    # Use _decision_from_trace(...) for every returned decision. Leave the
+    # selected resource as None for refusals; pass its ID for an allocation.
     raise NotImplementedError("TODO 2: choose allocation or refusal")
 
 
@@ -90,10 +93,12 @@ def apply_visible_repair(
     """
 
     # TODO 3
-    # 1. Require at least one earlier decision.
+    # 1. Raise ValueError unless there is at least one earlier decision.
     # 2. Compare the update with history[-1].
-    # 3. Require the same belief cluster and TRACE record ID.
-    # 4. Require a larger record version and nonempty visible evidence.
+    # 3. Raise ValueError unless it has the same belief cluster and TRACE
+    #    record ID.
+    # 4. Raise ValueError unless it has a larger record version and nonempty
+    #    visible evidence.
     # 5. Create a REPAIR with _decision_from_trace(...), then return
     #    (*history, repair). Do not select a resource for the repair.
     raise NotImplementedError("TODO 3: append the later repair")

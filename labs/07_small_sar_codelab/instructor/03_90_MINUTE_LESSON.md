@@ -165,7 +165,7 @@ On the instructor copy, point to the five validations and the final return:
 return (*history, repair)
 ```
 
-Ask why replacing the tuple would erase useful history. Demonstrate the two
+Ask why replacing the tuple would erase useful history. Demonstrate the six
 repair tests; students do not type TODO 3 in this route.
 
 ## 1:20–1:27 — Demonstrate comparison and replay

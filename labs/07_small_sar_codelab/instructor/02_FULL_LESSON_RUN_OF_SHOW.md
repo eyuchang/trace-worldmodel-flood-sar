@@ -27,8 +27,8 @@ The controller asks: Is a suitable response unit available?
 | 1:10–1:20 | Break | — | Helpers clear setup issues |
 | 1:20–1:50 | Step 4, TODO 1 | 8 | One eligibility test passes |
 | 1:50–2:25 | Step 4, TODO 2 | 9 | Five allocation/refusal tests pass |
-| 2:25–2:50 | Step 4, TODO 3 | 10 | Two repair tests pass |
-| 2:50–3:00 | Step 5 | 11 | All eight tests and full controller run pass |
+| 2:25–2:50 | Step 4, TODO 3 | 10 | Six repair tests pass |
+| 2:50–3:00 | Step 5 | 11 | All twelve tests and full controller run pass |
 | 3:00–3:10 | Step 6 | 12 | Students explain the capacity comparison |
 | 3:10–3:15 | Step 7 | 13 | Both replay checks are byte-identical |
 
@@ -351,8 +351,10 @@ python workshop.py test 3
 
 ### Move on when
 
-Both repair tests pass, version 2 remains first, and the repair has no selected
-resource.
+All six repair tests pass, version 2 remains first, and the repair has no
+selected resource. The five `ValueError` checks cover empty history, a different
+situation, a different TRACE record, a non-later version, and no visible
+evidence.
 
 ## Step 5 — Complete tests and controller run
 
@@ -369,7 +371,7 @@ python workshop.py run
 
 ### Expected screen result
 
-Eight tests pass. The exercise controller then produces the same four decisions
+Twelve tests pass. The exercise controller then produces the same four decisions
 as the supplied walkthrough.
 
 ### Move on when

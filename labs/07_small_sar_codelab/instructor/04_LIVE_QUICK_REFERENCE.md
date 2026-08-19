@@ -17,8 +17,8 @@ complete, tested implementation of all three student methods.
 | Walkthrough | `python workshop.py walkthrough` | Four explained decisions |
 | TODO 1 | `python workshop.py test 1` | One test passes |
 | TODO 2 | `python workshop.py test 2` | Five tests pass |
-| TODO 3 | `python workshop.py test 3` | Two tests pass |
-| All behavior | `python workshop.py test all` | Eight tests pass |
+| TODO 3 | `python workshop.py test 3` | Six tests pass |
+| All behavior | `python workshop.py test all` | Twelve tests pass |
 | Student run | `python workshop.py run` | Same four decisions as walkthrough |
 | Comparison | `python workshop.py what-if` | CLEAR remains; capacity/action changes |
 | Replay | `python workshop.py replay` | Two byte-identical messages |

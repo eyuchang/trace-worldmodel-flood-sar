@@ -227,7 +227,7 @@ SLIDES: Final = (
         terminal=(
             "$ python workshop.py test all",
             ".......                                                                  [100%]",
-            "8 passed",
+            "12 passed",
             "$ python workshop.py run",
             "Key idea: CLEAR lets the controller check resources; it does not dispatch one.",
         ),
@@ -338,7 +338,7 @@ def render_slide(slide: Slide, index: int, output: Path) -> None:
             y = top + 68 + line_index * 38
             if y > HEIGHT - 110:
                 break
-            color = GREEN if line.startswith(("[PASS]", "READY", "INFO", "8 passed")) else TEXT
+            color = GREEN if line.startswith(("[PASS]", "READY", "INFO", "12 passed")) else TEXT
             draw.text((115, y), line[:108], font=terminal_font, fill=color)
 
     draw.text(

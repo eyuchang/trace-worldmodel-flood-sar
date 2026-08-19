@@ -83,6 +83,26 @@ def test_preview_distinguishes_supplied_system_from_student_code() -> None:
     assert "an **allocation**, a **refusal**, or an appended **repair**" in text
 
 
+def test_student_readme_states_return_and_error_contracts() -> None:
+    text = README.read_text(encoding="utf-8")
+    normalized = " ".join(text.split())
+
+    required = (
+        "### What each function must return",
+        "Return `()` when no unit is eligible.",
+        "Raise `ValueError` only when the request and TRACE authorization",
+        "A `HOLD` decision and a lack of capacity are normal controller outcomes.",
+        "one `RescueDecision` in every normal case",
+        "The test checks the exception type, not the exact wording",
+        "If any requirement in this list fails, raise `ValueError`",
+        "event type `REPAIR`",
+        "selected_resource_id=None",
+        "all twelve behavior tests",
+    )
+    for phrase in required:
+        assert phrase in normalized
+
+
 def test_student_readme_locates_the_visible_decision_outputs() -> None:
     text = README.read_text(encoding="utf-8")
     for filename in (

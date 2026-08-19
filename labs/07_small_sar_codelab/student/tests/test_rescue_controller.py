@@ -7,7 +7,7 @@ from types import ModuleType
 
 import pytest
 from _support import runtime
-from _support.types import ReasonCode, RescueEventType, TraceDecision
+from _support.types import ReasonCode, RescueDecision, RescueEventType, TraceDecision
 from exercise import rescue_controller
 
 
@@ -58,6 +58,8 @@ def test_clear_plus_capacity_allocates(
     assert decision.event_type is RescueEventType.ALLOCATION
     assert decision.reason_code is ReasonCode.ALLOCATED_COMPATIBLE_CAPACITY
     assert decision.selected_resource_id == "RES-ENGINE-01"
+    assert decision.call_id == case.authorization.call_id
+    assert decision.trace_record_id == case.authorization.record_id
 
 
 def test_hold_refuses_even_when_capacity_exists(
@@ -97,7 +99,7 @@ def test_decision_rejects_mismatched_call(
     case = public_cases["allocation"]
     mismatched = replace(case.authorization, call_id="C8-not-the-request")
 
-    with pytest.raises(ValueError, match="same call"):
+    with pytest.raises(ValueError):
         controller.decide_rescue(case.request, mismatched, case.resources)
 
 
@@ -108,21 +110,30 @@ def test_decision_rejects_mismatched_situation(
     case = public_cases["allocation"]
     mismatched = replace(case.authorization, belief_cluster_id="BC-not-the-request")
 
-    with pytest.raises(ValueError, match="belief cluster"):
+    with pytest.raises(ValueError):
         controller.decide_rescue(case.request, mismatched, case.resources)
+
+
+def _initial_allocation(
+    controller: ModuleType,
+    public_cases: dict[str, runtime.PublicCase],
+) -> RescueDecision:
+    """Create the earlier allocation needed by the repair tests."""
+
+    allocation = public_cases["allocation"]
+    return controller.decide_rescue(
+        allocation.request,
+        allocation.authorization,
+        allocation.resources,
+    )
 
 
 def test_visible_repair_appends_and_preserves_allocation(
     controller: ModuleType,
     public_cases: dict[str, runtime.PublicCase],
 ) -> None:
-    allocation = public_cases["allocation"]
     repair = public_cases["visible_repair"]
-    initial = controller.decide_rescue(
-        allocation.request,
-        allocation.authorization,
-        allocation.resources,
-    )
+    initial = _initial_allocation(controller, public_cases)
 
     history = controller.apply_visible_repair((initial,), repair.authorization)
 
@@ -138,14 +149,55 @@ def test_repair_requires_visible_basis(
     controller: ModuleType,
     public_cases: dict[str, runtime.PublicCase],
 ) -> None:
-    allocation = public_cases["allocation"]
     repair = public_cases["visible_repair"]
-    initial = controller.decide_rescue(
-        allocation.request,
-        allocation.authorization,
-        allocation.resources,
-    )
+    initial = _initial_allocation(controller, public_cases)
     unsupported = replace(repair.authorization, visible_evidence_basis=())
 
-    with pytest.raises(ValueError, match="visible evidence"):
+    with pytest.raises(ValueError):
         controller.apply_visible_repair((initial,), unsupported)
+
+
+def test_repair_rejects_empty_history(
+    controller: ModuleType,
+    public_cases: dict[str, runtime.PublicCase],
+) -> None:
+    repair = public_cases["visible_repair"]
+
+    with pytest.raises(ValueError):
+        controller.apply_visible_repair((), repair.authorization)
+
+
+def test_repair_rejects_a_different_situation(
+    controller: ModuleType,
+    public_cases: dict[str, runtime.PublicCase],
+) -> None:
+    initial = _initial_allocation(controller, public_cases)
+    repair = public_cases["visible_repair"]
+    wrong_situation = replace(repair.authorization, belief_cluster_id="BC-different")
+
+    with pytest.raises(ValueError):
+        controller.apply_visible_repair((initial,), wrong_situation)
+
+
+def test_repair_rejects_a_different_trace_record(
+    controller: ModuleType,
+    public_cases: dict[str, runtime.PublicCase],
+) -> None:
+    initial = _initial_allocation(controller, public_cases)
+    repair = public_cases["visible_repair"]
+    wrong_record = replace(repair.authorization, record_id="TR-different")
+
+    with pytest.raises(ValueError):
+        controller.apply_visible_repair((initial,), wrong_record)
+
+
+def test_repair_requires_a_later_version(
+    controller: ModuleType,
+    public_cases: dict[str, runtime.PublicCase],
+) -> None:
+    initial = _initial_allocation(controller, public_cases)
+    repair = public_cases["visible_repair"]
+    old_version = replace(repair.authorization, record_version=initial.trace_record_version)
+
+    with pytest.raises(ValueError):
+        controller.apply_visible_repair((initial,), old_version)
