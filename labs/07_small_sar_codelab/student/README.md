@@ -3,7 +3,7 @@
 ## Start here
 
 A welfare-check call arrives during a simulated flood. The information may be
-ready to use—but should the system actually send a response unit?
+ready to use, but should the system actually send a response unit?
 
 That is the decision you will program.
 
@@ -15,7 +15,7 @@ You will build a small controller that can:
 4. append a later correction without erasing the earlier decision.
 
 No search-and-rescue or TRACE background is required. The full workshop takes
-about **2.5–4 hours**.
+about **2.5-4 hours**.
 
 > **Edit only:** `exercise/rescue_controller.py`
 >
@@ -26,30 +26,111 @@ about **2.5–4 hours**.
 ```text
 trace-small-sar-workshop/
 ├── README.md                         follow this lesson from top to bottom
+├── setup_workshop.py                 create your local Python environment once
 ├── workshop.py                       run workshop commands
 ├── exercise/
 │   └── rescue_controller.py          the only file you edit
 ├── tests/
 │   └── test_rescue_controller.py     readable checks for your three TODOs
-└── _support/                          supplied examples and runtime; do not edit
+└── _support/                          supplied teaching data and runtime; do not edit
 ```
-
-You do not need to explore the larger TRACE research repository.
 
 Run this at any time to see the workshop route:
 
 python workshop.py
 
+## Before Step 1 — Set up this laptop
+
+You can complete this workshop on your own laptop. The ZIP already contains
+the code and the small public teaching scenario. It does not need an internet connection after you have extracted it.
+
+You need **Python 3.11, 3.12, 3.13, or 3.14**. First, extract the ZIP and open
+a terminal *inside* the `trace-small-sar-workshop` folder.
+
+### Extract the folder and open its terminal
+
+Do not run the workshop while the ZIP is still only being previewed. Extract it
+first, then open the extracted `trace-small-sar-workshop` folder.
+
+- **Windows:** in File Explorer, choose **Extract All** for the ZIP. Open the
+  extracted folder, click its address bar, type `powershell`, and press Enter.
+- **macOS:** double-click the ZIP in Finder. Open **Terminal**, type `cd `
+  (including the space), drag the extracted workshop folder into the Terminal
+  window, then press Return.
+- **Linux:** extract the ZIP, open the extracted folder, and use its
+  “Open Terminal Here” option when available.
+
+The prompt in your terminal should now be inside the workshop folder. You can
+check with `pwd` on macOS/Linux or `cd` on Windows; the final folder name should
+be `trace-small-sar-workshop`.
+
+### Check for Python
+
+On macOS or Linux, run:
+
+```bash
+python3 --version
+```
+
+On Windows, open PowerShell and run:
+
+```powershell
+py --version
+```
+
+If neither command prints a supported version, install Python from the
+[official Python download page](https://www.python.org/downloads/), then close
+and reopen your terminal. On Windows, select **Add Python to PATH** if the
+installer offers that option.
+
+### Create and activate your workshop environment
+
+A **virtual environment** is a private Python workspace for one project. The
+following commands create it locally; they do not download packages.
+
+On macOS or Linux, run:
+
+```bash
+python3 setup_workshop.py
+source .venv/bin/activate
+python workshop.py check
+```
+
+On Windows PowerShell, run:
+
+```powershell
+py setup_workshop.py
+.\.venv\Scripts\Activate.ps1
+python workshop.py check
+```
+
+If PowerShell blocks the activation command, use **Command Prompt** instead:
+
+```bat
+py setup_workshop.py
+.venv\Scripts\activate.bat
+python workshop.py check
+```
+
+You should now see five `PASS` lines and `READY`. Keep this terminal open for
+the workshop. If you later close it, open a new terminal in this folder and
+repeat only the activation command for your operating system.
+
+Do not run `pip install` or download a model. If setup reports `SETUP STOP`,
+share that one line with an instructor. On Ubuntu or Debian, an error that
+mentions `venv` may be fixed with `sudo apt install python3-venv` if you have
+permission to install software; otherwise, ask the setup helper.
+
 ## What system are you building?
 
 **Search and rescue (SAR)** is the work of finding, reaching, and helping people
-during an emergency. A response team has limited units—such as engines, boats,
-or medical teams—so software must answer two different questions:
+during an emergency. A response team has limited units, such as engines, boats,
+or medical teams, so software must answer two different questions:
 
 1. Is the available information ready to use?
 2. If it is, is a suitable response unit actually available?
 
-TRACE—the system's **decision notebook**—answers the first question. **Your
+TRACE, the system's **decision notebook**, answers the first question. **Your
 controller answers the second.**
 
 ```mermaid
@@ -69,7 +150,7 @@ then checks the response units and either allocates one or refuses with a
 reason. Later information can append a repair without deleting the earlier
 history.
 
-### Visible evidence—not the answer key
+### Partial evidence
 
 The simulation creates a complete story of what is happening. Think of that
 story as a **hidden answer key**. The controller cannot read it.
@@ -103,24 +184,24 @@ simulation's answer key.
 | **Repair** | A later correction to the decision record—not a physical repair |
 | **Replay** | Running the same scenario again and checking that every saved file matches |
 
-## Your seven-step route
+## Workshop Breakdown
 
 | Step | What you do | Approximate time |
 |---:|---|---:|
-| 1 | Check the prepared environment | 5–15 minutes |
-| 2 | Preview the supplied complete scenario | 15 minutes |
-| 3 | Study four completed decisions | 20–25 minutes |
-| 4 | Implement and test three functions | 90–120 minutes |
+| 1 | Check your local setup | 5 minutes |
+| 2 | Run the bundled small scenario | 15 minutes |
+| 3 | Study four completed decisions | 20-25 minutes |
+| 4 | Implement and test three functions | 90-120 minutes |
 | 5 | Run your completed controller | 15 minutes |
-| 6 | Change resource capacity | 15–20 minutes |
+| 6 | Change resource capacity | 15-20 minutes |
 | 7 | Replay the saved histories | 15 minutes |
 
 ---
 
-## Step 1 — Check your setup
+## Step 1: Check your setup
 
-**GOAL:** confirm that Python, the workshop files, the four examples, and your
-practice-output directory are ready.
+**GOAL:** confirm that your local Python environment, workshop files, four
+teaching cases, tests, and practice-output directory are ready.
 
 **DO THIS:** open a terminal in this workshop folder and run:
 
@@ -132,31 +213,31 @@ python workshop.py check
 
 ```text
 [PASS] python: Python 3.11 is ready
-[PASS] workshop-files: guide, exercise, tests, and examples found
-[PASS] packages: required Python packages are available
-[PASS] examples: four rescue examples are ready
+[PASS] workshop-files: guide, setup tool, exercise, tests, and teaching data found
+[PASS] teaching-data: four public teaching cases are ready
+[PASS] tests: Python's built-in test runner is ready
 [PASS] workspace: practice output is writable
 READY: continue to Step 2 with 'python workshop.py scenario'.
 ```
 
-Python 3.12 is also supported, so the first line may say `Python 3.12`.
+Python 3.12, 3.13, or 3.14 is also supported, so the first line may say one of
+those versions.
 
 **READY SIGNAL:** you see five `PASS` lines and `READY`. If you see `STOP`,
-share that one line with an instructor rather than changing the supplied files.
+share that one line with an instructor rather than changing supplied files.
+Most setup issues mean that the virtual environment has not been activated.
 
 ---
 
-## Step 2 — Preview the complete flood scenario
+## Step 2: Run the small flood scenario
 
-Before you write the controller, preview the larger system it will join. This
-command runs a **supplied, already-completed TRACE Small flood scenario**. It
-does not call the three unfinished functions in your exercise file.
+Before you write the controller, run the small simulated flood session included
+with this workshop. It does not call the three unfinished functions in your
+exercise file.
 
-Think of this run as an end-to-end example. It shows how a simulated call moves
-through evidence, TRACE, a completed controller, a resource commitment, and an
-outcome. In Step 4, you will implement the bounded controller rules for four
-representative decisions from this larger scenario; you are not expected to
-rebuild the rest of TRACE.
+This is an end-to-end example: a call moves through evidence, TRACE, a
+completed controller, a resource commitment, and an outcome. In Step 4, you
+will implement the controller rules used by these four teaching decisions.
 
 Run the supplied scenario:
 
@@ -167,19 +248,19 @@ python workshop.py scenario
 You should see:
 
 ```text
-Scenario complete: 8 allocated, 12 refused, 8 repaired.
+Scenario complete: 1 allocated, 2 refused, 1 repaired.
 Saved decision path:
   call -> evidence -> TRACE record -> controller decision -> commitment -> outcome
 ```
 
 Read the counts as recorded controller events:
 
-- `8 allocated`: eight requests received a resource commitment;
-- `12 refused`: twelve requests received no resource; and
-- `8 repaired`: eight histories received a later correction.
+- `1 allocated`: one request received a resource commitment;
+- `2 refused`: two requests received no resource; and
+- `1 repaired`: one decision history received a later correction.
 
-The run creates a hidden `.workshop/run` directory. You do not need to browse
-all of it. These six files form the path you are studying:
+The run creates a `.workshop/run` directory. You do not need to browse all of
+it. These six safe files form the path you are studying:
 
 ```text
 calls.json
@@ -195,7 +276,7 @@ important idea is the order of the six files, not their internal JSON details.
 
 ---
 
-## Step 3 — Study four completed controller decisions
+## Step 3: Study four completed controller decisions
 
 Now zoom in on four representative decisions from the supplied scenario. They
 show the three kinds of result a controller can record for a rescue request or
@@ -208,8 +289,9 @@ Run the walkthrough:
 python workshop.py walkthrough
 ```
 
-The command uses the supplied completed decisions so you can see the target
-behavior without revealing the exercise solution.
+The command prints the supplied completed decisions in the terminal. Read the
+four cases below as you read the matching text output. This lets you see the
+target behavior without revealing the exercise solution.
 
 ### Case 1: welfare check → allocate
 
@@ -268,7 +350,7 @@ eligible unit. Case 4 adds new history instead of replacing version 2.
 
 ---
 
-## Step 4 — Build and test the controller
+## Step 4: Build and test the controller
 
 **GOAL:** implement the three small decisions that connect TRACE, resource
 availability, and later record updates.
@@ -279,9 +361,9 @@ Open the only file you will edit:
 exercise/rescue_controller.py
 ```
 
-It contains exactly three TODO functions. Complete them in order.
+It contains exactly three TODO functions. You will complete them in order.
 
-### Meet the inputs
+### The inputs
 
 | Type | What it gives your function |
 |---|---|
@@ -316,7 +398,7 @@ A `HOLD` decision and a lack of capacity are normal controller outcomes. Return
 a refusal for either one; do **not** raise `ValueError`. `ValueError` is only
 for input records that cannot describe one valid decision or repair chain.
 
-### TODO 1 — Which units can help?
+### TODO 1: Which units can help?
 
 Implement `eligible_resources`.
 
@@ -350,7 +432,7 @@ python workshop.py test 1
 **WHEN IT PASSES:** the command reports one passing test and tells you to start
 TODO 2.
 
-### TODO 2 — Should the controller send a unit?
+### TODO 2: Should the controller send a unit?
 
 Implement `decide_rescue` using this table:
 
@@ -389,7 +471,7 @@ python workshop.py test 2
 
 **WHEN IT PASSES:** all five allocation/refusal tests pass.
 
-### TODO 3 — How should later information be recorded?
+### TODO 3: How should later information be recorded?
 
 Implement `apply_visible_repair`.
 
@@ -439,7 +521,7 @@ controller.
 
 ---
 
-## Step 5 — Run your controller
+## Step 5: Run your controller
 
 Your three functions are now complete. Connect them to the four teaching cases
 and compare their results with the supplied walkthrough from Step 3.
@@ -462,9 +544,12 @@ TRACE status separates information refusal from the resource check, capacity
 separates allocation from capacity refusal, and the repair remains appended to
 the earlier history.
 
+If the run reports that a TODO is unfinished or a case does not match, return
+to the first failing test instead of editing the supplied examples.
+
 ---
 
-## Step 6 — Change capacity
+## Step 6: Change capacity
 
 Next, change only resource availability and observe how your controller reacts
 while TRACE stays the same.
@@ -486,10 +571,10 @@ allocation.
 
 ---
 
-## Step 7 — Replay the saved histories
+## Step 7: Replay the saved histories
 
-Finish by checking deterministic replay: the fresh run from Step 2 and the
-saved class run should both regenerate exactly.
+Finish by checking deterministic replay: the saved run from Step 2 should be
+regenerated exactly.
 
 Run:
 
@@ -500,8 +585,7 @@ python workshop.py replay
 You should see:
 
 ```text
-Fresh replay: byte-identical.
-Saved class replay: byte-identical.
+Replay: byte-identical.
 COMPLETE: CLEAR permits a resource check; allocation also requires capacity.
 ```
 
@@ -519,20 +603,22 @@ call -> visible evidence -> TRACE -> resource check -> saved action -> outcome
 - [ ] The setup command reports five `PASS` lines and `READY`.
 - [ ] All twelve behavior tests pass.
 - [ ] My controller produces the four expected decisions.
+- [ ] I read the four decisions and my controller's matching decisions.
 - [ ] The capacity comparison changes controller results while TRACE stays `CLEAR`.
-- [ ] Both replay checks report `byte-identical`.
+- [ ] The replay check reports `byte-identical`.
 
 ## Troubleshooting
 
 | What you see | What to do |
 |---|---|
-| `python: command not found` | Ask an instructor to open the prepared workshop terminal |
-| `STOP: The prepared TRACE Small runtime was not found` | Ask for the prepared environment; do not install a model |
+| `python: command not found` | Activate `.venv` again, then run `python workshop.py check` |
+| `SETUP STOP: Python ... is required` | Install a supported Python version, then rerun `setup_workshop.py` |
+| `SETUP STOP: .venv already exists` | Use `python3 setup_workshop.py --repair` (or `py ... --repair` on Windows) only if you want to replace that local environment |
 | A TODO test fails | Read the first failure, then return to that TODO's decision rule |
 | `NotImplementedError: TODO ...` | Complete that named function in `exercise/rescue_controller.py` |
 | `run already exists` | Continue to the next step or reset if you intend to restart |
 | Replay says to run Step 2 | Run `python workshop.py scenario` first |
-| Many import errors | Confirm your terminal is open in the workshop folder |
+| Many import errors | Confirm your terminal is open in the workshop folder and `.venv` is activated |
 
 ## Reset practice outputs
 

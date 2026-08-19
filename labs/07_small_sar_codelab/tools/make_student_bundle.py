@@ -1,8 +1,8 @@
-"""Build the deterministic, standalone student workspace archive.
+"""Build the deterministic, standalone BYOD student workspace archive.
 
-The prepared Python environment supplies the pinned TRACE Small runtime. The
-archive contains only the guide, exercise, readable tests, command runner, and
-the small public-only workshop support layer.
+The archive contains its own public teaching runtime, setup tool, exercise,
+and standard-library tests.  Students need only a supported Python install;
+the archive never includes the research repository, a model, or hidden truth.
 """
 
 from __future__ import annotations
@@ -26,13 +26,14 @@ ZIP_TIMESTAMP: Final = (2026, 8, 15, 0, 0, 0)
 STUDENT_FILES: Final = (
     Path(".gitignore"),
     Path("README.md"),
+    Path("setup_workshop.py"),
     Path("workshop.py"),
     Path("exercise/__init__.py"),
     Path("exercise/rescue_controller.py"),
     Path("tests/test_rescue_controller.py"),
     Path("_support/__init__.py"),
-    Path("_support/cases.json"),
     Path("_support/runtime.py"),
+    Path("_support/teaching_fixture.json"),
     Path("_support/types.py"),
 )
 
@@ -84,7 +85,7 @@ def build_bundle(output: Path) -> dict[str, object]:
     manifest: dict[str, object] = {
         "schema_version": "trace-small-sar-student-bundle-v1",
         "base_commit": "3f912bdf3fbacb679063da9ed2ce15a2330b91ab",
-        "purpose": "standalone student workspace for the prepared TRACE Small runtime",
+        "purpose": "standalone BYOD workspace for the public Small SAR teaching runtime",
         "files": [
             {"path": name, "sha256": _sha256_bytes(payload)} for name, payload in payloads
         ],

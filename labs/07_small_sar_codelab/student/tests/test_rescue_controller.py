@@ -1,203 +1,195 @@
-"""Readable behavioral checks for the three student TODO functions."""
+"""Readable standard-library checks for the three Flood Rescue Controller TODOs.
+
+Run this file through ``python workshop.py test 1`` (or 2, 3, or all).  The
+tests deliberately use Python's built-in ``unittest`` module so students do not
+need to install a test package on their own laptops.
+"""
 
 from __future__ import annotations
 
+import argparse
+import sys
+import unittest
 from dataclasses import replace
-from types import ModuleType
+from pathlib import Path
+from typing import ClassVar
 
-import pytest
+STUDENT_ROOT = Path(__file__).resolve().parents[1]
+if str(STUDENT_ROOT) not in sys.path:
+    sys.path.insert(0, str(STUDENT_ROOT))
+
 from _support import runtime
 from _support.types import ReasonCode, RescueDecision, RescueEventType, TraceDecision
 from exercise import rescue_controller
 
 
-@pytest.fixture(scope="session")
-def controller() -> ModuleType:
-    """Use the one controller file students edit."""
+class RescueControllerTests(unittest.TestCase):
+    """One focused group of checks for each student function."""
 
-    return rescue_controller
+    cases: ClassVar[dict[str, runtime.PublicCase]]
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.cases = runtime.build_cases()
 
-@pytest.fixture(scope="session")
-def public_cases() -> dict[str, runtime.PublicCase]:
-    """Load the four provided, public-only workshop cases."""
+    def test_todo_1_eligible_resources_filters_and_sorts(self) -> None:
+        case = self.cases["allocation"]
+        first = case.resources[0]
+        slower = replace(first, resource_id="RES-SLOWER", routed_travel_s=first.routed_travel_s + 100)
+        wrong_route = replace(first, resource_id="RES-WRONG-ROUTE", route_id="XNG-03")
+        unreachable = replace(first, resource_id="RES-UNREACHABLE", route_reachable=False)
+        unavailable = replace(first, resource_id="RES-BUSY", currently_available=False)
 
-    return runtime.build_cases()
+        selected = rescue_controller.eligible_resources(
+            case.request,
+            (slower, wrong_route, unreachable, unavailable, first),
+        )
 
+        self.assertEqual([item.resource_id for item in selected], ["RES-ENGINE-01", "RES-SLOWER"])
 
-def test_eligible_resources_filters_and_sorts(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["allocation"]
-    slower = replace(
-        case.resources[0],
-        resource_id="RES-SLOWER",
-        routed_travel_s=case.resources[0].routed_travel_s + 100,
-    )
-    wrong_route = replace(case.resources[0], resource_id="RES-WRONG-ROUTE", route_id="XNG-03")
-    unreachable = replace(case.resources[0], resource_id="RES-UNREACHABLE", route_reachable=False)
-    unavailable = replace(case.resources[0], resource_id="RES-BUSY", currently_available=False)
+    def test_todo_2_clear_plus_capacity_allocates(self) -> None:
+        case = self.cases["allocation"]
 
-    selected = controller.eligible_resources(
-        case.request,
-        (slower, wrong_route, unreachable, unavailable, case.resources[0]),
-    )
+        decision = rescue_controller.decide_rescue(case.request, case.authorization, case.resources)
 
-    assert [item.resource_id for item in selected] == ["RES-ENGINE-01", "RES-SLOWER"]
+        self.assertIs(decision.event_type, RescueEventType.ALLOCATION)
+        self.assertIs(decision.reason_code, ReasonCode.ALLOCATED_COMPATIBLE_CAPACITY)
+        self.assertEqual(decision.selected_resource_id, "RES-ENGINE-01")
+        self.assertEqual(decision.call_id, case.authorization.call_id)
+        self.assertEqual(decision.trace_record_id, case.authorization.record_id)
 
+    def test_todo_2_hold_refuses_even_when_capacity_exists(self) -> None:
+        case = self.cases["evidence_hold"]
+        self.assertTrue(any(resource.currently_available for resource in case.resources))
 
-def test_clear_plus_capacity_allocates(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["allocation"]
+        decision = rescue_controller.decide_rescue(case.request, case.authorization, case.resources)
 
-    decision = controller.decide_rescue(case.request, case.authorization, case.resources)
+        self.assertIs(decision.trace_decision, TraceDecision.HOLD)
+        self.assertIs(decision.event_type, RescueEventType.REFUSAL)
+        self.assertIs(decision.reason_code, ReasonCode.TRACE_NOT_CLEAR)
+        self.assertIsNone(decision.selected_resource_id)
 
-    assert decision.event_type is RescueEventType.ALLOCATION
-    assert decision.reason_code is ReasonCode.ALLOCATED_COMPATIBLE_CAPACITY
-    assert decision.selected_resource_id == "RES-ENGINE-01"
-    assert decision.call_id == case.authorization.call_id
-    assert decision.trace_record_id == case.authorization.record_id
+    def test_todo_2_clear_without_capacity_refuses(self) -> None:
+        case = self.cases["capacity_refusal"]
+        self.assertIs(case.authorization.decision, TraceDecision.CLEAR)
+        self.assertFalse(any(resource.currently_available for resource in case.resources))
 
+        decision = rescue_controller.decide_rescue(case.request, case.authorization, case.resources)
 
-def test_hold_refuses_even_when_capacity_exists(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["evidence_hold"]
-    assert any(resource.currently_available for resource in case.resources)
+        self.assertIs(decision.event_type, RescueEventType.REFUSAL)
+        self.assertIs(decision.reason_code, ReasonCode.NO_COMPATIBLE_CAPACITY)
+        self.assertIsNone(decision.selected_resource_id)
 
-    decision = controller.decide_rescue(case.request, case.authorization, case.resources)
+    def test_todo_2_rejects_a_mismatched_call(self) -> None:
+        case = self.cases["allocation"]
+        mismatched = replace(case.authorization, call_id="C8-not-the-request")
 
-    assert decision.trace_decision is TraceDecision.HOLD
-    assert decision.event_type is RescueEventType.REFUSAL
-    assert decision.reason_code is ReasonCode.TRACE_NOT_CLEAR
-    assert decision.selected_resource_id is None
+        with self.assertRaises(ValueError):
+            rescue_controller.decide_rescue(case.request, mismatched, case.resources)
 
+    def test_todo_2_rejects_a_mismatched_situation(self) -> None:
+        case = self.cases["allocation"]
+        mismatched = replace(case.authorization, belief_cluster_id="BC-not-the-request")
 
-def test_clear_without_capacity_refuses(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["capacity_refusal"]
-    assert case.authorization.decision is TraceDecision.CLEAR
-    assert not any(resource.currently_available for resource in case.resources)
+        with self.assertRaises(ValueError):
+            rescue_controller.decide_rescue(case.request, mismatched, case.resources)
 
-    decision = controller.decide_rescue(case.request, case.authorization, case.resources)
+    def _initial_allocation(self) -> RescueDecision:
+        allocation = self.cases["allocation"]
+        return rescue_controller.decide_rescue(
+            allocation.request,
+            allocation.authorization,
+            allocation.resources,
+        )
 
-    assert decision.event_type is RescueEventType.REFUSAL
-    assert decision.reason_code is ReasonCode.NO_COMPATIBLE_CAPACITY
-    assert decision.selected_resource_id is None
+    def test_todo_3_visible_repair_appends_and_preserves_allocation(self) -> None:
+        repair = self.cases["visible_repair"]
+        initial = self._initial_allocation()
 
+        history = rescue_controller.apply_visible_repair((initial,), repair.authorization)
 
-def test_decision_rejects_mismatched_call(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["allocation"]
-    mismatched = replace(case.authorization, call_id="C8-not-the-request")
+        self.assertIs(history[0], initial)
+        self.assertEqual(len(history), 2)
+        self.assertIs(history[1].event_type, RescueEventType.REPAIR)
+        self.assertIs(history[1].reason_code, ReasonCode.VISIBLE_EVIDENCE_REPAIR)
+        self.assertIsNone(history[1].selected_resource_id)
+        self.assertGreater(history[1].trace_record_version, history[0].trace_record_version)
 
-    with pytest.raises(ValueError):
-        controller.decide_rescue(case.request, mismatched, case.resources)
+    def test_todo_3_requires_visible_basis(self) -> None:
+        repair = self.cases["visible_repair"]
+        unsupported = replace(repair.authorization, visible_evidence_basis=())
 
+        with self.assertRaises(ValueError):
+            rescue_controller.apply_visible_repair((self._initial_allocation(),), unsupported)
 
-def test_decision_rejects_mismatched_situation(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    case = public_cases["allocation"]
-    mismatched = replace(case.authorization, belief_cluster_id="BC-not-the-request")
+    def test_todo_3_rejects_empty_history(self) -> None:
+        repair = self.cases["visible_repair"]
 
-    with pytest.raises(ValueError):
-        controller.decide_rescue(case.request, mismatched, case.resources)
+        with self.assertRaises(ValueError):
+            rescue_controller.apply_visible_repair((), repair.authorization)
 
+    def test_todo_3_rejects_a_different_situation(self) -> None:
+        repair = self.cases["visible_repair"]
+        wrong_situation = replace(repair.authorization, belief_cluster_id="BC-different")
 
-def _initial_allocation(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> RescueDecision:
-    """Create the earlier allocation needed by the repair tests."""
+        with self.assertRaises(ValueError):
+            rescue_controller.apply_visible_repair((self._initial_allocation(),), wrong_situation)
 
-    allocation = public_cases["allocation"]
-    return controller.decide_rescue(
-        allocation.request,
-        allocation.authorization,
-        allocation.resources,
-    )
+    def test_todo_3_rejects_a_different_trace_record(self) -> None:
+        repair = self.cases["visible_repair"]
+        wrong_record = replace(repair.authorization, record_id="TR-different")
 
+        with self.assertRaises(ValueError):
+            rescue_controller.apply_visible_repair((self._initial_allocation(),), wrong_record)
 
-def test_visible_repair_appends_and_preserves_allocation(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    repair = public_cases["visible_repair"]
-    initial = _initial_allocation(controller, public_cases)
+    def test_todo_3_requires_a_later_version(self) -> None:
+        repair = self.cases["visible_repair"]
+        old_version = replace(
+            repair.authorization,
+            record_version=self._initial_allocation().trace_record_version,
+        )
 
-    history = controller.apply_visible_repair((initial,), repair.authorization)
-
-    assert history[0] is initial
-    assert len(history) == 2
-    assert history[1].event_type is RescueEventType.REPAIR
-    assert history[1].reason_code is ReasonCode.VISIBLE_EVIDENCE_REPAIR
-    assert history[1].selected_resource_id is None
-    assert history[1].trace_record_version > history[0].trace_record_version
+        with self.assertRaises(ValueError):
+            rescue_controller.apply_visible_repair((self._initial_allocation(),), old_version)
 
 
-def test_repair_requires_visible_basis(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    repair = public_cases["visible_repair"]
-    initial = _initial_allocation(controller, public_cases)
-    unsupported = replace(repair.authorization, visible_evidence_basis=())
-
-    with pytest.raises(ValueError):
-        controller.apply_visible_repair((initial,), unsupported)
-
-
-def test_repair_rejects_empty_history(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    repair = public_cases["visible_repair"]
-
-    with pytest.raises(ValueError):
-        controller.apply_visible_repair((), repair.authorization)
+TODO_TESTS = {
+    "1": ("test_todo_1_eligible_resources_filters_and_sorts",),
+    "2": (
+        "test_todo_2_clear_plus_capacity_allocates",
+        "test_todo_2_hold_refuses_even_when_capacity_exists",
+        "test_todo_2_clear_without_capacity_refuses",
+        "test_todo_2_rejects_a_mismatched_call",
+        "test_todo_2_rejects_a_mismatched_situation",
+    ),
+    "3": (
+        "test_todo_3_visible_repair_appends_and_preserves_allocation",
+        "test_todo_3_requires_visible_basis",
+        "test_todo_3_rejects_empty_history",
+        "test_todo_3_rejects_a_different_situation",
+        "test_todo_3_rejects_a_different_trace_record",
+        "test_todo_3_requires_a_later_version",
+    ),
+}
 
 
-def test_repair_rejects_a_different_situation(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    initial = _initial_allocation(controller, public_cases)
-    repair = public_cases["visible_repair"]
-    wrong_situation = replace(repair.authorization, belief_cluster_id="BC-different")
+def selected_suite(todo: str) -> unittest.TestSuite:
+    """Return exactly the focused tests requested by the workshop command."""
 
-    with pytest.raises(ValueError):
-        controller.apply_visible_repair((initial,), wrong_situation)
+    if todo == "all":
+        names = tuple(name for group in TODO_TESTS.values() for name in group)
+    else:
+        names = TODO_TESTS[todo]
+    return unittest.TestSuite(RescueControllerTests(name) for name in names)
 
 
-def test_repair_rejects_a_different_trace_record(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    initial = _initial_allocation(controller, public_cases)
-    repair = public_cases["visible_repair"]
-    wrong_record = replace(repair.authorization, record_id="TR-different")
-
-    with pytest.raises(ValueError):
-        controller.apply_visible_repair((initial,), wrong_record)
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--todo", choices=("1", "2", "3", "all"), default="all")
+    args = parser.parse_args()
+    result = unittest.TextTestRunner(verbosity=2).run(selected_suite(args.todo))
+    return 0 if result.wasSuccessful() else 1
 
 
-def test_repair_requires_a_later_version(
-    controller: ModuleType,
-    public_cases: dict[str, runtime.PublicCase],
-) -> None:
-    initial = _initial_allocation(controller, public_cases)
-    repair = public_cases["visible_repair"]
-    old_version = replace(repair.authorization, record_version=initial.trace_record_version)
-
-    with pytest.raises(ValueError):
-        controller.apply_visible_repair((initial,), old_version)
+if __name__ == "__main__":
+    raise SystemExit(main())

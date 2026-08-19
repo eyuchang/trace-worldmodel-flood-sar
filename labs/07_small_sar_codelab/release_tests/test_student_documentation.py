@@ -30,14 +30,15 @@ def test_readme_is_the_only_student_entry_document() -> None:
     assert list(STUDENT_ROOT.glob("*.md")) == [README]
 
 
-def test_student_commands_use_only_the_workshop_runner() -> None:
+def test_student_commands_use_a_clear_byod_setup_then_one_workshop_runner() -> None:
     text = README.read_text(encoding="utf-8")
-    bash_blocks = re.findall(r"```bash\n(.*?)```", text, flags=re.DOTALL)
 
-    assert bash_blocks
-    for block in bash_blocks:
-        commands = [line for line in block.splitlines() if line.strip()]
-        assert all(line.startswith("python workshop.py") for line in commands)
+    assert "python3 setup_workshop.py" in text
+    assert "source .venv/bin/activate" in text
+    assert "py setup_workshop.py" in text
+    assert ".\\.venv\\Scripts\\Activate.ps1" in text
+    assert ".venv\\Scripts\\activate.bat" in text
+    assert text.count("python workshop.py") >= 12
     assert "TRACE_SMALL_SAR_CONTROLLER" not in text
     assert "trace-jepa-delta-small" not in text
     assert "labs/07_small_sar_codelab" not in text
@@ -46,10 +47,10 @@ def test_student_commands_use_only_the_workshop_runner() -> None:
 def test_student_readme_teaches_terms_before_the_numbered_route() -> None:
     text = README.read_text(encoding="utf-8")
     normalized = " ".join(text.split())
-    route = text.index("## Your seven-step route")
+    route = text.index("## Workshop Breakdown")
     required = (
         "Search and rescue (SAR)",
-        "TRACE—the system's **decision notebook**",
+        "TRACE, the system's **decision notebook**",
         "hidden answer key",
         "visible evidence",
         "CLEAR does **not** send a unit",
@@ -61,6 +62,23 @@ def test_student_readme_teaches_terms_before_the_numbered_route() -> None:
     for phrase in required:
         assert phrase in normalized
         assert text.index(phrase) < route
+
+
+def test_student_readme_makes_the_full_byod_setup_route_explicit() -> None:
+    text = README.read_text(encoding="utf-8")
+
+    required = (
+        "## Before Step 1 — Set up this laptop",
+        "You can complete this workshop on your own laptop.",
+        "Python 3.11, 3.12, 3.13, or 3.14",
+        "official Python download page",
+        "A **virtual environment** is a private Python workspace",
+        "they do not download packages",
+        "Do not run `pip install` or download a model.",
+        "If you later close it",
+    )
+    for phrase in required:
+        assert phrase in text
 
 
 def test_student_lesson_is_sequential_with_only_useful_progress_signals() -> None:
@@ -77,10 +95,19 @@ def test_student_lesson_is_sequential_with_only_useful_progress_signals() -> Non
 def test_preview_distinguishes_supplied_system_from_student_code() -> None:
     text = README.read_text(encoding="utf-8")
 
-    assert "supplied, already-completed TRACE Small flood scenario" in text
+    assert "small simulated flood session included" in text
     assert "does not call the three unfinished functions" in text
     assert "four representative decisions" in text
     assert "an **allocation**, a **refusal**, or an appended **repair**" in text
+    assert "1 allocated, 2 refused, 1 repaired" in text
+
+
+def test_student_readme_uses_the_text_walkthrough_without_a_viewer() -> None:
+    text = README.read_text(encoding="utf-8")
+
+    assert "The command prints the supplied completed decisions in the terminal." in text
+    assert "Mission Viewer" not in text
+    assert "python workshop.py view" not in text
 
 
 def test_student_readme_states_return_and_error_contracts() -> None:

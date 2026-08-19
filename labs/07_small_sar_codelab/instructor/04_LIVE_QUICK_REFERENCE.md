@@ -10,10 +10,11 @@ complete, tested implementation of all three student methods.
 ## Command sequence
 
 | Stage | Command | Success signal |
+| Local setup | Follow README’s macOS/Linux or Windows block | `.venv` activated; no package download |
 |---|---|---|
 | Menu | `python workshop.py` | Seven numbered steps |
 | Setup | `python workshop.py check` | Five PASS lines and READY |
-| Scenario | `python workshop.py scenario` | 8 allocated, 12 refused, 8 repaired |
+| Scenario | `python workshop.py scenario` | 1 allocated, 2 refused, 1 repaired |
 | Walkthrough | `python workshop.py walkthrough` | Four explained decisions |
 | TODO 1 | `python workshop.py test 1` | One test passes |
 | TODO 2 | `python workshop.py test 2` | Five tests pass |
@@ -21,7 +22,7 @@ complete, tested implementation of all three student methods.
 | All behavior | `python workshop.py test all` | Twelve tests pass |
 | Student run | `python workshop.py run` | Same four decisions as walkthrough |
 | Comparison | `python workshop.py what-if` | CLEAR remains; capacity/action changes |
-| Replay | `python workshop.py replay` | Two byte-identical messages |
+| Replay | `python workshop.py replay` | One byte-identical replay message |
 | Reset outputs | `python workshop.py reset` | Outputs removed; exercise kept |
 
 ## The three concepts to protect
@@ -46,8 +47,10 @@ of the room.
 
 | Signal | Immediate response |
 |---|---|
-| `python: command not found` | Move student to the prepared terminal or machine |
-| Prepared runtime not found | Restore the activated editable environment; do not install live |
+| `python: command not found` | Activate `.venv`, then run `python workshop.py check` |
+| `python3` or `py` is not found | Follow the README’s official-Python installation link, then reopen the terminal |
+| `SETUP STOP: Python ... is required` | Install Python 3.11–3.14, then rerun `setup_workshop.py` |
+| `.venv already exists` | Use `setup_workshop.py --repair` only if the student agrees to replace that local environment |
 | Workshop folder incomplete | Replace it with a fresh extracted ZIP |
 | `NotImplementedError: TODO N` | Open the named function; do not edit support files |
 | One TODO test fails | Read only the first failure and compare it with that TODO's rule list |
@@ -104,4 +107,7 @@ visible evidence. Append one repair with no selected resource.
 - Do not edit frozen scenario or policy files.
 - Keep Reference, LEAP, debate, and regret outside this component.
 - Do not distribute the solution or instructor branch.
+- For a projected completion, use
+  [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md); it keeps the
+  ordinary student filename and commands.
 - Do not ask students to share personal paths, accounts, or full screens.

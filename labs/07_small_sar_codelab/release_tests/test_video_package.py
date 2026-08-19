@@ -42,21 +42,21 @@ def test_chapters_are_monotonic_and_match_target_length() -> None:
     values = re.findall(r"^(\d{2}:\d{2}) ", chapters, flags=re.MULTILINE)
     seconds = [_seconds(f"00:{value}") for value in values]
 
-    assert len(seconds) == 13
+    assert len(seconds) == 12
     assert seconds == sorted(seconds)
     assert seconds[0] == 0
-    assert seconds[-1] == 13 * 60 + 55
-    assert 12 * 60 <= 14 * 60 + 50 <= 20 * 60
+    assert seconds[-1] == 12 * 60 + 10
+    assert 12 * 60 <= 13 * 60 + 25 <= 20 * 60
 
 
-def test_caption_track_covers_all_thirteen_chapters() -> None:
+def test_caption_track_covers_all_twelve_chapters() -> None:
     text = CAPTIONS.read_text(encoding="utf-8")
     blocks = [block for block in text.strip().split("\n\n") if block]
 
-    assert len(blocks) == 13
+    assert len(blocks) == 12
     assert "00:00:00,000 --> 00:00:35,000" in blocks[0]
-    assert "00:13:55,000 --> 00:14:50,000" in blocks[-1]
-    assert "match byte for byte" in blocks[-1]
+    assert "00:12:10,000 --> 00:13:25,000" in blocks[-1]
+    assert "append-only decision history" in blocks[-1]
 
 
 @pytest.mark.skipif(shutil.which("ffprobe") is None, reason="ffprobe not installed")
@@ -85,7 +85,7 @@ def test_review_video_stream_duration_resolution_and_privacy_metadata() -> None:
     assert video_streams[0]["width"] == 1920
     assert video_streams[0]["height"] == 1080
     assert audio_streams == []
-    assert float(probe["format"]["duration"]) == pytest.approx(890.04, abs=0.1)
+    assert float(probe["format"]["duration"]) == pytest.approx(805.04, abs=0.1)
     assert (
         probe["format"]["tags"]["title"]
         == "Flood Rescue Controller student review video"
@@ -108,8 +108,15 @@ def test_recording_materials_keep_commands_and_claims_in_bounds() -> None:
     assert "Search and rescue" in text
     assert "decision notebook" in text
     assert "CLEAR allows the resource check" in text
+    assert "screen tutorial" in text
+    assert "Mission Viewer" not in text
+    assert "python workshop.py view" not in text
     assert "python workshop.py" in text
-    assert "prepared student workspace" in text
+    assert "Set up this laptop" in text
+    assert "python3 setup_workshop.py" in text
+    assert "same-file" in text
+    assert "does not install packages" in text
+    assert "model download" in text
     assert "artifact-reconstruction" not in text
     assert "registered result" not in text
     assert "No upload or personal recording is authorized" in text

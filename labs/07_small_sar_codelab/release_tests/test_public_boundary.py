@@ -1,16 +1,20 @@
-"""Scientific and filesystem boundary checks for the lab package."""
+"""Scientific and filesystem boundary checks for the standalone student package."""
 
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
-from typing import Any
+from types import ModuleType
 
 import pytest
 from _support import runtime
 
-HIDDEN_BOOK_FILES = {
+LAB_ROOT = Path(__file__).resolve().parents[1]
+STUDENT_ROOT = LAB_ROOT / "student"
+FIXTURE = STUDENT_ROOT / "_support" / "teaching_fixture.json"
+HIDDEN_NAMES = {
     "ground_truth.json",
     "incident_candidate_audit.json",
     "call_lineage.json",
@@ -21,75 +25,79 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_declared_artifacts_are_manifest_public_and_hash_bound() -> None:
-    case_manifest, _ = runtime.load_public_book()
-    source = case_manifest["source"]
-    book = runtime.REPO_ROOT / source["book_path"]
-    canonical_manifest = json.loads((book / "manifest.json").read_text(encoding="utf-8"))
-    registered = {item["file_name"]: item for item in canonical_manifest["artifacts"]}
-
-    declared_names = {item["file_name"] for item in case_manifest["public_artifacts"]}
-    assert declared_names.isdisjoint(HIDDEN_BOOK_FILES)
-    for expected in case_manifest["public_artifacts"]:
-        entry = registered[expected["file_name"]]
-        assert entry["contains_hidden_truth"] is False
-        assert entry["sha256"] == expected["sha256"]
-        assert _sha256(book / expected["file_name"]) == expected["sha256"]
+def _load_fixture_builder() -> ModuleType:
+    path = LAB_ROOT / "tools" / "build_teaching_fixture.py"
+    spec = importlib.util.spec_from_file_location("teaching_fixture_builder", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def test_loading_cases_never_opens_hidden_truth(monkeypatch: pytest.MonkeyPatch) -> None:
-    opened: list[Path] = []
-    original_open = Path.open
+def test_fixture_is_regenerated_from_declared_public_inputs_without_drift(tmp_path: Path) -> None:
+    builder = _load_fixture_builder()
+    regenerated = tmp_path / "teaching_fixture.json"
 
-    def tracking_open(path: Path, *args: Any, **kwargs: Any) -> Any:
-        opened.append(path)
-        return original_open(path, *args, **kwargs)
+    builder.write_fixture(regenerated, overwrite=False)
 
-    monkeypatch.setattr(Path, "open", tracking_open)
-
-    runtime.build_cases()
-
-    assert not ({path.name for path in opened} & HIDDEN_BOOK_FILES)
+    assert regenerated.read_bytes() == FIXTURE.read_bytes()
+    assert _sha256(regenerated) == _sha256(FIXTURE)
 
 
-def test_hash_drift_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    manifest = json.loads(runtime.CASE_MANIFEST_PATH.read_text(encoding="utf-8"))
-    manifest["public_artifacts"][0]["sha256"] = "0" * 64
-    changed = tmp_path / "changed-manifest.json"
-    changed.write_text(json.dumps(manifest), encoding="utf-8")
-    monkeypatch.setattr(runtime, "CASE_MANIFEST_PATH", changed)
+def test_student_fixture_has_only_minimal_controller_visible_content() -> None:
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
-    with pytest.raises(runtime.LabDataError, match="hash drift"):
-        runtime.load_public_book()
-
-
-def test_runtime_leaves_all_source_artifact_hashes_unchanged(controller_name: str) -> None:
-    manifest = json.loads(runtime.CASE_MANIFEST_PATH.read_text(encoding="utf-8"))
-    book = runtime.REPO_ROOT / manifest["source"]["book_path"]
-    before = {
-        item["file_name"]: _sha256(book / item["file_name"])
-        for item in manifest["public_artifacts"]
+    assert set(payload) == {
+        "schema_version",
+        "scenario_summary",
+        "scenario_artifacts",
+        "cases",
     }
+    assert payload["scenario_summary"] == {"allocated": 1, "refused": 2, "repaired": 1}
+    assert set(payload["scenario_artifacts"]) == set(runtime.SCENARIO_FILES)
+    serialized = json.dumps(payload, sort_keys=True).lower()
+    assert not any(name in serialized for name in HIDDEN_NAMES)
+    assert "trace_jepa" not in serialized
 
-    runtime.run_lab(controller_name, "all")
 
-    after = {
-        item["file_name"]: _sha256(book / item["file_name"])
-        for item in manifest["public_artifacts"]
+def test_student_runtime_has_no_research_runtime_or_network_dependency() -> None:
+    sources = {
+        path.relative_to(STUDENT_ROOT).as_posix(): path.read_text(encoding="utf-8")
+        for path in STUDENT_ROOT.rglob("*.py")
+        if not {".venv", "__pycache__"}.intersection(path.relative_to(STUDENT_ROOT).parts)
     }
-    assert after == before
+    combined = "\n".join(sources.values())
+
+    for forbidden in (
+        "import trace_jepa",
+        "from trace_jepa",
+        "requests",
+        "urllib",
+        "http.client",
+        "subprocess.run([\"pip\"",
+    ):
+        assert forbidden not in combined
 
 
-def test_output_inside_registered_reference_is_refused(controller_name: str) -> None:
-    report = runtime.run_lab(controller_name, "allocation")
-    protected = runtime.PROTECTED_OUTPUT_ROOTS[0] / "forbidden-lab-output.json"
+def test_runtime_rejects_a_fixture_that_names_hidden_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    changed = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    changed["scenario_artifacts"]["ground_truth.json"] = []
+    altered = tmp_path / "teaching_fixture.json"
+    altered.write_text(json.dumps(changed), encoding="utf-8")
+    monkeypatch.setattr(runtime, "FIXTURE_PATH", altered)
 
-    with pytest.raises(ValueError, match="protected"):
-        runtime.write_report(report, protected)
-    assert not protected.exists()
+    with pytest.raises(runtime.LabDataError, match="unexpected scenario file"):
+        runtime.build_cases()
 
 
-def test_reconciliation_explicitly_excludes_hidden_lineage() -> None:
-    _, artifacts = runtime.load_public_book()
+def test_runtime_does_not_mutate_the_frozen_fixture() -> None:
+    before = _sha256(FIXTURE)
 
-    assert artifacts["controller_reconciliation.json"]["hidden_lineage_used"] is False
+    runtime.run_lab("solution", "all")
+    runtime.scenario_payloads()
+
+    assert _sha256(FIXTURE) == before

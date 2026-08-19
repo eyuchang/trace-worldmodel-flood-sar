@@ -1,51 +1,47 @@
 1
 00:00:00,000 --> 00:00:35,000
-A welfare-check call arrives during a simulated flood. Should the software send a response unit? In this lab, you will program that decision.
+A welfare-check call becomes a recorded decision.
 
 2
-00:00:35,000 --> 00:01:40,000
-Search and rescue is the work of finding, reaching, and helping people. The simulation has a hidden answer key, but the controller cannot read it. A call produces visible evidence, TRACE checks the information, and your controller checks the response units before saving an action.
+00:00:35,000 --> 00:01:10,000
+The README is the route map; edit one file and run one command surface.
 
 3
-00:01:40,000 --> 00:02:50,000
-TRACE is the system's decision notebook. CLEAR permits a resource check. HOLD stops the controller. Your code then decides whether a suitable unit can actually be sent.
+00:01:10,000 --> 00:01:45,000
+The local environment needs no package or model download; five PASS lines mean ready.
 
 4
-00:02:50,000 --> 00:03:55,000
-An allocation selects a unit, a refusal selects none and explains why, and a repair appends a later correction without erasing the earlier decision.
+00:01:45,000 --> 00:02:40,000
+The supplied scenario records one allocation, two refusals, and one repair before coding.
 
 5
-00:03:55,000 --> 00:04:50,000
-The setup check confirms the workshop is ready. Continue only after five PASS lines and READY.
+00:02:40,000 --> 00:03:35,000
+CLEAR allows a resource check; it does not dispatch a unit.
 
 6
-00:04:50,000 --> 00:06:00,000
-Run one complete simulated session. The command saves the public path from call and evidence through the controller decision, commitment, and outcome.
+00:03:35,000 --> 00:05:10,000
+Pause to try the TODO, then return to the same file to inspect and test the completed function.
 
 7
-00:06:00,000 --> 00:07:35,000
-The four cases show allocation, information refusal, capacity refusal, and append-only repair. The medical case proves that CLEAR and allocation are not the same thing.
+00:05:10,000 --> 00:07:35,000
+Pause to try the TODO, then apply TRACE before capacity and test the same file.
 
 8
-00:07:35,000 --> 00:08:50,000
-A capability is a task a unit can perform. Keep only available, reachable, correct-route units with the needed capability, then sort them deterministically.
+00:07:35,000 --> 00:09:00,000
+Pause to try the TODO, then keep the prior allocation and append a later repair.
 
 9
-00:08:50,000 --> 00:10:20,000
-First reject mismatched calls or situations. Then apply TRACE before capacity. With CLEAR, an empty eligible list refuses; otherwise allocate its first unit.
+00:09:00,000 --> 00:10:20,000
+The terminal now prints decisions returned by the student's code.
 
 10
-00:10:20,000 --> 00:11:35,000
-A repair is a later correction to the record. Keep the earlier allocation and append a new repair only when the update belongs to the same chain.
+00:10:20,000 --> 00:11:15,000
+Capacity can change the controller action without changing TRACE.
 
 11
-00:11:35,000 --> 00:12:50,000
-A failure name points to the rule that still needs work. When every test passes, run your controller and compare it with the completed walkthrough.
+00:11:15,000 --> 00:12:10,000
+The saved teaching history regenerates byte-identically.
 
 12
-00:12:50,000 --> 00:13:55,000
-The what-if runs change copied resource snapshots. They isolate the resource decision: capacity changes the result while TRACE remains CLEAR.
-
-13
-00:13:55,000 --> 00:14:50,000
-You connected evidence, TRACE, resources, and recorded action. You can now explain both refusals, deterministic allocation, append-only repair, and exact replay. Finish with python workshop dot py replay; both saved histories match byte for byte.
+00:12:10,000 --> 00:13:25,000
+A call, TRACE, the controller, and append-only decision history.

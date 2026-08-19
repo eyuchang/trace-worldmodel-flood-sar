@@ -1,8 +1,9 @@
 # Ninety-Minute Lesson Run of Show
 
-This is a complete short alternative to the full workshop. Use it only when
-the prepared environment is already working. Students implement TODO 2; the
-instructor demonstrates how TODOs 1 and 3 complete the larger path.
+This is a complete short alternative to the full workshop. It has a
+**90-minute instructional route** after the 10–15 minute BYOD setup described
+in the student README. Students implement TODO 2; the instructor demonstrates
+how TODOs 1 and 3 complete the larger path.
 
 Total teaching time: **90 minutes**.
 
@@ -10,9 +11,10 @@ Total teaching time: **90 minutes**.
 
 - Every machine must already pass `python workshop.py check`.
 - Students must have the same full student workspace and README.
-- Open the complete three-function
-  [`solution/rescue_controller.py`](solution/rescue_controller.py) separately
-  for demonstrations; never distribute it in the student ZIP.
+- Prepare a disposable instructor demo copy with
+  [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md). It reveals one
+  function at a time in the same file students edit; never distribute the
+  solution or reveal tool.
 - Keep [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md) available.
 
 ## Learning outcome
@@ -30,20 +32,20 @@ eligibility and later repair fit in the full system.
 
 ## Schedule
 
-| Time | Activity | Slides |
+| Time | Activity | Projected screen |
 |---:|---|---:|
-| 0:00–0:12 | Mission, visible evidence, TRACE versus controller | 1–4 |
-| 0:12–0:20 | Setup confirmation and scenario summary | 5–6 |
-| 0:20–0:35 | Four-case walkthrough | 7 |
-| 0:35–0:45 | Demonstrate TODO 1 and give students its result | 8 |
-| 0:45–1:10 | Students implement and test TODO 2 | 9 |
-| 1:10–1:20 | Demonstrate TODO 3 | 10 |
-| 1:20–1:27 | Demonstrate capacity changes and replay | 11–12 |
-| 1:27–1:30 | Exit explanation | 13 |
+| 0:00–0:12 | Mission, visible evidence, TRACE versus controller | README |
+| 0:12–0:20 | Setup confirmation and scenario summary | Terminal |
+| 0:20–0:35 | Four-case walkthrough | Terminal and README |
+| 0:35–0:45 | Demonstrate TODO 1 and give students its result | Editor and terminal |
+| 0:45–1:10 | Students implement and test TODO 2 | Editor and terminal |
+| 1:10–1:20 | Demonstrate TODO 3 | Editor and terminal |
+| 1:20–1:27 | Demonstrate capacity changes and replay | Terminal |
+| 1:27–1:30 | Exit explanation | README |
 
 ## 0:00–0:12 — Establish the two questions
 
-Show Slides 1–4 and the student README system diagram.
+Show the student README system diagram.
 
 Say:
 
@@ -67,10 +69,10 @@ python workshop.py check
 python workshop.py scenario
 ```
 
-Do not troubleshoot installations live. Move anyone without `READY` to a
-prepared machine.
+Do not troubleshoot package installations live. Route anyone without `READY`
+to the setup helper and keep teaching.
 
-Read the scenario summary as controller events: 8 allocated, 12 refused, and 8
+Read the scenario summary as controller events: 1 allocated, 2 refused, and 1
 repaired. Point once to the six-file call-to-outcome path.
 
 ## 0:20–0:35 — Teach the four cases
@@ -97,15 +99,18 @@ Move on when students can explain why the two refusals differ.
 Show the four eligibility rules and the deterministic sort. Do not ask students
 to type TODO 1 during the short lesson.
 
-On the projected instructor copy, show a completed `eligible_resources`
-function and run:
+Give students one minute to read the TODO comments. Then pause the projection,
+reveal TODO 1 in the private instructor demo copy, and resume on the same
+`exercise/rescue_controller.py` filename. Students copy the displayed,
+provided implementation into their own TODO 1 so their TODO 2 tests can use
+it. Run the normal command:
 
 ```bash
 python workshop.py test 1
 ```
 
 Students should understand its output as an ordered tuple of usable units.
-Their own TODO 1 may remain unfinished in this route.
+TODO 1 is supplied in this short route; TODO 2 is the independent coding task.
 
 ## 0:45–1:10 — Students implement TODO 2
 
@@ -119,28 +124,6 @@ Keep this table visible:
 | not CLEAR | either | information refusal |
 | CLEAR | no | capacity refusal |
 | CLEAR | yes | allocation |
-
-Because TODO 2 calls TODO 1, students may temporarily use this instructor-
-provided line at the point where eligible units are needed:
-
-```python
-eligible = tuple(
-    sorted(
-        (
-            unit
-            for unit in resources
-            if unit.currently_available
-            and unit.route_reachable
-            and unit.route_id == request.route_id
-            and request.required_capability in unit.capabilities
-        ),
-        key=lambda unit: (unit.routed_travel_s, unit.resource_id),
-    )
-)
-```
-
-This line is a short-route teaching aid. In the full route, students call their
-own `eligible_resources` function instead.
 
 Students run:
 
@@ -159,7 +142,9 @@ Show the timeline:
 version 2 allocation -> later visible information -> append version 4 repair
 ```
 
-On the instructor copy, point to the five validations and the final return:
+After a one-minute read of the comments, pause projection and reveal TODO 3 in
+the private instructor copy. Point to the five validations and the final
+return in the same filename students know:
 
 ```python
 return (*history, repair)
@@ -170,7 +155,7 @@ repair tests; students do not type TODO 3 in this route.
 
 ## 1:20–1:27 — Demonstrate comparison and replay
 
-Use an instructor copy with all TODOs complete:
+Use the instructor demo copy after its three sequential reveals:
 
 ```bash
 python workshop.py what-if
@@ -195,7 +180,7 @@ though they did not personally implement TODOs 1 and 3.
 1. Finish the current segment rather than interrupting students mid-function.
 2. Announce that TODO 2 is now the required coding outcome.
 3. Use the table above and the short-route eligibility snippet.
-4. Demonstrate, rather than assign, TODO 3.
+4. Reveal and demonstrate, rather than assign, TODO 3.
 5. Preserve the final capacity comparison and exit explanation.
 
 Do not simply tell students to “skip ahead” in the full README without this

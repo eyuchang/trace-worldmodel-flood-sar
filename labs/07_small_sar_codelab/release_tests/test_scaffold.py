@@ -49,17 +49,17 @@ def test_student_tests_cover_each_documented_error_condition() -> None:
     )
 
     expected_tests = (
-        "test_decision_rejects_mismatched_call",
-        "test_decision_rejects_mismatched_situation",
-        "test_repair_rejects_empty_history",
-        "test_repair_rejects_a_different_situation",
-        "test_repair_rejects_a_different_trace_record",
-        "test_repair_requires_a_later_version",
-        "test_repair_requires_visible_basis",
+        "test_todo_2_rejects_a_mismatched_call",
+        "test_todo_2_rejects_a_mismatched_situation",
+        "test_todo_3_rejects_empty_history",
+        "test_todo_3_rejects_a_different_situation",
+        "test_todo_3_rejects_a_different_trace_record",
+        "test_todo_3_requires_a_later_version",
+        "test_todo_3_requires_visible_basis",
     )
     for name in expected_tests:
         assert f"def {name}(" in tests
-    assert tests.count("pytest.raises(ValueError)") == len(expected_tests)
+    assert tests.count("with self.assertRaises(ValueError):") == len(expected_tests)
 
 
 def test_student_visible_functions_remain_small_and_single_purpose() -> None:

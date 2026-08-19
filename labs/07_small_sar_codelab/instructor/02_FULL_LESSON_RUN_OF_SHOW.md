@@ -1,9 +1,13 @@
-# Full Lesson Run of Show — 3 Hours 15 Minutes
+# Full Lesson Run of Show — 3 Hours 30 Minutes Including BYOD Setup
 
 Use this document during the full workshop. Complete
 [`01_PREP_AND_DISTRIBUTION.md`](01_PREP_AND_DISTRIBUTION.md) before class and
 keep [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md) open for room
 triage.
+
+The first 15 minutes make the same laptop setup described before Step 1 in the
+student README. If every student completed that setup in advance, keep the
+time as a quiet readiness check rather than skipping it silently.
 
 Private answer reference: the complete implementations of all three TODOs are
 in [`solution/rescue_controller.py`](solution/rescue_controller.py).
@@ -18,25 +22,60 @@ The controller asks: Is a suitable response unit available?
 
 ## Schedule at a glance
 
-| Time | Student location | Slides | Move-on result |
+| Time | Student location | Projected screen | Move-on result |
 |---:|---|---:|---|
-| 0:00–0:20 | Start here and system explanation | 1–4 | Students can distinguish TRACE from the controller |
-| 0:20–0:30 | Step 1 | 5 | Everyone sees five PASS lines |
-| 0:30–0:45 | Step 2 | 6 | Students can read the call-to-outcome path |
-| 0:45–1:10 | Step 3 | 7 | Students distinguish the two refusal reasons |
-| 1:10–1:20 | Break | — | Helpers clear setup issues |
-| 1:20–1:50 | Step 4, TODO 1 | 8 | One eligibility test passes |
-| 1:50–2:25 | Step 4, TODO 2 | 9 | Five allocation/refusal tests pass |
-| 2:25–2:50 | Step 4, TODO 3 | 10 | Six repair tests pass |
-| 2:50–3:00 | Step 5 | 11 | All twelve tests and full controller run pass |
-| 3:00–3:10 | Step 6 | 12 | Students explain the capacity comparison |
-| 3:10–3:15 | Step 7 | 13 | Both replay checks are byte-identical |
+| 0:00–0:15 | Before Step 1: extract, set up, activate | README and terminal | Everyone can run `check` |
+| 0:15–0:35 | Start here and system explanation | README | Students can distinguish TRACE from the controller |
+| 0:35–0:45 | Step 1 | Terminal | Everyone sees five PASS lines |
+| 0:45–1:00 | Step 2 | Terminal | Students can read the call-to-outcome path |
+| 1:00–1:25 | Step 3 | Terminal and README | Students distinguish the two refusal reasons |
+| 1:25–1:35 | Break | — | Helpers clear setup issues |
+| 1:35–2:05 | Step 4, TODO 1 | Editor and terminal | One eligibility test passes |
+| 2:05–2:40 | Step 4, TODO 2 | Editor and terminal | Five allocation/refusal tests pass |
+| 2:40–3:05 | Step 4, TODO 3 | Editor and terminal | Six repair tests pass |
+| 3:05–3:15 | Step 5 | Terminal | All twelve tests and full controller run pass |
+| 3:15–3:25 | Step 6 | Terminal | Students explain the capacity comparison |
+| 3:25–3:30 | Step 7 | Terminal | Replay is byte-identical |
+
+## Before Step 1 — Local setup
+
+**Time:** 0:00–0:15
+**Student README:** “Before Step 1 — Set up this laptop”
+**Project:** README setup section, then a terminal
+
+### Teaching objective
+
+Get every student into the extracted workshop folder with the local `.venv`
+activated. This is the only setup needed: no package, model, repository, or
+network download is part of the lab.
+
+### Say and show
+
+Tell students to follow their operating-system block in the README. On the
+projector, show only the matching block—not a long list of alternatives. The
+final command on every platform is the same:
+
+```bash
+python workshop.py check
+```
+
+### Students do
+
+Extract the ZIP if needed, run `setup_workshop.py`, activate `.venv`, and run
+`check`. Students without Python or permission to install it pair with a ready
+neighbor while a setup helper follows the triage guide; they should not fall
+behind waiting for a package installation.
+
+### Move on when
+
+At least 95% see `READY`; every remaining student is paired or assigned to a
+helper.
 
 ## Opening — Mission and system
 
-**Time:** 0:00–0:20
+**Time:** 0:15–0:35
 **Student README:** “Start here” through “Words you will use”
-**Slides:** 1–4
+**Project:** the README system diagram
 
 ### Teaching objective
 
@@ -82,7 +121,7 @@ Students read the workspace map and point to:
 
 ### Move on when
 
-Several students can answer all three without reading the slide. Do not start
+Several students can answer all three without reading the projected screen. Do not start
 setup while the room still equates `CLEAR` with allocation.
 
 ### Likely misconception and recovery
@@ -93,13 +132,13 @@ been checked.
 
 ## Step 1 — Check setup
 
-**Time:** 0:20–0:30
+**Time:** 0:35–0:45
 **Student README:** Step 1
-**Slide:** 5
+**Project:** terminal
 
 ### Teaching objective
 
-Move the entire room to one known starting state without live package repair.
+Move the entire room to one known starting state after local setup and activation.
 
 ### Say and show
 
@@ -109,7 +148,7 @@ Run the same command students will run:
 python workshop.py check
 ```
 
-Read the five labels aloud: Python, workshop files, packages, examples, and
+Read the five labels aloud: Python, workshop files, teaching data, tests, and
 workspace.
 
 ### Students do
@@ -127,14 +166,14 @@ READY: continue to Step 2 with 'python workshop.py scenario'.
 ### Move on when
 
 At least 95% of the room is ready and every remaining setup issue is assigned
-to a helper. Move affected students to a prepared machine; do not turn this
-segment into a package-manager lesson.
+to a helper. Pair affected students with a ready neighbor if needed; do not
+turn this segment into a Python-installation lesson.
 
 ## Step 2 — Preview the complete scenario
 
-**Time:** 0:30–0:45
+**Time:** 0:45–1:00
 **Student README:** Step 2
-**Slide:** 6
+**Project:** terminal
 
 ### Teaching objective
 
@@ -154,7 +193,7 @@ python workshop.py scenario
 Focus only on:
 
 ```text
-8 allocated, 12 refused, 8 repaired
+1 allocated, 2 refused, 1 repaired
 ```
 
 Then show the six saved filenames and read them as a sentence from call to
@@ -180,9 +219,9 @@ to the wording “controller events.” The lesson does not make a casualty clai
 
 ## Step 3 — Four completed decisions
 
-**Time:** 0:45–1:10
+**Time:** 1:00–1:25
 **Student README:** Step 3
-**Slide:** 7
+**Project:** terminal and README
 
 ### Teaching objective
 
@@ -225,16 +264,16 @@ Students can explain the two refusal reasons and say that version 2 remains.
 
 ## Break
 
-**Time:** 1:10–1:20
+**Time:** 1:25–1:35
 
 Keep helpers available for setup recovery. Ask ready students to open
 `exercise/rescue_controller.py` but not begin TODO 2 before TODO 1.
 
 ## Step 4A — TODO 1: eligible resources
 
-**Time:** 1:20–1:50
+**Time:** 1:35–2:05
 **Student README:** Step 4, TODO 1
-**Slide:** 8
+**Project:** editor and terminal
 
 ### Teaching objective
 
@@ -261,6 +300,15 @@ Implement only `eligible_resources`, then run:
 python workshop.py test 1
 ```
 
+### Instructor checkpoint
+
+After the planned attempt time, pause the projection. In the disposable
+instructor demo copy, follow [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md)
+to reveal TODO 1 in the same `exercise/rescue_controller.py` file. Resume the
+projection on that file, explain the filter and sort, then run the ordinary
+student command above. Do not project the reveal tool or a separate solution
+file.
+
 ### Ask
 
 “If two units have the same travel time, what makes their order repeatable?”
@@ -278,9 +326,9 @@ hold.
 
 ## Step 4B — TODO 2: allocate or refuse
 
-**Time:** 1:50–2:25
+**Time:** 2:05–2:40
 **Student README:** Step 4, TODO 2
-**Slide:** 9
+**Project:** editor and terminal
 
 ### Teaching objective
 
@@ -307,6 +355,13 @@ Implement `decide_rescue`, then run:
 python workshop.py test 2
 ```
 
+### Instructor checkpoint
+
+After students attempt the branch order, pause the projection and reveal TODO
+2 in the same disposable instructor file. Return to that file to explain the
+three normal outcomes and the two input-consistency errors, then run `python
+workshop.py test 2`.
+
 ### Ask
 
 “Which line guarantees that a visible unit cannot override a TRACE hold?”
@@ -323,9 +378,9 @@ ask whether the resource question is permitted when information is on hold.
 
 ## Step 4C — TODO 3: append a repair
 
-**Time:** 2:25–2:50
+**Time:** 2:40–3:05
 **Student README:** Step 4, TODO 3
-**Slide:** 10
+**Project:** editor and terminal
 
 ### Teaching objective
 
@@ -345,6 +400,12 @@ Implement `apply_visible_repair`, then run:
 python workshop.py test 3
 ```
 
+### Instructor checkpoint
+
+After the attempt, reveal TODO 3 in the same instructor file and project only
+the completed function. Point from the validation rules to the returned
+`(*history, repair)` tuple before running `python workshop.py test 3`.
+
 ### Ask
 
 “What would be lost if version 4 replaced version 2?”
@@ -358,9 +419,9 @@ evidence.
 
 ## Step 5 — Complete tests and controller run
 
-**Time:** 2:50–3:00
+**Time:** 3:05–3:15
 **Student README:** Step 5
-**Slide:** 11
+**Project:** terminal
 
 ### Students do
 
@@ -381,9 +442,9 @@ it. Use the **Code** room status for remaining test failures.
 
 ## Step 6 — Capacity comparison
 
-**Time:** 3:00–3:10
+**Time:** 3:15–3:25
 **Student README:** Step 6
-**Slide:** 12
+**Project:** terminal
 
 ### Students do
 
@@ -402,9 +463,9 @@ controller action changed.
 
 ## Step 7 — Replay the saved histories
 
-**Time:** 3:10–3:15
+**Time:** 3:25–3:30
 **Student README:** Step 7
-**Slide:** 13
+**Project:** terminal
 
 ### Students do
 
@@ -414,7 +475,7 @@ python workshop.py replay
 
 ### Expected screen result
 
-Both the fresh replay and saved class replay are byte-identical.
+The replay is byte-identical to the saved teaching scenario.
 
 ### Close
 

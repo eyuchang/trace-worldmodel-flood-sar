@@ -24,9 +24,9 @@ This beginner-friendly code lab explains the system from the ground up:
 - **your controller:** the code that checks available units and returns an
   allocation or a refusal.
 
-You will run and replay the supplied flood scenario, walk through four completed
-decisions, implement three focused Python functions, pass fast tests, and try
-two resource “what if?” examples.
+You will run and replay the supplied flood scenario, read four completed
+decisions in the terminal walkthrough, implement three focused Python
+functions, pass fast tests, and try two resource “what if?” examples.
 
 By the end, you will be able to explain:
 
@@ -35,9 +35,10 @@ By the end, you will be able to explain:
 - how deterministic resource ordering makes decisions repeatable; and
 - why later information is appended as a repair instead of erasing history.
 
-Requirements: the prepared student workspace and Python environment. No GPU,
-model download, flood video, or live data connection is required. The lesson
-uses a simulated flood-response scenario.
+Requirements: extract the student ZIP and install a supported Python version;
+the README shows the complete Windows, macOS, and Linux setup. No GPU, package
+installation, model download, flood video, or live data connection is required.
+The lesson uses a simulated flood-response scenario.
 
 Repository and workshop links should be added only after the reviewed materials
 are published. Do not insert private links or local computer paths.
@@ -45,7 +46,7 @@ are published. Do not insert private links or local computer paths.
 ## Suggested chapters
 
 See [`chapters_and_captions.md`](chapters_and_captions.md). The review draft is
-14 minutes 50 seconds.
+13 minutes 25 seconds.
 
 ## Thumbnail concept
 

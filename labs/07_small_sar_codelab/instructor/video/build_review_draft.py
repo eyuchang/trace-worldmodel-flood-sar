@@ -1,4 +1,4 @@
-"""Generate a silent, screen-only review video and timed caption track."""
+"""Build a silent text-screen preflight for the Small SAR code-along."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import textwrap
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,13 +17,16 @@ from PIL import Image, ImageDraw, ImageFont
 
 WIDTH: Final = 1920
 HEIGHT: Final = 1080
-BACKGROUND: Final = "#08131f"
-PANEL: Final = "#10263a"
-TEXT: Final = "#f4f7fb"
-MUTED: Final = "#b7c8d8"
-CYAN: Final = "#42d7e8"
-GREEN: Final = "#62d38b"
-AMBER: Final = "#ffc857"
+BACKGROUND: Final = "#101418"
+PANEL: Final = "#151b21"
+TERMINAL: Final = "#0a0d10"
+BORDER: Final = "#3c4650"
+TEXT: Final = "#f5f7f8"
+MUTED: Final = "#b8c0c7"
+CYAN: Final = "#8bd5e8"
+GREEN: Final = "#a6e3a1"
+AMBER: Final = "#f9e2af"
+RED: Final = "#f38ba8"
 FONT_REGULAR: Final = (
     Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
     Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -36,241 +38,87 @@ FONT_BOLD: Final = (
 
 
 @dataclass(frozen=True, slots=True)
-class Slide:
-    title: str
+class Scene:
+    """One text-screen state from the final human recording."""
+
+    key: str
     duration_s: int
-    body: tuple[str, ...]
-    terminal: tuple[str, ...] = ()
-    narration: str = ""
+    title: str
+    caption: str
 
 
-SLIDES: Final = (
-    Slide(
-        "A flood call arrives. Should we send a unit?",
+SCENES: Final = (
+    Scene(
+        "intro",
         35,
-        (
-            "Your mission: build the controller that makes and explains the decision.",
-            "No previous rescue-system experience required.",
-            "No GPU or model download.",
-        ),
-        narration=(
-            "A welfare-check call arrives during a simulated flood. Should the software "
-            "send a response unit? In this lab, you will program that decision."
-        ),
+        "The flood-response decision you will build",
+        "A welfare-check call becomes a recorded decision.",
     ),
-    Slide(
-        "A call becomes a recorded decision",
-        65,
-        (
-            "1  CALL — a request for help",
-            "2  EVIDENCE — information the controller is allowed to see",
-            "3  TRACE — is the proposed action ready to move forward?",
-            "4  YOUR CONTROLLER — is a suitable unit available?",
-            "5  SAVED ACTION — allocate or refuse, with a reason",
-        ),
-        narration=(
-            "Search and rescue is the work of finding, reaching, and helping people. "
-            "The simulation has a hidden answer key, but the controller cannot read it. "
-            "A call produces visible evidence, TRACE checks the information, and your "
-            "controller checks the response units before saving an action."
-        ),
+    Scene(
+        "readme",
+        35,
+        "Your one-file workspace",
+        "The README is the route map; edit one file and run one command surface.",
     ),
-    Slide(
-        "TRACE checks information. You check resources.",
-        70,
-        (
-            "TRACE CLEAR — information checks passed; continue to resources",
-            "TRACE HOLD — information is not ready; stop for now",
-            "YOUR CODE — check availability, route, and capability",
-            "CLEAR means 'continue.' It does not mean 'send a unit.'",
-        ),
-        narration=(
-            "TRACE is the system's decision notebook. CLEAR permits a resource check. "
-            "HOLD stops the controller. Your code then decides whether a suitable unit "
-            "can actually be sent."
-        ),
+    Scene(
+        "check",
+        35,
+        "Set up this laptop, then check it",
+        "The local environment needs no package or model download; five PASS lines mean ready.",
     ),
-    Slide(
-        "Three outcomes: allocate, refuse, repair",
-        65,
-        (
-            "ALLOCATE — select a suitable unit",
-            "REFUSE: INFORMATION — TRACE did not clear the action",
-            "REFUSE: CAPACITY — no suitable unit is free",
-            "REPAIR — append a later correction to the decision history",
-            "A repair updates the record; it is not a physical repair.",
-        ),
-        narration=(
-            "An allocation selects a unit, a refusal selects none and explains why, and a "
-            "repair appends a later correction without erasing the earlier decision."
-        ),
-    ),
-    Slide(
-        "One command checks your setup",
+    Scene(
+        "scenario",
         55,
-        (
-            "Five PASS lines mean Python, files, packages, examples, and scratch space work.",
-            "Share the first failed line with an instructor.",
-        ),
-        terminal=(
-            "$ python workshop.py check",
-            "[PASS] python: Python 3.11 is ready",
-            "[PASS] workshop-files: guide, exercise, tests, and examples found",
-            "[PASS] packages: required Python packages are available",
-            "[PASS] examples: four rescue examples are ready",
-            "[PASS] workspace: practice output is writable",
-            "READY: continue to Step 2 with 'python workshop.py scenario'.",
-        ),
-        narration=(
-            "The setup check confirms the workshop is ready. Continue only after five PASS lines and "
-            "READY."
-        ),
+        "Run the supplied Small scenario",
+        "The supplied scenario records one allocation, two refusals, and one repair before coding.",
     ),
-    Slide(
-        "Run the complete flood scenario",
-        70,
-        (
-            "A scenario is one complete simulated flood-response session.",
-            "The run saves the path from call to outcome.",
-            "You will replay it after your controller is complete.",
-        ),
-        terminal=(
-            "$ python workshop.py scenario",
-            "Scenario complete: 8 allocated, 12 refused, 8 repaired.",
-            "Saved decision path:",
-            "  call -> evidence -> TRACE record -> controller decision",
-            "       -> commitment -> outcome",
-        ),
-        narration=(
-            "Run one complete simulated session. The command saves the public path from "
-            "call and evidence through the controller decision, commitment, and outcome."
-        ),
+    Scene(
+        "cases",
+        55,
+        "Read the four completed decision cases",
+        "CLEAR allows a resource check; it does not dispatch a unit.",
     ),
-    Slide(
-        "Four cases reveal the decision rule",
+    Scene(
+        "todo1",
         95,
-        (
-            "1  WELFARE CHECK — CLEAR + free unit -> allocate Engine 01",
-            "2  LEVEE INSPECTION — HOLD -> refuse; information is too old",
-            "3  MEDICAL RESPONSE — CLEAR + no free unit -> refuse for capacity",
-            "4  LATER UPDATE — keep allocation v2; append repair v4",
-            "KEY IDEA — CLEAR allows a resource check; it does not dispatch a unit.",
-        ),
-        narration=(
-            "The four cases show allocation, information refusal, capacity refusal, and "
-            "append-only repair. The medical case proves that CLEAR and allocation are "
-            "not the same thing."
-        ),
+        "TODO 1: choose eligible units",
+        "Pause to try the TODO, then return to the same file to inspect and test the completed function.",
     ),
-    Slide(
-        "TODO 1: Which units can help?",
-        75,
-        (
-            "KEEP a unit only when all four checks pass:",
-            "  available now",
-            "  route is reachable",
-            "  route matches the request",
-            "  unit has the required capability",
-            "SORT by travel time, then resource ID, for repeatable results.",
-        ),
-        terminal=(
-            "$ python workshop.py test 1",
-            ".                                                                        [100%]",
-            "1 passed, 7 deselected",
-        ),
-        narration=(
-            "A capability is a task a unit can perform. Keep only available, reachable, "
-            "correct-route units with the needed capability, then sort them deterministically."
-        ),
+    Scene(
+        "todo2",
+        145,
+        "TODO 2: allocate or refuse",
+        "Pause to try the TODO, then apply TRACE before capacity and test the same file.",
     ),
-    Slide(
-        "TODO 2: Should we send one?",
-        90,
-        (
-            "TRACE not CLEAR + any resources -> refuse: information",
-            "TRACE CLEAR + no eligible unit   -> refuse: capacity",
-            "TRACE CLEAR + eligible unit      -> allocate first unit",
-            "First verify that the request and TRACE record name the same situation.",
-        ),
-        narration=(
-            "First reject mismatched calls or situations. Then apply TRACE before capacity. "
-            "With CLEAR, an empty eligible list refuses; otherwise allocate its first unit."
-        ),
+    Scene(
+        "todo3",
+        85,
+        "TODO 3: append a repair",
+        "Pause to try the TODO, then keep the prior allocation and append a later repair.",
     ),
-    Slide(
-        "TODO 3: New information, same history",
-        75,
-        (
-            "Require the same situation and TRACE record chain.",
-            "Require a larger record version and visible evidence for the update.",
-            "KEEP allocation v2 in history.",
-            "APPEND repair v4.",
-            "Do not select the resource again.",
-        ),
-        terminal=(
-            "version 2: allocation stays in history",
-            "version 4: repair is appended",
-        ),
-        narration=(
-            "A repair is a later correction to the record. Keep the earlier allocation and "
-            "append a new repair only when the update belongs to the same chain."
-        ),
+    Scene(
+        "complete",
+        80,
+        "Test and run your controller",
+        "The terminal now prints decisions returned by the student's code.",
     ),
-    Slide(
-        "Tests show which rule is missing",
-        75,
-        (
-            "Run one TODO test while coding.",
-            "Run all student tests when the three functions are complete.",
-            "Then run your controller and compare all four decisions.",
-        ),
-        terminal=(
-            "$ python workshop.py test all",
-            ".......                                                                  [100%]",
-            "12 passed",
-            "$ python workshop.py run",
-            "Key idea: CLEAR lets the controller check resources; it does not dispatch one.",
-        ),
-        narration=(
-            "A failure name points to the rule that still needs work. When every test passes, "
-            "run your controller and compare it with the completed walkthrough."
-        ),
-    ),
-    Slide(
-        "Change capacity; watch the decision change",
-        65,
-        (
-            "MAKE WELFARE UNITS BUSY:",
-            "  TRACE stays CLEAR -> controller now refuses",
-            "MAKE A MEDICAL UNIT AVAILABLE:",
-            "  TRACE stays CLEAR -> controller now allocates",
-            "Changing capacity can change the result even when TRACE does not change.",
-        ),
-        narration=(
-            "The what-if runs change copied resource snapshots. They isolate the resource "
-            "decision: capacity changes the result while TRACE remains CLEAR."
-        ),
-        terminal=(
-            "$ python workshop.py what-if",
-            "WHAT IF 1: all welfare-check units are busy? -> REFUSE",
-            "WHAT IF 2: a medical-response unit is available? -> ALLOCATE",
-        ),
-    ),
-    Slide(
-        "You built the bridge from information to action",
+    Scene(
+        "capacity",
         55,
-        (
-            "I can explain the path from a flood call to a controller decision.",
-            "I can explain why CLEAR is not the same as allocation.",
-            "I can explain information refusal versus capacity refusal.",
-            "I can append a repair without erasing the earlier decision.",
-            "Fresh and saved class runs match byte-for-byte after replay.",
-        ),
-        narration=(
-            "You connected evidence, TRACE, resources, and recorded action. You can now explain "
-            "both refusals, deterministic allocation, append-only repair, and exact replay. "
-            "Finish with python workshop dot py replay; both saved histories match byte for byte."
-        ),
+        "Change capacity while TRACE stays CLEAR",
+        "Capacity can change the controller action without changing TRACE.",
+    ),
+    Scene(
+        "replay",
+        55,
+        "Replay the saved histories",
+        "The saved teaching history regenerates byte-identically.",
+    ),
+    Scene(
+        "close",
+        75,
+        "What students built",
+        "A call, TRACE, the controller, and append-only decision history.",
     ),
 )
 
@@ -279,74 +127,234 @@ def _font(paths: Sequence[Path], size: int) -> ImageFont.FreeTypeFont:
     for path in paths:
         if path.is_file():
             return ImageFont.truetype(str(path), size=size)
-    searched = ", ".join(str(path) for path in paths)
-    raise RuntimeError(f"required review-draft font not found; searched: {searched}")
+    raise RuntimeError(f"required font not found: {', '.join(str(path) for path in paths)}")
 
 
-def _wrapped(lines: Sequence[str], width: int) -> list[str]:
-    output: list[str] = []
-    for line in lines:
-        if not line:
-            output.append("")
-        elif line.startswith("  "):
-            output.extend(textwrap.wrap(line, width=width, subsequent_indent="  "))
-        else:
-            output.extend(textwrap.wrap(line, width=width))
-    return output
+def _text(
+    draw: ImageDraw.ImageDraw,
+    xy: tuple[int, int],
+    content: str,
+    *,
+    size: int,
+    color: str = TEXT,
+    bold: bool = False,
+) -> None:
+    draw.text(
+        xy,
+        content,
+        font=_font(FONT_BOLD if bold else FONT_REGULAR, size),
+        fill=color,
+    )
 
 
-def render_slide(slide: Slide, index: int, output: Path) -> None:
+def _box(
+    draw: ImageDraw.ImageDraw,
+    bounds: tuple[int, int, int, int],
+    *,
+    fill: str,
+    outline: str = BORDER,
+) -> None:
+    draw.rounded_rectangle(bounds, radius=16, fill=fill, outline=outline, width=2)
+
+
+def _header(draw: ImageDraw.ImageDraw, scene: Scene, index: int) -> None:
+    _text(
+        draw,
+        (70, 50),
+        "TRACE SMALL SAR · SCREEN-RECORDING PREFLIGHT",
+        size=22,
+        color=CYAN,
+        bold=True,
+    )
+    _text(draw, (70, 96), scene.title, size=46, bold=True)
+    _text(draw, (1660, 55), f"{index:02d}/{len(SCENES):02d}", size=21, color=MUTED)
+    _text(
+        draw,
+        (70, 1025),
+        "Silent review draft — final tutorial is a narrated, real code-along",
+        size=20,
+        color=MUTED,
+    )
+
+
+def _terminal(draw: ImageDraw.ImageDraw, lines: Sequence[tuple[str, str]]) -> None:
+    _box(draw, (120, 250, 1800, 905), fill=TERMINAL, outline="#2f3a43")
+    _text(draw, (165, 290), "trace-small-sar-workshop", size=22, color=MUTED)
+    for index, (line, color) in enumerate(lines):
+        _text(draw, (165, 350 + index * 57), line, size=28, color=color)
+
+
+def _editor(draw: ImageDraw.ImageDraw, *, label: str, lines: Sequence[tuple[str, str]]) -> None:
+    _box(draw, (90, 235, 1830, 920), fill=PANEL)
+    _text(draw, (130, 270), "exercise/rescue_controller.py", size=24, bold=True)
+    _text(draw, (1645, 270), label, size=20, color=CYAN, bold=True)
+    for index, (line, color) in enumerate(lines):
+        y = 345 + index * 41
+        _text(draw, (130, y), f"{index + 1:>2}", size=21, color=MUTED)
+        _text(draw, (195, y), line, size=24, color=color)
+
+
+def _readme(draw: ImageDraw.ImageDraw, *, closing: bool = False) -> None:
+    _box(draw, (90, 240, 1830, 915), fill="#fbfcfd", outline="#aeb9c2")
+    dark = "#14212b"
+    accent = "#22617a"
+    _text(draw, (140, 290), "Flood Rescue Controller Workshop", size=41, color=dark, bold=True)
+    if closing:
+        _text(draw, (140, 370), "Completion checklist", size=31, color=accent, bold=True)
+        rows = (
+            "[x] Setup reports READY",
+            "[x] Twelve behavior tests pass",
+            "[x] Controller produces four expected decisions",
+            "[x] Capacity changes the action while TRACE stays CLEAR",
+            "[x] Replay is byte-identical",
+        )
+    else:
+        _text(draw, (140, 370), "What system are you building?", size=31, color=accent, bold=True)
+        rows = (
+            "call -> visible evidence -> TRACE -> controller -> saved action",
+            "TRACE: is the information ready to use?",
+            "Controller: is a suitable response unit available?",
+            "CLEAR means continue to the resource check.",
+            "CLEAR does not mean a unit was sent.",
+        )
+    for index, row in enumerate(rows):
+        _text(draw, (165, 470 + index * 72), row, size=27, color=dark, bold=index == 0)
+
+
+def _draw_scene(scene: Scene, index: int, output: Path) -> None:
     image = Image.new("RGB", (WIDTH, HEIGHT), BACKGROUND)
     draw = ImageDraw.Draw(image)
-    title_font = _font(FONT_BOLD, 64)
-    body_size = 40 if slide.terminal else 48
-    body_font = _font(FONT_REGULAR, body_size)
-    body_bold = _font(FONT_BOLD, body_size)
-    terminal_font = _font(FONT_REGULAR, 28)
-    footer_font = _font(FONT_REGULAR, 24)
-
-    draw.rectangle((0, 0, WIDTH, 14), fill=CYAN)
-    draw.text((90, 70), slide.title, font=title_font, fill=TEXT)
-    draw.text((90, 148), f"{index:02d} / {len(SLIDES):02d}", font=footer_font, fill=CYAN)
-
-    body_lines = _wrapped(slide.body, 70)
-    line_height = 56 if slide.terminal else 70
-    body_area_top = 220
-    body_area_bottom = 605 if slide.terminal else HEIGHT - 105
-    body_height = max(line_height, len(body_lines) * line_height)
-    body_top = body_area_top + max(0, (body_area_bottom - body_area_top - body_height) // 2)
-    for line_index, line in enumerate(body_lines):
-        y = body_top + line_index * line_height
-        if y > body_area_bottom:
-            break
-        color = TEXT
-        font = body_font
-        if any(token in line for token in ("HOLD", "REFUSE", "busy", "not ")):
-            color = AMBER
-        if any(token in line for token in ("CLEAR", "ALLOCATE", "KEEP", "YOUR CONTROLLER")):
-            color = GREEN
-        if line[:2].isdigit() or line.startswith(("TRACE", "YOU:", "MAKE ")):
-            font = body_bold
-            color = CYAN
-        draw.text((110, y), line, font=font, fill=color)
-
-    if slide.terminal:
-        top = 630
-        draw.rounded_rectangle((85, top, WIDTH - 85, HEIGHT - 82), radius=24, fill=PANEL)
-        draw.text((115, top + 20), "COMMAND / EXPECTED OUTPUT", font=footer_font, fill=CYAN)
-        for line_index, line in enumerate(slide.terminal):
-            y = top + 68 + line_index * 38
-            if y > HEIGHT - 110:
-                break
-            color = GREEN if line.startswith(("[PASS]", "READY", "INFO", "12 passed")) else TEXT
-            draw.text((115, y), line[:108], font=terminal_font, fill=color)
-
-    draw.text(
-        (90, HEIGHT - 52),
-        "Flood Rescue Controller  •  Student Code Lab",
-        font=footer_font,
-        fill=MUTED,
-    )
+    _header(draw, scene, index)
+    if scene.key in {"intro", "readme"}:
+        _readme(draw)
+    elif scene.key == "check":
+        _terminal(
+            draw,
+            (
+                ("$ python3 setup_workshop.py", TEXT),
+                ("SETUP READY: .venv created; no package or model download was needed.", GREEN),
+                ("$ source .venv/bin/activate", TEXT),
+                ("$ python workshop.py check", TEXT),
+                ("[PASS] python: Python 3.12 is ready", GREEN),
+                ("[PASS] workshop-files: guide, setup tool, exercise, tests, and teaching data found", GREEN),
+                ("[PASS] teaching-data: four public teaching cases are ready", GREEN),
+                ("[PASS] tests: Python's built-in test runner is ready", GREEN),
+                ("[PASS] workspace: practice output is writable", GREEN),
+                ("READY: continue to Step 2 with 'python workshop.py scenario'.", CYAN),
+            ),
+        )
+    elif scene.key == "scenario":
+        _terminal(
+            draw,
+            (
+                ("$ python workshop.py scenario", TEXT),
+                ("Scenario complete: 1 allocated, 2 refused, 1 repaired.", GREEN),
+                ("Saved decision path:", MUTED),
+                ("  call -> evidence -> TRACE record -> controller decision", TEXT),
+                ("       -> commitment -> outcome", TEXT),
+                ("$ python workshop.py walkthrough", TEXT),
+            ),
+        )
+    elif scene.key == "cases":
+        _terminal(
+            draw,
+            (
+                ("TRACE Small SAR walkthrough", TEXT),
+                ("1. Welfare check", TEXT),
+                ("   TRACE: CLEAR - continue to the resource check", GREEN),
+                ("   Controller: ALLOCATE RES-ENGINE-01", GREEN),
+                ("2. Levee inspection: HOLD -> REFUSE before resource check", AMBER),
+                ("3. Medical response: CLEAR -> REFUSE, no suitable unit", AMBER),
+                ("4. Later information: keep allocation v2, append repair v4", CYAN),
+            ),
+        )
+    elif scene.key == "todo1":
+        _editor(
+            draw,
+            label="TODO 1 — after pause",
+            lines=(
+                ("eligible = (", CYAN),
+                ("    resource for resource in resources", TEXT),
+                ("    if resource.currently_available", TEXT),
+                ("    and resource.route_reachable", TEXT),
+                ("    and resource.route_id == request.route_id", TEXT),
+                ("    and request.required_capability in resource.capabilities", TEXT),
+                (")", CYAN),
+                ("return tuple(sorted(eligible, key=lambda item: (item.routed_travel_s, item.resource_id)))", GREEN),
+            ),
+        )
+    elif scene.key == "todo2":
+        _editor(
+            draw,
+            label="TODO 2 — after pause",
+            lines=(
+                ("if authorization.call_id != request.call_id:", CYAN),
+                ("    raise ValueError(\"...same call\")", RED),
+                ("if authorization.belief_cluster_id != request.belief_cluster_id:", CYAN),
+                ("    raise ValueError(\"...same belief cluster\")", RED),
+                ("if authorization.decision is not TraceDecision.CLEAR:", CYAN),
+                ("    return _decision_from_trace(... REFUSAL, TRACE_NOT_CLEAR)", AMBER),
+                ("compatible = eligible_resources(request, resources)", TEXT),
+                ("if not compatible:", CYAN),
+                ("    return _decision_from_trace(... REFUSAL, NO_COMPATIBLE_CAPACITY)", AMBER),
+                ("return _decision_from_trace(... ALLOCATION, compatible[0].resource_id)", GREEN),
+            ),
+        )
+    elif scene.key == "todo3":
+        _editor(
+            draw,
+            label="TODO 3 — after pause",
+            lines=(
+                ("if not history:", CYAN),
+                ("    raise ValueError(\"a repair requires existing history\")", RED),
+                ("prior = history[-1]", TEXT),
+                ("# Same situation, record chain, later version, visible evidence", MUTED),
+                ("repair = _decision_from_trace(", CYAN),
+                ("    repair_authorization, RescueEventType.REPAIR,", TEXT),
+                ("    ReasonCode.VISIBLE_EVIDENCE_REPAIR,", TEXT),
+                (")", CYAN),
+                ("return (*history, repair)", GREEN),
+            ),
+        )
+    elif scene.key == "complete":
+        _terminal(
+            draw,
+            (
+                ("$ python workshop.py test all", TEXT),
+                ("Ran 12 tests in 0.001s", GREEN),
+                ("OK", GREEN),
+                ("PASS: Run your controller: python workshop.py run", GREEN),
+                ("$ python workshop.py run", TEXT),
+                ("1. Welfare check      TRACE: CLEAR -> ALLOCATE RES-ENGINE-01", GREEN),
+                ("2. Levee inspection   TRACE: HOLD  -> REFUSE", AMBER),
+                ("3. Medical response   TRACE: CLEAR -> REFUSE", AMBER),
+                ("4. Later information  keep allocation v2, append repair v4", CYAN),
+            ),
+        )
+    elif scene.key == "capacity":
+        _terminal(
+            draw,
+            (
+                ("$ python workshop.py what-if", TEXT),
+                ("WHAT IF 1: all welfare-check units are busy?", MUTED),
+                ("TRACE: CLEAR -> REFUSE: no suitable unit is currently available", AMBER),
+                ("", TEXT),
+                ("WHAT IF 2: a medical-response unit becomes available?", MUTED),
+                ("TRACE: CLEAR -> ALLOCATE: RES-MEDICAL-01", GREEN),
+                ("Notice: capacity changed the action while TRACE stayed CLEAR.", CYAN),
+            ),
+        )
+    elif scene.key == "replay":
+        _terminal(
+            draw,
+            (
+                ("$ python workshop.py replay", TEXT),
+                ("Replay: byte-identical.", GREEN),
+                ("COMPLETE: CLEAR permits a resource check; allocation also requires capacity.", CYAN),
+            ),
+        )
+    elif scene.key == "close":
+        _readme(draw, closing=True)
     image.save(output, format="PNG", optimize=True)
 
 
@@ -356,85 +364,78 @@ def _srt_timestamp(seconds: int) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d},000"
 
 
-def write_captions(output: Path) -> None:
-    if output.exists():
-        raise ValueError(f"refusing to overwrite captions: {output}")
-    start = 0
+def _write_captions(output: Path) -> None:
     blocks: list[str] = []
-    for index, slide in enumerate(SLIDES, start=1):
-        end = start + slide.duration_s
-        narration = slide.narration or " ".join(slide.body)
+    start = 0
+    for index, scene in enumerate(SCENES, start=1):
+        end = start + scene.duration_s
         blocks.append(
-            f"{index}\n{_srt_timestamp(start)} --> {_srt_timestamp(end)}\n{narration}\n"
+            f"{index}\n{_srt_timestamp(start)} --> {_srt_timestamp(end)}\n{scene.caption}\n"
         )
         start = end
     output.write_text("\n".join(blocks), encoding="utf-8")
 
 
 def build_video(output: Path, captions: Path) -> None:
+    """Render the text-screen preflight and package it as one silent MP4."""
+
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:
         raise RuntimeError("FFmpeg is required to build the review draft")
-    if output.exists():
-        raise ValueError(f"refusing to overwrite video: {output}")
-    if captions.exists():
-        raise ValueError(f"refusing to overwrite captions: {captions}")
-    if not output.parent.is_dir() or not captions.parent.is_dir():
-        raise ValueError("output parent directories must already exist")
-
-    with tempfile.TemporaryDirectory(
-        prefix=".trace-small-sar-video-",
-        dir=output.parent,
-    ) as directory:
+    if output.exists() or captions.exists():
+        raise ValueError("review-draft outputs must not already exist")
+    with tempfile.TemporaryDirectory(prefix=".trace-small-sar-video-", dir=output.parent) as directory:
         temporary = Path(directory)
         concat_lines: list[str] = []
-        for index, slide in enumerate(SLIDES, start=1):
-            frame = temporary / f"slide-{index:02d}.png"
-            render_slide(slide, index, frame)
-            concat_lines.extend((f"file '{frame}'", f"duration {slide.duration_s}"))
+        for index, scene in enumerate(SCENES, start=1):
+            frame = temporary / f"scene-{index:02d}.png"
+            _draw_scene(scene, index, frame)
+            concat_lines.extend((f"file '{frame}'", f"duration {scene.duration_s}"))
         concat_lines.append(f"file '{frame}'")
-        concat_file = temporary / "slides.ffconcat"
-        concat_file.write_text("\n".join(concat_lines) + "\n", encoding="utf-8")
+        concat = temporary / "scenes.ffconcat"
+        concat.write_text("\n".join(concat_lines) + "\n", encoding="utf-8")
         temporary_output = temporary / "review-draft.mp4"
-
-        command = [
-            ffmpeg,
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-n",
-            "-f",
-            "concat",
-            "-safe",
-            "0",
-            "-i",
-            str(concat_file),
-            "-vf",
-            "format=yuv420p",
-            "-fps_mode",
-            "vfr",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "fast",
-            "-tune",
-            "stillimage",
-            "-bf",
-            "0",
-            "-g",
-            "1",
-            "-crf",
-            "23",
-            "-movflags",
-            "+faststart",
-            "-an",
-            "-metadata",
-            "title=Flood Rescue Controller student review video",
-            str(temporary_output),
-        ]
-        subprocess.run(command, check=True, timeout=180)
+        subprocess.run(
+            [
+                ffmpeg,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-n",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(concat),
+                "-vf",
+                "format=yuv420p",
+                "-fps_mode",
+                "vfr",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-tune",
+                "stillimage",
+                "-bf",
+                "0",
+                "-g",
+                "1",
+                "-crf",
+                "23",
+                "-movflags",
+                "+faststart",
+                "-an",
+                "-metadata",
+                "title=Flood Rescue Controller student review video",
+                str(temporary_output),
+            ],
+            check=True,
+            timeout=180,
+        )
         os.replace(temporary_output, output)
-    write_captions(captions)
+    _write_captions(captions)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -451,10 +452,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
+    total = sum(scene.duration_s for scene in SCENES)
     print(f"review draft ready: {args.output}")
     print(f"captions ready: {args.captions}")
-    print(f"duration: {sum(slide.duration_s for slide in SLIDES) // 60}:"
-          f"{sum(slide.duration_s for slide in SLIDES) % 60:02d}; audio: none")
+    print(f"duration: {total // 60}:{total % 60:02d}; audio: none")
     return 0
 
 

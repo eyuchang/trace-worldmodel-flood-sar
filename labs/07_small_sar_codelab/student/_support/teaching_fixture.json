@@ -1,0 +1,902 @@
+{
+  "cases": [
+    {
+      "authorization": {
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-51128dec2bcf690f",
+        "decision": "clear",
+        "record_id": "trace-a3a193ed42b86e47471e",
+        "record_version": 2,
+        "visible_evidence_basis": []
+      },
+      "case_id": "allocation",
+      "expected": {
+        "event_type": "allocation",
+        "reason_code": "allocated_compatible_capacity",
+        "selected_resource_id": "RES-ENGINE-01"
+      },
+      "request": {
+        "action_type": "perform_welfare_check",
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-51128dec2bcf690f",
+        "call_type": "C-WEL",
+        "required_capability": "welfare_check",
+        "route_id": "XNG-04",
+        "simulation_time_s": 3991
+      },
+      "resources": [
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": true,
+          "resource_id": "RES-ENGINE-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 871
+        },
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-RV-ENGINE-55-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 871
+        }
+      ]
+    },
+    {
+      "authorization": {
+        "belief_cluster_id": "C8-9fd8515db9a47379",
+        "call_id": "C8-9fd8515db9a47379",
+        "decision": "hold",
+        "record_id": "trace-da3d84d2052a8ef9163a",
+        "record_version": 2,
+        "visible_evidence_basis": []
+      },
+      "case_id": "evidence_hold",
+      "expected": {
+        "event_type": "refusal",
+        "reason_code": "trace_not_clear",
+        "selected_resource_id": null
+      },
+      "request": {
+        "action_type": "inspect_levee",
+        "belief_cluster_id": "C8-9fd8515db9a47379",
+        "call_id": "C8-9fd8515db9a47379",
+        "call_type": "C-LEV",
+        "required_capability": "levee_inspection",
+        "route_id": "XNG-04",
+        "simulation_time_s": 7496
+      },
+      "resources": [
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-ENGINE-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 958
+        },
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": true,
+          "resource_id": "RES-RV-ENGINE-55-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 958
+        }
+      ]
+    },
+    {
+      "authorization": {
+        "belief_cluster_id": "C8-6eb8a02621930b25",
+        "call_id": "C8-6eb8a02621930b25",
+        "decision": "clear",
+        "record_id": "trace-dc2fe125e1e8908043b5",
+        "record_version": 2,
+        "visible_evidence_basis": []
+      },
+      "case_id": "capacity_refusal",
+      "expected": {
+        "event_type": "refusal",
+        "reason_code": "no_compatible_capacity",
+        "selected_resource_id": null
+      },
+      "request": {
+        "action_type": "deploy_ground_team",
+        "belief_cluster_id": "C8-6eb8a02621930b25",
+        "call_id": "C8-6eb8a02621930b25",
+        "call_type": "C-MED",
+        "required_capability": "medical_first_response",
+        "route_id": "XNG-04",
+        "simulation_time_s": 12697
+      },
+      "resources": [
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-ENGINE-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 1030
+        },
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-RV-ENGINE-55-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 1030
+        }
+      ]
+    },
+    {
+      "authorization": {
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-fd76f89d72443d03",
+        "decision": "hold",
+        "record_id": "trace-a3a193ed42b86e47471e",
+        "record_version": 4,
+        "visible_evidence_basis": [
+          "exact_shared_available_callback_token",
+          "C8-51128dec2bcf690f"
+        ]
+      },
+      "case_id": "visible_repair",
+      "expected": {
+        "event_type": "repair",
+        "reason_code": "visible_evidence_repair",
+        "selected_resource_id": null
+      },
+      "request": {
+        "action_type": "perform_welfare_check",
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-fd76f89d72443d03",
+        "call_type": "C-WEL",
+        "required_capability": "welfare_check",
+        "route_id": "XNG-04",
+        "simulation_time_s": 4356
+      },
+      "resources": [
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-ENGINE-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 871
+        },
+        {
+          "capabilities": [
+            "medical_first_response",
+            "road_rescue",
+            "welfare_check",
+            "levee_inspection"
+          ],
+          "currently_available": false,
+          "resource_id": "RES-RV-ENGINE-55-01",
+          "route_id": "XNG-04",
+          "route_reachable": true,
+          "routed_travel_s": 871
+        }
+      ]
+    }
+  ],
+  "scenario_artifacts": {
+    "calls.json": [
+      {
+        "call_id": "C8-51128dec2bcf690f",
+        "callback_token": "SYNTH-CB-4644186d4f85",
+        "channel": "911",
+        "language": "en",
+        "location": {
+          "confidence_milli": 654,
+          "easting_mm": 621905477,
+          "method": "gps-or-address-intersection",
+          "northing_mm": 4224359869,
+          "precision_m": 53,
+          "stated": "synthetic landmark 06"
+        },
+        "on_scene": false,
+        "psap": "Sacramento County",
+        "quality": {
+          "call_dropped": false,
+          "callback_failed": false,
+          "revision_of_call_id": null
+        },
+        "received_s": 3991,
+        "received_ts": "2026-01-15T21:06:31Z",
+        "reported": {
+          "call_type": "C-WEL",
+          "description_token": "unable-to-contact",
+          "medical": [],
+          "occupants": 1,
+          "occupants_confidence": "estimated"
+        },
+        "third_party": true
+      },
+      {
+        "call_id": "C8-fd76f89d72443d03",
+        "callback_token": "SYNTH-CB-4644186d4f85",
+        "channel": "911",
+        "language": "en",
+        "location": {
+          "confidence_milli": 667,
+          "easting_mm": 621880712,
+          "method": "gps-or-address-intersection",
+          "northing_mm": 4224343985,
+          "precision_m": 50,
+          "stated": "synthetic landmark 06"
+        },
+        "on_scene": true,
+        "psap": "Sacramento County",
+        "quality": {
+          "call_dropped": false,
+          "callback_failed": false,
+          "revision_of_call_id": null
+        },
+        "received_s": 4356,
+        "received_ts": "2026-01-15T21:12:36Z",
+        "reported": {
+          "call_type": "C-WEL",
+          "description_token": "unable-to-contact",
+          "medical": [],
+          "occupants": 1,
+          "occupants_confidence": "estimated"
+        },
+        "third_party": false
+      },
+      {
+        "call_id": "C8-9fd8515db9a47379",
+        "callback_token": "SYNTH-CB-c9dcb4d972d9",
+        "channel": "911",
+        "language": "en",
+        "location": {
+          "confidence_milli": 690,
+          "easting_mm": 621274729,
+          "method": "gps-or-address-intersection",
+          "northing_mm": 4224421715,
+          "precision_m": 45,
+          "stated": "synthetic landmark 03"
+        },
+        "on_scene": true,
+        "psap": "Sacramento County",
+        "quality": {
+          "call_dropped": false,
+          "callback_failed": false,
+          "revision_of_call_id": null
+        },
+        "received_s": 7496,
+        "received_ts": "2026-01-15T22:04:56Z",
+        "reported": {
+          "call_type": "C-LEV",
+          "description_token": "wet-levee-face",
+          "medical": [],
+          "occupants": 0,
+          "occupants_confidence": "estimated"
+        },
+        "third_party": false
+      },
+      {
+        "call_id": "C8-6eb8a02621930b25",
+        "callback_token": "SYNTH-CB-f44ede9ec6ee",
+        "channel": "911",
+        "language": "es",
+        "location": {
+          "confidence_milli": 763,
+          "easting_mm": 621147726,
+          "method": "gps-or-address-intersection",
+          "northing_mm": 4224328532,
+          "precision_m": 31,
+          "stated": "synthetic landmark 08"
+        },
+        "on_scene": true,
+        "psap": "Sacramento County",
+        "quality": {
+          "call_dropped": false,
+          "callback_failed": false,
+          "revision_of_call_id": null
+        },
+        "received_s": 12697,
+        "received_ts": "2026-01-15T23:31:37Z",
+        "reported": {
+          "call_type": "C-MED",
+          "description_token": "medical-access-blocked",
+          "medical": [
+            "oxygen"
+          ],
+          "occupants": 1,
+          "occupants_confidence": "estimated"
+        },
+        "third_party": false
+      }
+    ],
+    "commitments.json": [
+      {
+        "action": {
+          "action_id": "action-C8-51128dec2bcf690f",
+          "action_type": "perform_welfare_check",
+          "actor_id": "RES-ENGINE-01",
+          "destination": "reported-location",
+          "origin": "FAC-FIRE-01",
+          "parameters": {
+            "call_id": "C8-51128dec2bcf690f",
+            "required_capability": "welfare_check"
+          },
+          "route_id": "XNG-04"
+        },
+        "authorizing_record_id": "trace-a3a193ed42b86e47471e",
+        "authorizing_record_version": 2,
+        "commitment_id": "commitment-C8-51128dec2bcf690f",
+        "consumer_policy_version": "trace-delta-small-v1",
+        "created_at": "2026-01-15T21:06:31Z"
+      }
+    ],
+    "controller_decisions.json": [
+      {
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-51128dec2bcf690f",
+        "censoring_s": 21600,
+        "commitment_id": "commitment-C8-51128dec2bcf690f",
+        "event_type": "allocation",
+        "observed_completion_s": 7562,
+        "outcome_status": "completed_within_window",
+        "reason": "TRACE cleared and compatible reachable capacity was assigned",
+        "resource_id": "RES-ENGINE-01",
+        "scheduled_completion_s": 7562,
+        "sequence": 1,
+        "simulation_time_s": 3991,
+        "trace_decision": "clear",
+        "trace_record_id": "trace-a3a193ed42b86e47471e",
+        "trace_record_version": 2,
+        "visible_evidence_basis": []
+      },
+      {
+        "belief_cluster_id": "C8-9fd8515db9a47379",
+        "call_id": "C8-9fd8515db9a47379",
+        "censoring_s": null,
+        "commitment_id": null,
+        "event_type": "refusal",
+        "observed_completion_s": null,
+        "outcome_status": null,
+        "reason": "TRACE held the unqualified or unsupported action",
+        "resource_id": "",
+        "scheduled_completion_s": null,
+        "sequence": 3,
+        "simulation_time_s": 7496,
+        "trace_decision": "hold",
+        "trace_record_id": "trace-da3d84d2052a8ef9163a",
+        "trace_record_version": 2,
+        "visible_evidence_basis": []
+      },
+      {
+        "belief_cluster_id": "C8-6eb8a02621930b25",
+        "call_id": "C8-6eb8a02621930b25",
+        "censoring_s": null,
+        "commitment_id": null,
+        "event_type": "refusal",
+        "observed_completion_s": null,
+        "outcome_status": null,
+        "reason": "no compatible mobilized reachable uncommitted capacity",
+        "resource_id": "",
+        "scheduled_completion_s": null,
+        "sequence": 12,
+        "simulation_time_s": 12697,
+        "trace_decision": "clear",
+        "trace_record_id": "trace-dc2fe125e1e8908043b5",
+        "trace_record_version": 2,
+        "visible_evidence_basis": []
+      },
+      {
+        "belief_cluster_id": "C8-51128dec2bcf690f",
+        "call_id": "C8-fd76f89d72443d03",
+        "censoring_s": null,
+        "commitment_id": null,
+        "event_type": "repair",
+        "observed_completion_s": null,
+        "outcome_status": null,
+        "reason": "controller revised a belief using controller-visible evidence",
+        "resource_id": "",
+        "scheduled_completion_s": null,
+        "sequence": 2,
+        "simulation_time_s": 4356,
+        "trace_decision": "hold",
+        "trace_record_id": "trace-a3a193ed42b86e47471e",
+        "trace_record_version": 4,
+        "visible_evidence_basis": [
+          "exact_shared_available_callback_token",
+          "C8-51128dec2bcf690f"
+        ]
+      }
+    ],
+    "evidence_ledger.json": [
+      {
+        "action_schema_version": "delta-response-actions-v2",
+        "assumptions": [
+          "route_report_is_fresh"
+        ],
+        "calibration_version": "toy-calibration-v1",
+        "candidate_plan_id": "plan-C8-51128dec2bcf690f",
+        "created_at": "2026-01-15T21:06:31Z",
+        "decisively_contradicted": false,
+        "encoder_version": "delta-symbolic-observation-v2",
+        "evidence_id": "evidence-C8-51128dec2bcf690f",
+        "experimental_profile": {
+          "adequacy_status": "qualified",
+          "calibration_hash": "44a0e361c8cdfbfeaae42bacfc033d03e11a95efe25630504ab4ebe60b403816",
+          "calibration_version": "toy-calibration-v1",
+          "claim_family": "perform_welfare_check",
+          "model_hash": "c590a3621cb24a2c0f7cf6b084b6192feeeb5df8c1ea70d10d5e160294d2eb56",
+          "notes": [
+            "prior_profile=delta-prior-high-v1"
+          ],
+          "prediction_timestamp": "2026-01-15T21:06:31Z",
+          "predictor_version": "toy-action-prefix-v2",
+          "profile_id": "profile-C8-51128dec2bcf690f",
+          "profile_schema_version": "experimental-profile-v1"
+        },
+        "fleet_state_hash": "bfda1b2b6b427f92deaa61acc6d874714ca70baf7debda4fed5c66ecd1b3f57e",
+        "fusion_version": "delta-small-controller-context-v4",
+        "model_support": 0.93,
+        "observation_age_s": 91.0,
+        "observation_window_hash": "f59020a67d950dad5a4327f26d9578bff5d8bebb8a607ee53c07208bb7fdae8a",
+        "out_of_distribution_score": 0.08,
+        "predicted_claims": [
+          "XNG-04 and registered compatible capacity support the proposed response"
+        ],
+        "prediction_residual": null,
+        "predictor_version": "toy-action-prefix-v2",
+        "reachability_evidence": {
+          "arrival_time_s": 1089.0,
+          "crossing_sample_time_s": 3900,
+          "gauge_id": "RVB",
+          "gauge_sample_time_s": 3900,
+          "gauge_stage_millifeet": 4722,
+          "gauge_threshold_status": "verified-cdec-2026-08-05",
+          "hazard_score": 0.18,
+          "route_confidence_milli": 950,
+          "route_status": "open"
+        },
+        "realized_outcome": null,
+        "rollout_consistency": 0.86,
+        "rollout_horizon": 7,
+        "rollout_id": "rollout-C8-51128dec2bcf690f",
+        "semantic_probe_versions": [
+          "delta-route-and-resource-probe-v2"
+        ],
+        "training_snapshot": "synthetic-flood-v1",
+        "uncertainty": 0.14
+      },
+      {
+        "action_schema_version": "delta-response-actions-v2",
+        "assumptions": [
+          "route_report_is_fresh"
+        ],
+        "calibration_version": "toy-calibration-v1",
+        "candidate_plan_id": "plan-C8-fd76f89d72443d03",
+        "created_at": "2026-01-15T21:12:36Z",
+        "decisively_contradicted": false,
+        "encoder_version": "delta-symbolic-observation-v2",
+        "evidence_id": "evidence-C8-fd76f89d72443d03",
+        "experimental_profile": {
+          "adequacy_status": "qualified",
+          "calibration_hash": "44a0e361c8cdfbfeaae42bacfc033d03e11a95efe25630504ab4ebe60b403816",
+          "calibration_version": "toy-calibration-v1",
+          "claim_family": "perform_welfare_check",
+          "model_hash": "c590a3621cb24a2c0f7cf6b084b6192feeeb5df8c1ea70d10d5e160294d2eb56",
+          "notes": [
+            "prior_profile=delta-prior-high-v1"
+          ],
+          "prediction_timestamp": "2026-01-15T21:12:36Z",
+          "predictor_version": "toy-action-prefix-v2",
+          "profile_id": "profile-C8-fd76f89d72443d03",
+          "profile_schema_version": "experimental-profile-v1"
+        },
+        "fleet_state_hash": "a253541daf8afa63cdc312de90d9cde559d940df3c35ef22451ae41e834c89c6",
+        "fusion_version": "delta-small-controller-context-v4",
+        "model_support": 0.93,
+        "observation_age_s": 156.0,
+        "observation_window_hash": "cc90942f575d44c53b247ebdf68e652baaa1395e5db84aa95ac1d6490331993a",
+        "out_of_distribution_score": 0.08,
+        "predicted_claims": [
+          "XNG-04 and registered compatible capacity support the proposed response"
+        ],
+        "prediction_residual": null,
+        "predictor_version": "toy-action-prefix-v2",
+        "reachability_evidence": {
+          "arrival_time_s": 1089.0,
+          "crossing_sample_time_s": 4200,
+          "gauge_id": "RVB",
+          "gauge_sample_time_s": 4200,
+          "gauge_stage_millifeet": 4811,
+          "gauge_threshold_status": "verified-cdec-2026-08-05",
+          "hazard_score": 0.18,
+          "route_confidence_milli": 950,
+          "route_status": "open"
+        },
+        "realized_outcome": null,
+        "rollout_consistency": 0.86,
+        "rollout_horizon": 7,
+        "rollout_id": "rollout-C8-fd76f89d72443d03",
+        "semantic_probe_versions": [
+          "delta-route-and-resource-probe-v2"
+        ],
+        "training_snapshot": "synthetic-flood-v1",
+        "uncertainty": 0.14
+      },
+      {
+        "action_schema_version": "delta-response-actions-v2",
+        "assumptions": [
+          "route_report_is_fresh"
+        ],
+        "calibration_version": "toy-calibration-v1",
+        "candidate_plan_id": "plan-C8-9fd8515db9a47379",
+        "created_at": "2026-01-15T22:04:56Z",
+        "decisively_contradicted": false,
+        "encoder_version": "delta-symbolic-observation-v2",
+        "evidence_id": "evidence-C8-9fd8515db9a47379",
+        "experimental_profile": {
+          "adequacy_status": "qualified",
+          "calibration_hash": "44a0e361c8cdfbfeaae42bacfc033d03e11a95efe25630504ab4ebe60b403816",
+          "calibration_version": "toy-calibration-v1",
+          "claim_family": "inspect_levee",
+          "model_hash": "c590a3621cb24a2c0f7cf6b084b6192feeeb5df8c1ea70d10d5e160294d2eb56",
+          "notes": [
+            "prior_profile=delta-prior-high-v1"
+          ],
+          "prediction_timestamp": "2026-01-15T22:04:56Z",
+          "predictor_version": "toy-action-prefix-v2",
+          "profile_id": "profile-C8-9fd8515db9a47379",
+          "profile_schema_version": "experimental-profile-v1"
+        },
+        "fleet_state_hash": "bfda1b2b6b427f92deaa61acc6d874714ca70baf7debda4fed5c66ecd1b3f57e",
+        "fusion_version": "delta-small-controller-context-v4",
+        "model_support": 0.93,
+        "observation_age_s": 296.0,
+        "observation_window_hash": "3e31bfe2a160d92c6b6fbc678d0cc364e4aae21bdac3af71c030d85bd47478cb",
+        "out_of_distribution_score": 0.08,
+        "predicted_claims": [
+          "XNG-04 and registered compatible capacity support the proposed response"
+        ],
+        "prediction_residual": null,
+        "predictor_version": "toy-action-prefix-v2",
+        "reachability_evidence": {
+          "arrival_time_s": 1197.0,
+          "crossing_sample_time_s": 7200,
+          "gauge_id": "RVB",
+          "gauge_sample_time_s": 7200,
+          "gauge_stage_millifeet": 5661,
+          "gauge_threshold_status": "verified-cdec-2026-08-05",
+          "hazard_score": 0.18,
+          "route_confidence_milli": 950,
+          "route_status": "open"
+        },
+        "realized_outcome": null,
+        "rollout_consistency": 0.86,
+        "rollout_horizon": 7,
+        "rollout_id": "rollout-C8-9fd8515db9a47379",
+        "semantic_probe_versions": [
+          "delta-route-and-resource-probe-v2"
+        ],
+        "training_snapshot": "synthetic-flood-v1",
+        "uncertainty": 0.14
+      },
+      {
+        "action_schema_version": "delta-response-actions-v2",
+        "assumptions": [
+          "route_report_is_fresh"
+        ],
+        "calibration_version": "toy-calibration-v1",
+        "candidate_plan_id": "plan-C8-6eb8a02621930b25",
+        "created_at": "2026-01-15T23:31:37Z",
+        "decisively_contradicted": false,
+        "encoder_version": "delta-symbolic-observation-v2",
+        "evidence_id": "evidence-C8-6eb8a02621930b25",
+        "experimental_profile": {
+          "adequacy_status": "qualified",
+          "calibration_hash": "44a0e361c8cdfbfeaae42bacfc033d03e11a95efe25630504ab4ebe60b403816",
+          "calibration_version": "toy-calibration-v1",
+          "claim_family": "deploy_ground_team",
+          "model_hash": "c590a3621cb24a2c0f7cf6b084b6192feeeb5df8c1ea70d10d5e160294d2eb56",
+          "notes": [
+            "prior_profile=delta-prior-high-v1"
+          ],
+          "prediction_timestamp": "2026-01-15T23:31:37Z",
+          "predictor_version": "toy-action-prefix-v2",
+          "profile_id": "profile-C8-6eb8a02621930b25",
+          "profile_schema_version": "experimental-profile-v1"
+        },
+        "fleet_state_hash": "a253541daf8afa63cdc312de90d9cde559d940df3c35ef22451ae41e834c89c6",
+        "fusion_version": "delta-small-controller-context-v4",
+        "model_support": 0.93,
+        "observation_age_s": 97.0,
+        "observation_window_hash": "27526592dbf1b51f28d430c6117423bf5414e3dc213619efffe3007e749805ae",
+        "out_of_distribution_score": 0.08,
+        "predicted_claims": [
+          "XNG-04 and registered compatible capacity support the proposed response"
+        ],
+        "prediction_residual": null,
+        "predictor_version": "toy-action-prefix-v2",
+        "reachability_evidence": {
+          "arrival_time_s": 1287.0,
+          "crossing_sample_time_s": 12600,
+          "gauge_id": "RVB",
+          "gauge_sample_time_s": 12600,
+          "gauge_stage_millifeet": 6165,
+          "gauge_threshold_status": "verified-cdec-2026-08-05",
+          "hazard_score": 0.18,
+          "route_confidence_milli": 950,
+          "route_status": "open"
+        },
+        "realized_outcome": null,
+        "rollout_consistency": 0.86,
+        "rollout_horizon": 7,
+        "rollout_id": "rollout-C8-6eb8a02621930b25",
+        "semantic_probe_versions": [
+          "delta-route-and-resource-probe-v2"
+        ],
+        "training_snapshot": "synthetic-flood-v1",
+        "uncertainty": 0.14
+      }
+    ],
+    "outcomes.json": [
+      {
+        "authorizing_commitment_id": "commitment-C8-51128dec2bcf690f",
+        "authorizing_trace_record_id": "trace-a3a193ed42b86e47471e",
+        "authorizing_trace_record_version": 2,
+        "call_id": "C8-51128dec2bcf690f",
+        "censoring_s": 21600,
+        "observed_completion_s": 7562,
+        "outcome_id": "outcome-C8-51128dec2bcf690f",
+        "resource_id": "RES-ENGINE-01",
+        "scheduled_completion_s": 7562,
+        "status": "completed_within_window"
+      }
+    ],
+    "trace_records.json": [
+      {
+        "claim": {
+          "claim_id": "claim-C8-51128dec2bcf690f",
+          "confidence": 0.82,
+          "confidence_semantics": "predictor action-prefix probability support",
+          "created_at": "2026-01-15T21:06:31Z",
+          "grounding": {
+            "action_type": "perform_welfare_check",
+            "call_id": "C8-51128dec2bcf690f"
+          },
+          "layer": "predictive",
+          "text": "Registered compatible capacity can reach the reported location."
+        },
+        "consumer_actions": [
+          {
+            "consumer": "delta-mission-controller",
+            "consumer_action_id": "consumer-C8-51128dec2bcf690f",
+            "consumer_policy_version": "trace-delta-small-v1",
+            "created_at": "2026-01-15T21:06:31Z",
+            "decision": "clear",
+            "reason": "All declared technical gates passed for this action class.",
+            "record_id": "trace-a3a193ed42b86e47471e",
+            "record_version": 1
+          }
+        ],
+        "created_at": "2026-01-15T21:06:31Z",
+        "evidence_refs": [
+          "evidence-C8-51128dec2bcf690f"
+        ],
+        "failed_gates": [],
+        "final_status": "accept",
+        "metadata": {
+          "belief_cluster_id": "C8-51128dec2bcf690f",
+          "call_id": "C8-51128dec2bcf690f",
+          "lineage_key": "delta-small-belief:C8-51128dec2bcf690f",
+          "trigger_event_id": "C8-51128dec2bcf690f",
+          "visible_evidence_basis": []
+        },
+        "missing_items": [],
+        "policy_version": "trace-delta-small-v1",
+        "record_id": "trace-a3a193ed42b86e47471e",
+        "record_version": 2,
+        "repair": null,
+        "schema_version": "trace-student-v1",
+        "supersedes_record_id": "trace-a3a193ed42b86e47471e",
+        "supersedes_record_version": 1
+      },
+      {
+        "claim": {
+          "claim_id": "claim-C8-fd76f89d72443d03",
+          "confidence": 0.82,
+          "confidence_semantics": "predictor action-prefix probability support",
+          "created_at": "2026-01-15T21:12:36Z",
+          "grounding": {
+            "action_type": "perform_welfare_check",
+            "call_id": "C8-fd76f89d72443d03"
+          },
+          "layer": "predictive",
+          "text": "Registered compatible capacity can reach the reported location."
+        },
+        "consumer_actions": [
+          {
+            "consumer": "delta-mission-controller",
+            "consumer_action_id": "consumer-C8-fd76f89d72443d03",
+            "consumer_policy_version": "trace-delta-small-v1",
+            "created_at": "2026-01-15T21:12:36Z",
+            "decision": "hold",
+            "reason": "One or more hard technical gates failed.",
+            "record_id": "trace-a3a193ed42b86e47471e",
+            "record_version": 3
+          }
+        ],
+        "created_at": "2026-01-15T21:12:36Z",
+        "evidence_refs": [
+          "evidence-C8-fd76f89d72443d03"
+        ],
+        "failed_gates": [
+          "observation_freshness"
+        ],
+        "final_status": "defer",
+        "metadata": {
+          "belief_cluster_id": "C8-51128dec2bcf690f",
+          "call_id": "C8-fd76f89d72443d03",
+          "lineage_key": "delta-small-belief:C8-51128dec2bcf690f",
+          "semantic_revision_of": {
+            "record_id": "trace-a3a193ed42b86e47471e",
+            "record_version": 2
+          },
+          "trigger_event_id": "C8-fd76f89d72443d03",
+          "visible_evidence_basis": [
+            "exact_shared_available_callback_token",
+            "C8-51128dec2bcf690f"
+          ]
+        },
+        "missing_items": [
+          "a fresh observation window"
+        ],
+        "policy_version": "trace-delta-small-v1",
+        "record_id": "trace-a3a193ed42b86e47471e",
+        "record_version": 4,
+        "repair": "Obtain current route evidence or qualified calibration.",
+        "schema_version": "trace-student-v1",
+        "supersedes_record_id": "trace-a3a193ed42b86e47471e",
+        "supersedes_record_version": 3
+      },
+      {
+        "claim": {
+          "claim_id": "claim-C8-9fd8515db9a47379",
+          "confidence": 0.82,
+          "confidence_semantics": "predictor action-prefix probability support",
+          "created_at": "2026-01-15T22:04:56Z",
+          "grounding": {
+            "action_type": "inspect_levee",
+            "call_id": "C8-9fd8515db9a47379"
+          },
+          "layer": "predictive",
+          "text": "Registered compatible capacity can reach the reported location."
+        },
+        "consumer_actions": [
+          {
+            "consumer": "delta-mission-controller",
+            "consumer_action_id": "consumer-C8-9fd8515db9a47379",
+            "consumer_policy_version": "trace-delta-small-v1",
+            "created_at": "2026-01-15T22:04:56Z",
+            "decision": "hold",
+            "reason": "One or more hard technical gates failed.",
+            "record_id": "trace-da3d84d2052a8ef9163a",
+            "record_version": 1
+          }
+        ],
+        "created_at": "2026-01-15T22:04:56Z",
+        "evidence_refs": [
+          "evidence-C8-9fd8515db9a47379"
+        ],
+        "failed_gates": [
+          "observation_freshness"
+        ],
+        "final_status": "defer",
+        "metadata": {
+          "belief_cluster_id": "C8-9fd8515db9a47379",
+          "call_id": "C8-9fd8515db9a47379",
+          "lineage_key": "delta-small-belief:C8-9fd8515db9a47379",
+          "trigger_event_id": "C8-9fd8515db9a47379",
+          "visible_evidence_basis": []
+        },
+        "missing_items": [
+          "a fresh observation window"
+        ],
+        "policy_version": "trace-delta-small-v1",
+        "record_id": "trace-da3d84d2052a8ef9163a",
+        "record_version": 2,
+        "repair": "Obtain current route evidence or qualified calibration.",
+        "schema_version": "trace-student-v1",
+        "supersedes_record_id": "trace-da3d84d2052a8ef9163a",
+        "supersedes_record_version": 1
+      },
+      {
+        "claim": {
+          "claim_id": "claim-C8-6eb8a02621930b25",
+          "confidence": 0.82,
+          "confidence_semantics": "predictor action-prefix probability support",
+          "created_at": "2026-01-15T23:31:37Z",
+          "grounding": {
+            "action_type": "deploy_ground_team",
+            "call_id": "C8-6eb8a02621930b25"
+          },
+          "layer": "predictive",
+          "text": "Registered compatible capacity can reach the reported location."
+        },
+        "consumer_actions": [
+          {
+            "consumer": "delta-mission-controller",
+            "consumer_action_id": "consumer-C8-6eb8a02621930b25",
+            "consumer_policy_version": "trace-delta-small-v1",
+            "created_at": "2026-01-15T23:31:37Z",
+            "decision": "clear",
+            "reason": "All declared technical gates passed for this action class.",
+            "record_id": "trace-dc2fe125e1e8908043b5",
+            "record_version": 1
+          }
+        ],
+        "created_at": "2026-01-15T23:31:37Z",
+        "evidence_refs": [
+          "evidence-C8-6eb8a02621930b25"
+        ],
+        "failed_gates": [],
+        "final_status": "accept",
+        "metadata": {
+          "belief_cluster_id": "C8-6eb8a02621930b25",
+          "call_id": "C8-6eb8a02621930b25",
+          "lineage_key": "delta-small-belief:C8-6eb8a02621930b25",
+          "trigger_event_id": "C8-6eb8a02621930b25",
+          "visible_evidence_basis": []
+        },
+        "missing_items": [],
+        "policy_version": "trace-delta-small-v1",
+        "record_id": "trace-dc2fe125e1e8908043b5",
+        "record_version": 2,
+        "repair": null,
+        "schema_version": "trace-student-v1",
+        "supersedes_record_id": "trace-dc2fe125e1e8908043b5",
+        "supersedes_record_version": 1
+      }
+    ]
+  },
+  "scenario_summary": {
+    "allocated": 1,
+    "refused": 2,
+    "repaired": 1
+  },
+  "schema_version": "trace-small-sar-teaching-fixture-v2"
+}

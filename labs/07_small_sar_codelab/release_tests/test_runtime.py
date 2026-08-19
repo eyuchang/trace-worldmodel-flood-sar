@@ -12,7 +12,7 @@ from _support import runtime
 def test_public_book_walkthrough_needs_no_student_or_solution_code() -> None:
     report = runtime.run_lab("book", "all")
 
-    assert report["controller"] == "public-book-records"
+    assert report["controller"] == "bundled-public-records"
     assert report["scenario_files_modified"] is False
     assert [item["case_id"] for item in report["results"]] == [
         "allocation",
@@ -32,7 +32,7 @@ def test_solution_runs_all_four_public_cases() -> None:
         "capacity_refusal",
         "visible_repair",
     ]
-    assert report["results"][0]["public_observed_outcome"] == "completed_within_window"
+    assert report["results"][0]["student_decision"]["selected_resource_id"] == "RES-ENGINE-01"
     assert report["results"][3]["new_commitment_created"] is False
 
 
@@ -102,3 +102,25 @@ def test_write_report_cleans_temporary_file_when_publish_fails(
 def test_invalid_variant_pair_is_rejected() -> None:
     with pytest.raises(ValueError, match="not defined"):
         runtime.run_lab("solution", "evidence_hold", "no-capacity")
+
+
+def test_scenario_output_is_public_only_and_byte_deterministic(tmp_path: Path) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+
+    runtime.write_scenario(first)
+    runtime.write_scenario(second)
+
+    expected = {
+        "calls.json",
+        "evidence_ledger.json",
+        "trace_records.json",
+        "controller_decisions.json",
+        "commitments.json",
+        "outcomes.json",
+    }
+    assert {path.name for path in first.iterdir()} == expected
+    assert runtime.scenario_directories_match(first, second)
+    assert not {"ground_truth.json", "call_lineage.json"} & {
+        path.name for path in first.iterdir()
+    }
