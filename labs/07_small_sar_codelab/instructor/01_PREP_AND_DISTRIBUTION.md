@@ -4,8 +4,9 @@ Use this document before class. During class, use either
 [`02_FULL_LESSON_RUN_OF_SHOW.md`](02_FULL_LESSON_RUN_OF_SHOW.md) or
 [`03_90_MINUTE_LESSON.md`](03_90_MINUTE_LESSON.md), plus the
 [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md). For a projected
-or recorded code-along, use the separate
-[`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md).
+or recorded code-along, use the single
+[`video/recording_script.md`](video/recording_script.md). It includes the
+private same-file reveal procedure as well as the recording directions.
 
 The audience is more than 100 college students who know basic Python but have
 no prior SAR or TRACE experience. Dr. Chang already knows the system; this
@@ -22,8 +23,8 @@ functions match the student exercise exactly:
 3. `apply_visible_repair`.
 
 Keep it private. It is not in the student ZIP. For an actual demonstration,
-use the reveal workflow rather than opening this file before students attempt
-the relevant TODO.
+use the private reveal procedure in the recording script rather than opening
+this file before students attempt the relevant TODO.
 
 ## 1. Choose the lesson before distributing anything
 
@@ -190,8 +191,8 @@ unlisted package installation.
 - Project the README, a clean terminal, and the student editor—not slides.
 - Set terminal and editor text to at least 20 pt.
 - Keep the short troubleshooting table open for helpers.
-- Use the reveal workflow for the instructor screen; students use their own
-  untouched copy.
+- Use the private reveal procedure in `video/recording_script.md` for the
+  instructor screen; students use their own untouched copy.
 - Keep a backup distribution method ready if classroom Wi-Fi is unreliable.
 
 ## 8. Scope and safety check

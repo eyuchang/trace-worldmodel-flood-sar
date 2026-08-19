@@ -303,11 +303,11 @@ python workshop.py test 1
 ### Instructor checkpoint
 
 After the planned attempt time, pause the projection. In the disposable
-instructor demo copy, follow [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md)
-to reveal TODO 1 in the same `exercise/rescue_controller.py` file. Resume the
-projection on that file, explain the filter and sort, then run the ordinary
-student command above. Do not project the reveal tool or a separate solution
-file.
+instructor demo copy, follow the private reveal procedure in
+[`video/recording_script.md`](video/recording_script.md) to reveal TODO 1 in
+the same `exercise/rescue_controller.py` file. Resume the projection on that
+file, explain the filter and sort, then run the ordinary student command above.
+Do not project the reveal tool or a separate solution file.
 
 ### Ask
 

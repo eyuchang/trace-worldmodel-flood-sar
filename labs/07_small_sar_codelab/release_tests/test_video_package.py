@@ -17,7 +17,6 @@ CAPTIONS = VIDEO_ROOT / "review_draft.en.srt"
 REQUIRED_TEXT_FILES = (
     "title_description.md",
     "recording_script.md",
-    "shot_list.md",
     "chapters_and_captions.md",
     "recording_checklist.md",
     "review_draft_notes.md",
@@ -115,6 +114,8 @@ def test_recording_materials_keep_commands_and_claims_in_bounds() -> None:
     assert "Set up this laptop" in text
     assert "python3 setup_workshop.py" in text
     assert "same-file" in text
+    assert "Stop recording now. Do not show the next command." in text
+    assert "Record each numbered section below as a separate take." in text
     assert "does not install packages" in text
     assert "model download" in text
     assert "artifact-reconstruction" not in text

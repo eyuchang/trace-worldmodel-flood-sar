@@ -45,8 +45,8 @@ are published. Do not insert private links or local computer paths.
 
 ## Suggested chapters
 
-See [`chapters_and_captions.md`](chapters_and_captions.md). The review draft is
-13 minutes 25 seconds.
+See [`chapters_and_captions.md`](chapters_and_captions.md). The filming guide
+targets a 12–15 minute screen tutorial.
 
 ## Thumbnail concept
 

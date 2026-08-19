@@ -11,8 +11,8 @@ Total teaching time: **90 minutes**.
 
 - Every machine must already pass `python workshop.py check`.
 - Students must have the same full student workspace and README.
-- Prepare a disposable instructor demo copy with
-  [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md). It reveals one
+- Prepare a disposable instructor demo copy with the private reveal procedure
+  in [`video/recording_script.md`](video/recording_script.md). It reveals one
   function at a time in the same file students edit; never distribute the
   solution or reveal tool.
 - Keep [`04_LIVE_QUICK_REFERENCE.md`](04_LIVE_QUICK_REFERENCE.md) available.

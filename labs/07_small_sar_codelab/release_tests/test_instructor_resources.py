@@ -10,18 +10,21 @@ PREP = INSTRUCTOR_ROOT / "01_PREP_AND_DISTRIBUTION.md"
 FULL = INSTRUCTOR_ROOT / "02_FULL_LESSON_RUN_OF_SHOW.md"
 SHORT = INSTRUCTOR_ROOT / "03_90_MINUTE_LESSON.md"
 QUICK = INSTRUCTOR_ROOT / "04_LIVE_QUICK_REFERENCE.md"
-REVEAL = INSTRUCTOR_ROOT / "05_DEMO_REVEAL_WORKFLOW.md"
+RECORDING = INSTRUCTOR_ROOT / "video" / "recording_script.md"
 
 
 def test_instructor_resources_are_split_by_job() -> None:
-    for document in (PREP, FULL, SHORT, QUICK, REVEAL):
+    for document in (PREP, FULL, SHORT, QUICK, RECORDING):
         assert document.is_file()
 
     assert "Day-before release checklist" in PREP.read_text(encoding="utf-8")
     assert "Schedule at a glance" in FULL.read_text(encoding="utf-8")
     assert "Ninety-Minute Lesson Run of Show" in SHORT.read_text(encoding="utf-8")
     assert "Fast triage" in QUICK.read_text(encoding="utf-8")
-    assert "Instructor Demo Reveal Workflow" in REVEAL.read_text(encoding="utf-8")
+    recording = RECORDING.read_text(encoding="utf-8")
+    assert "Record This Video: Flood Rescue Controller Code-Along" in recording
+    assert "private reveal procedure" in recording
+    assert "--todo 1" in recording
 
 
 def test_preparation_covers_scale_distribution_and_novice_rehearsal() -> None:
@@ -52,7 +55,7 @@ def test_complete_solution_is_easy_for_instructors_to_find() -> None:
         assert f"def {function_name}(" in source
     for document in (PREP, FULL, QUICK):
         assert "solution/rescue_controller.py" in document.read_text(encoding="utf-8")
-    assert "05_DEMO_REVEAL_WORKFLOW.md" in SHORT.read_text(encoding="utf-8")
+    assert "video/recording_script.md" in SHORT.read_text(encoding="utf-8")
 
 
 def test_full_guide_follows_the_student_and_screen_sequence() -> None:

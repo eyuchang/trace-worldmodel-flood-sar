@@ -107,7 +107,7 @@ visible evidence. Append one repair with no selected resource.
 - Do not edit frozen scenario or policy files.
 - Keep Reference, LEAP, debate, and regret outside this component.
 - Do not distribute the solution or instructor branch.
-- For a projected completion, use
-  [`05_DEMO_REVEAL_WORKFLOW.md`](05_DEMO_REVEAL_WORKFLOW.md); it keeps the
+- For a projected completion, use the private reveal procedure in
+  [`video/recording_script.md`](video/recording_script.md); it keeps the
   ordinary student filename and commands.
 - Do not ask students to share personal paths, accounts, or full screens.
