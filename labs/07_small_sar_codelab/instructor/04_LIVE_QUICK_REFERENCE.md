@@ -10,8 +10,8 @@ complete, tested implementation of all three student methods.
 ## Command sequence
 
 | Stage | Command | Success signal |
-| Local setup | Follow README’s macOS/Linux or Windows block | `.venv` activated; no package download |
 |---|---|---|
+| Local setup | Follow README’s macOS/Linux or Windows block | `.venv` activated; no package download |
 | Menu | `python workshop.py` | Seven numbered steps |
 | Setup | `python workshop.py check` | Five PASS lines and READY |
 | Scenario | `python workshop.py scenario` | 1 allocated, 2 refused, 1 repaired |
