@@ -32,6 +32,15 @@ trace-jepa-*     = temporary CLI command prefix
 
 This repository implements the first end-to-end Flood-SAR workbench for the TRACE-WorldModel research program.
 
+If you use, adapt, or build on this repository in research, please cite:
+
+- Edward Y. Chang. **TRW: TRACE-RealWorld---An Auditable Consistency Contract
+  for World Models as Materialized Views.** arXiv:2607.21910, 2026.
+  <https://arxiv.org/abs/2607.21910>
+
+GitHub also reads [`CITATION.cff`](CITATION.cff) for its repository citation
+metadata.
+
 The foundational TRACE schema is described in:
 
 - Edward Y. Chang and Emily J. Chang.  

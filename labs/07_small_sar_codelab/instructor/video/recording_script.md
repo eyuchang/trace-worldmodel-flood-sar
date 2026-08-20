@@ -17,6 +17,11 @@ solution file, the research repository, or a browser tab as footage.
 **File they see you edit:** `exercise/rescue_controller.py`.
 **Commands they see you run:** `python workshop.py ...`.
 
+Every block marked **Say** below is a complete read-aloud script. Read it as
+written; the surrounding **Put on screen**, **Type**, and **Stop recording**
+instructions are private stage directions, not narration. Do not add claims
+about real emergency operations, model performance, or the research system.
+
 ## 1. Set up the recording workspace before opening Screen Recording
 
 Use a disposable instructor-only copy. It starts with the same three TODOs the
@@ -54,7 +59,7 @@ Open a second terminal for the recording. In that visible terminal, run:
 ```bash
 cd "$DEMO_DIR"
 source .venv/bin/activate
-PS1='workshop % '
+PS1='workshop> '
 clear
 ```
 
@@ -106,15 +111,12 @@ diagram and its text alternative. Do not show the whole README.
 
 **Say:**
 
-> A welfare-check call arrives during a simulated flood. We have information
-> about the call, but we also have limited response units. In this lesson, you
-> will write the controller that decides whether to allocate a suitable unit,
-> refuse with a reason, or later append a correction. SAR means search and
-> rescue: helping people during an emergency.
->
-> TRACE is the decision notebook. It checks whether the visible information is
-> ready to use. Your controller checks whether a suitable response unit is
-> actually available.
+> Welcome. In this workshop, you will build a small Python controller
+> for a simulated flood-response system.
+
+> A welfare-check call arrives with information about a person who may need help. Your controller must decide what to do next: allocate a suitable response unit, refuse with a clear reason when it cannot act, or add a later correction when new visible evidence changes the decision record.
+
+> SAR means search and rescue: coordinating limited response units during an emergency. TRACE is the decision notebook. It checks whether the information is ready to use. Your controller then checks whether a suitable response unit is actually available.
 
 **Leave on screen:** the two questions—TRACE checks information readiness; the
 controller checks resource availability.
@@ -130,14 +132,10 @@ Breakdown.” Scroll only far enough to show those sections.
 **Say:**
 
 > This README is your route map. You will edit exactly one file,
-> `exercise/rescue_controller.py`, and run every workshop action with
-> `python workshop.py`. First we will run the supplied scenario. Then you
-> will complete three focused functions, test each one, and run the resulting
-> controller.
+> `rescue_controller.py`, and run every workshop action with
+> `python workshop.py`. First we will run the supplied scenario. Then you will complete three focused functions, test each one, and run the resulting controller.
 >
-> Before Step 1, the README gives complete Windows, macOS, and Linux setup
-> instructions. I will show the macOS and Linux commands here; Windows students
-> use the PowerShell block in the README.
+> Before Step 1, the README gives complete Windows, macOS, and Linux setup instructions. I will show the macOS and Linux commands here; Windows students use the PowerShell block in the README.
 
 ### Take 3 — Set up this laptop and check it (1:10–1:45)
 
@@ -158,8 +156,7 @@ If setup already says the environment is ready, that is fine. Keep the final
 **Say:**
 
 > The ZIP contains everything this workshop needs. The setup command creates a
-> private Python environment in this folder. It does not install packages,
-> download a model, or require a GPU. After activation, everyone uses the same
+> private Python environment in this folder. It does not install packages or require a GPU. After activation, everyone uses the same
 > `python workshop.py` commands.
 >
 > Five PASS lines and READY mean you can continue. The checks cover Python, the
@@ -224,15 +221,16 @@ read. Do not replace this with a slide.
 `eligible_resources`. It must still show the original TODO 1 comments and
 `NotImplementedError`.
 
-**Do before the pause:** read the four eligibility rules from the comments:
-available, reachable, correct route, required capability. Point to the sort
-key in the README if needed.
-
 **Say before the pause:**
 
-> A resource is a response unit. Keep it only when it is available, can reach
-> the route, matches the requested route, and has the required capability. Then
-> sort usable units by travel time and resource ID so the result is repeatable.
+> A resource is one response unit on the dispatch board. This function receives
+> the request and every visible resource. It must return only the units that
+> can serve this particular request.
+>
+> Read the four conditions in the TODO: the unit is available, can reach the
+> route, belongs to the requested route, and has the required capability. All
+> four must be true. Then order the usable units by travel time and resource ID
+> so two identical runs make the same choice.
 >
 > Pause the video here and attempt TODO 1. When you are ready, continue to
 > compare your implementation with this one.
@@ -260,10 +258,19 @@ the completed `eligible_resources` function is visible.
 
 **Say after resuming:**
 
-> This version keeps only resources that pass all four checks. The parentheses
-> collect those resources, and `sorted` makes their order deterministic:
-> first by travel time, then by resource ID. The outer `tuple` returns the
-> ordered result. An empty tuple is normal when no unit qualifies.
+> Start at `eligible =`. The expression below it looks at one `resource` at a
+> time. Each line joined by `and` is one required rule: available, reachable,
+> the requested route, and the requested capability. A resource is kept only
+> when every one of those expressions is true.
+>
+> Next, `sorted` orders the kept resources. Its key is the pair
+> `routed_travel_s, resource_id`. Python compares travel time first; when two
+> times tie, it compares the resource ID. That second value makes the result
+> repeatable.
+>
+> Finally, `tuple` returns the ordered resources in the required immutable
+> form. If none pass the four checks, the result is the empty tuple. That is a
+> normal capacity result, not an error.
 
 **Switch to terminal and type:**
 
@@ -281,8 +288,10 @@ return to the editor.
 
 **Say before the pause:**
 
-> First make sure the request and TRACE authorization describe the same call
-> and situation. A mismatch is invalid input, so raise `ValueError`.
+> This function combines the request, TRACE authorization, and visible
+> resources into one controller decision. First make sure the request and
+> authorization describe the same call and the same situation. A mismatch is
+> invalid input, so raise `ValueError`.
 >
 > After that, TRACE comes before capacity. HOLD produces an information
 > refusal. CLEAR allows us to check units. No eligible unit produces a capacity
@@ -304,10 +313,23 @@ Return to the same `exercise/rescue_controller.py` tab and resume recording.
 
 **Say after resuming:**
 
-> The first two checks reject records that describe different situations. Then
-> the TRACE branch stops a HOLD before resources are considered. Only a CLEAR
-> decision reaches the capacity check. If the eligible-resource tuple is empty,
-> the controller refuses; otherwise it allocates the first ordered unit.
+> Start with the first `if`. It compares the two call IDs. If they differ, the
+> function raises `ValueError` because the records cannot describe the same
+> request. The second `if` makes the same check for the belief-cluster ID,
+> which is this lesson's identifier for the same situation.
+>
+> The next branch asks whether TRACE is CLEAR. If it is not, the helper creates
+> a refusal with the reason `TRACE_NOT_CLEAR`. Notice that the code returns
+> here. It does not inspect resource capacity after a HOLD.
+>
+> On the CLEAR path, `eligible_resources` runs once and stores its ordered
+> tuple in `compatible`. If that tuple is empty, the next branch returns the
+> capacity refusal `NO_COMPATIBLE_CAPACITY`.
+>
+> Otherwise, `compatible[0]` is the first unit in the deterministic order. The
+> final return uses its resource ID to create the allocation decision. The
+> helper fills in the shared TRACE fields for every decision, so this function
+> stays focused on choosing the correct branch.
 >
 > HOLD and no capacity are normal refusal outcomes. They are not errors.
 
@@ -327,9 +349,13 @@ still show TODO 3.
 **Say before the pause:**
 
 > A repair is a correction to the decision record, not physical repair work.
-> It can extend history only when there is a prior decision, the belief cluster
-> and TRACE record chain match, the version is later, and visible evidence
-> supports the update. Each failed consistency check raises `ValueError`.
+> This function receives the earlier decision history and a later TRACE
+> authorization. It may add one repair without deleting the earlier decision.
+>
+> First, there must be earlier history. Then the new authorization must remain
+> in the same belief cluster and continue the same TRACE record chain. It must
+> have a later version and name visible evidence that supports the update. Each
+> failed consistency check raises `ValueError`.
 >
 > Pause here and attempt TODO 3.
 
@@ -347,10 +373,16 @@ Return to the same editor file and resume recording.
 
 **Say after resuming:**
 
-> The function checks the earlier history, the situation, the TRACE record
-> chain, the later version, and the visible evidence. It then creates one
-> repair and returns a new tuple containing the old history followed by that
-> repair. The original allocation stays first.
+> The first line rejects an empty history, because there is nothing to repair.
+> `prior = history[-1]` selects the most recent earlier decision. Each following
+> check compares the later authorization with that decision: same belief
+> cluster, same TRACE record ID, a strictly larger record version, and a
+> nonempty visible-evidence basis.
+>
+> After those checks, the helper creates one decision with event type `REPAIR`
+> and reason `VISIBLE_EVIDENCE_REPAIR`. The final line returns the old history
+> followed by that repair. It creates a new tuple; it does not replace or
+> rewrite the earlier allocation. The original allocation stays first.
 
 **Switch to terminal and type:**
 

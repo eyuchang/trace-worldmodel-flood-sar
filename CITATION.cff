@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use, adapt, or build on this repository in research, please cite the preferred citation below."
+title: "TRACE-WorldModel Flood-SAR"
+authors:
+  - family-names: Chang
+    given-names: "Edward Y."
+preferred-citation:
+  type: article
+  title: "TRW: TRACE-RealWorld---An Auditable Consistency Contract for World Models as Materialized Views"
+  authors:
+    - family-names: Chang
+      given-names: "Edward Y."
+  year: 2026
+  url: "https://arxiv.org/abs/2607.21910"

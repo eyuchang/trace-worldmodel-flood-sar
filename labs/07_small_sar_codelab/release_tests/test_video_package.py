@@ -114,8 +114,14 @@ def test_recording_materials_keep_commands_and_claims_in_bounds() -> None:
     assert "Set up this laptop" in text
     assert "python3 setup_workshop.py" in text
     assert "same-file" in text
+    assert "PS1='workshop> '" in text
     assert "Stop recording now. Do not show the next command." in text
     assert "Record each numbered section below as a separate take." in text
+    assert "Every block marked **Say** below is a complete read-aloud script." in text
+    assert "Start at `eligible =`." in text
+    assert "Each line joined by `and`" in text
+    assert "helper fills in the shared TRACE fields" in text
+    assert "creates a new tuple; it does not replace" in text
     assert "does not install packages" in text
     assert "model download" in text
     assert "artifact-reconstruction" not in text

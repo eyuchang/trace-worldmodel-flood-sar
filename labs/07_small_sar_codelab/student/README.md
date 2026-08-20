@@ -651,3 +651,12 @@ Keep your changes inside `exercise/` and `tests/`.
 - Every required action is available through a keyboard-run terminal command.
 - Commands and expected outputs are presented as selectable text.
 - Ask for a paired workflow or additional setup time if either would help.
+
+## Research reuse
+
+If you adapt this workshop or build on TRACE-WorldModel in research, please
+cite:
+
+> Edward Y. Chang. **TRW: TRACE-RealWorld---An Auditable Consistency Contract
+> for World Models as Materialized Views.** arXiv:2607.21910, 2026.
+> <https://arxiv.org/abs/2607.21910>
